@@ -619,10 +619,21 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   `b2_board_log_touchsuche.txt`). PC: 64 Bit 16/16, i686 18/18 grün.
   Bekannt langsam (B10): jeder Abruf baut TLS neu auf (1,5–2 s), Box-Aufbau
   und Layout einer Wikipedia-Seite dauern am Board ~20 s.
-- [ ] **B3 Cache im PSRAM begrenzt**. Nachweis: Konfigwert + Speicherlog.
-  Stand 22.11.: Grenze am Board gesetzt (`NS_SPEICHER_CACHE` 2 MB, NetSurfs
-  Untergrenze; Bilder 25 %), Heap des Browsers im Log „ns_takt“ alle 5 s.
-  Offen: Nachweis, dass der Zwischenspeicher die Grenze hält.
+- [x] **B3 Cache im PSRAM begrenzt**. Nachweis: Konfigwert + Speicherlog.
+  Konfigwert: `NS_SPEICHER_CACHE` = 2 MB am Board (build.rs, gui.c-Kopie
+  setzt `memory_cache_size` vor netsurf_init; NetSurfs Untergrenze) –
+  NetSurf teilt 75 % Quelldaten (1536 KB) / 25 % Bilder (512 KB); vorher
+  12 MB bei 10 MB Heap. Messung: llcache.c als geprüfte Kopie hält nach
+  jedem Aufräumen Grösse, Grenze und freigebbaren Teil fest; Board-Log
+  „ns_takt“ alle 5 s mit Heap und Zwischenspeicher.
+  Nachweis: PC-Test `zwischenspeicher_grenze` (6 zwischenspeicherbare Seiten
+  à 700 KB über einen Prüfserver: freigebbarer Teil ≤ Grenze, danach 0,7 MB
+  statt 4,2 MB im Speicher; mit der alten Grenze schlüge er fehl) – 64 Bit
+  17/17, i686 19/19 grün. Board (`docs/nachweise/b3/`): Touch-Suche →
+  Wikipedia, Verlauf `b3_board_cache_verlauf.txt`: Grenze 1536 KB,
+  freigebbar höchstens 111 KB, gesamt höchstens 1583 KB (alles von der
+  offenen Seite belegt), Browser-Heap Spitze 9,4 MB < 10 MB, Seite
+  angezeigt (`b3_board_wikipedia.png`).
 - [ ] **B4 Adressleiste, Lesezeichen, Verlauf** per Touch. Nachweis: Autopilot,
   Fotos.
 - [ ] **B5 Touch-Scrollen und Pinch-Zoom**. Nachweis: Autopilot, Fotos.

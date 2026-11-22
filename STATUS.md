@@ -76,8 +76,11 @@ langsam (~40 s nach dem Antippen). Unterwegs gefunden und behoben:
 - Zwischenspeicher 2 MB, JS-Grenze 2 MB am Board.
 Werkzeug für B9/B10: `esp32/netsurf/werkzeuge/proxy.py` + PC-Test
 `seite_ueber_proxy` stellt echte HTTPS-Seiten am PC nach.
-**Nächster Schritt laut Nutzer:** B5 (Touch-Scrollen, Pinch-Zoom); B3/B4
-stehen im Plan davor (B3 begonnen: Cache-Grenze gesetzt).
+**B3 abgeschlossen:** Zwischenspeicher am Board 2 MB (1,5 MB Quelldaten,
+0,5 MB Bilder) statt 12 MB; PC-Test zeigt, dass die Grenze unter Druck hält,
+Board-Log über eine ganze Sitzung (`docs/nachweise/b3/`).
+**Nächster Schritt:** B4 (Adressleiste, Lesezeichen, Verlauf) laut Plan;
+der Nutzer hatte B5 als Nächstes genannt – vor B4 nachfragen.
 
 ## Browser-Architektur (Auftrag 13.9, Entscheidung 22.11.)
 

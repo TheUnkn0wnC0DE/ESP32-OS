@@ -103,6 +103,7 @@ unsafe extern "C" {
     fn ns_js_konsole_leeren();
     fn ns_neu_layout_anzahl() -> u32;
     fn ns_ohne_js_rueckfaelle() -> u32;
+    fn ns_llcache_stand(groesse: *mut u32, grenze: *mut u32, frei: *mut u32);
     fn ns_ohne_js_test_setzen(adresse: *const core::ffi::c_char) -> bool;
     fn ns_eingabe_art(text: *const core::ffi::c_char, aus: *mut u8, max: usize) -> i32;
     fn ns_probe_setenv(name: *const core::ffi::c_char, wert: *const core::ffi::c_char) -> i32;
@@ -218,6 +219,16 @@ pub fn ohne_js_setzen(adresse: &str) -> bool {
     let a = std::ffi::CString::new(adresse).unwrap_or_default();
     // SAFETY: nullterminierte Adresse.
     unsafe { ns_ohne_js_test_setzen(a.as_ptr()) }
+}
+
+/// Zwischenspeicher nach dem letzten Aufräumen (B3, llcache-Kopie):
+/// (Gesamtgrösse, Grenze, freigebbarer Teil) in Bytes.
+#[cfg(not(target_os = "espidf"))]
+pub fn zwischenspeicher() -> (u32, u32, u32) {
+    let (mut g, mut l, mut f) = (0u32, 0u32, 0u32);
+    // SAFETY: drei lokale Zahlen.
+    unsafe { ns_llcache_stand(&mut g, &mut l, &mut f) };
+    (g, l, f)
 }
 
 /// Anzahl automatischer Rückfälle „ohne JavaScript“ (c/ohne_js.c).
@@ -952,6 +963,72 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
         let blau = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_00FF).count();
         let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
         assert!(blau >= 200 * 100 * 9 / 10 && rot == 0, "blau {blau}, rot {rot}");
+    }
+
+    /// B3: Zwischenspeicher hält die Grenze. Sechs Seiten zu je 700 KB,
+    /// zwischenspeicherbar (max-age), per meta refresh nacheinander geladen
+    /// – 4,2 MB durch einen Zwischenspeicher mit 2 MB Grenze. Danach liegt
+    /// der freigebbare Teil (Seiten ohne Nutzer) innerhalb der Grenze.
+    #[test]
+    fn zwischenspeicher_grenze() {
+        c(zwischenspeicher_grenze_innen);
+    }
+
+    fn zwischenspeicher_grenze_innen() {
+        if im_eigenen_prozess("zwischenspeicher_grenze") {
+            return;
+        }
+        use std::io::{Read, Write};
+        ressourcen();
+        const GRENZE: u32 = 2 * 1024 * 1024;
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_CACHE_GRENZE", "");
+            }
+        }
+        let _zurueck = Zuruecksetzen;
+        assert!(c_umgebung("NS_CACHE_GRENZE", &GRENZE.to_string()));
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        let anfragen = std::sync::Arc::new(Mutex::new(Vec::<String>::new()));
+        let log = anfragen.clone();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                log.lock().unwrap().push(pfad.clone());
+                let n: usize = pfad.trim_start_matches("/seite/").parse().unwrap_or(0);
+                let weiter = if n < 6 { format!("<meta http-equiv=\"refresh\" content=\"0;url=/seite/{}\">", n + 1) } else { String::new() };
+                let fuell = "x".repeat(700 * 1024);
+                let html = format!("<html><head>{weiter}</head><body style='margin:0;background:white'><p>Seite {n}</p><!-- {fuell} --></body></html>");
+                let antwort = format!(
+                    "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nCache-Control: max-age=3600\r\nContent-Length: {}\r\n\r\n{html}",
+                    html.len()
+                );
+                let _ = s.write_all(antwort.as_bytes());
+            }
+        });
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/seite/1"), 480, 320, 6000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let a = anfragen.lock().unwrap().clone();
+        let seiten = a.iter().filter(|p| p.starts_with("/seite/")).count();
+        let (gesamt, grenze, frei) = zwischenspeicher();
+        println!("Seiten {seiten}, Zwischenspeicher {gesamt} B, Grenze {grenze} B, freigebbar {frei} B");
+        assert!(seiten >= 6, "alle Seiten geladen: {a:?}");
+        // NetSurf teilt die Grenze: 25 % Bild-Zwischenspeicher, 75 % für die
+        // Quelldaten (llcache) – desktop/netsurf.c
+        let quelle = GRENZE - GRENZE / 4;
+        assert_eq!(grenze, quelle, "Grenze übernommen");
+        assert!(frei <= quelle, "freigebbarer Teil {frei} B über der Grenze {quelle} B");
+        // es wurde wirklich aufgeräumt: 6 × 700 KB lagen nicht alle im Speicher
+        assert!(gesamt < 6 * 700 * 1024, "Zwischenspeicher {gesamt} B");
     }
 
     #[test]

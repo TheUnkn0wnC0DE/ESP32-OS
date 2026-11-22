@@ -218,6 +218,9 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     // html.c als geprüfte Kopie: Seiten auf der Liste „ohne JavaScript“
     // (c/ohne_js.c) laden ohne Skripte
     g.f(html_kopie(q, aus));
+    // llcache.c als geprüfte Kopie: Grösse des Zwischenspeichers nach jedem
+    // Aufräumen messbar (B3)
+    g.f(llcache_kopie(q, aus));
     g.proben.push(c("probe_kern.c"));
     // B2: content/fetch.c mit WITH_CURL (ruft fetch_curl_register, das
     // c/abruf.c bereitstellt) – nur diese Datei, utils/time.c bliebe sonst
@@ -461,7 +464,11 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              #ifdef NS_SPEICHER_CACHE\n\
              \t/* ESP32-OS (B3): Zwischenspeicher begrenzt (Heap des Browsers 10 MB) */\n\
              \tnsoption_set_int(memory_cache_size, NS_SPEICHER_CACHE);\n\
-             #endif\n",
+             #endif\n\
+             \t/* ESP32-OS (B3, PC-Tests): Grenze per Umgebung */\n\
+             \t{\n\t\tconst char *grenze = getenv(\"NS_CACHE_GRENZE\");\n\
+             \t\tif (grenze != NULL && grenze[0] != '\\0')\n\
+             \t\t\tnsoption_set_int(memory_cache_size, atoi(grenze));\n\t}\n",
         ),
         // Knopf „Ohne JS“/„Mit JS“ (c/ohne_js.c) in der Werkzeugleiste
         ("#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrutc\"", "#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrjutc\""),
@@ -559,6 +566,54 @@ fn html_kopie(q: &Path, ziel: &Path) -> PathBuf {
     std::fs::create_dir_all(ziel).expect("Ordner");
     if std::fs::read_to_string(&datei).ok().as_deref() != Some(t.as_str()) {
         std::fs::write(&datei, t).expect("html.c");
+    }
+    datei
+}
+
+/// `content/llcache.c` als geprüfte Kopie (B3): am Ende jedes Aufräumens
+/// (`llcache_clean`) Gesamtgrösse, Grenze und den freigebbaren Teil
+/// (Objekte ohne Nutzer und ohne laufenden Abruf) festhalten – die Grenze
+/// gilt für diesen Teil; was eine Seite gerade nutzt, bleibt.
+fn llcache_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    let quelle = q.join("netsurf/content/llcache.c");
+    println!("cargo:rerun-if-changed={}", quelle.display());
+    let mut t = std::fs::read_to_string(&quelle).expect("llcache.c").replace("\r\n", "\n");
+    for (alt, neu) in [
+        (
+            "\nvoid llcache_clean(bool purge)\n{\n",
+            "\n/* ESP32-OS (B3): Messwerte des letzten Aufräumens (Board-Log\n \
+             * „ns_takt“ bzw. Tests lesen sie über ns_llcache_stand) */\n\
+             static uint32_t ns_cache_groesse, ns_cache_grenze, ns_cache_frei;\n\
+             void ns_llcache_stand(uint32_t *groesse, uint32_t *grenze, uint32_t *frei)\n{\n\
+             \t*groesse = ns_cache_groesse;\n\t*grenze = ns_cache_grenze;\n\t*frei = ns_cache_frei;\n}\n\n\
+             void llcache_clean(bool purge)\n{\n",
+        ),
+        (
+            "\tNSLOG(llcache, DEBUG, \"Size: %\"PRIu32\" (limit: %\"PRIu32\")\", llcache_size, limit);\n}\n",
+            "\tNSLOG(llcache, DEBUG, \"Size: %\"PRIu32\" (limit: %\"PRIu32\")\", llcache_size, limit);\n\
+             \t/* ESP32-OS (B3): Messwerte festhalten */\n\
+             \t{\n\
+             \t\tuint32_t frei = 0;\n\
+             \t\tfor (object = llcache->cached_objects; object != NULL; object = object->next)\n\
+             \t\t\tif (object->users == NULL && object->candidate_count == 0 && object->fetch.fetch == NULL)\n\
+             \t\t\t\tfrei += total_object_size(object);\n\
+             \t\tfor (object = llcache->uncached_objects; object != NULL; object = object->next)\n\
+             \t\t\tif (object->users == NULL && object->candidate_count == 0 && object->fetch.fetch == NULL)\n\
+             \t\t\t\tfrei += total_object_size(object);\n\
+             \t\tns_cache_groesse = llcache_size;\n\
+             \t\tns_cache_grenze = limit;\n\
+             \t\tns_cache_frei = frei;\n\
+             \t}\n}\n",
+        ),
+    ] {
+        assert_eq!(t.matches(alt).count(), 1, "llcache.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
+        t = t.replacen(alt, neu, 1);
+    }
+    let t = format!("/* Erzeugt von esp32/netsurf/build.rs (llcache_kopie) aus content/llcache.c. */\n{t}");
+    let datei = ziel.join("llcache.c");
+    std::fs::create_dir_all(ziel).expect("Ordner");
+    if std::fs::read_to_string(&datei).ok().as_deref() != Some(t.as_str()) {
+        std::fs::write(&datei, t).expect("llcache.c");
     }
     datei
 }
@@ -688,7 +743,7 @@ fn board_liste(q: &Path) {
 /// Quellen des NetSurf-Kerns (Ordner, Dateien) – aus content/Makefile,
 /// content/fetchers/…, content/handlers/…, utils/…, desktop/Makefile.
 const KERN: &[(&str, &str)] = &[
-    ("content", "content.c content_factory.c hlcache.c llcache.c mimesniff.c textsearch.c urldb.c no_backing_store.c"),
+    ("content", "content.c content_factory.c hlcache.c mimesniff.c textsearch.c urldb.c no_backing_store.c"),
     ("content/fetchers", "data.c resource.c"),
     (
         "content/fetchers/about",

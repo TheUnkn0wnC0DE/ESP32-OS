@@ -271,6 +271,7 @@ static void maus(void)
 static int64_t takt_start, takt_warten;
 static unsigned takt_runden;
 void ns_heap_stand_kb(uint32_t *belegt, uint32_t *spitze);
+void ns_llcache_stand(uint32_t *groesse, uint32_t *grenze, uint32_t *frei);
 
 static void takt(int64_t warten_us)
 {
@@ -280,11 +281,15 @@ static void takt(int64_t warten_us)
 	takt_warten += warten_us;
 	takt_runden++;
 	if (jetzt - takt_start >= 5000000) {
-		uint32_t belegt, spitze;
+		uint32_t belegt, spitze, cache, grenze, frei;
 		ns_heap_stand_kb(&belegt, &spitze);
-		ESP_LOGI("ns_takt", "%u Runden, Arbeit %lld ms, Warten %lld ms, Heap %u KB (Spitze %u KB)", takt_runden,
-			 (long long)((jetzt - takt_start - takt_warten) / 1000), (long long)(takt_warten / 1000),
-			 (unsigned)belegt, (unsigned)spitze);
+		ns_llcache_stand(&cache, &grenze, &frei);
+		ESP_LOGI("ns_takt",
+			 "%u Runden, Arbeit %lld ms, Warten %lld ms, Heap %u KB (Spitze %u KB), Cache %u KB "
+			 "(freigebbar %u KB, Grenze %u KB)",
+			 takt_runden, (long long)((jetzt - takt_start - takt_warten) / 1000), (long long)(takt_warten / 1000),
+			 (unsigned)belegt, (unsigned)spitze, (unsigned)(cache / 1024), (unsigned)(frei / 1024),
+			 (unsigned)(grenze / 1024));
 		takt_start = jetzt;
 		takt_warten = 0;
 		takt_runden = 0;
