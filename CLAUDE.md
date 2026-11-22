@@ -46,3 +46,12 @@ Plan: `PLAN.md`, Stand/Übergabe: `STATUS.md`.
 - Vor jedem Commit alle Tests laufen lassen (64 Bit: kern, kolibri, desktop;
   i686: kern, kolibri) – erst bei grün committen. Geänderte Erwartungsbilder
   ansehen, dann mit `ERWARTET_NEU=1` erneuern.
+- Öffentlich auf GitHub (`origin` = TheUnkn0wnC0DE/ESP32-OS): Commits nur
+  mit der Identität aus der lokalen `.git/config` (TheUnkn0wnC0DE, noreply)
+  und in UTC (`TZ=UTC git commit …`), damit keine Zeitzone sichtbar wird.
+  Keine echten Namen, Pfade mit Benutzernamen, WLAN-Daten in Dateien.
+- `main` hat keine alte Geschichte (eigener Anfangscommit). Neue Stände von
+  `esp32-os` kommen als eigener Commit darauf:
+  `git commit-tree <esp32-os-Commit>^{tree} -p main -m …`, dann
+  `git branch -f main <neu>`. Pushen nur nach OK des Nutzers.
+- Der alte Remote heisst `pudding-panik` – dorthin nie pushen.

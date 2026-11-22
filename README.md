@@ -167,6 +167,10 @@ downloaded on the first build (1–2 GB, takes a while).
    for chip revision v1.x; for v3.x boards change
    `esp_idf_sdkconfig_defaults` in `esp32/firmware/Cargo.toml` to
    `sdkconfig.defaults.rev3_x` and run `cargo clean` once.
+   The script reaches the repository through a virtual drive `O:` (short
+   paths for ESP-IDF). If `O:` already points to a different folder, it
+   stops instead of silently building that folder's code – remove the old
+   mapping with `subst O: /D`.
 
 3. **Flash:** connect the board's **USB TO UART** port and run
 
@@ -218,7 +222,9 @@ zlib.
 
 Exception: the stand-alone crates of the root Cargo workspace, **`spatz`**
 (software 3D engine) and **`pudding`** (PC version of the game), are
-licensed under **MIT OR Apache-2.0**, as declared in their `Cargo.toml`.
+licensed under **MIT OR Apache-2.0**, as declared in their `Cargo.toml`
+(license texts: `spatz/LICENSE-MIT`, `spatz/LICENSE-APACHE`,
+`pudding/LICENSE-MIT`, `pudding/LICENSE-APACHE`).
 When they are built into the ESP32-OS firmware, the firmware as a whole is
 GPL-2.0.
 

@@ -101,7 +101,19 @@ function Test-ReleaseAbbild([string]$pfad) {
     }
     Write-Host "Release-Pruefung $(Split-Path -Leaf $pfad): keine WLAN-Zugangsdaten"
 }
-if (-not (Test-Path 'O:\esp32\firmware\Cargo.toml')) { subst O: $repo }
+# O: muss auf DIESEN Checkout zeigen – sonst baute das Skript den Code eines
+# anderen Ordners (z. B. eines Worktrees), auch bei -Release.
+$o_ziel = (subst | Where-Object { $_ -like 'O:\: => *' } | Select-Object -First 1)
+if ($o_ziel) {
+    $o_pfad = ($o_ziel -replace '^O:\\: => ', '').TrimEnd('\')
+    if ((Resolve-Path $o_pfad).Path -ne (Resolve-Path $repo).Path) {
+        throw "Laufwerk O: zeigt auf '$o_pfad', nicht auf diesen Checkout '$repo' - zuerst 'subst O: /D'"
+    }
+} elseif (Test-Path 'O:\') {
+    throw "Laufwerk O: ist belegt (kein subst) - für den Bau wird O: als subst auf '$repo' gebraucht"
+} else {
+    subst O: $repo
+}
 
 $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' +
     [Environment]::GetEnvironmentVariable('Path', 'User') + ';C:\Program Files\LLVM\bin'
