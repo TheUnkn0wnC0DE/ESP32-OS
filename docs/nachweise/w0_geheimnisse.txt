@@ -1,0 +1,18 @@
+W0 22.11.2026: WLAN-Testzugang nur in wlan.local (Repo-Wurzel).
+git check-ignore -v wlan.local:
+.gitignore:23:**/wlan.local	wlan.local
+
+python esp32/firmware/werkzeuge/geheimnis_pruefen.py (zählt nur, zeigt keine Werte):
+wlan.local von Git ignoriert: ja
+Dateien durchsucht: 878, mit Treffer: 0
+  SSID: 0 Treffer in Dateien
+  PASSWORT: 0 Treffer in Dateien
+git log -p --all (68 Commits, 10359 KiB):
+  SSID: 0 Treffer in der Geschichte
+  PASSWORT: 0 Treffer in der Geschichte
+ERGEBNIS: sauber
+
+Board-Logs: werkzeuge/log_schwaerzen.py ersetzt SSID/Passwort vor dem Lesen.
+Gefunden und behoben: esp_hosted (eh_wifi) schrieb beim Setzen der Konfiguration die SSID ins Log (Stufe Info)
+-> wlan.c setzt die Stufe für "eh_wifi" auf Warnung; danach: "keine Zugangsdaten im Log" in allen Läufen.
+HTTPS: noch kein TLS-Code (kommt mit U1/B-Block); Regel: Zertifikatsprüfung nie abschalten.

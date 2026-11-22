@@ -1,0 +1,297 @@
+# ==========================================================================
+#  Pudding-Panik – Kapitel 2: "Der Herd"
+#  Hinter dem Brotkasten wartet der Herd: Herdplatten glühen im Takt, Pfannen,
+#  Töpfe und Kochlöffel bilden den Weg, Donuts brutzeln in der Pfanne,
+#  Zuckerstangen kreisen auf Topfdeckeln, verkohlter Toast bröckelt, Butter
+#  rutscht. Ganz am Ende, oben auf der Arbeitsplatte: der Kühlschrank.
+#  block/mblock: x y z = Mitte der OBERKANTE, dann Breite(x) Tiefe(z) Höhe
+#  cyl: x y z = Mitte der OBERKANTE, Radius, Höhe
+#  hotplate: x y z r periode phase (heiß in der ersten Hälfte der Periode)
+# ==========================================================================
+
+theme kitchen
+spawn 0 0 4 0
+sea -10
+
+# --- Herdrand (Start) -----------------------------------------------------------
+block   0 0 0       10 12 1.5   a8a8b0 d8d8e0
+hint    0 0 3   5  DER HERD IST AN! SCHNELL ZUM KÜHLSCHRANK!
+cherry -2   0.8 -2
+cherry  2   0.8 -2
+deko cyl -3.8 0 -4.2   0.45 1.4  f4f4f4
+deko cyl -3.8 1.4 -4.2 0.47 0.35 c8ccd4
+deko cyl  3.8 0 -4.2   0.45 1.4  4a4a50
+deko cyl  3.8 1.4 -4.2 0.47 0.35 c8ccd4
+deko cyl -2.2 0 5.3    0.4 0.6  d8dce4
+deko cyl  2.2 0 5.3    0.4 0.6  d8dce4
+
+# --- Kochlöffel-Steg ----------------------------------------------------------------
+block   0 0 -11.5    1.4 11 0.5   b07a44 d8a060
+cyl     0 0 -19.2    2.2 0.5      b07a44 d8a060
+cherry  0 0.9 -9
+cherry  0 0.9 -13
+hint    0 0 -18.5  3  ROTE PLATTEN SIND HEISS: SCHNELL WEITERHÜPFEN!
+
+# --- Herdplatten-Rhythmus -------------------------------------------------------
+hotplate 0 0.3 -24.3   1.5 3 0
+deko cyl 0 -3.1 -24.3  1.25 3  2e2e34
+hotplate 0 0.6 -28.5   1.5 3 0.5
+deko cyl 0 -2.8 -28.5  1.25 3  2e2e34
+cherry   0 1.6 -28.5
+hotplate 0 0.9 -32.7   1.5 3 0
+deko cyl 0 -2.5 -32.7  1.25 3  2e2e34
+hotplate 0 1.2 -36.9   1.5 3 0.5
+deko cyl 0 -2.2 -36.9  1.25 3  2e2e34
+cherry   0 2.2 -36.9
+
+# --- Erste Pfanne (Checkpoint) ----------------------------------------------------
+cyl     0 1.5 -41.4    2.6 1    3a3a40 202024
+deko box -4.6 0.7 -41.4  4 0.8 0.5  2a2a2e
+checkpoint 0 1.5 -41.4
+cherry -1.5 2.4 -42.6
+hint    0 1.5 -41.4  2.5  AUF DAS BACKBLECH WARTEN ...
+
+# --- Backblech-Fähre und Dreiertakt ------------------------------------------
+mblock  4.7 1.5 -41.4   3 3 0.3   8a8a92 c0c4cc   8 0 0   5 0
+cherry  8.7 2.6 -41.4
+cyl    17.2 1.5 -41.4   1.8 1.5   c8ccd4 e8ecf0
+ice    17.2 2.3 -41.4
+hint   17.2 1.5 -41.4  1.8  DREIERTAKT: IMMER IN BEWEGUNG BLEIBEN!
+hotplate 21.2 1.8 -39.6  1.4 2.4 0
+deko cyl 21.2 -1.6 -39.6 1.15 3  2e2e34
+hotplate 25.2 2.1 -41.4  1.4 2.4 0.333
+deko cyl 25.2 -1.3 -41.4 1.15 3  2e2e34
+cherry  25.2 3.1 -41.4
+hotplate 29.2 2.4 -39.6  1.4 2.4 0.667
+deko cyl 29.2 -1.0 -39.6 1.15 3  2e2e34
+block   34.5 2.4 -40.5   3.4 4 1.5   a8a8b0 d8d8e0
+cherry  34.0 3.3 -42
+hint    34.5 2.4 -40.5  2  DONUTS IN DER PFANNE: DRÜBERSPRINGEN!
+
+# --- Donut-Pfanne ------------------------------------------------------------------
+cyl     43 2.4 -40.5   6 1.2   3a3a40 202024
+deko box 43 1.6 -49    1.6 5 0.6  2a2a2e
+donut   38.7 2.4 -43.9   0 6.8  2.4
+donut   45.5 2.4 -44.9   0 8.8  2.8
+cherry  40.9 3.3 -40.5
+cherry  47.7 3.3 -40.5
+cherry  43   3.3 -45.5
+
+# --- Topfdeckel (Checkpoint) und Topf-Turm --------------------------------------
+cyl     52.2 2.4 -40.5   2.2 1.5   c8ccd4 e8ecf0
+checkpoint 52.2 2.4 -40.5
+hint    52.2 2.4 -40.5  2.4  DER TOPF-TURM: HOCH HINAUS!
+hotplate 52.2 3.3 -45.6  1.4 3 0
+deko cyl 52.2 -0.1 -45.6 1.15 3  2e2e34
+cyl     55.0 4.2 -48.4   1.4 5     b8bcc4 e8ecf0
+cherry  55.0 5.2 -48.4
+hotplate 52.2 5.1 -51.2  1.4 3 0.5
+deko cyl 52.2 1.7 -51.2  1.15 3  2e2e34
+cyl     55.0 6.0 -54.0   1.4 6     b8bcc4 e8ecf0
+cherry  55.0 7.0 -54.0
+hotplate 52.2 6.9 -56.8  1.4 3 0
+deko cyl 52.2 3.5 -56.8  1.15 3  2e2e34
+cyl     55.2 7.8 -59.8   1.5 7     b8bcc4 e8ecf0
+cherry  55.2 8.8 -59.8
+hint    55.2 7.8 -59.8  1.6  IN DER MITTE BIST DU SICHER!
+
+# --- Zuckerstange auf dem Topfdeckel --------------------------------------------
+cyl     55.2 6.8 -64.8   3.0 1.2   c8ccd4 e8ecf0
+spinner 55.2 6.8 -64.8   5.6 1.8
+cherry  52.6 7.7 -64.8
+
+# --- Pfannenwender-Fähre --------------------------------------------------------
+block   55.2 6.3 -71.5   4 6 1.5   a8a8b0 d8d8e0
+cherry  56.6 7.2 -70
+ice     55.2 7.1 -70.6
+hint    55.2 6.3 -72.5  2.5  AUF DEN PFANNENWENDER WARTEN ...
+mblock  55.2 6.3 -76.5   3 3 0.3   2a2a2e 505058   0 0 -8   5 0
+cherry  55.2 7.4 -80.5
+
+# --- Deckel (Checkpoint), zwei Herdplatten, Deckel ---------------------------
+cyl     55.2 6.6 -88.0   1.6 1.5   c8ccd4 e8ecf0
+checkpoint 55.2 6.6 -88.0
+cherry  55.2 7.6 -88.0
+hotplate 55.2 6.9 -92.2  1.4 3 0
+deko cyl 55.2 3.5 -92.2  1.15 3  2e2e34
+hotplate 55.2 7.2 -96.4  1.4 3 0.5
+deko cyl 55.2 3.8 -96.4  1.15 3  2e2e34
+cherry   55.2 8.2 -96.4
+cyl     55.2 7.5 -100.6  1.6 1.5   c8ccd4 e8ecf0
+ice     55.2 8.3 -100.6
+hint    55.2 7.5 -100.6  1.8  VERKOHLTER TOAST BRÖCKELT, BUTTER RUTSCHT!
+
+# --- Zweite Fähre, verkohlter Toast, Butterpfanne --------------------------------
+mblock  51.4 7.5 -100.6   3 3 0.3   2a2a2e 505058   -8 0 0   5 0.5
+cherry  47.4 8.6 -100.6
+crumble 40.7 7.5 -100.6   2.4 2.6 0.8   3a2a20 5a4030
+crumble 38.3 7.5 -100.6   2.4 2.6 0.8   4a3424 6a4a34
+crumble 35.9 7.5 -100.6   2.4 2.6 0.8   3a2a20 5a4030
+cherry  38.3 8.4 -100.6
+cyl     31.5 7.5 -100.6   3.2 1   3a3a40 f0d870  glatt
+cherry  31.5 8.4 -100.6
+
+# --- Herdrand (Checkpoint) und langer Kochlöffel ----------------------------------
+block   24.5 7.5 -100.6   3 4 1.5   a8a8b0 d8d8e0
+checkpoint 24.5 7.5 -100.6
+block   16.6 7.5 -100.6   12.8 1.4 0.5   b07a44 d8a060
+cherry  19   8.4 -100.6
+cherry  13   8.4 -100.6
+cyl      8   7.5 -100.6   2.2 0.5   b07a44 d8a060
+ice      8   8.3 -100.6
+hint     8   7.5 -100.6  2  ZWEI ZUCKERSTANGEN: IN DER MITTE BIST DU SICHER!
+
+# --- Doppel-Karussell auf zwei Topfdeckeln ---------------------------------------
+cyl      2.3 6.5 -100.6   3.0 1.2   c8ccd4 e8ecf0
+spinner  2.3 6.5 -100.6   5.6 1.6
+block   -2.65 7.0 -100.6  2.5 3 1.5   a8a8b0 d8d8e0
+cherry  -2.65 7.9 -100.6
+cyl     -7.5 6.5 -100.6   3.0 1.2   c8ccd4 e8ecf0
+spinner -7.5 6.5 -100.6   5.6 -1.9
+cherry  -7.5 7.4 -103.2
+
+# --- Herdrand und schneller Herdplatten-Takt -----------------------------------
+block  -13.2 6.0 -100.6   4 4 1.5   a8a8b0 d8d8e0
+deko cyl -14.6 6.0 -99.0  0.4 0.6  d8dce4
+deko cyl -11.8 6.0 -99.0  0.4 0.6  d8dce4
+hint   -13.2 6.0 -100.6  2.2  JETZT GEHT DER TAKT SCHNELLER!
+hotplate -13.2 6.3 -105.6  1.4 2 0
+deko cyl -13.2 2.9 -105.6  1.15 3  2e2e34
+hotplate -13.2 6.6 -109.8  1.4 2 0.5
+deko cyl -13.2 3.2 -109.8  1.15 3  2e2e34
+cherry   -13.2 7.6 -109.8
+hotplate -13.2 6.9 -114.0  1.4 2 0
+deko cyl -13.2 3.5 -114.0  1.15 3  2e2e34
+hotplate -13.2 7.2 -118.2  1.4 2 0.5
+deko cyl -13.2 3.8 -118.2  1.15 3  2e2e34
+cherry   -13.2 8.2 -118.2
+
+# --- Letzte Pfanne (Checkpoint) und Waffel-Aufzug zur Arbeitsplatte -----------
+cyl    -13.2 7.5 -123.2   2.6 1   3a3a40 202024
+checkpoint -13.2 7.5 -123.2
+deko box -17.8 6.7 -123.2  4 0.8 0.5  2a2a2e
+hint   -13.2 7.5 -123.2  2.2  AUF DEN WAFFEL-AUFZUG WARTEN ...
+wafer  -13.2 7.5 -127.9   3 3 0.6   0 4.5 0   4 0.5
+cherry -13.2 10.0 -127.9
+cyl    -13.2 12 -132.2    1.6 1.5   c8ccd4 e8ecf0
+ice    -13.2 12.8 -132.2
+wafer  -13.2 12 -136.4    3 3 0.6   0 4.5 0   4 0
+cherry -13.2 14.5 -136.4
+
+# --- Arbeitsplatte mit Donut-Wache und Kühlschrank -------------------------------
+block  -13.2 16.5 -152    12 26 3   5a5a64 9a9aa6
+hint   -13.2 16.5 -139.9  2.5  DONUT-WACHE! DAHINTER WARTET DER KÜHLSCHRANK!
+donut  -17.9 16.5 -144.0   9.4 0  2.6
+donut   -8.5 16.5 -150.5  -9.4 0  2.2
+donut  -17.9 16.5 -157.0   9.4 0  3.0
+cherry -13.2 17.4 -146.2
+cherry -13.2 17.4 -152.7
+cherry -17.5 17.4 -148
+cherry  -9   17.4 -155
+fridge -13.2 16.5 -163.3  0  kitchen
+deko cyl -17.2 16.5 -163.1   0.45 1.4  f4f4f4
+deko cyl -17.2 17.9 -163.1   0.47 0.35 c8ccd4
+deko cyl -16.0 16.5 -163.1   0.45 1.4  4a4a50
+deko cyl -16.0 17.9 -163.1   0.47 0.35 c8ccd4
+
+# --- Kulisse: großer Kochtopf, Wasserkessel, Fliesenwand, Dampf ----------------
+deko cyl  22 -9 -18    5 9      b8bcc4
+deko cyl  22  0 -18    5.4 0.4  d8dce4
+deko cyl  22 0.4 -18   0.9 0.6  2a2a2e
+deko cyl -14 -6 -50    3 8      e04040
+deko cyl -14  2 -50    1.2 1    2a2a2e
+deko cyl  76 -8 -70    2 16     4a3a30
+deko box  10 -10 -169  100 3 36  b4d4e2
+cloud     22 8 -18     2.5
+cloud     60 16 -50    3
+cloud     30 20 -85    3.5
+cloud     -6 24 -120   4
+
+# ==========================================================================
+#  Autopilot-Route
+# ==========================================================================
+route walk  0 -1.5
+route walk  0 -20.4
+route jump  0 -24.3
+route jump  0 -28.5
+route jump  0 -32.7
+route jump  0 -36.9
+route jump  0 -40.8
+route walk  1.2 -41.4
+route walk  2.0 -41.4
+route waitplat 0 0.5 0.45
+route waitplat 0 0 0.02
+route jump  5.4 -41.4
+route waitplat 0 1 0.01
+route walk 13.6 -41.4
+route jump 17.2 -41.4
+route jump 21.2 -39.6
+route jump 25.2 -41.4
+route jump 29.2 -39.6
+route jump 33.6 -40.2
+route walk 36.35 -40.5
+route jump 40.9 -40.5
+route walk 43.15 -40.5
+route jump 47.7 -40.5
+route jump 51.8 -40.5
+route walk 52.2 -42.0
+route jump 52.2 -45.6
+route jump 55.0 -48.4
+route jump 52.2 -51.2
+route jump 55.0 -54.0
+route jump 52.2 -56.8
+route jump 55.2 -59.8
+route walk 55.2 -61.15
+route jump 55.2 -64.8
+route jump 55.2 -69.4
+route walk 55.2 -73.8
+route waitplat 1 0.5 0.45
+route waitplat 1 0 0.02
+route jump 55.2 -77.2
+route waitplat 1 1 0.01
+route walk 55.2 -85.3
+route jump 55.2 -88.0
+route jump 55.2 -92.2
+route jump 55.2 -96.4
+route jump 55.2 -100.6
+route walk 54.0 -100.6
+route waitplat 2 0.5 0.45
+route waitplat 2 0 0.02
+route jump 50.2 -100.6
+route waitplat 2 1 0.01
+route jump 40.7 -100.6
+route walk 29.3 -100.6
+route jump 24.7 -100.6
+route walk  6.15 -100.6
+route jump  2.3 -100.6
+route jump -1.9 -100.6
+route walk -3.95 -100.6
+route jump -7.5 -100.6
+route jump -12.1 -100.6
+route walk -13.2 -102.4
+route jump -13.2 -105.6
+route jump -13.2 -109.8
+route jump -13.2 -114.0
+route jump -13.2 -118.2
+route jump -13.2 -122.6
+route walk -13.2 -125.6
+route waitplat 3 0.5 0.45
+route waitplat 3 0 0.03
+route jump -13.2 -127.9
+route waitplat 3 1 0.02
+route walk -13.2 -128.6
+route jump -13.2 -132.2
+route walk -13.2 -133.3
+route waitplat 4 0.5 0.45
+route waitplat 4 0 0.03
+route jump -13.2 -136.4
+route waitplat 4 1 0.02
+route walk -13.2 -137.1
+route jump -13.2 -139.9
+route walk -13.2 -141.65
+route jump -13.2 -146.2
+route walk -13.2 -148.15
+route jump -13.2 -152.7
+route walk -13.2 -154.65
+route jump -13.2 -159.2
+route walk -13.2 -161.7

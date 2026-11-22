@@ -1,0 +1,20 @@
+[package]
+name = "quake"
+description = "Quake (quakegeneric/WinQuake, Shareware-PAK) als Spiel der Konsole"
+version = "0.1.0"
+edition = "2024"
+# Der Quake-Quellcode (quakegeneric/) steht unter der GPL-2.0; damit auch diese Crate.
+license = "GPL-2.0-or-later"
+publish = false
+build = "build.rs"
+links = "quakegeneric"
+
+[dependencies]
+pudding-core = { path = "../game" }
+konsole = { path = "../konsole" }
+
+[dev-dependencies]
+spatz = { path = "../../spatz", default-features = false }
+
+[build-dependencies]
+cc = "1"

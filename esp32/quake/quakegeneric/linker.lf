@@ -1,0 +1,42 @@
+# Quake-Variablen ohne Startwert (.bss, u. a. das 320x240-Bild) in den PSRAM.
+# Braucht CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y.
+[scheme:quake_extram_bss]
+entries:
+    bss -> extern_ram
+    common -> extern_ram
+
+# Renderer-Code, der je Pixel oder je Bildzeile laeuft, im internen RAM statt
+# per XIP aus dem PSRAM (dort teilt er sich den L2-Cache mit Texturen,
+# Surface-Cache und Bild). noflash: Code -> iram0_text, Konstanten ->
+# dram0_data; die .bss dieser Objekte bleibt ueber "*" im PSRAM.
+# Groessen aus quakeapp.elf/libquakegeneric.a (Board-Build vom 20.11.2026),
+# Code + Konstanten:
+#   d_scan    2736 B  D_DrawSpans8, D_DrawZSpans, Turbulent8, D_WarpScreen
+#   r_edge    2972 B  R_ScanEdges, R_LeadingEdge, R_GenerateSpans, R_StepActiveU
+#   d_edge    1740 B  D_DrawSurfaces, D_CalcGradients
+#   r_surf    3745 B  R_DrawSurfaceBlock8_mip0-3, R_BuildLightMap, R_DrawSurface
+#   r_draw    5352 B  R_RenderFace, R_EmitEdge, R_ClipEdge, R_RenderBmodelFace
+#   d_polyse  5008 B  D_PolysetDrawSpans8, D_RasterizeAliasPolySmooth u. a.;
+#                     nur Code (noflash_text): die 8-KB-Tabelle adivtab wird
+#                     je Dreieckskante gelesen, nicht je Pixel
+#   d_sky      668 B  D_DrawSkyScans8
+#   d_part     912 B  D_DrawParticle
+#   zusammen 23133 B (22,6 KB).
+# Platz: Der P4 (Rev. < 3) fuehrt Code nur im unteren SRAM aus (sram_low,
+# 179 KB); dort waren 19 KB frei. Was darueber hinausgeht, schiebt Daten in
+# den oberen SRAM (--enable-non-contiguous-regions) - jedes KB hier fehlt
+# also dem internen Heap, aus dem die Pipeline ihre Streifenpuffer nimmt.
+# Weitere Kandidaten, wenn am Board genug interner RAM frei bleibt: r_bsp
+# 4500 B, r_alias 5366 B, r_aclip 4604 B, d_sprite 2716 B, d_surf 1505 B.
+[mapping:quakegeneric]
+archive: libquakegeneric.a
+entries:
+    * (quake_extram_bss)
+    d_scan (noflash)
+    r_edge (noflash)
+    d_edge (noflash)
+    r_surf (noflash)
+    r_draw (noflash)
+    d_polyse (noflash_text)
+    d_sky (noflash)
+    d_part (noflash)

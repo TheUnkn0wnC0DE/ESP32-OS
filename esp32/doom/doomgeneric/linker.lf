@@ -1,0 +1,12 @@
+# Doom-Variablen ohne Startwert (.bss, einige 100 KB) in den PSRAM: Der
+# interne RAM bleibt den anderen Spielen (Bildstreifen, Pipeline).
+# Braucht CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y.
+[scheme:doom_extram_bss]
+entries:
+    bss -> extern_ram
+    common -> extern_ram
+
+[mapping:doomgeneric]
+archive: libdoomgeneric.a
+entries:
+    * (doom_extram_bss)

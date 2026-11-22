@@ -1,0 +1,12 @@
+W5 Board 22.11.2026: Test-Build ESP32OS_SCHONER_S=25 (Schoner nach 25 s, Einstellung unverändert).
+Ablauf: verbunden → Bildschirm dunkel → iTWT-Einrichtung angefordert (Intervall ~0,5 s, Wachdauer ~65 ms).
+Ergebnis: Die C6-Firmware 0.0.0 beantwortet die iTWT-Anfrage nicht (RPC unbekannt, ESP_FAIL nach 5 s).
+→ W5 wartet auf W2 (neue C6-Firmware). Code ist fertig: Einrichtung beim Abdunkeln, Abbau beim Aufwachen.
+Log mit werkzeuge/log_schwaerzen.py geprüft: keine Zugangsdaten.
+
+I (3265) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+I (3265) eh_wifi_itwt: wifi iTWT ext init
+I (10777) pudding_fw::wlan: WLAN: verbunden in 4537 ms, IP 192.168.1.142, Signal -45 dBm, Kanal 6, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+W (62091) pudding_p4: Touch klemmt bei Panel (82, 1231) seit 60 s – wird ignoriert
+I (87089) pudding_p4: Bildschirmschoner: Hintergrundlicht aus
+W (92134) pudding_fw::wlan: WLAN: iTWT Einrichtung abgelehnt, Code 0xffffffff

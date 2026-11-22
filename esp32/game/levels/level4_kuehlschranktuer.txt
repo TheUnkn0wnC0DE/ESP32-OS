@@ -1,0 +1,279 @@
+# ==========================================================================
+#  Pudding-Panik – Kapitel 4: "Die Kühlschranktür"
+#  Der Pudding klettert an der Innenseite der Tür hinauf: Türfach für Türfach,
+#  vorne nach rechts, hinten nach links, immer im Kreis nach oben. Über
+#  Flaschendeckel und Ketchup, den Eierkarton, einen Aufzug, das Donut-Fach
+#  mit der Quirl-Dose, die Klappe des Butterfachs, Mayo- und Senftuben, die
+#  Frischkäse-Fähre, per Marshmallow ins obere Getränkefach (Dosen, Quirl),
+#  Joghurtbecher, rutschige Butter, einen schrägen Aufzug, Donuts und
+#  Saftflaschen, den letzten Aufzug, Eiswürfel und einen Quirl bis zur
+#  Klappe des Gefrierfachs.
+#  block/mblock: x y z = Mitte der OBERKANTE, dann Breite(x) Tiefe(z) Höhe
+#  cyl: x y z = Mitte der OBERKANTE, Radius, Höhe
+#  Vordere Türfächer: z -2.5..2.5 (Weg nach +X), hintere: z -12.5..-7.5 (Weg nach -X)
+# ==========================================================================
+
+theme fridge
+spawn -3 0 0 -90
+sea -10
+
+# === 1. Unterstes Türfach: Flaschenfach (nach rechts) ======================
+block  -1 0 0        8 5 0.6    5aa0d0 9cd4f0
+hint   -2 0 0  4  DIE TÜR! KLETTERE BIS GANZ NACH OBEN!
+cherry  0.5 0.8 0
+# Wasserflasche
+cyl     6.4 -0.6 0     1.3 7      8fd0f0 a8e0f8
+cyl     6.4  1.2 0     0.8 1.8    a8e0f8 3a7bd5
+cherry  6.4  2.2 0
+# Saftflasche
+cyl    10.4  0.4 -1.0  1.3 8      f0a030 f6c060
+cyl    10.4  2.2 -1.0  0.8 1.8    f6c060 2a9a3a
+cherry 10.4  3.2 -1.0
+# Milchflasche
+cyl    14.4  1.4 0.4   1.3 9      c8dcec eef6fc
+cyl    14.4  3.2 0.4   0.8 1.8    eef6fc 3a7bd5
+cherry 14.4  4.2 0.4
+hint    3.5 0 0  1.4  FLASCHENDECKEL: GENAU ZIELEN!
+# Ende des Fachs
+block  20.4 3.2 0      6 5 0.6    5aa0d0 9cd4f0
+cherry 18.8 4.1 1.6
+
+# === 2. Ketchup (nach hinten) ==============================================
+cyl    20.4 4.6 -5.4   1.1 9      d42a20 e83a2a
+cherry 20.4 5.6 -5.4
+
+# === 3. Hinteres Fach: Eierkarton (nach links) ============================
+block  19.6 6.0 -10    3 5 0.6    a07a4a b8946a
+hint   19.6 6.0 -10  1.6  EIERKARTON: VON EI ZU EI!
+block  10.6 5.2 -10    15 5 1.2   a07a4a b8946a
+cyl    15.4 6.8 -9.2   0.8 1.8    f0e6d2 fffaf0
+cyl    12.0 6.8 -10.8  0.8 1.8    c89060 dca070
+cherry 12.0 7.8 -10.8
+cyl     8.6 6.8 -9.2   0.8 1.8    f0e6d2 fffaf0
+cyl     5.2 6.8 -10.8  0.8 1.8    f0e6d2 fffaf0
+cherry  5.2 7.8 -10.8
+block  -0.5 6.8 -10    5 5 0.6    5aa0d0 9cd4f0
+checkpoint -0.5 6.8 -10
+
+# === 4. Aufzug (nach vorn) ==================================================
+mblock -0.5 6.8 -5.0   3 3 0.5    7a9ab8 b8d0e4   0 4.6 0   4.6 0.5
+hint   -0.5 6.8 -9  1.4  AUF DEN AUFZUG WARTEN ...
+cherry -0.5 12.4 -5.0
+
+# === 5. Zweites Fach vorn: Donuts und Dose mit Quirl (nach rechts) ======
+block   0 11.4 0       6 5 0.6    5aa0d0 9cd4f0
+block  10.5 11.4 0     11 5 0.6   5aa0d0 9cd4f0
+hint    1.5 11.4 0  2.5  VORSICHT, DONUTS IM TÜRFACH!
+donut   5.6 11.4 1.4    9.8 0  2.6
+donut  15.4 11.4 1.4   -9.8 0  2.0
+cherry  8   12.4 1.4
+cherry 13   12.3 -1.6
+ice    10.5 12.2 -1.6
+cyl    21.0 11.4 0     3.4 4      98a4b0 c8d2dc
+spinner 21.0 11.4 0    3.8 1.6
+hint   17.0 11.4 -1.6  1.4  ERST AUF DIE MITTE DES QUIRLS!
+cherry 21.0 12.4 2.9
+
+# === 6. Butterfach mit Klappe (nach hinten) ================================
+block  21.0 12.2 -5.6   4 3 1.6   f4f6fa fff0a8
+checkpoint 21.0 12.2 -5.6
+hint   21.0 12.2 -5.6  1.8  DIE KLAPPE DES BUTTERFACHS HEBT DICH!
+mblock 21.0 12.2 -9.6   3.4 3 0.4  d8c890 f2d36a   0 4.4 0   5 0.5
+
+# === 7. Tubenfach mit Frischkäse-Fähre (nach links) =====================
+block  15.6 16.6 -10    4 5 0.6    5aa0d0 9cd4f0
+cherry 15.6 17.5 -11.6
+cyl    11.0 17.4 -9.0   0.9 4      f4f2e8 5a9ad8
+cyl     7.4 18.2 -10.8  0.9 4      e8b818 f6d040
+cherry  7.4 19.2 -10.8
+ice    11.0 18.2 -9.0
+mblock  3.0 17.4 -10    3 3 0.6    f4f6fa 9ad0ff   -5.5 0 0   5.5 0
+hint    7.4 18.2 -10.8  1.4  WARTE AUF DIE FRISCHKÄSE-FÄHRE!
+cherry  0.2 18.5 -10
+block  -8.2 17.4 -10    4.4 5 0.6  5aa0d0 9cd4f0
+mallow -8.2 17.4 -7.9
+hint   -8.2 17.4 -10.5  1.8  MARSHMALLOW = TRAMPOLIN!
+cherry -8.2 18.3 -11.6
+
+# === 8. Oberes Getränkefach: Dosen und Quirl (nach rechts) =============
+block  -8.2 23.4 -0.9   6 5 6      5aa0d0 9cd4f0
+checkpoint -6.6 23.4 -0.9
+cyl    -1.8 24.2 -0.6   1.3 5      d8282a c8d0d8
+cherry -1.8 25.2 -0.6
+cyl     2.4 25.0 0.8    1.3 5      2a9a4a c8d0d8
+cherry  2.4 26.0 0.8
+cyl     6.6 24.2 -0.6   1.3 5      3a6ad8 c8d0d8
+cherry  6.6 25.2 -0.6
+block  15.4 24.2 0      12 5 0.6   5aa0d0 9cd4f0
+donut   9.8 24.2 1.8    2.8 0  1.6
+spinner 15.4 24.2 0     4.4 1.7
+cherry 15.4 25.2 2.2
+ice    19.6 25.0 -1.0
+
+# === 9. Joghurtbecher-Treppe (nach hinten) ===============================
+cyl    20.6 25.4 -5.0   1.1 5      f4f6fa ff9cc8
+cherry 20.6 26.4 -5.0
+cyl    20.6 26.6 -8.8   1.1 5      f4f6fa ffe066
+
+# === 10. Hinteres Fach: rutschige Butter (nach links) ===================
+block  16.4 26.6 -10    4 5 0.6    5aa0d0 9cd4f0
+hint   16.4 26.6 -10  2  BUTTER IST GLATT! SCHÖN GERADEAUS!
+block   8.4 26.6 -10    12 2.4 0.6  f2d36a fff0a8  glatt
+cherry 11.0 27.5 -10
+cherry  5.0 27.5 -10
+block  -0.6 26.6 -10    6 5 0.6    5aa0d0 9cd4f0
+checkpoint -0.6 26.6 -10
+
+# === 11. Schräger Saftkarton-Aufzug (nach vorn) ===========================
+mblock -0.6 26.6 -5.0   3 3 0.5    f0a030 ffc860   0 7.0 3.0   5 0.5
+hint   -0.6 26.6 -8.6  1.4  SCHRÄGER AUFZUG ... WARTEN!
+cherry -0.6 34.6 -2.0
+
+# === 12. Oberstes Fach vorn: Donuts und Saftflaschen (nach rechts) =====
+block   8.4 33.6 0      12 5 0.6   5aa0d0 9cd4f0
+donut   3.0 33.6 1.4   10.8 0  2.8
+donut  13.8 33.6 1.4  -10.8 0  2.2
+cherry  6.0 34.6 1.4
+cherry 11.0 34.5 -1.6
+ice     8.4 34.4 -1.6
+cyl    18.4 31.4 -0.8   1.2 3      f0a030 f6c060
+cyl    18.4 34.4 -0.8   0.75 3     f6c060 d8282a
+cherry 18.4 35.4 -0.8
+cyl    22.4 32.2 0.6    1.2 3      8fd0f0 a8e0f8
+cyl    22.4 35.2 0.6    0.75 3     a8e0f8 3a7bd5
+cyl    26.4 33.0 -0.8   1.2 3      c8dcec eef6fc
+cyl    26.4 36.0 -0.8   0.75 3     eef6fc 2a9a3a
+cherry 26.4 37.0 -0.8
+block  31.4 36.0 0      5 5 0.6    5aa0d0 9cd4f0
+checkpoint 31.0 36.0 -0.9
+
+# === 13. Letzter Aufzug, Eiswürfel, Quirl, Gefrierfach-Klappe (nach hinten)
+mblock 31.4 36.0 -5.0   3 3 0.5    7a9ab8 b8d0e4   0 4.6 -4.0   5 0.5
+hint   31.4 36.0 -1.6  1.4  DER LETZTE AUFZUG!
+# Eiswürfel aus dem Gefrierfach
+block  31.4 41.4 -13.2  2.6 2.6 2.6  bfe8ff f2fcff
+block  33.4 42.2 -17.0  2.6 2.6 2.6  bfe8ff f2fcff
+cherry 33.4 43.2 -17.0
+block  31.4 43.0 -20.8  2.6 2.6 2.6  bfe8ff f2fcff
+# Eisscheibe mit Quirl vor der Klappe
+cyl     31.4 43.0 -27.0  3.4 0.6    7cc4e4 b4e4f6
+spinner 31.4 43.0 -27.0  3.6 1.8
+hint    31.4 43.0 -21.5  1.6  AUF DIE MITTE, DANN ZUR KLAPPE!
+cherry  28.4 44.0 -27.0
+# Ziel
+block  31.4 43.0 -34.2  8 5 0.6    7cc4e4 b4e4f6
+cherry 28.6 43.9 -33
+cherry 34.2 43.9 -33
+fridge 31.4 43.0 -35.6   0  freezer
+deko box 27.8 43.0 -35.8  1.2 1.2 2.4  bfe8ff
+deko cyl 35.0 43.0 -35.6  0.8 1.8  f4f6fa
+
+# === Kulisse: Innenseite der Tür ==========================================
+deko box  12 -10 -40    64 2 64   dfe6ee
+deko box -24 -10 -16    2 48 52   e4ebf2
+deko box  48 -10 -16    2 48 58   e4ebf2
+cloud    -6 46 -18   3
+cloud    30 50 -8    4
+
+# ==========================================================================
+#  Autopilot-Route
+# ==========================================================================
+# 1. Flaschenfach (erster Punkt dicht am Start: der Autopilot sucht den nächsten)
+route walk -2.6 0
+route walk  2.6 0
+route jump  6.4 0
+route jump 10.4 -1.0
+route jump 14.4 0.4
+route jump 18.6 0.2
+route walk 20.4 -2.2
+# 2. Ketchup
+route jump 20.4 -5.4
+route jump 20.0 -9.4
+# 3. Eierkarton
+route walk 18.6 -10.0
+route jump 15.4 -9.2
+route jump 12.0 -10.8
+route jump  8.6 -9.2
+route jump  5.2 -10.8
+route jump  1.0 -10.0
+route walk -0.5 -10.0
+# 4. Aufzug
+route walk -0.5 -7.8
+route waitplat 0 0 0.03
+route jump -0.5 -5.0
+route waitplat 0 1 0.02
+route walk -0.5 -3.8
+route jump  0 -0.8
+# 5. Donuts, Quirl
+route walk  2.6 -1.6
+route jump  6.2 -1.6
+route walk 15.6 -1.6
+route jump 18.0 -1.0
+route jump 21.0 0
+route jump 21.0 -2.9
+# 6. Butterfach
+route jump 21.0 -5.4
+route walk 21.0 -6.8
+route waitplat 1 0 0.03
+route jump 21.0 -9.6
+route waitplat 1 1 0.02
+# 7. Tuben, Fähre, Marshmallow
+route walk 19.6 -9.6
+route jump 16.0 -10
+route walk 14.0 -9.6
+route jump 11.0 -9.0
+route jump  7.4 -10.8
+route waitplat 2 0 0.01
+route jump  2.4 -10
+route waitplat 2 1 0.02
+route walk -3.2 -10
+route jump -7.0 -10
+route walk -8.2 -10.2
+route jump -8.2 -7.9
+route air  -8.2 -1.2
+# 8. Dosen, Quirl
+route walk -6.6 -0.9
+route walk -5.6 -0.8
+route jump -1.8 -0.6
+route jump  2.4 0.8
+route jump  6.6 -0.6
+route jump 10.6 -0.8
+route walk 12.2 -0.2
+route jump 15.4 0
+route jump 18.6 0
+route walk 20.8 -2.0
+# 9. Joghurtbecher
+route jump 20.6 -5.0
+route jump 20.6 -8.8
+# 10. Rutschige Butter
+route jump 17.0 -9.8
+route walk 15.0 -10
+route walk  3.0 -10
+route walk -0.6 -10
+# 11. Schräger Aufzug
+route walk -0.6 -7.8
+route waitplat 3 0 0.03
+route jump -0.6 -5.0
+route waitplat 3 1 0.02
+route walk  0.6 -1.8
+route jump  3.8 -1.4
+# 12. Donuts, Saftflaschen
+route walk 13.8 -1.6
+route jump 18.4 -0.8
+route jump 22.4 0.6
+route jump 26.4 -0.8
+route jump 30.2 -0.4
+route walk 31.4 -2.2
+# 13. Letzter Aufzug, Ziel
+route waitplat 4 0 0.03
+route jump 31.4 -5.0
+route waitplat 4 1 0.02
+route walk 31.4 -10.2
+route jump 31.4 -13.2
+route jump 33.4 -17.0
+route jump 31.4 -20.8
+route jump 31.4 -24.0
+route jump 31.4 -27.0
+route jump 31.4 -30.0
+route jump 31.4 -32.6
+route walk 31.4 -34.0

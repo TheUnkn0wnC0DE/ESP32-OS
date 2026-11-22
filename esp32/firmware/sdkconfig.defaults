@@ -1,0 +1,77 @@
+# ESP-IDF-Einstellungen für das Waveshare ESP32-P4-WIFI6-Touch-LCD-5.
+# Grundlage: die Beispiele von Waveshare (07_Displaycolorbar); dazu die
+# Chip-Revision in sdkconfig.defaults.rev3_x bzw. sdkconfig.defaults.rev1_3.
+
+# --- Flash und PSRAM (wie bei Waveshare) -------------------------------------
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+CONFIG_SPIRAM=y
+# Programmcode läuft aus dem PSRAM (schneller als aus dem Flash; Speichern im
+# Flash hält die Kerne nicht an).
+CONFIG_SPIRAM_XIP_FROM_PSRAM=y
+CONFIG_CACHE_L2_CACHE_256KB=y
+CONFIG_CACHE_L2_CACHE_LINE_128B=y
+# Waveshare schaltet hiermit u. a. PSRAM mit 250 MHz frei.
+CONFIG_IDF_EXPERIMENTAL_FEATURES=y
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# Interner RAM, den malloc() nicht an das Spiel vergibt: für Thread-Stacks,
+# Treiber und DMA. Kleine Spiel-Allokationen landen sonst so lange intern, bis
+# nichts mehr frei ist (der Rest geht ins PSRAM) – dann scheitern Threads.
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=65536
+# Doom: Variablen ohne Startwert in den PSRAM (doom/doomgeneric/linker.lf).
+CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
+
+# --- System -----------------------------------------------------------------
+CONFIG_FREERTOS_HZ=1000
+# Wie bei Waveshare: kein Task-Wachhund (die Spielschleife lastet Kern 0 aus).
+CONFIG_ESP_TASK_WDT_EN=n
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=32768
+CONFIG_PTHREAD_TASK_STACK_SIZE_DEFAULT=16384
+
+# --- Display: Waveshare-Treiber ohne dessen I²C-Initialisierung ---------------
+# (gehört zu einem anderen Panel; das Board-Support-Paket dieser Platine
+# schaltet sie ebenfalls ab)
+CONFIG_ESP_LCD_HX8394_SKIP_I2C_INIT=y
+
+# ESP32-OS: TLS-Platz 1 = Faden-Kontext des Kerns (kern_board.rs)
+CONFIG_FREERTOS_THREAD_LOCAL_STORAGE_POINTERS=3
+
+# ESP32-OS (P1): lange Dateinamen (UTF-8) auf SD und intern – ohne LFN
+# bildet FatFs „P1 (Kopie)“ auf „P1“ ab (Dateimanager)
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+CONFIG_FATFS_API_ENCODING_UTF_8=y
+CONFIG_FATFS_CODEPAGE_850=y
+
+# ESP32-OS (B0): Rollback – ein neu gesetztes Programm, das sich nicht als
+# gültig meldet (Absturz vor der Anzeigeschleife), wird beim nächsten Start
+# verworfen; der Bootloader startet wieder das vorige.
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+
+# ESP32-OS (W1): WLAN über den ESP32-C6 (esp_hosted 3.x, SDIO-Slot 1).
+# Kein Autostart vor app_main: sonst ginge der Transport auch in den
+# Doom-/Quake-Programmen hoch (Aufgabe mit Priorität 23, SDIO-Interrupts).
+# Das OS startet ihn in komponenten/esp32os/wlan.c selbst.
+CONFIG_ESP_HOSTED_AUTO_CALL_INIT_BEFORE_APP_MAIN=n
+# ESP32-OS (W7, für W1 vorgezogen): Nach dem Start der Anzeige sind nur noch
+# ~19 KB interner RAM frei (4 KB DMA-fähig) – esp_hosted bekam keine
+# SDIO-Puffer („mempool OOM“), Antworten des C6 gingen verloren. Darum:
+# SDIO-Puffer in den PSRAM (wirkt erst mit der Anpassung in
+# werkzeuge/komponenten_holen.py), Aufgabenstapel von esp_hosted und die
+# lwIP-Puffer ebenfalls.
+CONFIG_EH_HOST_PORT_DMA_PREFER_SPIRAM=y
+CONFIG_ESP_HOSTED_DFLT_TASK_FROM_SPIRAM=y
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+# ESP32-OS (U1): TLS-Speicher (mbedTLS) im PSRAM – der interne RAM reicht
+# neben Anzeige und WLAN nicht für einen TLS-Handshake. Zertifikatsbündel an
+# (Prüfung der Server-Zertifikate, nie abschalten).
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL=y
+# ESP32-OS (U1): AES/SHA der TLS-Verbindungen in Software. Die Hardware-AES
+# braucht DMA-fähigen internen RAM für Deskriptoren; der ist neben Anzeige
+# und WLAN aufgebraucht („esp-aes: Failed to allocate … DMA descriptors“,
+# danach Absturz). Bei WLAN-Datenraten kostet Software-AES kaum etwas.
+CONFIG_MBEDTLS_HARDWARE_AES=n
+CONFIG_MBEDTLS_HARDWARE_SHA=n

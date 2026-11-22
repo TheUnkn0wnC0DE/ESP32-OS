@@ -1,0 +1,24 @@
+W8 22.11.2026: WLAN-Durchsatz Board ↔ PC (2,4 GHz, Signal -45 dBm, Kanal 6, C6-Firmware 0.0.0, esp_hosted 3.1.0 Host).
+Werkzeug: werkzeuge/durchsatz.py (PC) + src/durchsatz.rs (Firmware mit ESP32OS_DURCHSATZ=1), je 8–10 s.
+
+TCP PC → Board:  11.61 Mbit/s (14336 KiB in 10.1 s)  (PC gesendet 14336 KiB)
+TCP Board → PC:   9.84 Mbit/s (12032 KiB in 10.0 s)
+UDP Board → PC:  24.25 Mbit/s (29622 KiB in 10.0 s)
+UDP PC → Board (gesendet mit 10 Mbit/s):   9.95 Mbit/s (9644 KiB in 7.9 s), Verlust 1.3 %
+UDP PC → Board (gesendet mit 20 Mbit/s):  18.58 Mbit/s (18142 KiB in 8.0 s), Verlust 7.1 %
+UDP PC → Board (gesendet mit 30 Mbit/s):  24.58 Mbit/s (24002 KiB in 8.0 s), Verlust 18.1 %
+(UDP PC → Board ungebremst: Zugangspunkt verwirft fast alles – darum mit fester Senderate gemessen.)
+
+Board-Log (Auszug):
+W (3282) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (3642) pudding_fw::durchsatz: DURCHSATZ: bereit (TCP 5001, UDP 5002)
+I (32155) pudding_fw::durchsatz: DURCHSATZ: TCP empfangen 11.28 Mbit/s (13888 KiB)
+I (52889) pudding_fw::durchsatz: DURCHSATZ: TCP empfangen 11.61 Mbit/s (14336 KiB)
+I (63969) pudding_fw::durchsatz: DURCHSATZ: TCP gesendet 9.85 Mbit/s (12032 KiB)
+I (75549) pudding_fw::durchsatz: DURCHSATZ: UDP empfangen 0.79 Mbit/s (1018 KiB)
+I (86584) pudding_fw::durchsatz: DURCHSATZ: UDP gesendet 26.13 Mbit/s (31900 KiB)
+I (113807) pudding_fw::durchsatz: DURCHSATZ: UDP empfangen 9.95 Mbit/s (9643 KiB)
+
+Gefunden und behoben: Unter Last brach der Empfang ab („SDIO RX read (3072 bytes) exceeds staging target (1536 bytes)“,
+danach keine RPC-Antworten mehr) – alte C6-Firmware streamt mehrere Pakete, meldet ihren Modus aber nicht.
+Anpassung in werkzeuge/komponenten_holen.py: ohne SDIO_MODE-TLV dynamische Empfangspuffer.

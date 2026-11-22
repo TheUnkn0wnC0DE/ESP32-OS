@@ -1,0 +1,12 @@
+[package]
+name = "kern"
+description = "ESP32-OS: native Kernschicht (KolibriOS-Systemfunktionen, Prozesse, Heaps)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+
+[dev-dependencies]
+spatz = { path = "../../spatz" }

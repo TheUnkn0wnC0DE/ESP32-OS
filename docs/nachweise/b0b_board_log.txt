@@ -1,0 +1,15 @@
+B0b Board 22.11.2026: Testbild-Build (ESP32OS_TESTBILDER=1, Bildbetrachter mit /rd/1/bilder/progressiv.jpg, interner Speicher).
+I (6422) pudding_fw::testbilder: JPEG-Messung 640x480: Hardware 55.7 ms, Software 810.8 ms; Abweichung HW/SW Mittel 0.36, max 106 (Feld rot HW ffe61415, SW ffe61415)
+I (6422) pudding_fw::testbilder: JPEG progressiv über Hardware: nicht unterstützt (Code 0x105)
+I (7350) pudding_fw::testbilder: JPEG progressiv über Software: 640x480 in 887.8 ms, Abweichung zum Baseline-Foto Mittel 0.00
+I (8006) pudding_fw::jpeg: JPEG HW: kein Baseline-JPEG (progressiv?) → Software
+I (9092) pudding_p4: [debug] BV: /rd/1/bilder/progressiv.jpg 640x480 in 1094 ms
+I (9325) pudding_p4: [debug] BV: Zeichnen 149 ms
+
+PC: kolibri/tests/dekoder.rs progressive_jpegs_genau – mittlere Abweichung zu Pillow/libjpeg:
+jpg_prog_444: mittlere Abweichung 0.029, max 2
+jpg_prog_420: mittlere Abweichung 0.070, max 3
+jpg_prog_grau: mittlere Abweichung 0.016, max 1
+jpg_prog_gross: mittlere Abweichung 0.086, max 3
+jpg_444: mittlere Abweichung 0.029, max 2
+jpg_420: mittlere Abweichung 0.070, max 3

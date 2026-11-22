@@ -1,0 +1,24 @@
+[package]
+name = "netsurf"
+description = "NetSurf-Browser (B1): Upstream 3.11 mit Framebuffer-Frontend auf dem Kern"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "GPL-2.0-only"
+
+[dependencies]
+
+# 32 Bit (i686, Board): NetSurf als ESP32-OS-Programm „browser“
+[target.'cfg(target_pointer_width = "32")'.dependencies]
+kern = { path = "../kern" }
+
+[dev-dependencies]
+spatz = { path = "../../spatz", default-features = false }
+
+# 32 Bit: Tests laufen als ESP32-OS-Programm im Kern (kolibri_libc: Heap
+# des Programms)
+[target.'cfg(target_pointer_width = "32")'.dev-dependencies]
+kolibri = { path = "../kolibri" }
+
+[build-dependencies]
+cc = "1"

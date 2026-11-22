@@ -1,0 +1,12 @@
+P3 Board 21.11.2026: Einstellungen per Autopilot (Helligkeit + +, Speicher, Akku, Uhr stellen, Hintergrund Grün, Sprache Deutsch), dann Neustart.
+Erster Lauf auf dem unveränderten Board (Boot-Log, Uhr nicht gestellt):
+Einstellungen: Sprache en, Helligkeit 8, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 0
+Nach den Läufen mit Autopilot und Neustart (Uhr aus der Sicherung = gestellte 01.01.2026 12:00):
+Einstellungen: Sprache de, Helligkeit 10, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(1), Uhr 1767265200
+Einstellungen: Sprache de, Helligkeit 10, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(1), Uhr 1767265200
+Neuzeichnen @icon:
+4741 ms  @icon: gezeichnet in 655 ms
+55300 ms  @icon: gezeichnet in 566 ms
+68553 ms  @icon: gezeichnet in 362 ms
+Danach am Board auf Standard zurückgestellt (Englisch, Helligkeit 8, Blau):
+Einstellungen: Sprache en, Helligkeit 8, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1767265200

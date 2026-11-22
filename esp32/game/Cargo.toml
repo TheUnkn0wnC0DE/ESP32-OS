@@ -1,0 +1,16 @@
+[package]
+name = "pudding-core"
+description = "Pudding-Panik für den ESP32: plattformunabhängiger Kern (no_std + alloc)"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lib]
+name = "pudding_core"
+
+[dependencies]
+spatz = { path = "../../spatz", default-features = false }
+
+[lints.clippy]
+too_many_arguments = "allow"
+needless_range_loop = "allow"

@@ -1,0 +1,26 @@
+W7 22.11.2026: Transportpuffer im PSRAM.
+sdkconfig (Build-Ordner):
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+# CONFIG_ESP_HOSTED_AUTO_CALL_INIT_BEFORE_APP_MAIN is not set
+CONFIG_ESP_HOSTED_DFLT_TASK_FROM_SPIRAM=y
+CONFIG_EH_HOST_PORT_DMA_PREFER_SPIRAM=y
++ Anpassung eh_host_port_dma.c (werkzeuge/komponenten_holen.py): PSRAM auf die L2-Cache-Zeile ausgerichtet
++ hw::INTERN_RESERVE 64 KB: Bildpuffer lassen dem WLAN internen RAM
+
+VORHER (erster WLAN-Lauf, Puffer intern):
+I (2092) pudding_p4: Spiel geladen: intern frei 19 KB (größter Block 7 KB), DMA-fähig 4 KB
+W (3298) eh_sdio: mempool OOM start (RX)
+I (4096) pudding_p4: Frei: 5 KB intern, 15688 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (4096) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+W (8416) eh_host_feat_rpc: request: no response uid=1 msg_id=278 (5000 ms)
+-> Antworten des C6 gingen verloren, WLAN-Start fehlgeschlagen.
+
+NACHHER (normaler Build, verbunden):
+I (2107) pudding_p4: Spiel geladen: intern frei 33 KB (größter Block 15 KB), DMA-fähig 11 KB
+I (3644) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2067 ms, interner RAM frei 309 → 30 KB
+I (4118) pudding_p4: Frei: 2 KB intern, 15672 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (4118) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (6660) pudding_p4: Frei: 12 KB intern, 16741 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6660) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (11201) pudding_p4: Frei: 20 KB intern, 16741 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11202) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM

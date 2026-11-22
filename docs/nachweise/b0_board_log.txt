@@ -1,0 +1,44 @@
+B0 Board 22.11.2026
+--- PAK-Rettung (Neustart nach dem Kopieren, Prüfung der SD-Kopie):
+9916 ms  UMZUG: /sdcard/ESP32-OS/quake/pak0.pak schon vorhanden, CRC32 74e3b084 = erwartet – nichts zu tun
+--- Neue Partitionstabelle (Bootloader):
+64 ms   0 nvs              WiFi data        01 02 00009000 00006000
+71 ms   1 phy_init         RF data          01 01 0000f000 00001000
+77 ms   2 otadata          OTA data         01 00 00010000 00002000
+84 ms   3 esp32os_a        OTA app          00 10 00020000 005f0000
+90 ms   4 esp32os_b        OTA app          00 11 00610000 005f0000
+97 ms   5 doomapp          OTA app          00 12 00c00000 00200000
+103 ms   6 quakeapp         OTA app          00 13 00e00000 00200000
+110 ms   7 daten            Unknown data     01 81 01000000 01000000
+--- Daten zurück (Boot-Log normale Firmware):
+1493 ms  Einstellungen: Sprache de, Helligkeit 10, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1767265200
+4178 ms  [debug] Ersteinrichtung: schon erledigt
+--- Doom (WAD aus /daten):
+1415 ms  Programm „esp32os_a“, Startziel Doom
+1323 ms  Programm „doomapp“, Startziel Doom
+1357 ms  Programm „doomapp“ als gültig markiert (war in Prüfung, Code 0)
+2035 ms  Doom: WAD 4097 KB in 477 ms geladen
+4630 ms  54.9 FPS (640x360 weich), Frame 14.3 ms, Streifen 16/29, Rendern 4.8/10.5 ms, Skalieren 0.0/0.0 ms, PPA 4.7/1.7 ms, Ausgabe 13.0 ms, Panel 54.73 Hz
+6634 ms  54.9 FPS (640x360 weich), Frame 14.2 ms, Streifen 17/28, Rendern 4.9/10.5 ms, Skalieren 0.0/0.0 ms, PPA 3.5/0.7 ms, Ausgabe 12.0 ms, Panel 54.85 Hz
+--- Quake (PAK von der SD):
+1410 ms  Programm „esp32os_a“, Startziel Quake
+1337 ms  Programm „quakeapp“, Startziel Quake
+1369 ms  Programm „quakeapp“ als gültig markiert (war in Prüfung, Code 0)
+1611 ms  Quake: PAK 17847 KB auf der SD-Karte
+5252 ms  55.0 FPS (640x360 weich), Frame 2776.9 ms, Streifen 0/0, Rendern 0.0/0.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/0.0 ms, Ausgabe 0.0 ms, Panel 55.01 Hz
+7265 ms  27.7 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.7 ms, Ausgabe 20.9 ms, Panel 55.41 Hz
+9265 ms  27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.4 ms, Ausgabe 27.2 ms, Panel 55.20 Hz
+--- Rollback-Test (esp32os_b defekt):
+439 ms  Loaded app from partition at offset 0x20000
+1411 ms  Programm „esp32os_a“, Startziel Konsole
+2017 ms  Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+2098 ms  OTA-Test: Startpartition "esp32os_b" gesetzt – Neustart
+236 ms  Loaded app from partition at offset 0x610000
+1097 ms  Programm „esp32os_b“, Startziel Konsole
+1098 ms  PANIK: panicked at src\main.rs:117:9:
+ESP32OS_DEFEKT: absichtlich defektes Programm
+412 ms  Loaded app from partition at offset 0x20000
+1374 ms  Programm „esp32os_a“, Startziel Konsole
+1977 ms  Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+2025 ms  Rollback: „esp32os_b“ ist als ungültig markiert (startete nicht) – läuft wieder „esp32os_a“
+2025 ms  OTA-Test: schon durchgeführt

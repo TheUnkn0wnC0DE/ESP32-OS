@@ -1,0 +1,6 @@
+P6 Board 22.11.2026: Autopilot langer Druck auf die Uhr (Taskleiste) → Bildschirmfoto, dann Dateimanager → Screenshots → Bildbetrachter.
+9140 ms  Screenshot: /sd0/1/Screenshots/ESP32-OS_2026-01-01_12-00-07_2.png (17473 Bytes, gelesen und geprüft)
+21411 ms  DM: /sd0/1: current/, old/, Screenshots/, z/, autoboot (Kopie).txt (20), autoboot.txt (20), bootcode.bin (52624), config.txt (1717), fixup.dat (7367), fixup4.dat (5498), fixup4cd.dat (3272), fixup4db.dat (8491), fixup4x.dat (8493), fixup_cd.dat (3272), fixup_db.dat (10334), fixup_x.dat (10336), meta-data (921), README (7886), start.elf (3027872), start4.elf (2303680), start4cd.elf (850300), start4db.elf (3802024), start4x.elf (3051304), start_cd.elf (850300), start_db.elf (4873960), start_x.elf (3774952), u
+23398 ms  DM: /sd0/1/Screenshots: ESP32-OS_2026-01-01_12-00-07.png (17473), ESP32-OS_2026-01-01_12-00-07_2.png (17473), ESP32-OS_2026-01-01_12-00-29.png (25249)
+25928 ms  BV: /sd0/1/Screenshots/ESP32-OS_2026-01-01_12-00-07.png 640x360 in 244 ms
+26423 ms  BV: Zeichnen 216 ms

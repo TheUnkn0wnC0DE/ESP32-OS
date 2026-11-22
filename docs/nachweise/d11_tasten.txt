@@ -1,0 +1,17 @@
+D11 – Tastenabfragen in eingebundenen Programmen (Stand 21.11.2026)
+
+grep Funktion 2 / Tastenereignis:
+kolibri/c/basic_gui.c:79:        case KSYS_EVENT_KEY:
+kolibri/c/boxlib.c:57:        case KSYS_EVENT_KEY:
+kolibri/c/boxlib.c:58:            edit_box_key_safe(&ed, _ksys_get_key());
+kolibri/src/dialog.rs:163:                let k = sys::taste();
+
+Bewertung:
+- basic_gui.c:79  Tastenereignis wird ignoriert (break) – keine Taste nötig.
+- boxlib.c:57-58  nur Texteingabe ins edit_box – Bildschirmtastatur (D8), Kontextmenü (D9).
+- dialog.rs:163   Dateiname beim Speichern (edit_box) – Bildschirmtastatur.
+- Shell (@start, @icon, @taskbar, @menu, info, @tastatur): keine Tastenabfrage;
+  Schliessen/Minimieren über Fensterknöpfe, Kontextmenü über langen Druck.
+- Quake (eigene Partition, Block S): Beenden-Abfrage verlangt 'y' – Pflicht in S4
+  (Touch-Knopf), Quelle STATUS-Übergabe 5.1.
+- Ersteinrichtung WLAN/Uhrzeit per Touch: P4.

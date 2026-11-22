@@ -1,0 +1,10 @@
+Alte Partition: 7 Dateien
+  bilder/animation.gif  778 B  65b0e778378b7dc5
+  bilder/farben.bmp  36918 B  f1239e4852c27415
+  bilder/foto.jpg  13091 B  d79ba62d25f3e131
+  bilder/progressiv.jpg  10178 B  9060865fb144ab73
+  bilder/transparent.png  3589 B  35c1b07c32ea57ec
+  settings/esp32os.ini  123 B  e3cff0dccd84c866
+  welt.bin  306 B  7604c94e3ac04542
+Neues Abbild: 8 Dateien, fehlend [], abweichend []
+OK: alle Dateien gleich (SHA-256)

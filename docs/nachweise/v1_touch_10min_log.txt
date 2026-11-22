@@ -1,0 +1,481 @@
+# V1 Board-Lauf 22.11.2026: Firmware mit eigener GT911-Abfrage (touch.rs), Diagnose
+# ESP32OS_TOUCH_ROH=1 (jede Aenderung von Status 0x814E und jede gemeldete Beruehrung
+# wird geloggt). Hardware-Reset, 630 s ohne Beruehrung: keine Meldung; Bildschirm
+# aus nach 120 s, Ruhezustand nach 420 s (Schleife prueft dort alle 50 ms auf
+# Beruehrung, kein Aufwecken). Log geprueft mit log_schwaerzen.py.
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (28) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (28) boot: compile time Nov 22 2026 01:00:10
+I (29) boot: Multicore bootloader
+I (30) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (35) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 40MHz
+I (43) boot.esp32p4: SPI Mode       : QIO
+I (47) boot.esp32p4: SPI Flash Size : 32MB
+I (51) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (58) boot: ## Label            Usage          Type ST Offset   Length
+I (64) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (71) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (77) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (84) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (90) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (97) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (103) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (110) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (118) boot: End of partition table
+I (121) boot: No factory image, trying OTA 0
+I (124) esp_image: segment 0: paddr=00020020 vaddr=481e0020 size=90b50h (592720) map
+I (221) esp_image: segment 1: paddr=000b0b78 vaddr=30100000 size=00070h (   112) load
+I (223) esp_image: segment 2: paddr=000b0bf0 vaddr=4ff00000 size=0f428h ( 62504) load
+I (237) esp_image: segment 3: paddr=000c0020 vaddr=48000020 size=1da960h (1943904) map
+I (528) esp_image: segment 4: paddr=0029a988 vaddr=4ff0f428 size=0c6d4h ( 50900) load
+I (538) esp_image: segment 5: paddr=002a7064 vaddr=4ff1bb00 size=04each ( 20140) load
+I (544) esp_image: segment 6: paddr=002abf18 vaddr=50108080 size=0000ch (    12) load
+I (545) esp_image: segment 7: paddr=002abf2c vaddr=501080e8 size=00020h (    32) load
+I (557) boot: Loaded app from partition at offset 0x20000
+I (583) boot: Set actual ota_seq=1 in otadata[0]
+I (583) boot: Disabling RNG early entropy source...
+I (594) hex_psram: vendor id    : 0x0d (AP)
+I (594) hex_psram: Latency      : 0x01 (Fixed)
+I (594) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (595) hex_psram: dev id       : 0x03 (generation 4)
+I (600) hex_psram: density      : 0x07 (256 Mbit)
+I (604) hex_psram: good-die     : 0x06 (Pass)
+I (608) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (613) hex_psram: BurstType    : 0x00 ( Wrap)
+I (617) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (622) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (626) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (631) hex_psram: DriveStrength: 0x00 (1/1)
+I (635) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (856) mmu_psram: .rodata xip on psram
+I (1002) mmu_psram: .text xip on psram
+I (1002) hex_psram: psram CS IO is dedicated
+I (1003) cpu_start: Multicore app
+I (1453) esp_psram: SPI SRAM memory test OK
+I (1463) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1463) cpu_start: Pro cpu start user code
+I (1463) cpu_start: cpu freq: 360000000 Hz
+I (1465) app_init: Application information:
+I (1469) app_init: Project name:     libespidf
+I (1474) app_init: App version:      1
+I (1477) app_init: Compile time:     Nov 22 2026 03:37:30
+I (1482) app_init: ELF file SHA256:  456701767...
+I (1487) app_init: ESP-IDF:          v5.5.5
+I (1490) efuse_init: Min chip rev:     v1.0
+I (1494) efuse_init: Max chip rev:     v1.99 
+I (1498) efuse_init: Chip rev:         v1.3
+I (1502) heap_init: Initializing. RAM available for dynamic allocation:
+I (1509) heap_init: At 4FF25F50 len 00015070 (84 KiB): RETENT_RAM
+I (1514) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1520) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1525) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (1530) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1536) esp_psram: Adding pool of 30208K of PSRAM memory to heap allocator
+I (1542) esp_psram: Adding pool of 21K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1553) esp_psram: Adding pool of 61K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1565) spi_flash: detected chip: gd
+I (1568) spi_flash: flash io: qio
+I (1571) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1578) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1584) main_task: Started on CPU0
+I (1587) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (1595) main_task: Calling app_main()
+I (1599) pudding_p4: ESP32-OS startet …
+I (1599) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 346 KB intern, 30277 KB PSRAM
+I (1599) pudding_p4: Start: intern frei 346 KB (größter Block 184 KB), DMA-fähig 307 KB
+I (1603) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+W (1604) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (1647) pudding_fw::speicher: SD-Karte eingehängt: 241724 MB als /sd0/1
+I (1710) pudding_p4: Einstellungen: Sprache de, Helligkeit 10, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1795343843
+I (1711) pudding_p4: Startziel Konsole, Spielstand geladen
+I (1711) eh_mcu_transport: transport_init: probing bus backend
+I (1711) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (1711) sdmmc_periph: sdmmc_host_init: SDMMC host already initialized, skipping init flow
+I (1711) eh_sdio: sdio_data_to_rx_buf_task started
+I (1712) eh_mcu_transport: transport_init: bus backend up
+W (1712) eh_sdio: Reset co-processor using GPIO[54]
+I (1726) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (1727) GT911: TouchPad_ID:0x39,0x31,0x31
+I (1727) GT911: TouchPad_Config_Version:70
+W (1727) pudding_fw::touch: GT911 roh: Produkt "911\0", Firmware 1060, Auflösung 720x1280, Hersteller 00
+W (1733) pudding_fw::touch: GT911 roh: Konfig 8047: 46 d0 02 00 05 05 35 00 01 08 28 08 5a 3c 03 05
+W (1733) pudding_fw::touch: GT911 roh: Konfig 8057: 00 00 00 00 00 00 00 18 1a 1e 14 8c 2e 0e 9b 9d
+W (1733) pudding_fw::touch: GT911 roh: Konfig 8067: b2 04 00 00 00 c9 02 1c 00 01 00 00 00 00 00 00
+W (1733) pudding_fw::touch: GT911 roh: Konfig 8077: 00 00 00 78 c8 94 d5 02 08 00 00 04 94 7e 00 89
+W (1733) pudding_fw::touch: GT911 roh: Konfig 8087: 8c 00 7f 9b 00 77 ab 00 70 be 00 70 00 00 00 00
+W (1734) pudding_fw::touch: GT911 roh: Konfig 8097: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+W (1734) pudding_fw::touch: GT911 roh: Konfig 80a7: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+W (1734) pudding_fw::touch: GT911 roh: Konfig 80b7: 1c 1a 18 16 14 12 10 0e 0c 0a 08 06 04 02 ff ff
+W (1734) pudding_fw::touch: GT911 roh: Konfig 80c7: ff ff ff ff ff ff ff ff ff ff ff ff ff ff 00 02
+W (1734) pudding_fw::touch: GT911 roh: Konfig 80d7: 04 06 08 0a 0c 0f 10 12 13 14 2a 29 28 26 24 22
+W (1735) pudding_fw::touch: GT911 roh: Konfig 80e7: 21 20 1f 1e 1d 1c 18 16 ff ff ff ff ff ff ff ff
+W (1735) pudding_fw::touch: GT911 roh: Konfig 80f7: ff ff ff ff ff ff ff ff 18 00
+I (1735) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (1737) hx8394: version: 2.1.0
+W (1740) pudding_fw::touch: GT911 roh: 204 ms Status 00 (bereit 0, Punkte 0, Taste 0)
+W (1908) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (2249) pudding_p4: ESP32-OS-Desktop startet (@start)
+I (2249) pudding_p4: Spiel geladen: intern frei 28 KB (größter Block 7 KB), DMA-fähig 18 KB
+I (2250) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (2250) pudding_p4: Los geht's!
+I (3232) eh_host_port_reset: reset done pin=54 parked=1
+I (3266) eh_host_port_sdio: bus applied: clk_khz=40000
+I (3266) eh_host_port_sdio: Function 0 Blocksize: 512
+I (3266) eh_host_port_sdio: Function 1 Blocksize: 512
+I (3366) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (3412) eh_sdio: SDIO Host operating in STREAMING MODE
+I (3412) eh_sdio: Open data path at slave
+I (3412) eh_sdio: Starting SDIO process rx task
+I (3417) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (3417) eh_init_evt: capabilities: 0x0d
+I (3417) eh_init_evt: Features supported are:
+I (3417) eh_init_evt: 	 * WLAN over SDIO
+I (3417) eh_init_evt: 	   - HCI over SDIO
+I (3417) eh_init_evt: 	   - BLE only
+I (3417) eh_raw_tp: raw TP inactive
+I (3417) eh_init_evt: Default RPC to V2
+I (3417) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (3417) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (3417) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (3417) eh_init_evt: Missing SDIO_MODE TLV; Continue anyway.
+W (3417) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (3417) eh_init_evt: chip=0x0d (esp32c6) fw=0x00000000 caps=0x0d ext=0x00000000
+I (3418) eh_auto_init: auto_init: found 1 descriptor(s)
+I (3418) eh_auto_init: auto_init: initialising 'wifi' (priority 150)
+I (3418) eh_wifi_itwt: wifi iTWT ext init
+I (3777) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 304 → 24 KB
+I (3778) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (4266) pudding_p4: Mittel: Simulation 0.7 ms, Bild vorbereiten 15.8 ms (0 Dreiecke), Mithelfen 11.9 ms, Rest-PPA 0.9 ms, Warten auf Bildspeicher 0.0 ms
+I (4266) pudding_p4: Ruckler: 24 verpasste Bildwechsel; längstes Bild 47.2 ms (Simulation 0.2, Vorbereiten 32.3, Mithelfen 12.8, Sichern 0.0)
+I (4266) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 4.6 ms je Bild
+I (4266) pudding_p4: Frei: 11 KB intern, 15278 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (4266) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (4267) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.40 ms, Kern 1 4.84 ms; angeschubst seit Start: 0
+I (4267) pudding_p4: 34.8 FPS (640x360 scharf), Frame 46.2 ms, Streifen 7/38, Rendern 0.9/9.2 ms, Skalieren 1.0/13.9 ms, PPA 9.8/20.9 ms, Ausgabe 44.5 ms, Panel 55.34 Hz
+I (4267) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (4300) pudding_p4: Desktop: 7.9 Bilder/s neu, 145.2 übersprungen/s, Fläche 175823 px/Bild, Compositor 0.88 ms/Bild
+I (4666) pudding_p4: [debug] @icon: gezeichnet in 610 ms
+I (4666) pudding_p4: [debug] 
+I (4816) pudding_p4: [debug] Ersteinrichtung: schon erledigt
+I (4816) pudding_p4: [debug] 
+I (6271) pudding_p4: Desktop: 7.0 Bilder/s neu, 134.7 übersprungen/s, Fläche 187897 px/Bild, Compositor 1.18 ms/Bild
+I (6407) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (6490) pudding_p4: Mittel: Simulation 0.3 ms, Bild vorbereiten 23.0 ms (0 Dreiecke), Mithelfen 11.6 ms, Rest-PPA 1.0 ms, Warten auf Bildspeicher 0.0 ms
+I (6490) pudding_p4: Ruckler: 26 verpasste Bildwechsel; längstes Bild 46.5 ms (Simulation 0.0, Vorbereiten 32.4, Mithelfen 12.4, Sichern 0.0)
+I (6491) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 4.1 ms je Bild
+I (6491) pudding_p4: Frei: 10 KB intern, 16348 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6491) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (6491) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.37 ms, Kern 1 5.96 ms; angeschubst seit Start: 0
+I (6491) pudding_p4: 30.9 FPS (640x360 scharf), Frame 1.6 ms, Streifen 15/30, Rendern 1.7/2.7 ms, Skalieren 1.9/3.7 ms, PPA 22.6/20.3 ms, Ausgabe 26.8 ms, Panel 55.10 Hz
+I (6491) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (8271) pudding_p4: Desktop: 2.0 Bilder/s neu, 188.5 übersprungen/s, Fläche 31112 px/Bild, Compositor 0.03 ms/Bild
+W (8778) eh_host_feat_rpc: request: no response uid=6 msg_id=350 (5000 ms)
+I (8778) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (8778) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (9424) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x4817e9b2
+I (9424) wlan: mit dem Zugangspunkt verbunden
+I (10271) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (10439) esp_netif_handlers: sta ip: 192.168.1.142, mask: 255.255.255.0, gw: 192.168.1.1
+I (10439) wlan: IP 192.168.1.142
+I (10945) pudding_fw::wlan: WLAN: verbunden in 4537 ms, IP 192.168.1.142, Signal -47 dBm, Kanal 6, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (10945) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (11035) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 2.1 ms (0 Dreiecke), Mithelfen 19.2 ms, Rest-PPA 0.9 ms, Warten auf Bildspeicher 0.0 ms
+I (11035) pudding_p4: Ruckler: 6 verpasste Bildwechsel; längstes Bild 29.7 ms (Simulation 0.4, Vorbereiten 2.7, Mithelfen 25.4, Sichern 0.0)
+I (11035) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 25.9 ms je Bild
+I (11035) pudding_p4: Frei: 18 KB intern, 16348 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11036) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (11036) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.53 ms, Kern 1 4.05 ms; angeschubst seit Start: 0
+I (11036) pudding_p4: 33.4 FPS (640x360 scharf), Frame 1.6 ms, Streifen 15/30, Rendern 1.5/2.9 ms, Skalieren 2.0/4.0 ms, PPA 22.2/20.0 ms, Ausgabe 27.0 ms, Panel 55.11 Hz
+I (11036) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (12274) pudding_p4: Desktop: 1.0 Bilder/s neu, 194.2 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (12448) pudding_fw::wlan: NTP: Uhr gestellt – 22.11.2026 11:44:50 Ortszeit
+I (13038) pudding_p4: Mittel: Simulation 294.0 ms, Bild vorbereiten 2.3 ms (0 Dreiecke), Mithelfen 12.4 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (13038) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 589.6 ms (Simulation 587.9, Vorbereiten 1.6, Mithelfen 0.0, Sichern 0.0)
+I (13039) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 22.8 ms je Bild
+I (13039) pudding_p4: Frei: 18 KB intern, 16348 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (13039) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (13039) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.51 ms, Kern 1 4.00 ms; angeschubst seit Start: 0
+I (13039) pudding_p4: 33.4 FPS (640x360 scharf), Frame 589.6 ms, Streifen 15/30, Rendern 1.7/2.7 ms, Skalieren 1.9/3.6 ms, PPA 22.7/20.4 ms, Ausgabe 26.8 ms, Panel 55.08 Hz
+I (13039) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (14276) pudding_p4: Desktop: 1.0 Bilder/s neu, 135.4 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (16281) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (18284) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (20284) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (22284) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (22560) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 2.1 ms (0 Dreiecke), Mithelfen 12.8 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (22560) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 29.5 ms (Simulation 0.0, Vorbereiten 2.8, Mithelfen 25.6, Sichern 0.0)
+I (22560) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 108.1 ms je Bild
+I (22560) pudding_p4: Frei: 21 KB intern, 16348 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (22561) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (22561) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.65 ms, Kern 1 4.15 ms; angeschubst seit Start: 0
+I (22561) pudding_p4: 33.4 FPS (640x360 scharf), Frame 1.6 ms, Streifen 15/30, Rendern 1.4/2.8 ms, Skalieren 1.9/4.3 ms, PPA 22.1/19.6 ms, Ausgabe 26.9 ms, Panel 55.05 Hz
+I (22561) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (24286) pudding_p4: Desktop: 1.0 Bilder/s neu, 194.3 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (26286) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (28286) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (30286) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (32286) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (34291) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (36291) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (38296) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (40298) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.3 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (42301) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (44301) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (46306) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (48306) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (50309) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (52309) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (54314) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (56314) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (58314) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (60314) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (62314) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (64314) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (66319) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (68324) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (70324) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (72324) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (74328) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (76328) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (78328) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (80328) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (82333) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (82694) pudding_p4: Bilanz 80 s: 0.5 FPS, Arbeit je Bild Mittel 43.6 ms, p99 128.0 ms, max 589.6 ms; verpasste Bildwechsel 71 (1.6 je 100)
+I (82695) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 2.1 ms (0 Dreiecke), Mithelfen 12.3 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (82695) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 29.0 ms (Simulation 0.0, Vorbereiten 2.7, Mithelfen 24.7, Sichern 0.0)
+I (82695) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 683.4 ms je Bild
+I (82695) pudding_p4: Frei: 21 KB intern, 16346 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (82695) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (82695) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.50 ms, Kern 1 4.00 ms; angeschubst seit Start: 0
+I (82695) pudding_p4: 33.3 FPS (640x360 scharf), Frame 1.9 ms, Streifen 15/30, Rendern 1.7/2.7 ms, Skalieren 2.0/3.7 ms, PPA 22.4/20.2 ms, Ausgabe 26.7 ms, Panel 54.99 Hz
+I (82696) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (84333) pudding_p4: Desktop: 2.0 Bilder/s neu, 188.0 übersprungen/s, Fläche 46782 px/Bild, Compositor 0.04 ms/Bild
+I (86333) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (88333) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (90338) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (92338) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (94338) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (96338) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (98343) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (100343) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (102343) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (104343) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (106343) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (108343) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (110346) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (112349) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (114349) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (116353) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (118353) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (120353) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (122253) pudding_p4: Bildschirmschoner: Hintergrundlicht aus
+I (122358) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (124358) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (126362) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+W (127696) eh_host_feat_rpc: request: no response uid=49 msg_id=355 (5000 ms)
+W (127696) pudding_fw::wlan: WLAN: iTWT – der C6 antwortet nicht (Firmware zu alt, siehe W2); bis zum Neustart kein weiterer Versuch
+I (128366) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (130369) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (132373) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (134373) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (136373) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (138378) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (140383) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (142383) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (142859) pudding_p4: Bilanz 60 s: 0.1 FPS, Arbeit je Bild Mittel 22.6 ms, p99 30.0 ms, max 30.0 ms; verpasste Bildwechsel 6 (0.2 je 100)
+I (142859) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 3.0 ms (0 Dreiecke), Mithelfen 18.7 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (142859) pudding_p4: Ruckler: 6 verpasste Bildwechsel; längstes Bild 30.0 ms (Simulation 0.1, Vorbereiten 4.4, Mithelfen 24.2, Sichern 0.0)
+I (142859) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 342.7 ms je Bild
+I (142860) pudding_p4: Frei: 21 KB intern, 16346 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (142860) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (142860) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.55 ms, Kern 1 4.03 ms; angeschubst seit Start: 0
+I (142860) pudding_p4: 35.0 FPS (640x360 scharf), Frame 1.5 ms, Streifen 16/29, Rendern 1.8/3.5 ms, Skalieren 2.1/3.6 ms, PPA 23.3/19.7 ms, Ausgabe 27.4 ms, Panel 54.99 Hz
+I (142860) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (144386) pudding_p4: Desktop: 1.0 Bilder/s neu, 194.2 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (146391) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (148391) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (150394) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (152394) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (154394) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (156394) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (158394) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (160394) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (162399) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (164399) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (166399) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (168399) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (170403) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (172403) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (174406) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (176406) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (178411) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (180416) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (182421) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (184426) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (186426) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (188426) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (190426) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (192426) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (194431) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (196431) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (198436) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (200436) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (202441) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (202492) pudding_p4: Bilanz 60 s: 0.0 FPS, Arbeit je Bild Mittel 15.1 ms, p99 28.5 ms, max 28.5 ms; verpasste Bildwechsel 5 (0.2 je 100)
+I (202493) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 2.0 ms (0 Dreiecke), Mithelfen 12.2 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (202493) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 28.5 ms (Simulation 0.0, Vorbereiten 2.6, Mithelfen 24.3, Sichern 0.0)
+I (202493) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 677.9 ms je Bild
+I (202493) pudding_p4: Frei: 21 KB intern, 16346 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (202493) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (202493) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.65 ms, Kern 1 3.87 ms; angeschubst seit Start: 0
+I (202493) pudding_p4: 34.6 FPS (640x360 scharf), Frame 1.7 ms, Streifen 15/30, Rendern 1.8/2.7 ms, Skalieren 2.0/4.4 ms, PPA 22.4/19.6 ms, Ausgabe 26.7 ms, Panel 54.98 Hz
+I (202493) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (204441) pudding_p4: Desktop: 2.0 Bilder/s neu, 188.0 übersprungen/s, Fläche 46782 px/Bild, Compositor 0.04 ms/Bild
+I (206446) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (208446) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (210449) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (212454) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (214454) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (216459) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (218459) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (220459) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (222459) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (224459) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (226459) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (228464) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (230464) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (232469) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (234469) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (236469) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (238469) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (240469) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (242469) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (244474) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (246474) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (248474) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (250479) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (252479) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (254484) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (256489) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (258489) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (260489) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (262489) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (262655) pudding_p4: Bilanz 60 s: 0.1 FPS, Arbeit je Bild Mittel 22.8 ms, p99 30.2 ms, max 30.2 ms; verpasste Bildwechsel 6 (0.2 je 100)
+I (262655) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 3.0 ms (0 Dreiecke), Mithelfen 18.7 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (262655) pudding_p4: Ruckler: 6 verpasste Bildwechsel; längstes Bild 30.2 ms (Simulation 0.4, Vorbereiten 4.3, Mithelfen 24.2, Sichern 0.0)
+I (262656) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 342.5 ms je Bild
+I (262656) pudding_p4: Frei: 18 KB intern, 16346 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (262656) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (262656) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.70 ms, Kern 1 4.20 ms; angeschubst seit Start: 0
+I (262656) pudding_p4: 36.1 FPS (640x360 scharf), Frame 1.6 ms, Streifen 16/29, Rendern 1.7/2.8 ms, Skalieren 2.2/3.5 ms, PPA 23.1/20.1 ms, Ausgabe 27.1 ms, Panel 54.98 Hz
+I (262656) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (264491) pudding_p4: Desktop: 2.0 Bilder/s neu, 188.3 übersprungen/s, Fläche 31112 px/Bild, Compositor 0.03 ms/Bild
+I (266491) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (268496) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (270496) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (272499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (274499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (276499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (278499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (280499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (282499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (284499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (286499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (288499) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (290504) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (292504) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (294504) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (296504) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (298509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (300509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (302509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (304509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (306509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (308509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (310509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (312509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (314509) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (316514) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (318514) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (320514) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (322514) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (322820) pudding_p4: Bilanz 60 s: 0.1 FPS, Arbeit je Bild Mittel 22.3 ms, p99 29.3 ms, max 29.3 ms; verpasste Bildwechsel 6 (0.2 je 100)
+I (322820) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 2.0 ms (0 Dreiecke), Mithelfen 19.4 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (322821) pudding_p4: Ruckler: 6 verpasste Bildwechsel; längstes Bild 29.3 ms (Simulation 0.0, Vorbereiten 2.1, Mithelfen 26.6, Sichern 0.0)
+I (322821) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 341.7 ms je Bild
+I (322821) pudding_p4: Frei: 21 KB intern, 16346 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (322821) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (322821) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.74 ms, Kern 1 3.98 ms; angeschubst seit Start: 0
+I (322821) pudding_p4: 36.8 FPS (640x360 scharf), Frame 1.7 ms, Streifen 15/30, Rendern 1.9/2.7 ms, Skalieren 2.0/4.0 ms, PPA 22.4/19.9 ms, Ausgabe 26.8 ms, Panel 54.98 Hz
+I (322821) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (324519) pudding_p4: Desktop: 1.0 Bilder/s neu, 194.0 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (326519) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (328519) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (330519) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (332524) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (334528) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (336528) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (338528) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (340533) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (342537) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (344541) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (346541) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (348546) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (350549) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (352549) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (354549) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (356549) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (358549) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (360554) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (362559) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (364559) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (366559) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (368559) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (370559) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (372559) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (374559) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (376564) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (378564) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (380564) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (382455) pudding_p4: Bilanz 60 s: 0.0 FPS, Arbeit je Bild Mittel 15.7 ms, p99 29.8 ms, max 29.8 ms; verpasste Bildwechsel 5 (0.2 je 100)
+I (382455) pudding_p4: Mittel: Simulation 0.3 ms, Bild vorbereiten 2.0 ms (0 Dreiecke), Mithelfen 12.5 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (382455) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 29.8 ms (Simulation 0.6, Vorbereiten 2.6, Mithelfen 25.0, Sichern 0.0)
+I (382456) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 677.3 ms je Bild
+I (382456) pudding_p4: Frei: 21 KB intern, 16346 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (382456) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (382456) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.62 ms, Kern 1 4.11 ms; angeschubst seit Start: 0
+I (382456) pudding_p4: 36.1 FPS (640x360 scharf), Frame 1.6 ms, Streifen 15/30, Rendern 1.4/2.9 ms, Skalieren 2.0/3.6 ms, PPA 22.1/20.3 ms, Ausgabe 27.0 ms, Panel 54.98 Hz
+I (382456) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (382568) pudding_p4: Desktop: 1.0 Bilder/s neu, 194.1 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (384568) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (386568) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (388573) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (390573) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (392573) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (394573) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (396578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (398578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (400578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (402578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (404578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (406578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (408578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (410578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (412578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (414578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (416578) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (418581) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (420584) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (422275) pudding_p4: Ruhezustand: Panel schläft (0/0)

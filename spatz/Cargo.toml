@@ -1,0 +1,25 @@
+[package]
+name = "spatz"
+description = "Winzige, schnelle 3D-Engine mit Software-Rasterizer (no_std-Kern)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["std"]
+# `std` aktiviert Plattform-Layer (Fenster, Zeitmessung) und den App-Runner.
+# Ohne `std` bleibt ein reiner `no_std + alloc`-Kern (Mathe, Rendering, Physik),
+# der z. B. auf Mikrocontrollern/Taschenrechnern laufen kann.
+std = []
+
+[dependencies]
+# Bewusst keine externen Abhängigkeiten.
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+missing_debug_implementations = "allow"
+
+[lints.clippy]
+too_many_arguments = "allow"
+needless_range_loop = "allow"

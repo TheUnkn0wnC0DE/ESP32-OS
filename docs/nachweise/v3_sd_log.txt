@@ -1,0 +1,10 @@
+# V3 Board-Lauf 22.11.2026 (ESP32OS_SD_AUFRAEUMEN=1): Listen der SD nach dem Loeschen.
+# Der erste Lauf nach dem Aufspielen startete unbeobachtet (Board startet nach dem
+# Flashen sofort) und loeschte die Reste; die Vorher-Liste ist darum nicht im Log.
+# Belegt vorher: STATUS 21.11./22.11. (z, autoboot (Kopie).txt, drei Bilder in /Screenshots).
+W (1642) pudding_fw::speicher: SD aufräumen – vorher: ["ESP32-OS", "README", "Screenshots", "autoboot.txt", "bootcode.bin", "config.txt", "current", "fixup.dat", "fixup4.dat", "fixup4cd.dat", "fixup4db.dat", "fixup4x.dat", "fixup_cd.dat", "fixup_db.dat", "fixup_x.dat", "meta-data", "old", "start.elf", "start4.elf", "start4cd.elf", "start4db.elf", "start4x.elf", "start_cd.elf", "start_db.elf", "start_x.elf", "user-data"]
+W (1645) pudding_fw::speicher: SD aufräumen – vorher Screenshots: []
+W (1646) pudding_fw::speicher:   z nicht vorhanden
+W (1648) pudding_fw::speicher:   autoboot (Kopie).txt: Err("No such file or directory (os error 2)")
+W (1653) pudding_fw::speicher: SD aufräumen – nachher: ["ESP32-OS", "README", "Screenshots", "autoboot.txt", "bootcode.bin", "config.txt", "current", "fixup.dat", "fixup4.dat", "fixup4cd.dat", "fixup4db.dat", "fixup4x.dat", "fixup_cd.dat", "fixup_db.dat", "fixup_x.dat", "meta-data", "old", "start.elf", "start4.elf", "start4cd.elf", "start4db.elf", "start4x.elf", "start_cd.elf", "start_db.elf", "start_x.elf", "user-data"]
+W (1656) pudding_fw::speicher: SD aufräumen – nachher Screenshots: []

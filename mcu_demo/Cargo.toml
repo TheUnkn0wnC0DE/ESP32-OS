@@ -1,0 +1,22 @@
+[package]
+name = "mcu_demo"
+description = "Bare-Metal-Beispiel: spatz auf einem Cortex-M7 (Taschenrechner-Klasse), ohne Betriebssystem"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Eigenständig (nicht Teil des Workspaces), da nur für ARM gebaut wird.
+[workspace]
+
+[dependencies]
+spatz = { path = "../spatz", default-features = false }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+debug = false
+
+[profile.dev]
+panic = "abort"

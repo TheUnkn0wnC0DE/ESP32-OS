@@ -1,0 +1,8 @@
+# Chip-Revision v3.x (Standardprofil der Waveshare-Beispiele).
+CONFIG_ESP32P4_SELECTS_REV_LESS_V3=n
+CONFIG_ESP32P4_REV_MIN_300=y
+CONFIG_SPIRAM_SPEED_250M=y
+CONFIG_SPIRAM_SPEED=250
+# 400 MHz – nur Revision v3.x kann das. Nicht aus den Waveshare-Beispielen;
+# das Programm `hwtest` zeigt beim Start den tatsächlichen Takt an.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_400=y

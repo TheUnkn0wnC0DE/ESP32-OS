@@ -1,0 +1,11 @@
+[package]
+name = "wuerfelwelt"
+description = "Würfelwelt: Blockinsel zum Erkunden und Bauen (Spiel der Konsole)"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+pudding-core = { path = "../game" }
+konsole = { path = "../konsole" }
+spatz = { path = "../../spatz", default-features = false }

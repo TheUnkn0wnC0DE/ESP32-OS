@@ -1,0 +1,11 @@
+## Registry-Komponenten für den C-Teil von ESP32-OS (wlan.c, Block D).
+## esp_hosted kommt als gekürzte lokale Kopie (werkzeuge/komponenten_holen.py,
+## von bauen_flashen.ps1 aufgerufen): Die Registry-Fassung enthält Beispiele
+## mit Pfaden über der Windows-Grenze von 260 Zeichen. override_path gilt
+## projektweit, also auch für die Abhängigkeit aus esp_wifi_remote.
+dependencies:
+  espressif/esp_wifi_remote:
+    version: "1.6.5"
+  espressif/esp_hosted:
+    version: "3.1.0"
+    override_path: "C:/ec/v3.1.0/espressif__esp_hosted"

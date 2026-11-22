@@ -1,0 +1,7 @@
+P5 Board 22.11.2026 (Autopilot, Bildschirm aus 30 s, Ruhe nach 60 s):
+2008 ms  Einstellungen: Sprache de, Helligkeit 10, Bildschirm aus 30 s, Ruhe nach 60 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1767265200
+36822 ms  Bildschirmschoner: Hintergrundlicht aus
+96842 ms  Ruhezustand: Panel schläft (0/0)
+112671 ms  Ruhezustand: aufgeweckt (Panel 0/0) nach 105 s
+129752 ms  Ruhezustand: Panel schläft (0/0), aus dem Menü
+147708 ms  Ruhezustand: aufgeweckt (Panel 0/0) nach 17 s

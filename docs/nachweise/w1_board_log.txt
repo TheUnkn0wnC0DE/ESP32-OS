@@ -1,0 +1,28 @@
+W1/W3/W3b Board 22.11.2026 (Test-Build -Wlan, Autopilot: Einstellungen > WLAN, Trennen, Testnetz, Passwort-Dialog, OK).
+Log vorher mit werkzeuge/log_schwaerzen.py geprüft: keine Zugangsdaten im Log.
+
+I (1602) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (2133) pudding_p4: Spiel geladen: intern frei 32 KB (größter Block 15 KB), DMA-fähig 10 KB
+I (3256) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (3302) eh_sdio: SDIO Host operating in STREAMING MODE
+I (3307) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (3308) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (3308) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (3308) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (3667) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 309 → 19 KB
+W (3668) pudding_fw::wlan: WLAN: gemerkte Netze gelöscht (ESP32OS_WLAN_VERGESSEN)
+I (3668) pudding_fw::wlan: WLAN: 0 bekannte Netze
+I (3668) pudding_fw::wlan: WLAN: verbinde mit dem Testnetz aus wlan.local (nicht gemerkt)
+I (4140) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (6818) wlan: mit dem Zugangspunkt verbunden
+I (7834) wlan: IP 192.168.1.142
+I (8336) pudding_fw::wlan: WLAN: verbunden in 4668 ms, IP 192.168.1.142, Signal -45 dBm, Kanal 6, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (8337) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (8668) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (8668) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (11953) pudding_fw::wlan: NTP: Uhr gestellt – 22.11.2026 02:29:35 Ortszeit
+W (22366) wlan: getrennt, Grund 8
+I (37541) wlan: mit dem Zugangspunkt verbunden
+I (38558) wlan: IP 192.168.1.142
+I (38623) pudding_fw::wlan: WLAN: 1 bekannte Netze gespeichert
+I (38623) pudding_fw::wlan: WLAN: verbunden, IP 192.168.1.142, Signal -46 dBm, Kanal 6, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)

@@ -1,0 +1,324 @@
+/* ESP32-OS, B1: libnsfb-Fläche „esp32os“ und Einstieg des Programms.
+ *
+ * NetSurf (Framebuffer-Frontend, unverändert) zeichnet in einen Puffer im
+ * Format RGB565 – dem Format der Anzeige. Die Fläche bringt ihn über die
+ * Kern-Funktion 65 in ein Fenster über die ganze Arbeitsfläche (ohne
+ * Taskleiste) und übersetzt die Ereignisse des Kerns (Funktion 23):
+ * Neuzeichnen (selbst erledigt), Maus/Touch → Bewegung + Taste 1,
+ * Mausrad → Tasten 4/5, Tasten → nsfb-Tastencodes, Schliessen → Beenden.
+ * Nur 32 Bit (Kern-Systemaufrufe über die native ksys.h).
+ */
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* direkt (nicht über den Suchpfad: kolibri/include hätte auch ein
+ * KolibriOS-sys/socket.h, das gui.c fälschlich fände) */
+#include "../../kolibri/include/sys/ksys.h"
+
+#include <libnsfb.h>
+#include <libnsfb_plot.h>
+#include <libnsfb_event.h>
+#include "nsfb.h"
+#include "surface.h"
+#include "plot.h"
+
+int netsurf_fb_main(int argc, char **argv);
+
+/* Stil: skinned (3); X-Bits Titel (1), Koordinaten im Arbeitsbereich (2),
+ * Arbeitsbereich nicht füllen (4) */
+#define STIL 0x73
+#define TITEL "NetSurf"
+
+static int fx, fy, fw, fh;	/* Fenster (aussen) */
+static bool zu;			/* Schliessen gedrückt */
+static uint32_t knoepfe;	/* letzter Stand der Maustasten */
+static int mx = -1, my = -1;	/* letzte Mausposition im Arbeitsbereich */
+/* Warteschlange: ein Kern-Ereignis kann mehrere nsfb-Ereignisse ergeben */
+static nsfb_event_t schlange[16];
+static int s_anfang, s_ende;
+
+static void einreihen(enum nsfb_event_type_e typ, int wert)
+{
+	int n = (s_ende + 1) % (int)(sizeof schlange / sizeof schlange[0]);
+	if (n == s_anfang)
+		return; /* voll: Ereignis verwerfen */
+	memset(&schlange[s_ende], 0, sizeof schlange[0]);
+	schlange[s_ende].type = typ;
+	schlange[s_ende].value.keycode = wert;
+	s_ende = n;
+}
+
+static void bewegung(int x, int y)
+{
+	int n = (s_ende + 1) % (int)(sizeof schlange / sizeof schlange[0]);
+	if (n == s_anfang)
+		return;
+	memset(&schlange[s_ende], 0, sizeof schlange[0]);
+	schlange[s_ende].type = NSFB_EVENT_MOVE_ABSOLUTE;
+	schlange[s_ende].value.vector.x = x;
+	schlange[s_ende].value.vector.y = y;
+	schlange[s_ende].value.vector.z = 0;
+	s_ende = n;
+}
+
+static bool holen(nsfb_event_t *e)
+{
+	if (s_anfang == s_ende)
+		return false;
+	*e = schlange[s_anfang];
+	s_anfang = (s_anfang + 1) % (int)(sizeof schlange / sizeof schlange[0]);
+	return true;
+}
+
+/* Arbeitsfläche des Bildschirms ohne Taskleiste (Funktion 48.5) */
+static void arbeitsflaeche(int *x, int *y, int *w, int *h)
+{
+	ksys_regs_t r = { 0 };
+	r.eax = 48;
+	r.ebx = 5;
+	kos_syscall(&r);
+	*x = (int)(r.eax >> 16);
+	*w = (int)(r.eax & 0xFFFF) - *x + 1;
+	*y = (int)(r.ebx >> 16);
+	*h = (int)(r.ebx & 0xFFFF) - *y + 1;
+}
+
+static void fenster_zeichnen(nsfb_t *nsfb)
+{
+	_ksys_start_draw();
+	_ksys_create_window((uint32_t)fx, (uint32_t)fy, (uint32_t)fw, (uint32_t)fh, TITEL, 0xFFFFFF, STIL);
+	if (nsfb->ptr != NULL)
+		ksys_draw_bitmap_palette(nsfb->ptr, 0, 0, nsfb->width, nsfb->height, 16, NULL, 0);
+	_ksys_end_draw();
+}
+
+static int e_defaults(nsfb_t *nsfb)
+{
+	nsfb->width = 640;
+	nsfb->height = 360;
+	nsfb->format = NSFB_FMT_RGB565;
+	nsfb->bpp = 16;
+	select_plotters(nsfb);
+	return 0;
+}
+
+static int puffer_anlegen(nsfb_t *nsfb)
+{
+	size_t n = (size_t)nsfb->width * (size_t)nsfb->height * 2;
+	uint8_t *p = realloc(nsfb->ptr, n);
+	if (p == NULL)
+		return -1;
+	memset(p, 0xFF, n);
+	nsfb->ptr = p;
+	nsfb->linelen = nsfb->width * 2;
+	return 0;
+}
+
+/* Fenster anlegen (vor NetSurf, damit das Frontend die echte Grösse als
+ * -w/-h bekommt) und Grösse des Arbeitsbereichs vom Kern (Funktion 9) */
+static void fenster_anlegen(int *breite, int *hoehe)
+{
+	ksys_thread_t info;
+	ksys_regs_t r = { 0 };
+	int i, schirm_h;
+	/* Die Taskleiste trägt ihre Höhe erst nach ihrem Start ein (Funktion
+	 * 48.6). Startet der Browser direkt nach dem Booten, wartet er bis zu
+	 * 3 s darauf – sonst läge der untere Fensterrand hinter der Leiste
+	 * (das Framebuffer-Frontend kann seine Grösse danach nicht ändern). */
+	r.eax = 14;
+	kos_syscall(&r);
+	schirm_h = (int)(r.eax & 0xFFFF) + 1;
+	arbeitsflaeche(&fx, &fy, &fw, &fh);
+	for (i = 0; i < 30 && fy + fh >= schirm_h; i++) {
+		_ksys_delay(10);
+		arbeitsflaeche(&fx, &fy, &fw, &fh);
+	}
+	_ksys_set_event_mask(KSYS_EVM_REDRAW | KSYS_EVM_KEY | KSYS_EVM_BUTTON | KSYS_EVM_MOUSE);
+	_ksys_set_key_input_mode(KSYS_KEY_INPUT_MODE_ASCII);
+	_ksys_start_draw();
+	_ksys_create_window((uint32_t)fx, (uint32_t)fy, (uint32_t)fw, (uint32_t)fh, TITEL, 0xFFFFFF, STIL);
+	_ksys_end_draw();
+	memset(&info, 0, sizeof info);
+	_ksys_thread_info(&info, -1);
+	*breite = info.clientwidth > 0 ? info.clientwidth : 640;
+	*hoehe = info.clientheight > 0 ? info.clientheight : 360;
+}
+
+static int e_initialise(nsfb_t *nsfb)
+{
+	/* nsfb->width/height: vom Frontend (-w/-h = Arbeitsbereich) */
+	nsfb->ptr = NULL;
+	nsfb->format = NSFB_FMT_RGB565;
+	nsfb->bpp = 16;
+	select_plotters(nsfb);
+	zu = false;
+	knoepfe = 0;
+	s_anfang = s_ende = 0;
+	if (puffer_anlegen(nsfb) != 0)
+		return -1;
+	fenster_zeichnen(nsfb);
+	return 0;
+}
+
+static int e_finalise(nsfb_t *nsfb)
+{
+	free(nsfb->ptr);
+	nsfb->ptr = NULL;
+	return 0;
+}
+
+static int e_geometry(nsfb_t *nsfb, int width, int height, enum nsfb_format_e format)
+{
+	/* Grösse vom Frontend (= Arbeitsbereich); Format bleibt RGB565 (das
+	 * Format der Anzeige) */
+	(void)format;
+	if (width > 0)
+		nsfb->width = width;
+	if (height > 0)
+		nsfb->height = height;
+	nsfb->format = NSFB_FMT_RGB565;
+	nsfb->bpp = 16;
+	select_plotters(nsfb);
+	return 0;
+}
+
+/* KolibriOS-Tastencode (ASCII-Modus) → nsfb */
+static int taste_nsfb(uint8_t c)
+{
+	switch (c) {
+	case 8: return NSFB_KEY_BACKSPACE;
+	case 9: return NSFB_KEY_TAB;
+	case 13: return NSFB_KEY_RETURN;
+	case 27: return NSFB_KEY_ESCAPE;
+	case 0xB0: return NSFB_KEY_LEFT;
+	case 0xB1: return NSFB_KEY_DOWN;
+	case 0xB2: return NSFB_KEY_UP;
+	case 0xB3: return NSFB_KEY_RIGHT;
+	case 0xB4: return NSFB_KEY_HOME;
+	case 0xB5: return NSFB_KEY_END;
+	case 0xB6: return NSFB_KEY_DELETE;
+	case 0xB7: return NSFB_KEY_PAGEDOWN;
+	case 0xB8: return NSFB_KEY_PAGEUP;
+	default:
+		/* druckbares ASCII; Umlaute & Co. (cp866/Unicode) kommen mit der
+		 * eigenen Texteingabe (B6), nsfb-Tastencodes kennen sie nicht */
+		return (c >= 32 && c < 127) ? c : -1;
+	}
+}
+
+static void maus(void)
+{
+	ksys_pos_t p = _ksys_get_mouse_pos(KSYS_MOUSE_WINDOW_POS);
+	uint32_t k = _ksys_get_mouse_buttons();
+	uint32_t rad = _ksys_get_mouse_wheels();
+	int16_t dy = (int16_t)(rad & 0xFFFF);
+	if (p.x != mx || p.y != my) {
+		mx = p.x;
+		my = p.y;
+		bewegung(mx, my);
+	}
+	if ((k & 1) != (knoepfe & 1))
+		einreihen((k & 1) ? NSFB_EVENT_KEY_DOWN : NSFB_EVENT_KEY_UP, NSFB_KEY_MOUSE_1);
+	if ((k & 2) != (knoepfe & 2))
+		einreihen((k & 2) ? NSFB_EVENT_KEY_DOWN : NSFB_EVENT_KEY_UP, NSFB_KEY_MOUSE_3);
+	knoepfe = k;
+	while (dy != 0) {
+		int t = dy < 0 ? NSFB_KEY_MOUSE_4 : NSFB_KEY_MOUSE_5;
+		einreihen(NSFB_EVENT_KEY_DOWN, t);
+		einreihen(NSFB_EVENT_KEY_UP, t);
+		dy += dy < 0 ? 1 : -1;
+	}
+}
+
+static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
+{
+	uint32_t ev;
+	if (holen(event))
+		return true;
+	if (zu) {
+		event->type = NSFB_EVENT_CONTROL;
+		event->value.controlcode = NSFB_CONTROL_QUIT;
+		return true;
+	}
+	/* timeout in ms (< 0: unbegrenzt); Funktion 23 zählt in 1/100 s */
+	if (timeout == 0)
+		ev = _ksys_wait_event_timeout(0);
+	else if (timeout < 0)
+		ev = _ksys_wait_event_timeout(100);
+	else
+		ev = _ksys_wait_event_timeout((uint32_t)((timeout + 9) / 10));
+	switch (ev) {
+	case KSYS_EVENT_REDRAW:
+		fenster_zeichnen(nsfb);
+		break;
+	case KSYS_EVENT_KEY: {
+		ksys_oskey_t k = _ksys_get_key();
+		int c;
+		if (k.state == 1)
+			break;
+		c = taste_nsfb(k.code);
+		if (c >= 0) {
+			einreihen(NSFB_EVENT_KEY_DOWN, c);
+			einreihen(NSFB_EVENT_KEY_UP, c);
+		}
+		break;
+	}
+	case KSYS_EVENT_BUTTON:
+		if (_ksys_get_button() == 1)
+			zu = true; /* Schliessen-Knopf */
+		break;
+	case KSYS_EVENT_MOUSE:
+		maus();
+		break;
+	default:
+		break;
+	}
+	if (zu) {
+		event->type = NSFB_EVENT_CONTROL;
+		event->value.controlcode = NSFB_CONTROL_QUIT;
+		return true;
+	}
+	return holen(event);
+}
+
+static int e_update(nsfb_t *nsfb, nsfb_bbox_t *box)
+{
+	int x0 = box->x0 < 0 ? 0 : box->x0, y0 = box->y0 < 0 ? 0 : box->y0;
+	int x1 = box->x1 > nsfb->width ? nsfb->width : box->x1;
+	int y1 = box->y1 > nsfb->height ? nsfb->height : box->y1;
+	if (x1 <= x0 || y1 <= y0 || nsfb->ptr == NULL)
+		return 0;
+	/* Teilrechteck: Zeilenabstand über den Versatz (Funktion 65, ebp) */
+	ksys_draw_bitmap_palette(nsfb->ptr + (size_t)y0 * nsfb->linelen + (size_t)x0 * 2, x0, y0, x1 - x0, y1 - y0, 16, NULL,
+				 nsfb->linelen - (x1 - x0) * 2);
+	return 0;
+}
+
+static const nsfb_surface_rtns_t esp32os_rtns = {
+	.defaults = e_defaults,
+	.initialise = e_initialise,
+	.finalise = e_finalise,
+	.input = e_input,
+	.geometry = e_geometry,
+	.update = e_update,
+};
+
+/* Einstieg des Programms „browser“ (vom Rust-Programm nach dem
+ * Zurückspielen der statischen Daten gerufen). */
+int ns_esp32os_main(const char *url)
+{
+	/* -b 16: das Frontend wählt Formate und Plotter passend zur Fläche;
+	 * -w/-h: Arbeitsbereich des Fensters */
+	static char breite[12], hoehe[12];
+	static char *argv[] = { "netsurf", "--enable_javascript=1", "-f", "esp32os", "-b", "16", "-w", breite, "-h", hoehe, NULL, NULL };
+	int b, h;
+	_nsfb_register_surface(NSFB_SURFACE_ABLE, &esp32os_rtns, "esp32os");
+	fenster_anlegen(&b, &h);
+	snprintf(breite, sizeof breite, "%d", b);
+	snprintf(hoehe, sizeof hoehe, "%d", h);
+	argv[10] = (char *)(url != NULL && url[0] != '\0' ? url : "about:welcome");
+	return netsurf_fb_main(11, argv);
+}

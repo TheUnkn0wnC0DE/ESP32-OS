@@ -1,0 +1,37 @@
+# Pudding-Panik für den ESP32-P4 (Waveshare ESP32-P4-WIFI6-Touch-LCD-5).
+#
+#   game/      plattformunabhängiger Kern (no_std): Spiel, Renderer, Menüs, Audio
+#   sim/       PC-Simulation: Tests, Bilder, GIF, WAV – ohne Hardware
+#   firmware/  die eigentliche Firmware (eigener Workspace, RISC-V + ESP-IDF)
+
+[workspace]
+resolver = "3"
+members = ["game", "sim", "konsole", "doom", "wuerfelwelt", "quake", "kern", "kolibri", "desktop", "netsurf"]
+exclude = ["firmware"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+debug = false
+
+# Schneller zu bauen als `release` (für die PC-Simulation reicht das).
+[profile.sim]
+inherits = "release"
+lto = false
+codegen-units = 16
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.test]
+opt-level = 2

@@ -1,0 +1,18 @@
+[package]
+name = "doom"
+description = "Doom (doomgeneric, Shareware-WAD) als Spiel der Konsole"
+version = "0.1.0"
+edition = "2024"
+# Der Doom-Quellcode (doomgeneric/) steht unter der GPL-2.0; damit auch diese Crate.
+license = "GPL-2.0-or-later"
+publish = false
+build = "build.rs"
+# Die C-Bibliothek wird je Programm genau einmal gelinkt.
+links = "doomgeneric"
+
+[dependencies]
+pudding-core = { path = "../game" }
+konsole = { path = "../konsole" }
+
+[build-dependencies]
+cc = "1"

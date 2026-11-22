@@ -1,0 +1,31 @@
+Abzug 1: 33554432 Bytes, SHA-256 5816b69fddbcb90100a1c7604c5005376985c99bd6f936606a5e996ddcc2f362
+Abzug 2: 33554432 Bytes, SHA-256 5816b69fddbcb90100a1c7604c5005376985c99bd6f936606a5e996ddcc2f362
+Partitionstabelle (0x8000):
+  nvs        Typ 1 Sub 0x02 @ 0x0009000 Größe 0x0006000
+  phy_init   Typ 1 Sub 0x01 @ 0x000f000 Größe 0x0001000
+  factory    Typ 0 Sub 0x00 @ 0x0010000 Größe 0x01e0000
+  otadata    Typ 1 Sub 0x00 @ 0x01f0000 Größe 0x0002000
+  doomapp    Typ 0 Sub 0x10 @ 0x0210000 Größe 0x0200000
+  quakeapp   Typ 0 Sub 0x11 @ 0x0410000 Größe 0x0200000
+  doomwad    Typ 1 Sub 0x06 @ 0x0610000 Größe 0x0480000
+  daten      Typ 1 Sub 0x81 @ 0x0a90000 Größe 0x0100000
+  quakepak   Typ 1 Sub 0x06 @ 0x0b90000 Größe 0x11e0000
+doomwad: DOOM1.WAD (4196020 Bytes) im Abzug GLEICH, SHA-256 1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771
+quakepak: pak0.pak (18689235 Bytes) im Abzug GLEICH, SHA-256 35a9c55e5e5a284a159ad2a62e0e8def23d829561fe2f54eb402dbc0a9a946af
+NVS (nvs_tool --dump minimal):
+Page no. 0, Status: Full
+
+Page no. 14, Status: Active
+ pudding:konsole[0] = 
+
+Page no. 12, Status: Full
+
+Page no. 13, Status: Full
+ pudding:save[0] = 
+
+Page no. 11, Status: Full
+
+Page Empty
+
+
+OK: Sicherung vollständig und geprüft

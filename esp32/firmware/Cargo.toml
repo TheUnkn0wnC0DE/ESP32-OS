@@ -1,0 +1,94 @@
+[package]
+name = "pudding-p4"
+description = "Pudding-Panik: Firmware für das Waveshare ESP32-P4-WIFI6-Touch-LCD-5"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+# Eigener Workspace: wird nur für das RISC-V-Ziel des ESP32-P4 gebaut.
+[workspace]
+
+# Gemeinsame Hardware-Anbindung (Display, PPA-Ausgabe, Touch, Audio, …).
+[lib]
+name = "pudding_fw"
+path = "src/lib.rs"
+harness = false
+test = false
+
+# Das Spiel: `cargo run --release`
+[[bin]]
+name = "pudding-p4"
+path = "src/main.rs"
+harness = false
+test = false
+bench = false
+
+# Hardware-Test: `cargo run --release --bin hwtest`
+[[bin]]
+name = "hwtest"
+path = "src/bin/hwtest.rs"
+harness = false
+test = false
+bench = false
+
+[dependencies]
+pudding-core = { path = "../game" }
+# Konsolen-Menü, Spielrahmen und die Spiele.
+konsole = { path = "../konsole" }
+doom = { path = "../doom", optional = true }
+wuerfelwelt = { path = "../wuerfelwelt" }
+kern = { path = "../kern" }
+desktop = { path = "../desktop" }
+kolibri = { path = "../kolibri" }
+quake = { path = "../quake", optional = true }
+# Rust-Anbindung an ESP-IDF (enthält esp-idf-sys und esp-idf-hal; `sys`
+# liefert die C-Schnittstellen für MIPI-DSI, PPA, Touch, I²S, I²C, NVS).
+esp-idf-svc = "0.53"
+log = "0.4"
+
+# Drei Programme aus derselben Quelle (siehe partitions.csv, src/slots.rs):
+# ohne Merkmal = Konsole, Pudding-Panik, Würfelwelt; „doom“ bzw. „quake“ =
+# Programm mit dem jeweiligen C-Spiel. So belegt kein Spiel den internen
+# RAM eines anderen.
+[features]
+default = []
+
+[build-dependencies]
+embuild = "0.33"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+# Debug-Infos landen nicht im Flash, helfen aber bei Absturzmeldungen.
+debug = true
+
+[profile.dev]
+opt-level = "s"
+debug = true
+
+[package.metadata.esp-idf-sys]
+# Gemeinsame Einstellungen + Chip-Revision. Das angeschlossene Board meldet
+# laut `espflash board-info` Revision v1.3 → Profil rev1_3 (360 MHz,
+# PSRAM 200 MHz). Für ein Board mit Revision v3.x hier
+# "sdkconfig.defaults.rev3_x" eintragen und `cargo clean`.
+esp_idf_sdkconfig_defaults = ["sdkconfig.defaults", "sdkconfig.defaults.rev1_3"]
+
+# Panel-Treiber des Herstellers (Initialisierungsfolge des HX8394) und der
+# Touch-Treiber von Espressif – beides lädt der erste Build automatisch, in den
+# Versionen, die auch das Board-Support-Paket von Waveshare benutzt.
+[[package.metadata.esp-idf-sys.extra_components]]
+remote_component = { name = "waveshare/esp_lcd_hx8394", version = "^2.1.0" }
+bindings_header = "bindings.h"
+
+[[package.metadata.esp-idf-sys.extra_components]]
+remote_component = { name = "espressif/esp_lcd_touch_gt911", version = "^1.2.1" }
+
+# WLAN (Block D): esp_hosted + esp_wifi_remote stehen in
+# komponenten/esp32os/idf_component.yml (feste Versionen, esp_hosted als
+# gekürzte lokale Kopie wegen der Windows-Pfadgrenze).
+
+# Doom (doomgeneric, GPL-2): C-Code als Komponente, Anbindung in der Crate `doom`.
+[[package.metadata.esp-idf-sys.extra_components]]
+component_dirs = ["../doom/doomgeneric", "../quake/quakegeneric", "komponenten/esp32os", "../kolibri/kolibri_c", "komponenten/netsurf"]

@@ -1,0 +1,14 @@
+[package]
+name = "pudding-sim"
+description = "PC-Simulation der ESP32-Fassung: kopflos, erzeugt Bilder/GIF/WAV und misst"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+pudding-core = { path = "../game" }
+konsole = { path = "../konsole" }
+doom = { path = "../doom" }
+wuerfelwelt = { path = "../wuerfelwelt" }
+quake = { path = "../quake" }
+spatz = { path = "../../spatz" }

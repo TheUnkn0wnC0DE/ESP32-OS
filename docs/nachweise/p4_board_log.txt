@@ -1,0 +1,7 @@
+P4 Board 21.11.2026: Entwicklungs-Build ESP32OS_ERSTEINRICHTUNG=1 löscht die Einstellungen (frisches Gerät), Autopilot: English, CH, Uhr stellen, Fertig.
+1783 ms  ESP32OS_ERSTEINRICHTUNG: Einstellungen gelöscht (Code 0)
+1791 ms  Einstellungen: Sprache en, Helligkeit 8, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 0
+4372 ms  Ersteinrichtung: startet
+Danach normale Firmware, Neustart:
+1656 ms  Einstellungen: Sprache en, Helligkeit 8, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1767265200
+4207 ms  Ersteinrichtung: schon erledigt

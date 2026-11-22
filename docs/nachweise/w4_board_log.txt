@@ -1,0 +1,20 @@
+W4/W6 Board 22.11.2026: normaler Build (ohne -Wlan, ohne Autopilot), Neustart ohne Eingabe.
+Das Netz wurde vorher per Touch in den Einstellungen verbunden und gemerkt (W3, NVS).
+Log mit werkzeuge/log_schwaerzen.py geprüft: keine Zugangsdaten im Log.
+
+I (2107) pudding_p4: Spiel geladen: intern frei 33 KB (größter Block 15 KB), DMA-fähig 11 KB
+I (3644) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2067 ms, interner RAM frei 309 → 30 KB
+I (3645) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (4118) pudding_p4: Frei: 2 KB intern, 15672 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6262) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (6660) pudding_p4: Frei: 12 KB intern, 16741 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (8645) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (8645) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (9280) wlan: mit dem Zugangspunkt verbunden
+I (10297) wlan: IP 192.168.1.142
+I (10800) pudding_fw::wlan: WLAN: 1 bekannte Netze gespeichert
+I (10800) pudding_fw::wlan: WLAN: verbunden in 4537 ms, IP 192.168.1.142, Signal -45 dBm, Kanal 6, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (10800) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (11201) pudding_p4: Frei: 20 KB intern, 16741 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (13835) pudding_fw::wlan: NTP: Uhr gestellt – 22.11.2026 02:33:05 Ortszeit
+I (14209) pudding_p4: Frei: 20 KB intern, 16741 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)

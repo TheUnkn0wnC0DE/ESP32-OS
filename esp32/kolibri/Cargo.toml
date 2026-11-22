@@ -1,0 +1,17 @@
+[package]
+name = "kolibri"
+description = "ESP32-OS: KolibriOS-C-Programme, für RISC-V/i686 neu kompiliert gegen die native ksys.h"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+build = "build.rs"
+
+[dependencies]
+kern = { path = "../kern" }
+
+[build-dependencies]
+cc = "1"
+
+[dev-dependencies]
+spatz = { path = "../../spatz" }

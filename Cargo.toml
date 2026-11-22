@@ -1,0 +1,33 @@
+[workspace]
+resolver = "3"
+members = ["spatz", "pudding"]
+# Bare-Metal-Beispiel für ARM Cortex-M7 und die ESP32-Fassung werden separat
+# gebaut (eigene Workspaces bzw. Ziele).
+exclude = ["mcu_demo", "esp32"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.85"
+
+# Release: maximale Optimierung, kleine Binärdatei, kein Unwinding-Overhead.
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+debug = false
+incremental = false
+strip = true
+
+# Debug-Builds trotzdem spielbar halten (Software-Rendering ist sonst zäh).
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# Tests mit Optimierung, damit Render-/Physik-Tests schnell laufen.
+[profile.test]
+opt-level = 2

@@ -1,0 +1,53 @@
+# ESP32-OS, B1: Neustart von NetSurf. Programme teilen den Adressraum, die
+# statischen Daten der NetSurf-Bibliotheken würden ein Programmende
+# überleben. Sie liegen deshalb in umrahmten Bereichen (_netsurf_daten_start
+# … _end, _netsurf_bss_start … _end); netsurf/c/programm_daten.c sichert sie
+# beim ersten Start in den PSRAM und spielt sie bei jedem weiteren zurück.
+# BSS (gross) im PSRAM, Daten intern (der Start lädt sie aus dem Flash).
+# Eigenes Schema: im Standard-Schema geht nur .ext_ram.bss in den PSRAM.
+# Daten nach iram0_data (beschreibbarer Teil hinter dem IRAM-Code, aus dem
+# Abbild geladen): dram0_data steht im P4-Linkerskript zweimal (.dram0.data
+# und .dram1.data), die Rahmen-Symbole wären dort mehrdeutig.
+[scheme:netsurf_daten]
+entries:
+    data -> iram0_data
+    bss -> extern_ram
+    common -> extern_ram
+
+# Tabellen, die NetSurf nie beschreibt, die upstream aber nicht `const`
+# sind: ohne dieses Schema lägen sie (~60 KB) im knappen internen RAM.
+# Geprüft (22.11.): nur gelesen (Nachschlagen, bsearch, Zeiger auf die
+# Tabelle). Ein Schreibzugriff darauf wäre ein Speicherfehler.
+[scheme:netsurf_nur_lesen]
+entries:
+    data -> flash_rodata
+
+[mapping:netsurf]
+archive: libnetsurf.a
+entries:
+    * (netsurf_daten);
+        data -> iram0_data SURROUND(netsurf_daten),
+        bss -> extern_ram SURROUND(netsurf_bss)
+    programm_daten (default)
+    # utils/idna_props.h (in idna.c): Unicode-Eigenschaften für IDNA
+    idna:idna_derived (netsurf_nur_lesen)
+    idna:idna_joiningtype (netsurf_nur_lesen)
+    # libparserutils src/charset/aliases.inc: Zeichensatz-Namen
+    aliases:charset_aliases (netsurf_nur_lesen)
+    aliases:canonical_charset_names (netsurf_nur_lesen)
+    # libparserutils codecs/ext8_tables.h: Windows-Codepages
+    codec_ext8:w1250 (netsurf_nur_lesen)
+    codec_ext8:w1251 (netsurf_nur_lesen)
+    codec_ext8:w1252 (netsurf_nur_lesen)
+    codec_ext8:w1253 (netsurf_nur_lesen)
+    codec_ext8:w1254 (netsurf_nur_lesen)
+    codec_ext8:w1255 (netsurf_nur_lesen)
+    codec_ext8:w1256 (netsurf_nur_lesen)
+    codec_ext8:w1257 (netsurf_nur_lesen)
+    codec_ext8:w1258 (netsurf_nur_lesen)
+    # libcss src/select/dispatch.c: Funktionstabelle der Eigenschaften
+    dispatch:prop_dispatch (netsurf_nur_lesen)
+    # libhubbub src/treebuilder/initial.c: bekannte DOCTYPEs
+    initial:public_doctypes (netsurf_nur_lesen)
+    # frontends/framebuffer/fbtk/osk.c: Tastenbelegung der Bildschirmtastatur
+    osk:kbdbase (netsurf_nur_lesen)

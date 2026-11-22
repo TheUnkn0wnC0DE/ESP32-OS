@@ -1,0 +1,29 @@
+P2 Board-Lauf 21.11.2026 (ESP32OS_TESTBILDER=1, Autopilot Wischen/Zoom/Fit):
+1974 ms  Testbild /rd/1/bilder/animation.gif: 778 Bytes, Code 0
+2796 ms  Testbild /rd/1/bilder/farben.bmp: 36918 Bytes, Code 0
+3336 ms  Testbild /rd/1/bilder/foto.jpg: 13091 Bytes, Code 0
+3775 ms  Testbild /rd/1/bilder/progressiv.jpg: 10178 Bytes, Code 0
+4173 ms  Testbild /rd/1/bilder/transparent.png: 3589 Bytes, Code 0
+5079 ms  JPEG YUV-Lage [0, 1, 2]: Abweichung Mittel 34.76
+5174 ms  JPEG YUV-Lage [0, 2, 1]: Abweichung Mittel 65.17
+5270 ms  JPEG YUV-Lage [1, 0, 2]: Abweichung Mittel 63.72
+5365 ms  JPEG YUV-Lage [1, 2, 0]: Abweichung Mittel 38.88
+5461 ms  JPEG YUV-Lage [2, 0, 1]: Abweichung Mittel 67.02
+5556 ms  JPEG YUV-Lage [2, 1, 0]: Abweichung Mittel 0.36
+6466 ms  JPEG-Messung 640x480: Hardware 55.8 ms, Software 810.0 ms; Abweichung HW/SW Mittel 0.36, max 106 (Feld rot HW ffe61415, SW ffe61415)
+6466 ms  JPEG progressiv über Hardware: nicht unterstützt (Code 0x105)
+7150 ms  BV: /rd/1/bilder/farben.bmp 128x96 in 11 ms
+7357 ms  BV: Zeichnen 76 ms
+26145 ms  JPEG HW: 640x480 in 63.2 ms
+26146 ms  BV: /rd/1/bilder/foto.jpg 640x480 in 69 ms
+26345 ms  BV: Zeichnen 105 ms
+41182 ms  BV: Zeichnen 85 ms
+41436 ms  BV: Zeichnen 119 ms
+41720 ms  BV: Zeichnen 143 ms
+56325 ms  BV: Zeichnen 105 ms
+57081 ms  JPEG HW: kein Baseline-JPEG (progressiv?) → Software
+57081 ms  BV: /rd/1/bilder/progressiv.jpg: Format variant not supported (e.g. progressive JPEG)
+71130 ms  BV: /rd/1/bilder/transparent.png 240x180 in 54 ms
+71329 ms  BV: Zeichnen 79 ms
+86085 ms  BV: /rd/1/bilder/animation.gif 120x90 in 9 ms
+86231 ms  BV: Zeichnen 130 ms

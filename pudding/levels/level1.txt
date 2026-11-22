@@ -1,0 +1,173 @@
+# ==========================================================================
+#  Pudding-Panik – Level 1: "Ab in den Kühlschrank!"
+#  Koordinaten: +Y oben, das Level verläuft Richtung -Z (und später +X).
+#  cake/choco/wafer: x y z = Mitte der OBERKANTE, dann Breite(x) Tiefe(z) Höhe
+# ==========================================================================
+
+spawn 0 0 4 0
+sea -9
+
+# --- Startinsel -----------------------------------------------------------
+cake   0 0 0      12 14 5   pink
+hint   0 0 3   5  WASD/PFEILE: LAUFEN   LEERTASTE: SPRINGEN   Q/E: KAMERA
+hint   0 0 -4  3  SCHNELL! BRING DEN PUDDING IN DEN KÜHLSCHRANK!
+cherry -2.5 0.8 -1
+cherry  0   0.8 -2.5
+cherry  2.5 0.8 -1
+cane   -4.6 0  5.2  3.2
+lolly   4.6 0  5.2  2.6  ff5c8a
+cupcake -4.4 0 -5.2 1.0
+cupcake  4.4 0 -5.0 0.8
+
+# --- Keks-Trittsteine -----------------------------------------------------
+cookie  0    0.5 -10    1.6 2
+cherry  0    1.6 -10
+cookie  2.5  1.0 -14.5  1.6 2
+cherry  2.5  2.1 -14.5
+cookie  0.5  1.5 -19    1.6 2
+cherry  0.5  2.6 -19
+cookie -2    1.0 -23.5  1.6 2
+cherry -2    2.1 -23.5
+
+# --- Insel 2: erster Donut ------------------------------------------------
+cake    0 1.5 -32     10 10 5   mint
+hint    0 1.5 -28  3  DONUTS: VON OBEN DRAUFSPRINGEN!
+donut  -3 1.5 -31.5   6 0  2.2
+cherry -3.5 2.4 -35
+cherry  3.5 2.4 -35
+ice     3   2.3 -29
+checkpoint  1.6 1.5 -35.4
+lolly   4.2 1.5 -36   2.2 ffd23c
+
+# --- Waffel-Fähre ---------------------------------------------------------
+wafer   0 1.5 -40     3 3 0.6   0 0 -8   5 0
+cherry  0 2.6 -44
+hint    0 1.5 -36  2.5  WARTE AUF DIE WAFFEL!
+
+# --- Insel 3: Trampolin ---------------------------------------------------
+cake    0 1.5 -55     8 8 5   choco
+mallow  0 1.5 -57.6
+hint    0 1.5 -53  2.5  MARSHMALLOW = TRAMPOLIN!
+cherry -2.5 2.4 -53
+cherry  2.5 2.4 -53
+
+# --- Turm -----------------------------------------------------------------
+cake    0 8 -64       6 6 12   lemon
+checkpoint -1.8 8 -62.2
+ice     1.8 8.8 -66
+cherry  0  9.0 -66
+cherry  0  4.5 -60.5
+
+# --- Schoko-Treppe nach rechts -------------------------------------------
+choco   6    7   -64   3 3 1
+cherry  6    7.9 -64
+choco  10.5  6   -64   3 3 1
+cherry 10.5  6.9 -64
+choco  15    5   -64   3 3 1
+cherry 15    5.9 -64
+
+# --- Schoko-Brücke mit Donuts --------------------------------------------
+choco   24   4.5 -64   12 3 1
+donut   19.5 4.5 -64   9 0  2.6
+donut   28.5 4.5 -64  -9 0  2.0
+cherry  22   5.6 -64
+cherry  26   5.6 -64
+ice     29.5 5.2 -63
+
+# --- Zuckerstangen-Karussell ---------------------------------------------
+cookie  36   4.5 -64   4 2
+spinner 36   4.5 -64   7.4 1.5
+hint    33   4.5 -64   2  ÜBER DIE ZUCKERSTANGE SPRINGEN!
+cherry  36   5.5 -61
+cherry  36   5.5 -67
+
+# --- Kekstreppe aufwärts --------------------------------------------------
+cookie  36   5.5 -72   1.5 2
+checkpoint 36 5.5 -72
+cookie  38   6.5 -76.5 1.5 2
+cherry  38   7.5 -76.5
+cookie  36   7.5 -81   1.5 2
+cherry  36   8.5 -81
+
+# --- Waffel-Aufzug --------------------------------------------------------
+wafer   36   7.0 -86   3 3 0.6   0 3.2 0   4 0.5
+hint    36   7.5 -81  1.4  AUF DEN AUFZUG WARTEN ...
+cherry  36  11.5 -86
+
+# --- Zielinsel mit Kühlschrank -------------------------------------------
+cake    36  10 -96    14 12 6   pink
+ice     33  10.8 -92
+cherry  31  10.9 -95
+cherry  41  10.9 -95
+cherry  36  10.9 -93
+fridge  36  10 -100   0
+cupcake 31  10 -100.5 1.2
+cupcake 41.5 10 -99   1.0
+lolly   30  10 -91    2.8  7ad0ff
+cane    42  10 -91.5  3.4
+
+# --- Kulisse --------------------------------------------------------------
+cake   -26 -2 -30     9 9 4   lemon
+cupcake -26 -2 -30    2.2
+cake    22  0  -18    8 8 5   choco
+cane    22  0  -18    4.5
+cake   -14  3  -78    7 7 6   mint
+lolly  -14  3  -78    4  ff8a3c
+cake    62  2  -80   10 10 5  pink
+cupcake 62  2  -80    2.5
+cake    12  6 -118    9 9 6   lemon
+cane    12  6 -118    5
+cloud  -12 16 -20     3
+cloud   18 19 -45     4
+cloud  -20 21 -70     3.5
+cloud   50 17 -60     3
+cloud   30 23 -110    4.5
+cloud    0 20  15     3
+
+# ==========================================================================
+#  Autopilot-Route (Demo-Modus und Benchmark)
+# ==========================================================================
+route walk  0 -1.5
+route walk  0 -6.4
+route jump  0 -10
+route jump  2.5 -14.5
+route jump  0.5 -19
+route jump -2 -23.5
+route jump -1.2 -29
+route walk -1.2 -29.2
+route walk  1.2 -35.2
+route walk  0 -36.4
+route waitplat 0 0 0.02
+route jump  0 -40.2
+route waitplat 0 1 0.01
+route walk  0 -49.1
+route jump  0 -52.5
+route walk  0 -53.2
+route jump  0 -57.6
+route air   0 -64.2
+route walk  0 -64
+route walk  2.6 -64
+route jump  6 -64
+route jump 10.5 -64
+route jump 15 -64
+route jump 19.6 -64
+route walk 20.2 -64
+route walk 29.2 -64
+route jump 32.6 -64
+route walk 33.2 -64
+route jump 36 -64
+route jump 39.4 -64
+route walk 39.6 -64.2
+route walk 36.8 -67.6
+route jump 36 -72
+route walk 36.45 -73.0
+route jump 38 -76.5
+route walk 37.55 -77.5
+route jump 36 -81
+route walk 36 -82.0
+route waitplat 1 0 0.03
+route jump 36 -86
+route waitplat 1 1 0.02
+route walk 36 -87.2
+route jump 36 -92
+route walk 36 -98.4

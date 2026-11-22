@@ -1,0 +1,11 @@
+[toolchain]
+# RISC-V-Chips von Espressif (wie der ESP32-P4) baut der normale
+# Nightly-Compiler; rust-src wird für `build-std` gebraucht.
+#
+# Fest auf 2026-10-19: Ab nightly-2026-10-20 benutzt die Standardbibliothek
+# libc 0.2.191, deren ESP-IDF-`stat` die Zeitfelder als `st_mtim` (timespec)
+# führt, während `std` noch `st_mtime` erwartet → build-std bricht ab.
+# Erst wieder auf "nightly" stellen, wenn das upstream behoben ist.
+channel = "nightly-2026-10-19"
+components = ["rust-src"]
+profile = "minimal"

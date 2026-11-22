@@ -1,0 +1,291 @@
+# ==========================================================================
+#  Pudding-Panik – Kapitel 6: "Die Eishöhle"
+#  Hinter dem Eis des Gefrierfachs liegt eine geheime Höhle. Milchiges,
+#  brüchiges Eis (crumble) bricht kurz nach dem Betreten weg – nur zügig
+#  drüber! Dazu eine riesige spiegelglatte Halle, Eiszapfen-Karussells,
+#  treibende Schollen, eine Rutschpartie mit Trampolin und zum Schluss der
+#  Bröckel-Kamin hinauf zum Lüftungsschacht.
+#  block/mblock/crumble: x y z = Mitte der OBERKANTE, Breite(x) Tiefe(z) Höhe
+#  cyl: x y z = Mitte der OBERKANTE, Radius, Höhe
+# ==========================================================================
+
+theme freezer
+spawn 0 0 4 0
+sea -10
+
+# --- Höhleneingang ------------------------------------------------------------
+block   0 0 0       10 12 1   7fb0d8 d6ecfa
+hint    0 0 3   5  GEHEIME EISHÖHLE! HIER GEHT ES WEITER.
+cherry -2.5 0.8 -1
+cherry  2.5 0.8 -1
+deko box -6 0 6      2 14 5    4a6f9a
+deko box  6 0 6      2 14 4    5d86b4
+deko cyl -4 0 4.5    0.5 1.6   bfe8ff
+deko cyl  4 0 4.5    0.4 1.1   bfe8ff
+
+# --- Brüchige Schollen -----------------------------------------------------------
+hint    0 0 -4   2.2  MILCHIGES EIS BRICHT! SCHNELL WEITER!
+crumble 0   0   -9.4   2.8 2.8 0.6   7c7898 b4b0cc
+crumble 0   0.4 -13.8  2.8 2.8 0.6   7c7898 b4b0cc
+cherry  0   1.4 -13.8
+crumble 2.2 0.8 -18.2  2.8 2.8 0.6   7c7898 b4b0cc
+crumble 0   1.2 -22.6  2.8 2.8 0.6   7c7898 b4b0cc
+cherry  0   2.2 -22.6
+# Bröckelbrücke: Stück für Stück, im Laufen
+crumble 0   1.2 -25    2.4 2 0.6     7c7898 b4b0cc
+crumble 0   1.2 -27    2.4 2 0.6     7c7898 b4b0cc
+crumble 0   1.2 -29    2.4 2 0.6     7c7898 b4b0cc
+cherry  0   2.2 -27
+
+# --- Vorplatz der Eishalle -----------------------------------------------------
+block   0 1.2 -33      10 6 1    7fb0d8 d6ecfa
+cocoa   3.5 2.1 -32
+
+# --- Riesige spiegelglatte Eishalle --------------------------------------------
+block   0 1.2 -45      16 18 1   b4e2fa f4fcff  glatt
+block  -8.5 3.2 -45    1 18 4    6f9fcf c8e6f8
+block   8.5 3.2 -45    1 18 4    6f9fcf c8e6f8
+cyl     2.5 5.2 -40    1.1 4     8ad0f0 e8f8ff
+cyl    -4  5.2 -48     1.1 4     8ad0f0 e8f8ff
+cyl     6.5 5.2 -46    1.1 4     8ad0f0 e8f8ff
+hint    0 1.2 -37  2.6  RIESIGE EISBAHN! GANZ SANFT LENKEN.
+cherry -5  2.1 -40
+cherry  4  2.1 -43
+cherry -1  2.1 -52
+cocoa  -5  2.1 -51
+block   0 1.2 -55      16 2 1    7fb0d8 d6ecfa
+checkpoint 5 1.2 -55
+
+# --- Eiszapfen-Karussell ---------------------------------------------------------
+cyl     4 1.2 -62      4.4 1.4   6f9fcf c8e6f8
+spinner 4 1.2 -62      6   1.6
+hint    5 1.2 -55  1.6  DIE MITTE DER EISZAPFEN IST SICHER!
+cherry  4 3.5 -62
+
+# --- Eiszapfen-Gasse: drei Karussells hintereinander -----------------------------
+block   4 1.2 -75.75   4 16.5 1  6f9fcf c8e6f8
+spinner 4 1.2 -69.5    3.6  1.8
+spinner 4 1.2 -73.5    3.6 -2.0
+spinner 4 1.2 -77.5    3.6  1.8
+cherry  4 3.5 -69.5
+cherry  4 3.5 -73.5
+cherry  4 3.5 -77.5
+
+# --- Schollen-Ufer ----------------------------------------------------------------
+block   4 1.2 -87      8 6 1     7fb0d8 d6ecfa
+checkpoint 4 1.2 -86
+cocoa   6.5 2.1 -88.5
+hint    4 1.2 -88  2.2  SCHOLLE ABWARTEN, DANN ÜBERS BRÖCKELEIS!
+
+# --- Treibende Scholle und Bröckel-Zickzack ----------------------------------------
+mblock  4 1.2 -93      3.2 3.2 0.6   8fc4e8 eef8ff   0 0 -7   5 0
+cherry  4 2.3 -97
+crumble 4   1.6 -104.5  2.8 2.8 0.6   7c7898 b4b0cc
+crumble 1.6 2.0 -108.3  2.8 2.8 0.6   7c7898 b4b0cc
+cherry  1.6 3.0 -108.3
+crumble 4   2.4 -112.1  2.8 2.8 0.6   7c7898 b4b0cc
+crumble 6.4 2.8 -115.9  2.8 2.8 0.6   7c7898 b4b0cc
+cherry  6.4 3.8 -115.9
+
+# --- Eisinsel und Querscholle --------------------------------------------------------
+block   4 2.8 -121     6 5 1     7fb0d8 d6ecfa
+checkpoint 3 2.8 -121
+mblock 10 2.8 -121     3.2 3.2 0.6   8fc4e8 eef8ff   7 0 0   5 0
+cherry 13.5 3.9 -121
+block  23 2.8 -121     6 6 1     7fb0d8 d6ecfa
+cocoa  23 3.7 -119
+
+# --- Rutschpartie --------------------------------------------------------------------
+block  23 2.0 -134     12 16 1   b4e2fa f4fcff  glatt
+block  16.5 3.0 -134   1 16 2.2  6f9fcf c8e6f8
+block  29.5 3.0 -134   1 16 2.2  6f9fcf c8e6f8
+cyl    19.5 5.0 -131   0.9 3     8ad0f0 e8f8ff
+cyl    26.5 5.0 -137   0.9 3     8ad0f0 e8f8ff
+hint   23 2.8 -122.5  2  RUTSCHPARTIE! DANACH AUFS TRAMPOLIN.
+cherry 20  2.9 -136
+cherry 26  2.9 -131
+cherry 23  2.9 -139
+
+# --- Trampolin zur oberen Galerie ------------------------------------------------------
+block  23 2.0 -146     12 8 1    7fb0d8 d6ecfa
+mallow 23 2.0 -148.5
+cherry 23 6.5 -151
+
+# --- Obere Galerie ----------------------------------------------------------------------
+block  23 7.6 -156     8 8 1     7fb0d8 d6ecfa
+checkpoint 21 7.6 -154.5
+cocoa  25.5 8.5 -157
+hint   23 7.6 -158  2.4  SCHNELL HOCH, DAS EIS BRÖCKELT!
+
+# --- Bröckel-Kamin ---------------------------------------------------------------------
+crumble 23   8.4 -163    2.8 2.8 0.6   7c7898 b4b0cc
+crumble 25.4 9.2 -166.8  2.8 2.8 0.6   7c7898 b4b0cc
+cherry  25.4 10.2 -166.8
+crumble 23  10.0 -170.6  2.8 2.8 0.6   7c7898 b4b0cc
+crumble 20.6 10.8 -174.4 2.8 2.8 0.6   7c7898 b4b0cc
+cherry  20.6 11.8 -174.4
+block   22 10.8 -180     6 6 1     7fb0d8 d6ecfa
+
+# --- Eis-Aufzug in die obere Höhle ----------------------------------------------------------
+mblock  22 10.8 -186     3 3 0.5   8fc4e8 eef8ff   0 5 0   5 0
+hint    22 10.8 -180  2  AUF DEN EIS-AUFZUG WARTEN ...
+cherry  22 16.9 -186
+
+# --- Obere Höhle -------------------------------------------------------------------------
+block   22 15.8 -193     10 8 0.8  7fb0d8 d6ecfa
+checkpoint 22 15.8 -193
+cherry  18.5 16.7 -190.5
+cocoa   25.5 16.7 -191
+hint    22 15.8 -195.5  2.4  BRÖCKELFELD! NUR NICHT ANHALTEN!
+
+# --- Bröckelfeld: alles brüchig -------------------------------------------------------------
+crumble 19.8 15.8 -198.1  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 22   15.8 -198.1  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 24.2 15.8 -198.1  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 19.8 15.8 -200.3  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 22   15.8 -200.3  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 24.2 15.8 -200.3  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 19.8 15.8 -202.5  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 22   15.8 -202.5  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 24.2 15.8 -202.5  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 19.8 15.8 -204.7  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 22   15.8 -204.7  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 24.2 15.8 -204.7  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 19.8 15.8 -206.9  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 22   15.8 -206.9  2.05 2.05 0.6   7c7898 b4b0cc
+crumble 24.2 15.8 -206.9  2.05 2.05 0.6   7c7898 b4b0cc
+cherry  19.8 16.8 -200.3
+cherry  24.2 16.8 -202.5
+cherry  19.8 16.8 -206.9
+
+# --- Schollen-Staffel: von der einen Scholle auf die andere ----------------------------------
+block   22 15.8 -211.5   8 7 0.8   7fb0d8 d6ecfa
+hint    22 15.8 -212  2.4  UMSTEIGEN, WENN SICH DIE SCHOLLEN TREFFEN!
+mblock  22 15.8 -217.6   3.2 3.2 0.6   8fc4e8 eef8ff   0 0 -7   5 0
+cherry  22 16.9 -221
+mblock  35 15.8 -224.6   3.2 3.2 0.6   8fc4e8 eef8ff   -9 0 0   5 0
+cherry  30.5 16.9 -224.6
+
+# --- Ufer vor dem Schacht -----------------------------------------------------------------
+block   41 15.8 -224.6   6 6 0.8   7fb0d8 d6ecfa
+checkpoint 41 15.8 -223.4
+cocoa   42.5 16.7 -226.5
+
+# --- Glattes Eiszapfen-Karussell ------------------------------------------------------------
+cyl     50 15.8 -224.6   4.4 1.2   b4e2fa f4fcff  glatt
+spinner 50 15.8 -224.6   6   2.0
+hint    41 15.8 -225.5  2  GLATT UND GEFÄHRLICH: AB IN DIE MITTE!
+cherry  50 18.1 -224.6
+cherry  50 16.9 -228
+
+# --- Ausgang: Lüftungsschacht nach oben -------------------------------------------------------
+block   60 15.8 -224.6   8 10 0.8  d6ecfa f4fcff
+cherry  58 16.7 -221
+cherry  62 16.7 -221
+fridge  60 15.8 -228   0  freezer
+deko box 60 19.1 -228.2  3.4 2.6 14  5d86b4
+deko box 56.5 15.8 -229  1.5 1.5 3   4a6f9a
+deko box 63.5 15.8 -229  1.5 1.5 3   4a6f9a
+
+# --- Kulisse: Höhlenwände, Eiszapfen, Tropfsteine ------------------------------------------
+deko box -14 -8 -20    6 30 22   4a6f9a
+deko box  12 -8 -25    6 26 20   5d86b4
+deko box -14 -8 -50    6 30 24   5d86b4
+deko box  16 -8 -55    6 26 22   4a6f9a
+deko box  -8 -8 -85    6 30 22   4a6f9a
+deko box  16 -8 -95    6 24 20   5d86b4
+deko box  -6 -8 -115   6 20 22   5d86b4
+deko box  36 -8 -130   6 30 24   4a6f9a
+deko box  10 -8 -140   6 26 22   4a6f9a
+deko box  34 -8 -165   6 30 30   5d86b4
+deko box  10 -8 -170   6 30 30   4a6f9a
+deko box  11 -8 -204   6 26 32   5d86b4
+deko box  33 -8 -200   6 22 30   4a6f9a
+deko box  45 -8 -252   50 6 26   5d86b4
+deko box  74 -8 -222   6 30 30   5d86b4
+deko cyl  52 -6 -238   1.2 26   dff4ff
+deko cyl  38 -6 -244   1.5 30   bfe8ff
+deko cyl  66 -6 -242   1.0 28   e8f8ff
+deko cyl  -9 -6 -35    1.2 14   bfe8ff
+deko cyl   9 -6 -65    1.0 12   bfe8ff
+deko cyl  -2 -6 -95    1.4 13   dff4ff
+deko cyl  12 -6 -110   1.0 14   bfe8ff
+deko cyl  32 -6 -120   1.2 14   dff4ff
+deko cyl  14 -6 -150   1.3 18   bfe8ff
+deko cyl  30 -6 -178   1.1 22   dff4ff
+
+# ==========================================================================
+#  Autopilot-Route
+# ==========================================================================
+route walk  0 -1.5
+route walk  0 -5.6
+route jump  0 -9.4
+route jump  0 -13.8
+route jump  2.2 -18.2
+route jump  0 -22.6
+route walk  0 -25
+route walk  0 -31
+route walk -4.5 -35.4
+route walk  5 -54.6
+route walk  4 -55.6
+route jump  4 -58
+route jump  4 -62
+route jump  4 -66
+route jump  4 -69.5
+route jump  4 -73.5
+route jump  4 -77.5
+route jump  4 -81.4
+route walk  4 -86
+route walk  4 -89.6
+route waitplat 0 0 0.03
+route jump  4 -94
+route waitplat 0 1 0.02
+route jump  4 -104.5
+route jump  1.6 -108.3
+route jump  4 -112.1
+route jump  6.4 -115.9
+route jump  5 -120.5
+route walk  3 -121
+route walk  6.6 -121
+route waitplat 1 0 0.03
+route jump 11 -121
+route waitplat 1 1 0.02
+route jump 21.5 -121
+route walk 23 -123.6
+route jump 23 -127.5
+route walk 23 -142.5
+route walk 23 -145.4
+route jump 23 -148.5
+route air  23 -155
+route walk 21 -154.5
+route walk 23 -159.6
+route jump 23 -163
+route jump 25.4 -166.8
+route jump 23 -170.6
+route jump 20.6 -174.4
+route jump 21.5 -178.5
+route walk 22 -182.6
+route waitplat 2 0 0.03
+route jump 22 -186
+route waitplat 2 1 0.02
+route walk 22 -187.2
+route jump 22 -190.5
+route walk 22 -193
+route walk 22 -196.4
+route walk 23.4 -202.5
+route walk 22 -208.6
+route walk 22 -214.6
+route waitplat 3 0 0.03
+route jump 22 -218.6
+route waitplat 3 1 0.02
+route jump 27 -224.6
+route waitplat 4 0 0.02
+route jump 39.5 -224.6
+route walk 41 -223.4
+route walk 43.6 -224.6
+route jump 46 -224.6
+route jump 50 -224.6
+route jump 54 -224.6
+route jump 58.5 -224.6
+route walk 60 -222
+route walk 60 -226.4

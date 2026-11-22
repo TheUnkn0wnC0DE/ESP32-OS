@@ -1,0 +1,31 @@
+/target
+/mcu_demo/target
+/esp32/target
+/esp32/firmware/target
+/esp32/firmware/.embuild
+*.png.tmp
+/android_out
+*.apk
+*.keystore
+.superpowers/
+
+# Doom-Shareware-WAD (wird geladen, nicht eingecheckt)
+/esp32/doom/wad/*.WAD
+/esp32/doom/wad/*.wad
+/esp32/quake/pak/*.pak
+/extern/
+
+# Flash-Sicherungen vom Board (B0), nie ins Repo
+/sicherung/
+
+# WLAN-Zugangsdaten zum Testen (W0) – nur lokal, nie ins Repo
+wlan.local
+**/wlan.local
+
+# NetSurf: Stand der erzeugten Board-Dateien (esp32/netsurf/build.rs, je Rechner)
+esp32/firmware/komponenten/netsurf/quellen_stand.txt
+
+# Lokale Werkzeuge und Python-Zwischenstände, nie ins Repo
+.claude/
+__pycache__/
+AUFTRAG-KolibriOS-P4.md

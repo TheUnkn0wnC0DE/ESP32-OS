@@ -1,0 +1,214 @@
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (28) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (28) boot: compile time Nov 22 2026 01:00:10
+I (29) boot: Multicore bootloader
+I (30) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (35) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 40MHz
+I (43) boot.esp32p4: SPI Mode       : QIO
+I (47) boot.esp32p4: SPI Flash Size : 32MB
+I (51) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (58) boot: ## Label            Usage          Type ST Offset   Length
+I (64) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (71) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (77) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (84) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (90) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (97) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (103) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (110) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (118) boot: End of partition table
+I (121) boot: No factory image, trying OTA 0
+I (124) esp_image: segment 0: paddr=00020020 vaddr=48360020 size=1a2e94h (1715860) map
+I (388) esp_image: segment 1: paddr=001c2ebc vaddr=30100000 size=00070h (   112) load
+I (390) esp_image: segment 2: paddr=001c2f34 vaddr=4ff00000 size=0d0e4h ( 53476) load
+I (402) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=357160h (3502432) map
+I (925) esp_image: segment 4: paddr=00527188 vaddr=4ff0d0e4 size=0ec80h ( 60544) load
+I (937) esp_image: segment 5: paddr=00535e10 vaddr=4ff1bd80 size=02cfch ( 11516) load
+I (941) esp_image: segment 6: paddr=00538b14 vaddr=4ff1ea80 size=04each ( 20140) load
+I (946) esp_image: segment 7: paddr=0053d9c8 vaddr=50108080 size=0000ch (    12) load
+I (950) esp_image: segment 8: paddr=0053d9dc vaddr=501080e8 size=00020h (    32) load
+I (964) boot: Loaded app from partition at offset 0x20000
+I (992) boot: Set actual ota_seq=1 in otadata[0]
+I (992) boot: Disabling RNG early entropy source...
+I (1002) hex_psram: vendor id    : 0x0d (AP)
+I (1003) hex_psram: Latency      : 0x01 (Fixed)
+I (1003) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (1004) hex_psram: dev id       : 0x03 (generation 4)
+I (1009) hex_psram: density      : 0x07 (256 Mbit)
+I (1013) hex_psram: good-die     : 0x06 (Pass)
+I (1017) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (1022) hex_psram: BurstType    : 0x00 ( Wrap)
+I (1026) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (1031) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (1036) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (1041) hex_psram: DriveStrength: 0x00 (1/1)
+I (1045) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1349) mmu_psram: .rodata xip on psram
+I (1611) mmu_psram: .text xip on psram
+I (1611) hex_psram: psram CS IO is dedicated
+I (1612) cpu_start: Multicore app
+I (2016) esp_psram: SPI SRAM memory test OK
+I (2028) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (2029) cpu_start: Pro cpu start user code
+I (2029) cpu_start: cpu freq: 360000000 Hz
+I (2031) app_init: Application information:
+I (2035) app_init: Project name:     libespidf
+I (2039) app_init: App version:      1
+I (2042) app_init: Compile time:     Nov 22 2026 03:37:30
+I (2048) app_init: ELF file SHA256:  2495aa68d...
+I (2052) app_init: ESP-IDF:          v5.5.5
+I (2056) efuse_init: Min chip rev:     v1.0
+I (2060) efuse_init: Max chip rev:     v1.99 
+I (2064) efuse_init: Chip rev:         v1.3
+I (2068) heap_init: Initializing. RAM available for dynamic allocation:
+I (2074) heap_init: At 4FF28FE0 len 00011FE0 (71 KiB): RETENT_RAM
+I (2080) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (2085) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (2091) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (2096) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (2101) esp_psram: Adding pool of 27359K of PSRAM memory to heap allocator
+I (2108) esp_psram: Adding pool of 35K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2119) esp_psram: Adding pool of 52K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2130) spi_flash: detected chip: gd
+I (2134) spi_flash: flash io: qio
+I (2137) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2143) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2150) main_task: Started on CPU0
+I (2153) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2161) main_task: Calling app_main()
+I (2165) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2165) pudding_p4: ESP32-OS startet …
+I (2165) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 334 KB intern, 27433 KB PSRAM
+I (2165) pudding_p4: Start: intern frei 334 KB (größter Block 184 KB), DMA-fähig 295 KB
+I (2169) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+W (2172) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2214) pudding_fw::speicher: SD-Karte eingehängt: 241724 MB als /sd0/1
+W (2253) pudding_fw::speicher: NetSurf-Testreste – vorher 23 Dateien, 177772 Byte: ["adblock.css", "credits.html", "de/Messages", "de/welcome.html", "default.css", "en/Messages", "en/welcome.html", "favicon.png", "icons/arrow-l.png", "icons/content.png", "icons/directory.png", "icons/directory2.png", "icons/hotlist-add.png", "icons/hotlist-rmv.png", "icons/local-history.png", "icons/search.png", "icons/show-cookie.png", "internal.css", "licence.html", "netsurf.png", "quirks.css", "stand", "welcome.html"]
+E (4166) pudding_p4: HÄNGT bei Bild 0: Schleife Stufe 0, Stufe 0/0, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 309 KB intern, 27350 KB PSRAM
+E (5181) pudding_p4: HÄNGT bei Bild 0: Schleife Stufe 0, Stufe 0/0, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 309 KB intern, 27350 KB PSRAM
+W (5763) pudding_fw::speicher:   Ordner /daten/netsurf/icons: Ok(())
+W (5906) pudding_fw::speicher:   Ordner /daten/netsurf/de: Ok(())
+W (6049) pudding_fw::speicher:   Ordner /daten/netsurf/en: Ok(())
+E (6196) pudding_p4: HÄNGT bei Bild 0: Schleife Stufe 0, Stufe 0/0, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 309 KB intern, 27350 KB PSRAM
+W (6258) pudding_fw::speicher:   Ordner /daten/netsurf: Ok(())
+W (6258) pudding_fw::speicher: NetSurf-Testreste – nachher 0 Dateien, Ordner vorhanden: false
+I (6322) pudding_p4: Einstellungen: Sprache de, Helligkeit 10, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1795358862
+I (6322) pudding_p4: Startziel Konsole, Spielstand geladen
+I (6322) eh_mcu_transport: transport_init: probing bus backend
+I (6322) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (6323) sdmmc_periph: sdmmc_host_init: SDMMC host already initialized, skipping init flow
+I (6323) eh_sdio: sdio_data_to_rx_buf_task started
+I (6323) eh_mcu_transport: transport_init: bus backend up
+W (6323) eh_sdio: Reset co-processor using GPIO[54]
+I (6337) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (6338) GT911: TouchPad_ID:0x39,0x31,0x31
+I (6338) GT911: TouchPad_Config_Version:70
+I (6338) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (6340) hx8394: version: 2.1.0
+W (6510) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (6850) pudding_p4: ESP32-OS-Desktop startet (@start)
+I (6850) pudding_p4: Spiel geladen: intern frei 32 KB (größter Block 7 KB), DMA-fähig 17 KB
+I (6851) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (6852) pudding_p4: Los geht's!
+I (7843) eh_host_port_reset: reset done pin=54 parked=1
+I (7877) eh_host_port_sdio: bus applied: clk_khz=40000
+I (7877) eh_host_port_sdio: Function 0 Blocksize: 512
+I (7877) eh_host_port_sdio: Function 1 Blocksize: 512
+I (7977) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (8023) eh_sdio: SDIO Host operating in STREAMING MODE
+I (8023) eh_sdio: Open data path at slave
+I (8023) eh_sdio: Starting SDIO process rx task
+I (8029) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (8029) eh_init_evt: capabilities: 0x0d
+I (8029) eh_init_evt: Features supported are:
+I (8029) eh_init_evt: 	 * WLAN over SDIO
+I (8029) eh_init_evt: 	   - HCI over SDIO
+I (8029) eh_init_evt: 	   - BLE only
+I (8029) eh_raw_tp: raw TP inactive
+I (8029) eh_init_evt: Default RPC to V2
+I (8029) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (8029) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (8029) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (8029) eh_init_evt: Missing SDIO_MODE TLV; Continue anyway.
+W (8029) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (8029) eh_init_evt: chip=0x0d (esp32c6) fw=0x00000000 caps=0x0d ext=0x00000000
+I (8030) eh_auto_init: auto_init: found 1 descriptor(s)
+I (8030) eh_auto_init: auto_init: initialising 'wifi' (priority 150)
+I (8030) eh_wifi_itwt: wifi iTWT ext init
+I (8388) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 291 → 24 KB
+I (8389) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (8891) pudding_p4: Mittel: Simulation 0.5 ms, Bild vorbereiten 15.7 ms (0 Dreiecke), Mithelfen 12.8 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (8891) pudding_p4: Ruckler: 26 verpasste Bildwechsel; längstes Bild 46.8 ms (Simulation 0.2, Vorbereiten 30.7, Mithelfen 14.5, Sichern 0.0)
+I (8891) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 4.3 ms je Bild
+I (8891) pudding_p4: Frei: 7 KB intern, 12415 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (8891) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (8891) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.42 ms, Kern 1 4.79 ms; angeschubst seit Start: 0
+I (8891) pudding_p4: 33.8 FPS (640x360 scharf), Frame 45.7 ms, Streifen 8/37, Rendern 0.9/8.4 ms, Skalieren 1.1/12.8 ms, PPA 11.6/21.9 ms, Ausgabe 45.1 ms, Panel 55.21 Hz
+I (8891) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (8923) pudding_p4: Desktop: 8.3 Bilder/s neu, 142.1 übersprungen/s, Fläche 170984 px/Bild, Compositor 0.93 ms/Bild
+I (9303) pudding_p4: [debug] @icon: gezeichnet in 698 ms
+I (9303) pudding_p4: [debug] 
+I (9431) pudding_p4: [debug] Ersteinrichtung: schon erledigt
+I (9431) pudding_p4: [debug] 
+I (10892) pudding_p4: Desktop: 7.0 Bilder/s neu, 133.5 übersprungen/s, Fläche 201874 px/Bild, Compositor 1.25 ms/Bild
+I (11018) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (11037) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 23.9 ms (0 Dreiecke), Mithelfen 11.5 ms, Rest-PPA 1.1 ms, Warten auf Bildspeicher 0.0 ms
+I (11037) pudding_p4: Ruckler: 24 verpasste Bildwechsel; längstes Bild 46.6 ms (Simulation 0.0, Vorbereiten 31.2, Mithelfen 13.9, Sichern 0.0)
+I (11037) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 4.1 ms je Bild
+I (11037) pudding_p4: Frei: 9 KB intern, 13483 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11037) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (11037) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.38 ms, Kern 1 5.92 ms; angeschubst seit Start: 0
+I (11038) pudding_p4: 31.1 FPS (640x360 scharf), Frame 1.4 ms, Streifen 15/30, Rendern 1.5/2.9 ms, Skalieren 1.9/3.6 ms, PPA 22.1/20.0 ms, Ausgabe 26.8 ms, Panel 55.12 Hz
+I (11038) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (12894) pudding_p4: Desktop: 2.0 Bilder/s neu, 188.3 übersprungen/s, Fläche 31297 px/Bild, Compositor 0.03 ms/Bild
+W (13389) eh_host_feat_rpc: request: no response uid=6 msg_id=350 (5000 ms)
+I (13389) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (13389) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (14035) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x482eca58
+I (14035) wlan: mit dem Zugangspunkt verbunden
+I (14897) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (15054) esp_netif_handlers: sta ip: 192.168.1.142, mask: 255.255.255.0, gw: 192.168.1.1
+I (15054) wlan: IP 192.168.1.142
+I (15556) pudding_fw::wlan: WLAN: verbunden in 4537 ms, IP 192.168.1.142, Signal -47 dBm, Kanal 6, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (15556) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (15577) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 2.1 ms (0 Dreiecke), Mithelfen 18.9 ms, Rest-PPA 1.1 ms, Warten auf Bildspeicher 0.0 ms
+I (15578) pudding_p4: Ruckler: 6 verpasste Bildwechsel; längstes Bild 29.9 ms (Simulation 0.6, Vorbereiten 4.5, Mithelfen 23.4, Sichern 0.0)
+I (15578) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 26.0 ms je Bild
+I (15578) pudding_p4: Frei: 18 KB intern, 13483 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (15578) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (15578) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.55 ms, Kern 1 4.02 ms; angeschubst seit Start: 0
+I (15578) pudding_p4: 33.5 FPS (640x360 scharf), Frame 1.7 ms, Streifen 15/30, Rendern 1.7/2.6 ms, Skalieren 1.9/3.9 ms, PPA 22.7/20.2 ms, Ausgabe 26.8 ms, Panel 55.11 Hz
+I (15578) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (16901) pudding_p4: Desktop: 2.0 Bilder/s neu, 188.1 übersprungen/s, Fläche 46782 px/Bild, Compositor 0.04 ms/Bild
+I (18901) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (20094) pudding_fw::wlan: NTP: Uhr gestellt – 22.11.2026 15:53:21 Ortszeit
+I (20722) pudding_p4: Mittel: Simulation 156.2 ms, Bild vorbereiten 2.8 ms (0 Dreiecke), Mithelfen 18.5 ms, Rest-PPA 1.1 ms, Warten auf Bildspeicher 0.0 ms
+I (20722) pudding_p4: Ruckler: 7 verpasste Bildwechsel; längstes Bild 626.2 ms (Simulation 624.6, Vorbereiten 1.6, Mithelfen 0.0, Sichern 0.0)
+I (20722) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 29.4 ms je Bild
+I (20722) pudding_p4: Frei: 18 KB intern, 13483 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (20722) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (20722) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.65 ms, Kern 1 4.06 ms; angeschubst seit Start: 0
+I (20722) pudding_p4: 32.9 FPS (640x360 scharf), Frame 626.2 ms, Streifen 15/30, Rendern 1.7/2.7 ms, Skalieren 2.0/4.0 ms, PPA 22.7/19.9 ms, Ausgabe 26.8 ms, Panel 55.08 Hz
+I (20722) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (20906) pudding_p4: Desktop: 1.0 Bilder/s neu, 131.7 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (22910) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (24913) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (26917) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (28917) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (30917) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (32917) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (34917) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (36917) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (38917) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild

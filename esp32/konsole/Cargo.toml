@@ -1,0 +1,13 @@
+[package]
+name = "konsole"
+description = "Spielekonsole auf dem ESP32-P4: Launcher, Spielrahmen und Spiele (no_std + alloc)"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+pudding-core = { path = "../game" }
+spatz = { path = "../../spatz", default-features = false }
+
+[lints.clippy]
+too_many_arguments = "allow"

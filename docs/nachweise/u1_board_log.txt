@@ -1,0 +1,25 @@
+U1 Board 22.11.2026: Selbsttest (Entwicklungs-Build ESP32OS_UPDATE_TEST=1) nach der ersten WLAN-Verbindung.
+Log mit werkzeuge/log_schwaerzen.py geprüft: keine Zugangsdaten.
+
+netz_laden: http://kolibrios.org/en/ -> /rd/1/laden.html
+I (10922) pudding_fw::update: UPDATE-TEST: laufende Version 1.0-dev (2026-11-21), Platz esp32os_a, Ziel esp32os_b
+I (12007) pudding_fw::update: UPDATE: Abfrage https://api.github.com/repos/<besitzer>/<repo>/releases/latest: HTTP 404, 130 Byte
+I (12007) pudding_fw::update: UPDATE-TEST: Abfrage: No release published yet
+netz_laden: HTTP/1.0 200 OK | 6 Empfaenge, Inhalt 5247 Byte, Content-Length 5247, Summe 32f09f59 -> VOLLSTAENDIG
+E (13608) esp-x509-crt-bundle: Failed to verify certificate
+W (13609) update: Verbindung fehlgeschlagen: ESP_ERR_HTTP_CONNECT
+I (13610) pudding_fw::update: UPDATE-TEST: abgelaufenes Zertifikat abgelehnt wie verlangt (Verbindung fehlgeschlagen (-28674))
+E (14155) esp-x509-crt-bundle: Failed to verify certificate
+W (14156) update: Verbindung fehlgeschlagen: ESP_ERR_HTTP_CONNECT
+I (14156) pudding_fw::update: UPDATE-TEST: selbst signiertes Zertifikat abgelehnt wie verlangt (Verbindung fehlgeschlagen (-28674))
+E (15013) esp_ota_ops: OTA image has invalid magic byte (expected 0xE9, saw 0x23)
+W (15015) update: Abbild unvollständig: 0 von 9534 Byte (ESP_ERR_OTA_VALIDATE_FAILED)
+I (15015) pudding_fw::update: UPDATE-TEST: fremde Datei, falsche Prüfsumme: abgelehnt (Image rejected (0x1503))
+E (15475) esp_ota_ops: OTA image has invalid magic byte (expected 0xE9, saw 0x23)
+W (15476) update: Abbild unvollständig: 0 von 9534 Byte (ESP_ERR_OTA_VALIDATE_FAILED)
+I (15476) pudding_fw::update: UPDATE-TEST: fremde Datei, richtige Prüfsumme: abgelehnt (Image rejected (0x1503))
+I (15477) pudding_fw::update: UPDATE-TEST: Startplatz danach esp32os_a (läuft esp32os_a) – unverändert
+
+PC: kern aktualisierung::tests (Versionsvergleich, Release-JSON nur HTTPS, Prüfsummendatei),
+desktop/tests/wlan.rs (Einstellungen → System: Update gefunden, Installieren mit Fortschritt; Quelle simuliert),
+Fotos desktop/tests/erwartet/u1_gefunden.png, u1_installiert.png.

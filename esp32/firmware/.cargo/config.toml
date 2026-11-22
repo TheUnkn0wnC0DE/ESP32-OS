@@ -1,0 +1,19 @@
+[build]
+target = "riscv32imafc-esp-espidf"
+
+[target.riscv32imafc-esp-espidf]
+linker = "ldproxy"
+runner = "espflash flash --monitor --partition-table partitions.csv"
+# --wrap: ESP32-OS-Absturzmerker vor dem Panic-Handler (komponenten/esp32os/absturz.c)
+rustflags = ["--cfg", "espidf_time64", "-C", "link-arg=-Wl,--wrap=esp_panic_handler"]
+
+[unstable]
+build-std = ["std", "panic_abort"]
+
+[env]
+MCU = "esp32p4"
+# Die ESP-IDF-Version, mit der Waveshare die Beispiele dieser Platine baut.
+ESP_IDF_VERSION = "v5.5.5"
+# ESP-IDF-Werkzeuge einmal zentral (~/.espressif) statt pro Projekt –
+# kürzere Pfade, was unter Windows wichtig ist.
+ESP_IDF_TOOLS_INSTALL_DIR = "global"
