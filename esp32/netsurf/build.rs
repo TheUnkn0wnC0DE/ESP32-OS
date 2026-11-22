@@ -214,7 +214,7 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
         // passt (gemessen 22.11.: 4 MB → Heap voll beim Neuladen)
         g.d("NS_JS_SPEICHER", Some("(2u*1024u*1024u)")).d("NS_JS_STAPEL", Some("(192u*1024u)"));
     }
-    g.f(c("iconv.c")).f(c("js_quickjs.c")).f(c("neu_layout.c")).f(c("eingabe.c")).f(c("ohne_js.c"));
+    g.f(c("iconv.c")).f(c("js_quickjs.c")).f(c("neu_layout.c")).f(c("eingabe.c")).f(c("ohne_js.c")).f(c("lesezeichen.c")).f(c("touch.c"));
     // html.c als geprüfte Kopie: Seiten auf der Liste „ohne JavaScript“
     // (c/ohne_js.c) laden ohne Skripte
     g.f(html_kopie(q, aus));
@@ -291,7 +291,11 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     for f in "framebuffer.c schedule.c bitmap.c fetch.c findfile.c corewindow.c local_history.c clipboard.c font_internal.c".split_whitespace() {
         g.f(fe.join(f));
     }
-    for f in "fbtk.c event.c fill.c bitmap.c user.c window.c text.c scroll.c osk.c".split_whitespace() {
+    // fbtk.c als geprüfte Kopie (B6: Schreibmarke → Bildschirmtastatur);
+    // sie bindet widget.h aus dem fbtk-Ordner ein
+    g.p(fe.join("fbtk"));
+    g.f(fbtk_kopie(q, aus));
+    for f in "event.c fill.c bitmap.c user.c window.c text.c scroll.c osk.c".split_whitespace() {
         g.f(fe.join("fbtk").join(f));
     }
     g.f(c("getopt.c"));
@@ -454,9 +458,59 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
             "#include \"framebuffer/local_history.h\"\n",
             "#include \"framebuffer/local_history.h\"\n#include \"desktop/searchweb.h\"\n\
              /* ESP32-OS (B2): Eingabe der Adressleiste → Adresse oder Suche */\n\
-             nserror ns_eingabe_zu_url(const char *text, struct nsurl **url);\n",
+             nserror ns_eingabe_zu_url(const char *text, struct nsurl **url);\n\
+             /* ESP32-OS (B4): Verlauf und Lesezeichen speichern (gui_quit) */\n\
+             void ns_daten_ende(void);\n\
+             /* ESP32-OS (B5): Touch-Scrollen und Pinch-Zoom (c/touch.c) */\n\
+             int ns_touch_scroll_nehmen(void);\n\
+             bool ns_touch_zoom_nehmen(double *faktor);\n",
         ),
         ("\terror = nsurl_create(text, &url);\n", "\terror = ns_eingabe_zu_url(text, &url);\n"),
+        // B4: Adressleiste – erstes Antippen leert sie (Touch: kein Markieren;
+        // die Bildschirmtastatur hat keine Ende-Taste)
+        (
+            "/* reload icon click routine */\n",
+            "/* ESP32-OS (B4): erstes Antippen der Adressleiste leert sie, damit
+             sich gleich eine neue Adresse tippen lässt; ein weiteres Antippen
+             setzt die Schreibmarke wie gewohnt */\n\
+             static fbtk_callback ns_url_klick_alt;\n\n\
+             static int\nns_url_klick(fbtk_widget_t *widget, fbtk_callback_info *cbi)\n{\n\
+             \tint x, y, h;\n\
+             \tif (!fbtk_get_caret(widget, &x, &y, &h))\n\t\tfbtk_set_text(widget, \"\");\n\
+             \treturn ns_url_klick_alt != NULL ? ns_url_klick_alt(widget, cbi) : 0;\n}\n\n\
+             /* reload icon click routine */\n",
+        ),
+        (
+            "\t\t\t\tgw->url = widget; /* keep reference */\n",
+            "\t\t\t\tgw->url = widget; /* keep reference */\n\
+             \t\t\t\tns_url_klick_alt = fbtk_set_handler(widget, FBTK_CBT_CLICK, ns_url_klick, NULL);\n",
+        ),
+        // B5: Wischen scrollt um den Fingerweg (gesammelte Pixel aus
+        // c/touch.c), ein echtes Mausrad weiter um 100
+        (
+            "\t\tcase NSFB_KEY_MOUSE_4:\n\t\t\t/* scroll up */\n\t\t\tif (browser_window_scroll_at_point(gw->bw,\n\t\t\t\t\t\t\t   x, y,\n\t\t\t\t\t\t\t   0, -100) == false)\n\t\t\t\twidget_scroll_y(gw, -100, false);\n\t\t\tbreak;\n\n\t\tcase NSFB_KEY_MOUSE_5:\n\t\t\t/* scroll down */\n\t\t\tif (browser_window_scroll_at_point(gw->bw,\n\t\t\t\t\t\t\t   x, y,\n\t\t\t\t\t\t\t   0, 100) == false)\n\t\t\t\twidget_scroll_y(gw, 100, false);\n\t\t\tbreak;\n",
+            "\t\tcase NSFB_KEY_MOUSE_4:\n\t\tcase NSFB_KEY_MOUSE_5: {\n\
+             \t\t\t/* ESP32-OS (B5): Fingerweg aus c/touch.c, sonst Mausrad */\n\
+             \t\t\tint d = ns_touch_scroll_nehmen();\n\
+             \t\t\tif (d == 0)\n\
+             \t\t\t\td = cbi->event->value.keycode == NSFB_KEY_MOUSE_4 ? -100 : 100;\n\
+             \t\t\tif (browser_window_scroll_at_point(gw->bw, x, y, 0, d) == false)\n\
+             \t\t\t\twidget_scroll_y(gw, d, false);\n\
+             \t\t\tbreak;\n\t\t}\n",
+        ),
+        // B5: Pinch-Zoom nach jedem Ereignis-Durchlauf (0,5- bis 3-fach)
+        (
+            "\t\tfbtk_redraw(fbtk);\n\t}\n}\n",
+            "\t\t/* ESP32-OS (B5): Pinch-Zoom (c/touch.c) */\n\
+             \t\t{\n\t\t\tdouble f;\n\
+             \t\t\tif (ns_touch_zoom_nehmen(&f) && window_list != NULL) {\n\
+             \t\t\t\tfloat s = browser_window_get_scale(window_list->bw) * (float)f;\n\
+             \t\t\t\tif (s < 0.5f)\n\t\t\t\t\ts = 0.5f;\n\
+             \t\t\t\tif (s > 3.0f)\n\t\t\t\t\ts = 3.0f;\n\
+             \t\t\t\tbrowser_window_set_scale(window_list->bw, s, true);\n\
+             \t\t\t}\n\t\t}\n\
+             \t\tfbtk_redraw(fbtk);\n\t}\n}\n",
+        ),
         // B3: Zwischenspeicher am Board begrenzen (vor netsurf_init)
         (
             "\tnsoption_commandline(&argc, argv, nsoptions);\n",
@@ -468,10 +522,12 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              \t/* ESP32-OS (B3, PC-Tests): Grenze per Umgebung */\n\
              \t{\n\t\tconst char *grenze = getenv(\"NS_CACHE_GRENZE\");\n\
              \t\tif (grenze != NULL && grenze[0] != '\\0')\n\
-             \t\t\tnsoption_set_int(memory_cache_size, atoi(grenze));\n\t}\n",
+             \t\t\tnsoption_set_int(memory_cache_size, atoi(grenze));\n\t}\n\
+             \t/* ESP32-OS (B4): Datenordner, Cookie-Dateien */\n\
+             \tns_daten_optionen();\n",
         ),
         // Knopf „Ohne JS“/„Mit JS“ (c/ohne_js.c) in der Werkzeugleiste
-        ("#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrutc\"", "#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrjutc\""),
+        ("#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrutc\"", "#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrjmvutc\""),
         (
             "\tbrowser_window_reload(bw, true);\n\treturn 1;\n}\n",
             "\tbrowser_window_reload(bw, true);\n\treturn 1;\n}\n\n\
@@ -481,6 +537,24 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              void ns_ohne_js_ladestart(struct browser_window *bw);\n\
              #define NS_JS_KNOPF_BREITE 70\n\
              static fbtk_widget_t *ns_js_knopf;\n\nvoid ns_js_knopf_text(const char *text)\n{\n\tif (ns_js_knopf != NULL)\n\t\tfbtk_set_text(ns_js_knopf, text);\n}\n\n\
+             /* ESP32-OS (B4): Lesezeichen und Verlauf (c/lesezeichen.c) */\n\
+             void ns_lesezeichen_umschalten(struct browser_window *bw);\n\
+             const char *ns_merken_knopftext(struct nsurl *url);\n\
+             void ns_liste_oeffnen(struct browser_window *bw);\n\
+             void ns_daten_optionen(void);\n\
+             void ns_daten_start(void);\n\
+             void ns_daten_ende(void);\n\
+             #define NS_MERKEN_BREITE 70\n\
+             #define NS_LISTE_BREITE 54\n\
+             static fbtk_widget_t *ns_merken_knopf;\n\n\
+             void ns_merken_knopf_text(const char *text)\n{\n\
+             \tif (ns_merken_knopf != NULL)\n\t\tfbtk_set_text(ns_merken_knopf, text);\n}\n\n\
+             static int\nns_merken_klick(fbtk_widget_t *widget, fbtk_callback_info *cbi)\n{\n\
+             \tif (cbi->event->type != NSFB_EVENT_KEY_UP)\n\t\treturn 0;\n\
+             \tns_lesezeichen_umschalten(cbi->context);\n\treturn 1;\n}\n\n\
+             static int\nns_liste_klick(fbtk_widget_t *widget, fbtk_callback_info *cbi)\n{\n\
+             \tif (cbi->event->type != NSFB_EVENT_KEY_UP)\n\t\treturn 0;\n\
+             \tns_liste_oeffnen(cbi->context);\n\treturn 1;\n}\n\n\
              static int\nns_js_knopf_klick(fbtk_widget_t *widget, fbtk_callback_info *cbi)\n{\n\
              \tif (cbi->event->type != NSFB_EVENT_KEY_UP)\n\t\treturn 0;\n\
              \tns_ohne_js_umschalten(cbi->context);\n\treturn 1;\n}\n",
@@ -498,6 +572,26 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              \t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = fbtk_create_bitmap(",
         ),
         (
+            "\t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = fbtk_create_bitmap(",
+            "\t\tcase 'm': /* ESP32-OS (B4): Lesezeichen merken */\n\
+             \t\t\twidget = fbtk_create_text_button(toolbar,\n\
+             \t\t\t\t\t\t(xdir == 1) ? xpos : xpos - NS_MERKEN_BREITE,\n\
+             \t\t\t\t\t\tpadding, NS_MERKEN_BREITE, -padding,\n\
+             \t\t\t\t\t\tframe_col, FB_COLOUR_BLACK,\n\
+             \t\t\t\t\t\tns_merken_klick, gw->bw);\n\
+             \t\t\tfbtk_set_text(widget, ns_merken_knopftext(NULL));\n\
+             \t\t\tns_merken_knopf = widget;\n\t\t\tbreak;\n\n\
+             \t\tcase 'v': /* ESP32-OS (B4): Lesezeichen und Verlauf */\n\
+             \t\t\twidget = fbtk_create_text_button(toolbar,\n\
+             \t\t\t\t\t\t(xdir == 1) ? xpos : xpos - NS_LISTE_BREITE,\n\
+             \t\t\t\t\t\tpadding, NS_LISTE_BREITE, -padding,\n\
+             \t\t\t\t\t\tframe_col, FB_COLOUR_BLACK,\n\
+             \t\t\t\t\t\tns_liste_klick, gw->bw);\n\
+             \t\t\tfbtk_set_text(widget, getenv(\"LANGUAGE\") != NULL && strncmp(getenv(\"LANGUAGE\"), \"de\", 2) == 0 ? \"Liste\" : \"List\");\n\
+             \t\t\tbreak;\n\n\
+             \t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = fbtk_create_bitmap(",
+        ),
+        (
             "\t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = gw->throbber;\n",
             "\t\tcase 'j': /* ESP32-OS: ohne/mit JavaScript */\n\
              \t\t\twidget = ns_js_knopf;\n\
@@ -506,9 +600,21 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              \t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = gw->throbber;\n",
         ),
         (
+            "\t\tcase 'j': /* ESP32-OS: ohne/mit JavaScript */\n\t\t\twidget = ns_js_knopf;\n",
+            "\t\tcase 'm': /* ESP32-OS (B4) */\n\
+             \t\t\twidget = ns_merken_knopf;\n\
+             \t\t\tx = (xdir == 1) ? xpos : xpos - NS_MERKEN_BREITE;\n\
+             \t\t\ty = padding;\n\t\t\tw = NS_MERKEN_BREITE;\n\t\t\th = -padding;\n\t\t\tbreak;\n\n\
+             \t\tcase 'v': /* ESP32-OS (B4): Knopf ohne Merker – nicht verschieben */\n\
+             \t\t\twidget = NULL;\n\
+             \t\t\tw = NS_LISTE_BREITE;\n\t\t\tbreak;\n\n\
+             \t\tcase 'j': /* ESP32-OS: ohne/mit JavaScript */\n\t\t\twidget = ns_js_knopf;\n",
+        ),
+        (
             "\tfbtk_set_text(g->url, nsurl_access(url));\n\treturn NSERROR_OK;\n",
             "\tfbtk_set_text(g->url, nsurl_access(url));\n\
              \tif (ns_js_knopf != NULL)\n\t\tfbtk_set_text(ns_js_knopf, ns_ohne_js_knopftext(url));\n\
+             \tif (ns_merken_knopf != NULL)\n\t\tfbtk_set_text(ns_merken_knopf, ns_merken_knopftext(url));\n\
              \treturn NSERROR_OK;\n",
         ),
         (
@@ -523,7 +629,25 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              \t/* ESP32-OS (B2): Suchanbieter (SearchEngines, DuckDuckGo-HTML zuerst) */\n\
              \t{\n\t\tchar *anbieter = filepath_find(respaths, \"SearchEngines\");\n\
              \t\tsearch_web_init(anbieter);\n\t\tfree(anbieter);\n\
-             \t\tsearch_web_select_provider(nsoption_int(search_provider));\n\t}\n",
+             \t\tsearch_web_select_provider(nsoption_int(search_provider));\n\t}\n\
+             \t/* ESP32-OS (B4): Adressen (Verlauf) und Lesezeichen laden */\n\
+             \tns_daten_start();\n",
+        ),
+        (
+            "\turldb_save_cookies(nsoption_charp(cookie_jar));\n\n\tframebuffer_finalise();\n",
+            "\t/* ESP32-OS (B4): Verlauf und Lesezeichen speichern */\n\
+             \tns_daten_ende();\n\
+             \turldb_save_cookies(nsoption_charp(cookie_jar));\n\n\tframebuffer_finalise();\n",
+        ),
+        // B4: nach jeder neuen Adresse gibt die Adressleiste die Schreibmarke
+        // ab – das nächste Antippen leert sie wieder (sonst landete neuer Text
+        // mitten in der alten Adresse)
+        (
+            "\tif (ns_merken_knopf != NULL)\n\t\tfbtk_set_text(ns_merken_knopf, ns_merken_knopftext(url));\n",
+            "\tif (ns_merken_knopf != NULL)\n\t\tfbtk_set_text(ns_merken_knopf, ns_merken_knopftext(url));\n\
+             \t{\n\t\tint cx, cy, ch;\n\
+             \t\tif (fbtk_get_caret(g->url, &cx, &cy, &ch))\n\
+             \t\t\tfbtk_set_caret(g->url, false, 0, 0, 0, NULL);\n\t}\n",
         ),
     ] {
         assert_eq!(t.matches(alt).count(), 1, "gui.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
@@ -566,6 +690,41 @@ fn html_kopie(q: &Path, ziel: &Path) -> PathBuf {
     std::fs::create_dir_all(ziel).expect("Ordner");
     if std::fs::read_to_string(&datei).ok().as_deref() != Some(t.as_str()) {
         std::fs::write(&datei, t).expect("html.c");
+    }
+    datei
+}
+
+/// `frontends/framebuffer/fbtk/fbtk.c` als geprüfte Kopie (B6): jede
+/// Schreibmarke – Formularfeld einer Seite oder Adressleiste – läuft über
+/// `fbtk_set_caret`; dort meldet die Kopie dem Kern, ob ein Textfeld den
+/// Fokus hat und wo es liegt (Bildschirmtastatur erscheint, verdeckt das
+/// Feld nicht, verschwindet wieder).
+fn fbtk_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    let quelle = q.join("netsurf/frontends/framebuffer/fbtk/fbtk.c");
+    println!("cargo:rerun-if-changed={}", quelle.display());
+    let mut t = std::fs::read_to_string(&quelle).expect("fbtk.c").replace("\r\n", "\n");
+    for (alt, neu) in [
+        (
+            "#include \"widget.h\"\n",
+            "#include \"widget.h\"\n\n\
+             /* ESP32-OS (B6): Textfeld-Fokus an den Kern (netsurf/src/lib.rs) */\n\
+             void ns_tastatur_fokus(int an, int x, int y, int hoehe);\n",
+        ),
+        (
+            "\t} else {\n\t\troot->u.root.caret.owner = NULL;\n\t\troot->u.root.caret.remove_cb = NULL;\n\t}\n}\n",
+            "\t} else {\n\t\troot->u.root.caret.owner = NULL;\n\t\troot->u.root.caret.remove_cb = NULL;\n\t}\n\
+             \t/* ESP32-OS (B6): Bildschirmtastatur – Lage im Fenster */\n\
+             \tns_tastatur_fokus(set, fbtk_get_absx(widget) + x, fbtk_get_absy(widget) + y, height);\n}\n",
+        ),
+    ] {
+        assert_eq!(t.matches(alt).count(), 1, "fbtk.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
+        t = t.replacen(alt, neu, 1);
+    }
+    let t = format!("/* Erzeugt von esp32/netsurf/build.rs (fbtk_kopie) aus frontends/framebuffer/fbtk/fbtk.c. */\n{t}");
+    let datei = ziel.join("fbtk.c");
+    std::fs::create_dir_all(ziel).expect("Ordner");
+    if std::fs::read_to_string(&datei).ok().as_deref() != Some(t.as_str()) {
+        std::fs::write(&datei, t).expect("fbtk.c");
     }
     datei
 }

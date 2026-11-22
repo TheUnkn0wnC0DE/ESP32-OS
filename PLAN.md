@@ -634,8 +634,27 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   freigebbar höchstens 111 KB, gesamt höchstens 1583 KB (alles von der
   offenen Seite belegt), Browser-Heap Spitze 9,4 MB < 10 MB, Seite
   angezeigt (`b3_board_wikipedia.png`).
-- [ ] **B4 Adressleiste, Lesezeichen, Verlauf** per Touch. Nachweis: Autopilot,
+- [x] **B4 Adressleiste, Lesezeichen, Verlauf** per Touch. Nachweis: Autopilot,
   Fotos.
+  Nachweis (Board, `docs/nachweise/b4/`, Autopilot mit Testordner
+  `/daten/netsurf_test`): Runde 29 Adressleiste antippen → Tastatur →
+  example.com → „Merken“ → Log „Lesezeichen gemerkt“; Runde 30 nach Neustart
+  ist es noch da („Merken“ entfernt es wieder); Runde 31: „Liste“ zeigt
+  1 Lesezeichen + Verlauf (`b4_board_liste.png`), Antippen öffnet
+  example.com, Knopf zeigt „Gemerkt“ (`b4_board_lesezeichen_geoeffnet.png`,
+  Log `b4_board_log.txt`). PC 64 Bit 22/22, i686 24/24 grün.
+  Umsetzung 22./23.11. (`netsurf/c/lesezeichen.c`, gui.c-Kopie): Knöpfe
+  „Merken“/„Gemerkt“ (NetSurfs Hotlist, Datei `Lesezeichen`) und „Liste“
+  (schreibt eine antippbare Seite: Lesezeichen + Verlauf, neueste zuerst,
+  höchstens 100; Verlauf aus NetSurfs Adress-Datenbank, Datei `Adressen`);
+  Cookies in `Cookies`. Datenordner am Board `/daten/netsurf`, für Tests
+  `browser --daten=<ordner>`. Adressleiste: erstes Antippen leert sie
+  (Bildschirmtastatur ohne Ende-Taste), nach jeder neuen Adresse gibt sie
+  die Schreibmarke ab. Unterwegs behoben: libnsfbs RAM-Fläche war am Board
+  nicht angemeldet → kein Bitmap, keine Bilder in Seiten, keine Baumansicht.
+  PC-Test `lesezeichen_verlauf_adressleiste` (+ `lesezeichen_zweiter_start`):
+  Eingabe-Skript der Prüf-Fläche tippt Merken, Link, Adressleiste (zweimal),
+  Liste; zweiter Start liest die Dateien und öffnet das Lesezeichen.
 - [ ] **B5 Touch-Scrollen und Pinch-Zoom**. Nachweis: Autopilot, Fotos.
 - [ ] **B6 Texteingabe in Formularen** über Bildschirmtastatur (Hook).
   Nachweis: Autopilot sucht in Wikipedia-Suchfeld, Foto Ergebnis.

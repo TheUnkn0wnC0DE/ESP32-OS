@@ -241,6 +241,16 @@ static void taste_nachfuehren(uint32_t e, uint32_t bit, int taste)
 		einreihen(jetzt ? NSFB_EVENT_KEY_DOWN : NSFB_EVENT_KEY_UP, taste);
 }
 
+/* c/touch.c (B5) */
+void ns_touch_scroll_schritte(int schritte);
+void ns_touch_zoom(double faktor);
+/* netsurf/src/lib.rs: Zoom-Geste des Kerns (Tausendstel, Mitte) */
+void ns_zoom_holen(uint32_t *faktor, int *x, int *y);
+#ifdef ESP_PLATFORM
+static int takt_scroll;
+static int wisch_neu; /* Scrollschritte seit dem letzten takt() */
+#endif
+
 static void maus(void)
 {
 	ksys_pos_t p = _ksys_get_mouse_pos(KSYS_MOUSE_WINDOW_POS);
@@ -255,11 +265,26 @@ static void maus(void)
 	taste_nachfuehren(e, 1, NSFB_KEY_MOUSE_1);
 	taste_nachfuehren(e, 2, NSFB_KEY_MOUSE_3);
 	knoepfe = e & 3;
-	while (dy != 0) {
+	/* B5: alle Scrollschritte als Pixel sammeln (c/touch.c) und nur ein
+	 * Mausrad-Ereignis schicken – die gui.c-Kopie scrollt um alles
+	 * Gesammelte, auch was während des Neuzeichnens dazukam */
+	if (dy != 0) {
 		int t = dy < 0 ? NSFB_KEY_MOUSE_4 : NSFB_KEY_MOUSE_5;
+		ns_touch_scroll_schritte(dy);
 		einreihen(NSFB_EVENT_KEY_DOWN, t);
 		einreihen(NSFB_EVENT_KEY_UP, t);
-		dy += dy < 0 ? 1 : -1;
+#ifdef ESP_PLATFORM
+		takt_scroll += dy;
+		wisch_neu += dy;
+#endif
+	}
+	/* B5: Pinch-Zoom der Desktop-Gesten (Faktor in Tausendstel) */
+	{
+		uint32_t f;
+		int zx, zy;
+		ns_zoom_holen(&f, &zx, &zy);
+		if (f != 1000 && f != 0)
+			ns_touch_zoom((double)f / 1000.0);
 	}
 }
 
@@ -269,9 +294,48 @@ static void maus(void)
 #include "esp_log.h"
 #include "esp_timer.h"
 static int64_t takt_start, takt_warten;
-static unsigned takt_runden;
+static unsigned takt_runden, takt_bilder;
+static bool takt_bild;
+static int64_t takt_bild_zeit; /* letztes Bild (e_update) */
 void ns_heap_stand_kb(uint32_t *belegt, uint32_t *spitze);
 void ns_llcache_stand(uint32_t *groesse, uint32_t *grenze, uint32_t *frei);
+
+/* B5: Bilder je Wischbewegung – vom ersten Scrollschritt bis zum letzten
+ * Bild danach; eine Bewegung endet 300 ms nach dem letzten Scrollschritt */
+static int64_t wisch_start, wisch_letzter_schritt, wisch_letztes_bild;
+static unsigned wisch_bilder;
+static int wisch_schritte;
+
+static void wischen_messen(int64_t jetzt, bool bild)
+{
+	/* Bild zuerst: es gehört zu einer schon laufenden Bewegung */
+	if (bild && wisch_start != 0) {
+		wisch_bilder++;
+		wisch_letztes_bild = takt_bild_zeit;
+	}
+	if (wisch_neu != 0) {
+		if (wisch_start == 0) {
+			wisch_start = jetzt;
+			wisch_letztes_bild = jetzt;
+			wisch_bilder = 0;
+			wisch_schritte = 0;
+		}
+		wisch_schritte += wisch_neu;
+		wisch_neu = 0;
+		wisch_letzter_schritt = jetzt;
+	}
+	if (wisch_start == 0)
+		return;
+	if (jetzt - wisch_letzter_schritt >= 300000) {
+		int64_t dauer_ms = (wisch_letztes_bild - wisch_start) / 1000;
+		if (dauer_ms < 1)
+			dauer_ms = 1;
+		ESP_LOGI("ns_takt", "Wischen: %d Schritte, %u Bilder in %lld ms (%u.%u Bilder/s)", wisch_schritte,
+			 wisch_bilder, (long long)dauer_ms, (unsigned)(wisch_bilder * 1000 / dauer_ms),
+			 (unsigned)(wisch_bilder * 10000 / dauer_ms % 10));
+		wisch_start = 0;
+	}
+}
 
 static void takt(int64_t warten_us)
 {
@@ -280,19 +344,28 @@ static void takt(int64_t warten_us)
 		takt_start = jetzt;
 	takt_warten += warten_us;
 	takt_runden++;
+	wischen_messen(jetzt, takt_bild);
+	if (takt_bild) {
+		takt_bilder++;
+		takt_bild = false;
+	}
 	if (jetzt - takt_start >= 5000000) {
 		uint32_t belegt, spitze, cache, grenze, frei;
 		ns_heap_stand_kb(&belegt, &spitze);
 		ns_llcache_stand(&cache, &grenze, &frei);
+		int64_t dauer_ms = (jetzt - takt_start) / 1000;
 		ESP_LOGI("ns_takt",
-			 "%u Runden, Arbeit %lld ms, Warten %lld ms, Heap %u KB (Spitze %u KB), Cache %u KB "
-			 "(freigebbar %u KB, Grenze %u KB)",
+			 "%u Runden, Arbeit %lld ms, Warten %lld ms, %u Bilder (%u.%u/s), Scroll %d Schritte, Heap %u KB "
+			 "(Spitze %u KB), Cache %u KB (freigebbar %u KB, Grenze %u KB)",
 			 takt_runden, (long long)((jetzt - takt_start - takt_warten) / 1000), (long long)(takt_warten / 1000),
-			 (unsigned)belegt, (unsigned)spitze, (unsigned)(cache / 1024), (unsigned)(frei / 1024),
+			 takt_bilder, (unsigned)(takt_bilder * 1000 / dauer_ms), (unsigned)(takt_bilder * 10000 / dauer_ms % 10),
+			 takt_scroll, (unsigned)belegt, (unsigned)spitze, (unsigned)(cache / 1024), (unsigned)(frei / 1024),
 			 (unsigned)(grenze / 1024));
 		takt_start = jetzt;
 		takt_warten = 0;
 		takt_runden = 0;
+		takt_bilder = 0;
+		takt_scroll = 0;
 	}
 }
 #endif
@@ -321,7 +394,7 @@ static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 	else
 		ev = _ksys_wait_event_timeout((uint32_t)((timeout + 9) / 10));
 #ifdef ESP_PLATFORM
-	takt(esp_timer_get_time() - warten_ab);
+	int64_t gewartet = esp_timer_get_time() - warten_ab;
 #endif
 	switch (ev) {
 	case KSYS_EVENT_REDRAW:
@@ -349,6 +422,9 @@ static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 	default:
 		break;
 	}
+#ifdef ESP_PLATFORM
+	takt(gewartet);
+#endif
 	if (zu) {
 		event->type = NSFB_EVENT_CONTROL;
 		event->value.controlcode = NSFB_CONTROL_QUIT;
@@ -364,11 +440,18 @@ static int e_update(nsfb_t *nsfb, nsfb_bbox_t *box)
 	int y1 = box->y1 > nsfb->height ? nsfb->height : box->y1;
 	if (x1 <= x0 || y1 <= y0 || nsfb->ptr == NULL)
 		return 0;
+#ifdef ESP_PLATFORM
+	takt_bild = true;
+	takt_bild_zeit = esp_timer_get_time();
+#endif
 	/* Teilrechteck: Zeilenabstand über den Versatz (Funktion 65, ebp) */
 	ksys_draw_bitmap_palette(nsfb->ptr + (size_t)y0 * nsfb->linelen + (size_t)x0 * 2, x0, y0, x1 - x0, y1 - y0, 16, NULL,
 				 nsfb->linelen - (x1 - x0) * 2);
 	return 0;
 }
+
+/* libnsfb/src/surface/ram.c */
+extern const nsfb_surface_rtns_t ram_rtns;
 
 static const nsfb_surface_rtns_t esp32os_rtns = {
 	.defaults = e_defaults,
@@ -389,6 +472,13 @@ int ns_esp32os_main(const char *url)
 	static char *argv[] = { "netsurf", "--enable_javascript=1", "-f", "esp32os", "-b", "16", "-w", breite, "-h", hoehe, NULL, NULL };
 	int b, h;
 	_nsfb_register_surface(NSFB_SURFACE_ABLE, &esp32os_rtns, "esp32os");
+	/* Bitmaps (Bilder, Baumansicht der Lesezeichen) legt das Frontend auf
+	 * libnsfbs RAM-Fläche an. ram.c meldet sie über einen Konstruktor an –
+	 * am Board ist diese Anmeldung beim Programmstart nicht mehr da (die
+	 * statischen Daten liegen im PSRAM und werden erst danach gesetzt);
+	 * ohne sie scheitert jedes guit->bitmap->create (B4, gemessen). */
+	if (nsfb_type_from_name("ram") == NSFB_SURFACE_NONE)
+		_nsfb_register_surface(NSFB_SURFACE_RAM, &ram_rtns, "ram");
 	fenster_anlegen(&b, &h);
 	snprintf(breite, sizeof breite, "%d", b);
 	snprintf(hoehe, sizeof hoehe, "%d", h);

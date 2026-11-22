@@ -4,6 +4,21 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
 `konsole` @ `44b79f2`). Die Vorgeschichte (Spiele, Firmware, Messwerte,
 Übergabe vom 21.11.) liegt im alten Repo des Vorgängerprojekts.
 
+## Nacht 23.11. (selbständig, eine Zeile je fertigem Punkt)
+
+- ✔ B4: Adressleiste (erstes Antippen leert sie), Knöpfe „Merken“ und
+  „Liste“ (Lesezeichen + Verlauf als antippbare Seite), Daten in
+  `/daten/netsurf`, bleiben über Neustart – am Board per Autopilot belegt.
+  Unterwegs gefunden: RAM-Fläche von libnsfb war am Board nicht angemeldet
+  → **keine Bitmaps, also auch keine Bilder in Webseiten**; behoben.
+- (läuft) B5 Touch-Scrollen (Fingerweg statt fester Schritte) und
+  Pinch-Zoom: am PC und auf Board-Fotos ok, FPS-Messung fehlt noch.
+  B6 (Tastatur geht bei Textfeld von selbst auf) am PC ok.
+
+## Fragen an dich (Nacht 23.11.)
+
+- (noch keine)
+
 ## Für dich: Zusammenfassung der Nacht 22.11.
 
 **Fertig (je mit Nachweis in PLAN.md):** P6 Bildschirmfoto · B0 Flash neu

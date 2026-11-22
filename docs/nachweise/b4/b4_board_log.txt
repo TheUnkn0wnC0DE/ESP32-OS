@@ -1,0 +1,13 @@
+# B4 Board, Runde 29-31 (Autopilot, Datenordner /daten/netsurf_test), Auszug ns_lesezeichen
+## Runde 29 (Merken, Liste)
+I (11642) ns_lesezeichen: Datenordner /daten/netsurf_test, Lesezeichen bereit (0)
+I (61811) ns_lesezeichen: Lesezeichen gemerkt: https://example.com/ (0)
+I (100348) ns_lesezeichen: Liste geschrieben: 1 Lesezeichen, 2 besuchte Seiten
+## Runde 30 (nach Neustart: Lesezeichen aus Runde 29 noch da -> Merken entfernt es)
+I (11642) ns_lesezeichen: Datenordner /daten/netsurf_test, Lesezeichen bereit (0)
+I (61811) ns_lesezeichen: Lesezeichen entfernt: https://example.com/
+I (100351) ns_lesezeichen: Liste geschrieben: 0 Lesezeichen, 2 besuchte Seiten
+## Runde 31 (Merken, Liste, Lesezeichen antippen)
+I (11655) ns_lesezeichen: Datenordner /daten/netsurf_test, Lesezeichen bereit (0)
+I (61826) ns_lesezeichen: Lesezeichen gemerkt: https://example.com/ (0)
+I (123613) ns_lesezeichen: Liste geschrieben: 1 Lesezeichen, 2 besuchte Seiten

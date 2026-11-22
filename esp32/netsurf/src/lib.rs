@@ -68,10 +68,57 @@ pub fn programm() {
         kern::sys::debug_text("browser: statische Daten nicht gesichert (Rahmen leer oder kein Speicher)\n");
         return;
     }
-    let url = std::ffi::CString::new(kern::argumente()).unwrap_or_default();
+    // „--daten=<ordner> [adresse]“: eigener Datenordner für Lesezeichen,
+    // Verlauf und Cookies (Board-Tests schreiben so nie in die echten
+    // Daten des Nutzers; c/lesezeichen.c liest NS_DATEN_ORDNER)
+    let mut argumente = kern::argumente();
+    if let Some(rest) = argumente.strip_prefix("--daten=") {
+        let (ordner, adresse) = rest.split_once(' ').unwrap_or((rest, ""));
+        // SAFETY: wie oben, NetSurf läuft noch nicht.
+        unsafe { std::env::set_var("NS_DATEN_ORDNER", ordner) };
+        argumente = adresse.trim().to_string();
+    }
+    let url = std::ffi::CString::new(argumente).unwrap_or_default();
     // SAFETY: nullterminierte Adresse, lebt bis zum Ende des Aufrufs.
     unsafe {
         ns_esp32os_main(url.as_ptr());
+    }
+}
+
+/// B6: Textfeld-Fokus aus der fbtk-Kopie (jede Schreibmarke): am Board und
+/// im 32-Bit-Programm an den Kern (Bildschirmtastatur erscheint und
+/// verdeckt das Feld nicht), am PC (64 Bit) für die Tests festgehalten.
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_tastatur_fokus(an: i32, x: i32, y: i32, hoehe: i32) {
+    #[cfg(target_pointer_width = "32")]
+    {
+        kern::sys::textfeld_fokus(an != 0);
+        if an != 0 {
+            kern::sys::textfeld_lage(x, y, 2, hoehe.max(1));
+        }
+    }
+    TASTATUR.lock().unwrap_or_else(|e| e.into_inner()).push((an != 0, x, y, hoehe));
+}
+
+/// Fokus-Meldungen an die Bildschirmtastatur seit dem letzten Abholen
+/// (an, x, y, Höhe) – für die Tests.
+pub fn tastatur_meldungen() -> Vec<(bool, i32, i32, i32)> {
+    std::mem::take(&mut *TASTATUR.lock().unwrap_or_else(|e| e.into_inner()))
+}
+
+static TASTATUR: std::sync::Mutex<Vec<(bool, i32, i32, i32)>> = std::sync::Mutex::new(Vec::new());
+
+/// B5: Zoom-Geste des Desktops (Faktor in Tausendstel seit dem letzten
+/// Abholen, Mittelpunkt) für die Fläche des Browsers (c/flaeche_esp32os.c).
+#[cfg(target_pointer_width = "32")]
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_zoom_holen(faktor: *mut u32, x: *mut i32, y: *mut i32) {
+    let (f, mx, my) = kern::sys::zoom_holen();
+    // SAFETY: Zeiger vom Aufrufer (lokale Variablen).
+    unsafe {
+        *faktor = f;
+        *x = mx;
+        *y = my;
     }
 }
 
@@ -824,8 +871,16 @@ setTimeout(() => {
         ressourcen();
         assert!(c_umgebung("NS_PROXY", &proxy));
         js_konsole(true);
+        // NS_GROESSE=„BxH“ (z. B. die Fenstergrösse am Board), sonst 800×480
+        let (b, h) = std::env::var("NS_GROESSE")
+            .ok()
+            .and_then(|g| {
+                let (b, h) = g.split_once('x')?;
+                Some((b.parse().ok()?, h.parse().ok()?))
+            })
+            .unwrap_or((800, 480));
         let t = std::time::Instant::now();
-        let (r, bild) = lauf_mit(&seite, 800, 480, ms, true).expect("Bild");
+        let (r, bild) = lauf_mit(&seite, b, h, ms, true).expect("Bild");
         println!("Ende {r} nach {:?}, Neu-Layouts {}", t.elapsed(), neu_layouts());
         #[cfg(target_pointer_width = "32")]
         {
@@ -1029,6 +1084,288 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
         assert!(frei <= quelle, "freigebbarer Teil {frei} B über der Grenze {quelle} B");
         // es wurde wirklich aufgeräumt: 6 × 700 KB lagen nicht alle im Speicher
         assert!(gesamt < 6 * 700 * 1024, "Zwischenspeicher {gesamt} B");
+    }
+
+    /// B4: Lesezeichen, Verlauf und Adressleiste per Antippen und Tippen
+    /// (Eingabe-Skript der Prüf-Fläche): Seite A merken, Link zu B
+    /// antippen, in der Adressleiste die Adresse von C tippen, „Liste“
+    /// antippen, dort das Lesezeichen A antippen. Danach liegen Lesezeichen
+    /// und Adressen im Datenordner.
+    #[test]
+    fn lesezeichen_verlauf_adressleiste() {
+        c(lesezeichen_verlauf_adressleiste_innen);
+    }
+
+    fn lesezeichen_verlauf_adressleiste_innen() {
+        if im_eigenen_prozess("lesezeichen_verlauf_adressleiste") {
+            return;
+        }
+        use std::io::{Read, Write};
+        ressourcen();
+        let ordner = std::env::temp_dir().join(format!("ns_daten_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&ordner);
+        std::fs::create_dir_all(&ordner).unwrap();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_DATEN_ORDNER", "");
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _zurueck = Zuruecksetzen;
+        // ohne Laufwerk: NetSurfs file:-Abrufer kennt nur Pfade wie /a/b
+        // (Windows nimmt sie auf dem aktuellen Laufwerk)
+        let ohne_lw = |p: &str| p.replace('\\', "/").trim_start_matches(|c: char| c.is_ascii_alphabetic()).trim_start_matches(':').to_string();
+        assert!(c_umgebung("NS_DATEN_ORDNER", &ohne_lw(&ordner.to_string_lossy())));
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        let anfragen = std::sync::Arc::new(Mutex::new(Vec::<String>::new()));
+        let log = anfragen.clone();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                log.lock().unwrap().push(pfad.clone());
+                let (titel, farbe, mehr) = match pfad.as_str() {
+                    "/a" => ("Seite A", "#00ff00", "<a href='/b' style='display:block;width:300px;height:60px;background:#0000ff'></a>"),
+                    "/b" => ("Seite B", "#ffff00", ""),
+                    "/c" => ("Seite C", "#00ffff", ""),
+                    _ => ("weg", "#ff0000", ""),
+                };
+                let html = format!(
+                    "<html><head><title>{titel}</title></head><body style='margin:0;background:white'>\
+                     <div style='width:200px;height:100px;background:{farbe}'></div><div style='height:30px'></div>{mehr}</body></html>"
+                );
+                let antwort = format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\r\n{html}", html.len());
+                let _ = s.write_all(antwort.as_bytes());
+            }
+        });
+        // NS_SKRIPT_KUERZEN=n: nur die ersten n Schritte (Fehlersuche).
+        // Merken (238,15) – Link zu B – Adressleiste antippen (leert sie) und
+        // Adresse von C tippen – Liste (300,15)
+        let schritte = [
+            "1000:238:15".to_string(),
+            "1500:150:160".to_string(),
+            "2500:600:15".to_string(),
+            format!("2800:T:http://127.0.0.1:{port}/c\\n"),
+            // zweite Eingabe gleich danach: die Leiste muss wieder leer sein
+            "3500:600:15".to_string(),
+            format!("3700:T:http://127.0.0.1:{port}/d\\n"),
+            "4500:300:15".to_string(),
+        ];
+        let n = std::env::var("NS_SKRIPT_KUERZEN").ok().and_then(|v| v.parse().ok()).unwrap_or(schritte.len());
+        let skript = schritte[..n.min(schritte.len())].join(";");
+        assert!(c_umgebung("NS_TEST_EINGABE", &skript));
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/a"), 800, 480, 6000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        // ohne Werkzeugleiste (die Adresszeile kann lokale Pfade zeigen)
+        let oben = 32 * bild.breite as usize;
+        std::fs::write(dir.join("b4_pc_liste.png"), spatz::image::encode_png(bild.breite, bild.hoehe - 32, &bild.px[oben..])).unwrap();
+        let a = anfragen.lock().unwrap().clone();
+        println!("Anfragen {a:?}");
+        let liste = std::fs::read_to_string(ordner.join("liste.html")).expect("liste.html");
+        println!("{liste}");
+        assert!(a.iter().any(|p| p == "/b"), "Link angetippt: {a:?}");
+        assert!(a.iter().any(|p| p == "/c"), "Adressleiste: {a:?}");
+        if n >= 5 {
+            assert!(a.iter().any(|p| p == "/d"), "zweite Eingabe in der Adressleiste: {a:?}");
+        }
+        if n < schritte.len() {
+            return;
+        }
+        // Liste: Lesezeichen A, Verlauf neueste zuerst C, B, A
+        let (lz, verlauf) = liste.split_once("<h2>Verlauf</h2>").expect("Abschnitt Verlauf");
+        assert!(lz.contains(&format!("127.0.0.1:{port}/a\">Seite A")), "Lesezeichen A: {lz}");
+        let pos = |t: &str| verlauf.find(t).unwrap_or(usize::MAX);
+        assert!(pos("Seite C") < pos("Seite B") && pos("Seite B") < pos("Seite A") && pos("Seite A") != usize::MAX, "Verlauf: {verlauf}");
+        // gespeichert beim Beenden
+        let datei = std::fs::read_to_string(ordner.join("Lesezeichen")).expect("Datei Lesezeichen");
+        assert!(datei.contains(&format!("127.0.0.1:{port}/a")), "{datei}");
+        assert!(ordner.join("Adressen").exists(), "Datei Adressen");
+
+        // zweiter Start (eigener Prozess, NetSurf startet nur einmal je
+        // Prozess): Liste aus den gespeicherten Dateien, Lesezeichen A
+        // antippen → Seite A. Nur 64 Bit – i686 hat alle Tests in einem
+        // Programm.
+        if cfg!(target_pointer_width = "64") {
+            anfragen.lock().unwrap().clear();
+            let aus = std::process::Command::new(std::env::current_exe().expect("Testprogramm"))
+                .args(["tests::lesezeichen_zweiter_start", "--exact", "--test-threads=1", "--nocapture"])
+                .env("NS_EINZELN", "1")
+                .env("NS_ZWEITER_ORDNER", ohne_lw(&ordner.to_string_lossy()))
+                .env("NS_ZWEITER_PORT", port.to_string())
+                .output()
+                .expect("Kindprozess");
+            let text = format!("{}{}", String::from_utf8_lossy(&aus.stdout), String::from_utf8_lossy(&aus.stderr));
+            assert!(aus.status.success() && text.contains("1 passed"), "zweiter Start:\n{text}");
+            let a = anfragen.lock().unwrap().clone();
+            assert!(a.iter().any(|p| p == "/a"), "Lesezeichen geöffnet: {a:?}");
+        }
+        let _ = std::fs::remove_dir_all(&ordner);
+    }
+
+    /// Teil von `lesezeichen_verlauf_adressleiste` (zweiter Start, eigener
+    /// Prozess); allein aufgerufen tut er nichts.
+    #[test]
+    fn lesezeichen_zweiter_start() {
+        c(lesezeichen_zweiter_start_innen);
+    }
+
+    fn lesezeichen_zweiter_start_innen() {
+        let (Ok(ordner), Ok(port)) = (std::env::var("NS_ZWEITER_ORDNER"), std::env::var("NS_ZWEITER_PORT")) else {
+            return;
+        };
+        ressourcen();
+        assert!(c_umgebung("NS_DATEN_ORDNER", &ordner));
+        // „Liste“ antippen, dann das erste Lesezeichen (Seite A)
+        assert!(c_umgebung("NS_TEST_EINGABE", "1000:300:15;2500:300:157"));
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/c"), 800, 480, 4000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        let oben = 32 * bild.breite as usize;
+        std::fs::write(dir.join("b4_pc_aus_liste.png"), spatz::image::encode_png(bild.breite, bild.hoehe - 32, &bild.px[oben..])).unwrap();
+        let gruen = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_FF00).count();
+        assert!(gruen >= 200 * 100 * 9 / 10, "Seite A aus der Liste geöffnet: grün {gruen}");
+    }
+
+    /// Seite aus drei Blöcken (rot, grün, blau, je 400 × 300) für B5
+    fn b5_seite() -> String {
+        data_url(
+            "<html><body style='margin:0;background:white'>\
+             <div style='width:400px;height:300px;background:#ff0000'></div>\
+             <div style='width:400px;height:300px;background:#00ff00'></div>\
+             <div style='width:400px;height:300px;background:#0000ff'></div>\
+             <div style='height:600px'></div></body></html>",
+        )
+    }
+
+    fn b5_farbe(bild: &Bild, x: usize, y: usize) -> u32 {
+        bild.px[y * bild.breite as usize + x] & 0xFF_FFFF
+    }
+
+    /// B5: Wischen scrollt um den Fingerweg (300 px → oben grün, darunter
+    /// blau); mit dem alten festen Schritt (100 px) stünde oben noch Rot.
+    #[test]
+    fn touch_scrollen() {
+        c(touch_scrollen_innen);
+    }
+
+    fn touch_scrollen_innen() {
+        if im_eigenen_prozess("touch_scrollen") {
+            return;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        // drei Wischbewegungen 120 + 120 + 60 px (Pixel werden gesammelt)
+        assert!(c_umgebung("NS_TEST_EINGABE", "800:S:120:200:200;850:S:120:200:200;900:S:60:200:200"));
+        let (r, bild) = lauf_mit(&b5_seite(), 800, 480, 2000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("b5_pc_gescrollt.png"), spatz::image::encode_png(bild.breite, bild.hoehe, &bild.px)).unwrap();
+        // Seitenbereich beginnt unter der Werkzeugleiste (y = 30)
+        assert_eq!(b5_farbe(&bild, 100, 40), 0x00_FF00, "oben grün (300 px gescrollt)");
+        assert_eq!(b5_farbe(&bild, 100, 340), 0x00_00FF, "darunter blau");
+    }
+
+    /// B5: Pinch-Zoom verdoppelt die Seite (roter Block reicht bis x 800).
+    #[test]
+    fn touch_zoomen() {
+        c(touch_zoomen_innen);
+    }
+
+    fn touch_zoomen_innen() {
+        if im_eigenen_prozess("touch_zoomen") {
+            return;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        assert!(c_umgebung("NS_TEST_EINGABE", "800:Z:200"));
+        let (r, bild) = lauf_mit(&b5_seite(), 800, 480, 2000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("b5_pc_gezoomt.png"), spatz::image::encode_png(bild.breite, bild.hoehe, &bild.px)).unwrap();
+        // ohne Zoom wäre bei x 600 Weiss (Block 400 breit)
+        assert_eq!(b5_farbe(&bild, 600, 100), 0xFF_0000, "rot bis über x 600 (Faktor 2)");
+    }
+
+    /// B6: Formularfeld antippen → die Schreibmarke meldet den Fokus samt
+    /// Lage an die Bildschirmtastatur; Text tippen, Eingabetaste schickt das
+    /// Formular ab.
+    #[test]
+    fn formular_tastatur() {
+        c(formular_tastatur_innen);
+    }
+
+    fn formular_tastatur_innen() {
+        if im_eigenen_prozess("formular_tastatur") {
+            return;
+        }
+        use std::io::{Read, Write};
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        let anfragen = std::sync::Arc::new(Mutex::new(Vec::<String>::new()));
+        let log = anfragen.clone();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                log.lock().unwrap().push(pfad.clone());
+                let html = if pfad == "/" {
+                    "<html><body style='margin:0;background:white'><form action='/suche' method='get'>\
+                     <input name='q' style='width:300px;height:40px;font-size:24px'></form></body></html>"
+                        .to_string()
+                } else {
+                    "<html><body style='margin:0;background:#00ff00'>Ergebnis</body></html>".to_string()
+                };
+                let antwort = format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\r\n{html}", html.len());
+                let _ = s.write_all(antwort.as_bytes());
+            }
+        });
+        tastatur_meldungen();
+        // Feld (Seite 0..300 × 0..40, unter der Werkzeugleiste ab y 30)
+        assert!(c_umgebung("NS_TEST_EINGABE", "1000:100:50;1400:T:abc\\n"));
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 3000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let a = anfragen.lock().unwrap().clone();
+        let m = tastatur_meldungen();
+        println!("Anfragen {a:?}\nTastatur {m:?}");
+        assert!(a.iter().any(|p| p == "/suche?q=abc"), "Formular abgeschickt: {a:?}");
+        let an = m.iter().find(|e| e.0).expect("Fokus an gemeldet");
+        assert!(an.2 >= 30 && an.2 <= 30 + 45 && an.3 > 0, "Lage im Feld: {an:?}");
+        assert!(m.iter().any(|e| !e.0), "Fokus wieder abgegeben: {m:?}");
     }
 
     #[test]

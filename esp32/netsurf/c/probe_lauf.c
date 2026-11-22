@@ -1,7 +1,16 @@
 /* ESP32-OS, B1: Prüflauf ohne Bildschirm (PC-Tests). Das unveränderte
  * Framebuffer-Frontend lädt eine Seite und zeichnet in die Prüf-Fläche
  * „probe“; nach `ms` Millisekunden meldet die Fläche „Beenden“, beim
- * Abbau wird das Bild für den Test kopiert. */
+ * Abbau wird das Bild für den Test kopiert.
+ *
+ * B4: Eingaben per Umgebungsvariable NS_TEST_EINGABE, Schritte mit „;“
+ * getrennt, Zeit in ms ab Start:
+ *   „ms:x:y“      Tippen (Zeiger hin, Taste 1 drücken und loslassen)
+ *   „ms:T:text“   Text tippen, „\n“ = Eingabetaste, „\b“ = Rücktaste
+ * B5:
+ *   „ms:S:px:x:y“ Wischen: um px scrollen (Zeiger bei x, y), wie die Fläche
+ *                 am Board über c/touch.c
+ *   „ms:Z:prozent“ Pinch-Zoom um den Faktor prozent/100 */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -26,7 +35,123 @@ __declspec(dllimport) void __stdcall Sleep(unsigned long ms);
 #define kurz_warten() usleep(5000)
 #endif
 
-static long ende_ms;
+static long ende_ms, start_ms;
+static long jetzt_ms(void);
+
+/* Eingabe-Skript (NS_TEST_EINGABE) und Warteschlange der Ereignisse */
+#define MAX_SCHRITTE 32
+#define MAX_EREIGNISSE 512
+static struct {
+	long ms;
+	char art; /* 'K' Tippen, 'T' Text, 'S' Scrollen, 'Z' Zoom */
+	int x, y, wert;
+	char text[96];
+} schritte[MAX_SCHRITTE];
+
+/* c/touch.c (B5) */
+void ns_touch_scroll_px(int px);
+void ns_touch_zoom(double faktor);
+static int n_schritte, naechster_schritt;
+static nsfb_event_t ereignisse[MAX_EREIGNISSE];
+static int erstes, letztes;
+
+static void skript_lesen(void)
+{
+	const char *e = getenv("NS_TEST_EINGABE");
+	n_schritte = naechster_schritt = 0;
+	erstes = letztes = 0;
+	while (e != NULL && *e && n_schritte < MAX_SCHRITTE) {
+		const char *ende = strchr(e, ';');
+		size_t l = ende ? (size_t)(ende - e) : strlen(e);
+		char teil[128];
+		if (l >= sizeof teil)
+			l = sizeof teil - 1;
+		memcpy(teil, e, l);
+		teil[l] = '\0';
+		schritte[n_schritte].text[0] = '\0';
+		schritte[n_schritte].art = 'K';
+		if (strstr(teil, ":S:") != NULL &&
+		    sscanf(teil, "%ld:S:%d:%d:%d", &schritte[n_schritte].ms, &schritte[n_schritte].wert,
+			   &schritte[n_schritte].x, &schritte[n_schritte].y) == 4) {
+			schritte[n_schritte].art = 'S';
+			n_schritte++;
+		} else if (strstr(teil, ":Z:") != NULL &&
+			   sscanf(teil, "%ld:Z:%d", &schritte[n_schritte].ms, &schritte[n_schritte].wert) == 2) {
+			schritte[n_schritte].art = 'Z';
+			n_schritte++;
+		} else if (sscanf(teil, "%ld:T:", &schritte[n_schritte].ms) == 1 && strstr(teil, ":T:") != NULL) {
+			schritte[n_schritte].art = 'T';
+			const char *t = strstr(teil, ":T:") + 3;
+			size_t k = 0;
+			while (*t && k + 1 < sizeof schritte[n_schritte].text) {
+				if (t[0] == '\\' && t[1] == 'n') {
+					schritte[n_schritte].text[k++] = '\n';
+					t += 2;
+				} else if (t[0] == '\\' && t[1] == 'b') {
+					schritte[n_schritte].text[k++] = '\b';
+					t += 2;
+				} else {
+					schritte[n_schritte].text[k++] = *t++;
+				}
+			}
+			schritte[n_schritte].text[k] = '\0';
+			n_schritte++;
+		} else if (sscanf(teil, "%ld:%d:%d", &schritte[n_schritte].ms, &schritte[n_schritte].x,
+				  &schritte[n_schritte].y) == 3) {
+			n_schritte++;
+		}
+		e = ende ? ende + 1 : NULL;
+	}
+}
+
+static void dazu(enum nsfb_event_type_e typ, int wert, int x, int y)
+{
+	nsfb_event_t *ev;
+	if ((letztes + 1) % MAX_EREIGNISSE == erstes)
+		return;
+	ev = &ereignisse[letztes];
+	memset(ev, 0, sizeof *ev);
+	ev->type = typ;
+	if (typ == NSFB_EVENT_MOVE_ABSOLUTE) {
+		ev->value.vector.x = x;
+		ev->value.vector.y = y;
+	} else {
+		ev->value.keycode = wert;
+	}
+	letztes = (letztes + 1) % MAX_EREIGNISSE;
+}
+
+static void schritte_ausloesen(void)
+{
+	while (naechster_schritt < n_schritte && jetzt_ms() >= start_ms + schritte[naechster_schritt].ms) {
+		const char *t = schritte[naechster_schritt].text;
+		int x = schritte[naechster_schritt].x, y = schritte[naechster_schritt].y;
+		if (schritte[naechster_schritt].art == 'K') {
+			dazu(NSFB_EVENT_MOVE_ABSOLUTE, 0, x, y);
+			dazu(NSFB_EVENT_KEY_DOWN, NSFB_KEY_MOUSE_1, 0, 0);
+			dazu(NSFB_EVENT_KEY_UP, NSFB_KEY_MOUSE_1, 0, 0);
+		} else if (schritte[naechster_schritt].art == 'S') {
+			/* wie die Fläche am Board: Pixel sammeln, ein Mausrad-Ereignis */
+			int px = schritte[naechster_schritt].wert;
+			int rad = px < 0 ? NSFB_KEY_MOUSE_4 : NSFB_KEY_MOUSE_5;
+			ns_touch_scroll_px(px);
+			dazu(NSFB_EVENT_MOVE_ABSOLUTE, 0, x, y);
+			dazu(NSFB_EVENT_KEY_DOWN, rad, 0, 0);
+			dazu(NSFB_EVENT_KEY_UP, rad, 0, 0);
+		} else if (schritte[naechster_schritt].art == 'Z') {
+			ns_touch_zoom(schritte[naechster_schritt].wert / 100.0);
+			/* ein Ereignis, damit die Hauptschleife einen Durchlauf macht */
+			dazu(NSFB_EVENT_MOVE_ABSOLUTE, 0, x, y);
+		} else {
+			for (; *t; t++) {
+				int k = *t == '\n' ? NSFB_KEY_RETURN : *t == '\b' ? NSFB_KEY_BACKSPACE : (unsigned char)*t;
+				dazu(NSFB_EVENT_KEY_DOWN, k, 0, 0);
+				dazu(NSFB_EVENT_KEY_UP, k, 0, 0);
+			}
+		}
+		naechster_schritt++;
+	}
+}
 static uint8_t *bild;
 static int bild_b, bild_h, bild_zeile;
 static int updates;
@@ -98,6 +223,12 @@ static bool probe_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 		event->value.controlcode = NSFB_CONTROL_QUIT;
 		return true;
 	}
+	schritte_ausloesen();
+	if (erstes != letztes) {
+		*event = ereignisse[erstes];
+		erstes = (erstes + 1) % MAX_EREIGNISSE;
+		return true;
+	}
 	if (timeout != 0)
 		kurz_warten();
 	return false;
@@ -151,7 +282,9 @@ int ns_probe_lauf(const char *url, int breite, int hoehe, int ms, int js,
 	snprintf(wtext, sizeof wtext, "%d", breite);
 	snprintf(htext, sizeof htext, "%d", hoehe);
 	updates = 0;
-	ende_ms = jetzt_ms() + ms;
+	start_ms = jetzt_ms();
+	ende_ms = start_ms + ms;
+	skript_lesen();
 	r = netsurf_fb_main(9, argv);
 	*aus = bild;
 	*b = bild_b;
