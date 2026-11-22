@@ -1,0 +1,592 @@
+ÿþESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (28) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (28) boot: compile time Nov 22 2026 01:00:10
+I (29) boot: Multicore bootloader
+I (30) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (35) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 40MHz
+I (43) boot.esp32p4: SPI Mode       : QIO
+I (47) boot.esp32p4: SPI Flash Size : 32MB
+I (51) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (58) boot: ## Label            Usage          Type ST Offset   Length
+I (64) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (71) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (77) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (84) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (90) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (97) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (103) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (110) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (118) boot: End of partition table
+I (121) boot: No factory image, trying OTA 0
+I (124) esp_image: segment 0: paddr=00020020 vaddr=48360020 size=1a2each (1715884) map
+I (388) esp_image: segment 1: paddr=001c2ed4 vaddr=30100000 size=00070h (   112) load
+I (390) esp_image: segment 2: paddr=001c2f4c vaddr=4ff00000 size=0d0cch ( 53452) load
+I (402) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=358de0h (3509728) map
+I (926) esp_image: segment 4: paddr=00528e08 vaddr=4ff0d0cc size=0ec98h ( 60568) load
+I (939) esp_image: segment 5: paddr=00537aa8 vaddr=4ff1bd80 size=02cfch ( 11516) load
+I (942) esp_image: segment 6: paddr=0053a7ac vaddr=4ff1ea80 size=04each ( 20140) load
+I (948) esp_image: segment 7: paddr=0053f660 vaddr=50108080 size=0000ch (    12) load
+I (951) esp_image: segment 8: paddr=0053f674 vaddr=501080e8 size=00020h (    32) load
+I (965) boot: Loaded app from partition at offset 0x20000
+I (993) boot: Set actual ota_seq=1 in otadata[0]
+I (993) boot: Disabling RNG early entropy source...
+I (1004) hex_psram: vendor id    : 0x0d (AP)
+I (1004) hex_psram: Latency      : 0x01 (Fixed)
+I (1004) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (1005) hex_psram: dev id       : 0x03 (generation 4)
+I (1010) hex_psram: density      : 0x07 (256 Mbit)
+I (1015) hex_psram: good-die     : 0x06 (Pass)
+I (1019) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (1024) hex_psram: BurstType    : 0x00 ( Wrap)
+I (1028) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (1032) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (1037) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (1042) hex_psram: DriveStrength: 0x00 (1/1)
+I (1046) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1350) mmu_psram: .rodata xip on psram
+I (1612) mmu_psram: .text xip on psram
+I (1613) hex_psram: psram CS IO is dedicated
+I (1613) cpu_start: Multicore app
+I (2005) esp_psram: SPI SRAM memory test OK
+I (2017) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (2017) cpu_start: Pro cpu start user code
+I (2017) cpu_start: cpu freq: 360000000 Hz
+I (2019) app_init: Application information:
+I (2023) app_init: Project name:     libespidf
+I (2028) app_init: App version:      1
+I (2031) app_init: Compile time:     Nov 22 2026 17:06:22
+I (2036) app_init: ELF file SHA256:  137ee8bc8...
+I (2041) app_init: ESP-IDF:          v5.5.5
+I (2044) efuse_init: Min chip rev:     v1.0
+I (2048) efuse_init: Max chip rev:     v1.99 
+I (2052) efuse_init: Chip rev:         v1.3
+I (2056) heap_init: Initializing. RAM available for dynamic allocation:
+I (2063) heap_init: At 4FF290B0 len 00011F10 (71 KiB): RETENT_RAM
+I (2068) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (2074) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (2079) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (2084) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (2090) esp_psram: Adding pool of 27359K of PSRAM memory to heap allocator
+I (2096) esp_psram: Adding pool of 28K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2107) esp_psram: Adding pool of 52K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2119) spi_flash: detected chip: gd
+I (2122) spi_flash: flash io: qio
+I (2125) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2132) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2138) main_task: Started on CPU0
+I (2141) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2149) main_task: Calling app_main()
+I (2153) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2153) pudding_p4: ESP32-OS startet & 
+I (2153) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 333 KB intern, 27426 KB PSRAM
+I (2153) pudding_p4: Start: intern frei 333 KB (größter Block 184 KB), DMA-fähig 295 KB
+I (2157) pudding_p4: Programm  esp32os_a , Startziel Konsole
+W (2160) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2203) pudding_fw::speicher: SD-Karte eingehängt: 241724 MB als /sd0/1
+I (2267) pudding_p4: Einstellungen: Sprache de, Helligkeit 10, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1795373730
+W (2267) pudding_p4: Autopilot: Touchpad-Modus für diesen Lauf aus
+I (2268) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2268) eh_mcu_transport: transport_init: probing bus backend
+I (2268) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (2268) sdmmc_periph: sdmmc_host_init: SDMMC host already initialized, skipping init flow
+I (2268) eh_sdio: sdio_data_to_rx_buf_task started
+I (2268) eh_mcu_transport: transport_init: bus backend up
+W (2268) eh_sdio: Reset co-processor using GPIO[54]
+I (2282) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2283) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2283) GT911: TouchPad_Config_Version:70
+I (2283) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (2285) hx8394: version: 2.1.0
+W (2455) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (2795) pudding_p4: ESP32-OS-Desktop startet (@start)
+I (2796) pudding_p4: Spiel geladen: intern frei 103 KB (größter Block 31 KB), DMA-fähig 65 KB
+I (2797) pudding_fw::slots: Programm  esp32os_a  als gültig markiert (schon gültig, Code 0)
+I (2798) pudding_p4: Los geht's!
+I (3788) eh_host_port_reset: reset done pin=54 parked=1
+I (3822) eh_host_port_sdio: bus applied: clk_khz=40000
+I (3822) eh_host_port_sdio: Function 0 Blocksize: 512
+I (3822) eh_host_port_sdio: Function 1 Blocksize: 512
+I (3922) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (3968) eh_sdio: Starting SDIO process rx task
+I (3968) eh_sdio: SDIO Host operating in STREAMING MODE
+I (3968) eh_sdio: Open data path at slave
+I (3975) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (3975) eh_init_evt: capabilities: 0x0d
+I (3975) eh_init_evt: Features supported are:
+I (3975) eh_init_evt: 	 * WLAN over SDIO
+I (3975) eh_init_evt: 	   - HCI over SDIO
+I (3975) eh_init_evt: 	   - BLE only
+I (3975) eh_raw_tp: raw TP inactive
+I (3975) eh_init_evt: Default RPC to V2
+I (3975) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (3975) eh_init_evt: major version mismatch   OTA coprocessor from host
+I (3975) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (3975) eh_init_evt: Missing SDIO_MODE TLV; Continue anyway.
+W (3975) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (3975) eh_init_evt: chip=0x0d (esp32c6) fw=0x00000000 caps=0x0d ext=0x00000000
+I (3976) eh_auto_init: auto_init: found 1 descriptor(s)
+I (3976) eh_auto_init: auto_init: initialising 'wifi' (priority 150)
+I (3976) eh_wifi_itwt: wifi iTWT ext init
+I (4333) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 295 ’! 96 KB
+I (4334) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (4837) pudding_p4: Mittel: Simulation 0.9 ms, Bild vorbereiten 18.5 ms (0 Dreiecke), Mithelfen 13.0 ms, Rest-PPA 1.0 ms, Warten auf Bildspeicher 0.0 ms
+I (4838) pudding_p4: Ruckler: 24 verpasste Bildwechsel; längstes Bild 46.7 ms (Simulation 0.1, Vorbereiten 31.8, Mithelfen 13.0, Sichern 0.0)
+I (4838) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 4.5 ms je Bild
+I (4838) pudding_p4: Frei: 88 KB intern, 12334 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (4838) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (4838) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.40 ms, Kern 1 5.28 ms; angeschubst seit Start: 0
+I (4838) pudding_p4: 34.5 FPS (640x360 scharf), Frame 46.4 ms, Streifen 8/37, Rendern 0.9/8.2 ms, Skalieren 1.1/14.0 ms, PPA 10.9/21.7 ms, Ausgabe 44.5 ms, Panel 54.69 Hz
+I (4838) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (4870) pudding_p4: Desktop: 8.3 Bilder/s neu, 139.1 übersprungen/s, Fläche 192586 px/Bild, Compositor 1.10 ms/Bild
+I (5201) pudding_p4: [debug] Ersteinrichtung: schon erledigt
+I (5201) pudding_p4: [debug] 
+I (5216) pudding_p4: [debug] @icon: gezeichnet in 680 ms
+I (5216) pudding_p4: [debug] 
+I (6842) pudding_p4: Desktop: 6.0 Bilder/s neu, 142.3 übersprungen/s, Fläche 197120 px/Bild, Compositor 0.97 ms/Bild
+I (6962) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (7392) pudding_p4: Mittel: Simulation 0.3 ms, Bild vorbereiten 22.9 ms (0 Dreiecke), Mithelfen 11.3 ms, Rest-PPA 1.1 ms, Warten auf Bildspeicher 0.0 ms
+I (7392) pudding_p4: Ruckler: 21 verpasste Bildwechsel; längstes Bild 46.6 ms (Simulation 1.8, Vorbereiten 31.5, Mithelfen 11.6, Sichern 0.0)
+I (7392) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 5.2 ms je Bild
+I (7392) pudding_p4: Frei: 89 KB intern, 13400 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (7392) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (7393) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.35 ms, Kern 1 6.00 ms; angeschubst seit Start: 0
+I (7393) pudding_p4: 31.3 FPS (640x360 scharf), Frame 1.6 ms, Streifen 15/30, Rendern 1.5/2.9 ms, Skalieren 1.9/3.6 ms, PPA 22.3/20.3 ms, Ausgabe 27.0 ms, Panel 54.76 Hz
+I (7393) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (8842) pudding_p4: Desktop: 2.0 Bilder/s neu, 188.5 übersprungen/s, Fläche 15545 px/Bild, Compositor 0.02 ms/Bild
+W (9334) eh_host_feat_rpc: request: no response uid=6 msg_id=350 (5000 ms)
+I (9334) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (9334) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (10000) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x482ee66c
+I (10000) wlan: mit dem Zugangspunkt verbunden
+I (10844) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.3 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (11014) esp_netif_handlers: sta ip: 192.168.1.142, mask: 255.255.255.0, gw: 192.168.1.1
+I (11014) wlan: IP 192.168.1.142
+I (11504) pudding_fw::wlan: WLAN: browser gestartet (6)
+I (11504) pudding_fw::wlan: WLAN: verbunden in 4541 ms, IP 192.168.1.142, Signal -45 dBm, Kanal 6, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (11504) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (11543) pudding_p4: Mittel: Simulation 3.0 ms, Bild vorbereiten 5.6 ms (0 Dreiecke), Mithelfen 19.6 ms, Rest-PPA 1.1 ms, Warten auf Bildspeicher 0.0 ms
+I (11543) pudding_p4: Ruckler: 6 verpasste Bildwechsel; längstes Bild 31.2 ms (Simulation 11.6, Vorbereiten 19.3, Mithelfen 0.0, Sichern 0.0)
+I (11543) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 23.7 ms je Bild
+I (11543) pudding_p4: Frei: 93 KB intern, 2015 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11543) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (11543) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.56 ms, Kern 1 4.07 ms; angeschubst seit Start: 0
+I (11543) pudding_p4: 33.9 FPS (640x360 scharf), Frame 31.2 ms, Streifen 15/30, Rendern 1.6/2.6 ms, Skalieren 1.9/4.0 ms, PPA 22.9/20.2 ms, Ausgabe 26.9 ms, Panel 54.80 Hz
+I (11544) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (11761) esp-x509-crt-bundle: Certificate validated
+I (12120) ns_abruf: 200, 2799 Byte, 497 ms: https://duckduckgo.com/favicon.ico
+I (12847) pudding_p4: Desktop: 12.0 Bilder/s neu, 104.8 übersprungen/s, Fläche 89167 px/Bild, Compositor 1.22 ms/Bild
+I (13508) pudding_fw::wlan: NTP: Uhr gestellt   22.11.2026 20:08:14 Ortszeit
+I (14124) pudding_p4: Mittel: Simulation 29.1 ms, Bild vorbereiten 11.1 ms (0 Dreiecke), Mithelfen 16.0 ms, Rest-PPA 0.9 ms, Warten auf Bildspeicher 0.0 ms
+I (14124) pudding_p4: Ruckler: 38 verpasste Bildwechsel; längstes Bild 614.5 ms (Simulation 612.7, Vorbereiten 1.7, Mithelfen 0.0, Sichern 0.0)
+I (14124) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 2.9 ms je Bild
+I (14124) pudding_p4: Frei: 89 KB intern, 1986 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (14124) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (14124) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.70 ms, Kern 1 4.72 ms; angeschubst seit Start: 0
+I (14125) pudding_p4: 34.1 FPS (640x360 scharf), Frame 614.5 ms, Streifen 16/29, Rendern 1.6/2.8 ms, Skalieren 2.0/3.9 ms, PPA 23.5/20.0 ms, Ausgabe 27.3 ms, Panel 54.92 Hz
+I (14125) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (14848) pudding_p4: Desktop: 1.0 Bilder/s neu, 132.9 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.02 ms/Bild
+I (16852) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (17660) ns_takt: 15 Runden, Arbeit 776 ms, Warten 5148 ms, Heap 1481 KB (Spitze 1550 KB)
+I (17797) pudding_fw::foto: BILD 0 720 1280 3000000 0
+I (24685) pudding_fw::foto: BILD 0 gesendet
+I (24690) pudding_p4: Desktop: 0.0 Bilder/s neu, 24.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (26695) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (26800) ns_takt: 1 Runden, Arbeit 0 ms, Warten 9139 ms, Heap 1477 KB (Spitze 1550 KB)
+I (26805) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 1.6 ms (0 Dreiecke), Mithelfen 12.4 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (26805) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 29.3 ms (Simulation 0.0, Vorbereiten 2.9, Mithelfen 24.7, Sichern 0.0)
+I (26805) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 143.6 ms je Bild
+I (26805) pudding_p4: Frei: 93 KB intern, 1986 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (26806) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (26806) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.48 ms, Kern 1 4.45 ms; angeschubst seit Start: 0
+I (26806) pudding_p4: 33.9 FPS (640x360 scharf), Frame 0.5 ms, Streifen 15/30, Rendern 1.6/2.7 ms, Skalieren 1.9/3.6 ms, PPA 22.9/20.6 ms, Ausgabe 27.0 ms, Panel 54.91 Hz
+I (26806) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (28697) pudding_p4: Desktop: 3.0 Bilder/s neu, 178.8 übersprungen/s, Fläche 79334 px/Bild, Compositor 0.15 ms/Bild
+I (29112) pudding_p4: Mittel: Simulation 2.0 ms, Bild vorbereiten 13.4 ms (0 Dreiecke), Mithelfen 15.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (29112) pudding_p4: Ruckler: 11 verpasste Bildwechsel; längstes Bild 46.0 ms (Simulation 0.1, Vorbereiten 31.1, Mithelfen 13.6, Sichern 0.0)
+I (29112) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 9.2 ms je Bild
+I (29112) pudding_p4: Frei: 93 KB intern, 1690 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (29112) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (29112) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.55 ms, Kern 1 4.47 ms; angeschubst seit Start: 0
+I (29113) pudding_p4: 35.3 FPS (640x360 scharf), Frame 35.3 ms, Streifen 15/30, Rendern 1.7/2.7 ms, Skalieren 1.9/3.7 ms, PPA 23.0/20.6 ms, Ausgabe 27.1 ms, Panel 54.97 Hz
+I (29113) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (30699) pudding_p4: Desktop: 5.0 Bilder/s neu, 152.8 übersprungen/s, Fläche 190464 px/Bild, Compositor 0.95 ms/Bild
+I (32699) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (34699) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (35799) pudding_fw::foto: BILD 1 720 1280 3000000 0
+I (42687) pudding_fw::foto: BILD 1 gesendet
+I (42692) pudding_p4: Desktop: 0.0 Bilder/s neu, 27.6 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (43026) ns_takt: 1 Runden, Arbeit 0 ms, Warten 5359 ms, Heap 1477 KB (Spitze 1550 KB)
+I (43036) pudding_p4: Bilanz 40 s: 1.9 FPS, Arbeit je Bild Mittel 41.2 ms, p99 128.0 ms, max 614.5 ms; verpasste Bildwechsel 124 (5.6 je 100)
+I (43036) pudding_p4: Mittel: Simulation 0.6 ms, Bild vorbereiten 27.2 ms (0 Dreiecke), Mithelfen 9.7 ms, Rest-PPA 1.0 ms, Warten auf Bildspeicher 0.0 ms
+I (43036) pudding_p4: Ruckler: 19 verpasste Bildwechsel; längstes Bild 51.6 ms (Simulation 2.7, Vorbereiten 38.6, Mithelfen 8.4, Sichern 0.0)
+I (43036) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 32.7 ms je Bild
+I (43036) pudding_p4: Frei: 93 KB intern, 1689 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (43036) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (43037) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.35 ms, Kern 1 6.24 ms; angeschubst seit Start: 0
+I (43037) pudding_p4: 30.8 FPS (640x360 scharf), Frame 5.2 ms, Streifen 15/30, Rendern 1.5/2.9 ms, Skalieren 1.9/3.6 ms, PPA 22.3/20.4 ms, Ausgabe 27.1 ms, Panel 54.95 Hz
+I (43037) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (44702) pudding_p4: Desktop: 3.0 Bilder/s neu, 181.1 übersprungen/s, Fläche 30876 px/Bild, Compositor 0.06 ms/Bild
+I (45436) pudding_p4: Mittel: Simulation 1.8 ms, Bild vorbereiten 3.1 ms (0 Dreiecke), Mithelfen 12.4 ms, Rest-PPA 0.4 ms, Warten auf Bildspeicher 0.0 ms
+I (45437) pudding_p4: Ruckler: 15 verpasste Bildwechsel; längstes Bild 31.3 ms (Simulation 1.0, Vorbereiten 3.8, Mithelfen 24.9, Sichern 0.0)
+I (45437) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 9.1 ms je Bild
+I (45437) pudding_p4: Frei: 93 KB intern, 1689 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (45437) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (45437) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.56 ms, Kern 1 4.17 ms; angeschubst seit Start: 0
+I (45437) pudding_p4: 32.0 FPS (640x360 scharf), Frame 4.8 ms, Streifen 15/30, Rendern 1.6/2.7 ms, Skalieren 1.9/3.9 ms, PPA 23.0/20.3 ms, Ausgabe 27.0 ms, Panel 54.97 Hz
+I (45437) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (46703) pudding_p4: Desktop: 2.0 Bilder/s neu, 187.4 übersprungen/s, Fläche 30876 px/Bild, Compositor 0.04 ms/Bild
+I (48707) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (50297) pudding_fw::foto: BILD 2 720 1280 3000000 0
+I (57185) pudding_fw::foto: BILD 2 gesendet
+I (57190) pudding_p4: Desktop: 0.0 Bilder/s neu, 37.6 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (57275) ns_takt: 6 Runden, Arbeit 36 ms, Warten 14212 ms, Heap 1480 KB (Spitze 1550 KB)
+I (57280) pudding_p4: Mittel: Simulation 0.7 ms, Bild vorbereiten 2.8 ms (0 Dreiecke), Mithelfen 12.3 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (57281) pudding_p4: Ruckler: 10 verpasste Bildwechsel; längstes Bild 30.5 ms (Simulation 0.0, Vorbereiten 4.2, Mithelfen 24.7, Sichern 0.0)
+I (57281) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 67.3 ms je Bild
+I (57281) pudding_p4: Frei: 92 KB intern, 1674 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (57281) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (57281) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.52 ms, Kern 1 4.54 ms; angeschubst seit Start: 0
+I (57281) pudding_p4: 32.4 FPS (640x360 scharf), Frame 0.9 ms, Streifen 16/29, Rendern 1.6/2.8 ms, Skalieren 2.0/3.5 ms, PPA 23.5/20.2 ms, Ausgabe 27.2 ms, Panel 54.97 Hz
+I (57281) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (57384) esp-x509-crt-bundle: Certificate validated
+I (58529) ns_abruf: 200, 49966 Byte, 1252 ms: https://html.duckduckgo.com/html/?q=esp32
+I (58710) esp-x509-crt-bundle: Certificate validated
+I (58770) esp-x509-crt-bundle: Certificate validated
+I (59193) pudding_p4: Desktop: 16.5 Bilder/s neu, 100.8 übersprungen/s, Fläche 20170 px/Bild, Compositor 0.29 ms/Bild
+I (59249) ns_abruf: 200, 16384 Byte, 596 ms: https://i.duckduckgo.com/i/13ff55f5f19d52b7.jpg
+I (59357) esp-x509-crt-bundle: Certificate validated
+I (59395) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 1.9 ms (0 Dreiecke), Mithelfen 14.5 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (59395) pudding_p4: Ruckler: 67 verpasste Bildwechsel; längstes Bild 45.2 ms (Simulation 0.0, Vorbereiten 30.5, Mithelfen 13.2, Sichern 0.0)
+I (59395) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.6 ms je Bild
+I (59395) pudding_p4: Frei: 87 KB intern, 1582 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (59396) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (59396) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.82 ms, Kern 1 4.17 ms; angeschubst seit Start: 0
+I (59396) pudding_p4: 34.1 FPS (640x360 scharf), Frame 0.2 ms, Streifen 16/29, Rendern 1.7/3.1 ms, Skalieren 2.6/4.1 ms, PPA 24.2/19.9 ms, Ausgabe 28.7 ms, Panel 54.96 Hz
+I (59396) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (59611) ns_abruf: 200, 106627 Byte, 996 ms: https://duckduckgo.com/dist/h.5e485425356583f3072f.css
+I (59672) ns_abruf: 200, 8894 Byte, 423 ms: https://external-content.duckduckgo.com/ip3/www.espressif.com.ico
+I (59798) esp-x509-crt-bundle: Certificate validated
+I (59819) esp-x509-crt-bundle: Certificate validated
+I (60150) ns_abruf: 200, 2734 Byte, 477 ms: https://external-content.duckduckgo.com/ip3/en.wikipedia.org.ico
+I (60251) esp-x509-crt-bundle: Certificate validated
+I (60464) ns_abruf: 200, 73841 Byte, 852 ms: https://external-content.duckduckgo.com/ip3/digitalewelt.at.ico
+I (60577) esp-x509-crt-bundle: Certificate validated
+I (60650) ns_abruf: 200, 25720 Byte, 499 ms: https://external-content.duckduckgo.com/ip3/www.bastelgarage.ch.ico
+I (60758) esp-x509-crt-bundle: Certificate validated
+I (60989) ns_abruf: 200, 2527 Byte, 524 ms: https://external-content.duckduckgo.com/ip3/esp32io.com.ico
+I (61052) ns_abruf: 200, 43 Byte, 401 ms: https://duckduckgo.com/t/sl_h
+I (61128) esp-x509-crt-bundle: Certificate validated
+I (61184) esp-x509-crt-bundle: Certificate validated
+I (61209) pudding_p4: Desktop: 14.4 Bilder/s neu, 106.6 übersprungen/s, Fläche 23184 px/Bild, Compositor 0.39 ms/Bild
+I (61415) pudding_p4: Mittel: Simulation 0.9 ms, Bild vorbereiten 3.1 ms (0 Dreiecke), Mithelfen 15.1 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (61415) pudding_p4: Ruckler: 69 verpasste Bildwechsel; längstes Bild 52.5 ms (Simulation 0.0, Vorbereiten 41.7, Mithelfen 9.5, Sichern 0.0)
+I (61415) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.8 ms je Bild
+I (61415) pudding_p4: Frei: 81 KB intern, 1575 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (61415) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (61415) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.05 ms, Kern 1 4.25 ms; angeschubst seit Start: 0
+I (61415) pudding_p4: 31.2 FPS (640x360 scharf), Frame 28.7 ms, Streifen 16/29, Rendern 2.8/3.1 ms, Skalieren 4.0/3.8 ms, PPA 19.6/19.9 ms, Ausgabe 28.2 ms, Panel 54.98 Hz
+I (61415) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (61609) ns_abruf: 200, 704 Byte, 619 ms: https://external-content.duckduckgo.com/ip3/blog.berrybase.de.ico
+I (61615) ns_abruf: 200, 1320 Byte, 563 ms: https://duckduckgo.com/assets/logo_header.v109.png
+I (61744) esp-x509-crt-bundle: Certificate validated
+I (61749) esp-x509-crt-bundle: Certificate validated
+I (62122) ns_abruf: 200, 752 Byte, 513 ms: https://duckduckgo.com/assets/loupe_gray.png
+I (62221) esp-x509-crt-bundle: Certificate validated
+I (62307) ns_abruf: 200, 16384 Byte, 692 ms: https://i.duckduckgo.com/i/13ff55f5f19d52b7.jpg
+I (62309) ns_takt: 163 Runden, Arbeit 2524 ms, Warten 2508 ms, Heap 3554 KB (Spitze 3555 KB)
+I (62424) esp-x509-crt-bundle: Certificate validated
+I (62660) ns_abruf: 200, 8894 Byte, 537 ms: https://external-content.duckduckgo.com/ip3/documentation.espressif.com.ico
+I (62693) ns_abruf: 200, 480 Byte, 385 ms: https://external-content.duckduckgo.com/ip3/soldered.com.ico
+I (62773) esp-x509-crt-bundle: Certificate validated
+I (62825) esp-x509-crt-bundle: Certificate validated
+I (63162) ns_abruf: 200, 4517 Byte, 501 ms: https://external-content.duckduckgo.com/ip3/learn-esp32.vercel.app.ico
+I (63210) pudding_p4: Desktop: 18.0 Bilder/s neu, 97.5 übersprungen/s, Fläche 624 px/Bild, Compositor 0.03 ms/Bild
+I (63455) pudding_p4: Mittel: Simulation 0.8 ms, Bild vorbereiten 0.8 ms (0 Dreiecke), Mithelfen 14.1 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (63455) pudding_p4: Ruckler: 87 verpasste Bildwechsel; längstes Bild 45.2 ms (Simulation 23.4, Vorbereiten 21.4, Mithelfen 0.0, Sichern 0.0)
+I (63455) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (63455) pudding_p4: Frei: 75 KB intern, 1586 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (63455) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (63455) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.01 ms, Kern 1 4.12 ms; angeschubst seit Start: 0
+I (63456) pudding_p4: 33.1 FPS (640x360 scharf), Frame 45.2 ms, Streifen 16/29, Rendern 2.4/3.8 ms, Skalieren 2.5/4.4 ms, PPA 23.4/19.8 ms, Ausgabe 28.5 ms, Panel 54.98 Hz
+I (63456) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (63516) ns_abruf: 200, 49152 Byte, 823 ms: https://external-content.duckduckgo.com/ip3/digitalewelt.at.ico
+I (65210) pudding_p4: Desktop: 4.0 Bilder/s neu, 170.0 übersprungen/s, Fläche 61578 px/Bild, Compositor 0.18 ms/Bild
+I (67215) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (67694) ns_takt: 83 Runden, Arbeit 282 ms, Warten 5102 ms, Heap 3640 KB (Spitze 3705 KB)
+I (69215) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (70800) pudding_fw::foto: BILD 3 720 1280 3000000 0
+I (77688) pudding_fw::foto: BILD 3 gesendet
+I (77693) pudding_p4: Desktop: 0.0 Bilder/s neu, 37.5 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (77693) ns_takt: 3 Runden, Arbeit 0 ms, Warten 9997 ms, Heap 3640 KB (Spitze 3705 KB)
+I (77723) pudding_p4: Bilanz 35 s: 3.3 FPS, Arbeit je Bild Mittel 18.0 ms, p99 49.2 ms, max 52.5 ms; verpasste Bildwechsel 253 (13.3 je 100)
+I (77723) pudding_p4: Mittel: Simulation 3.0 ms, Bild vorbereiten 27.5 ms (0 Dreiecke), Mithelfen 5.3 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (77723) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 47.4 ms (Simulation 0.0, Vorbereiten 35.3, Mithelfen 10.6, Sichern 0.0)
+I (77724) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 162.4 ms je Bild
+I (77724) pudding_p4: Frei: 85 KB intern, 1677 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (77724) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (77724) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.92 ms, Kern 1 5.21 ms; angeschubst seit Start: 0
+I (77724) pudding_p4: 33.2 FPS (640x360 scharf), Frame 25.6 ms, Streifen 18/27, Rendern 1.8/3.5 ms, Skalieren 2.3/3.7 ms, PPA 23.9/18.7 ms, Ausgabe 28.1 ms, Panel 54.98 Hz
+I (77724) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (79695) pudding_p4: Desktop: 3.0 Bilder/s neu, 172.8 übersprungen/s, Fläche 154650 px/Bild, Compositor 0.30 ms/Bild
+I (81700) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (82800) pudding_fw::foto: BILD 4 720 1280 3000000 0
+I (89688) pudding_fw::foto: BILD 4 gesendet
+I (89693) pudding_p4: Desktop: 0.0 Bilder/s neu, 27.6 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (89723) pudding_p4: Mittel: Simulation 4.5 ms, Bild vorbereiten 17.2 ms (0 Dreiecke), Mithelfen 13.3 ms, Rest-PPA 1.0 ms, Warten auf Bildspeicher 0.0 ms
+I (89723) pudding_p4: Ruckler: 11 verpasste Bildwechsel; längstes Bild 45.5 ms (Simulation 0.1, Vorbereiten 31.0, Mithelfen 12.4, Sichern 0.0)
+I (89723) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 45.9 ms je Bild
+I (89723) pudding_p4: Frei: 85 KB intern, 1677 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (89723) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (89723) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.46 ms, Kern 1 4.95 ms; angeschubst seit Start: 0
+I (89724) pudding_p4: 34.8 FPS (640x360 scharf), Frame 25.3 ms, Streifen 15/30, Rendern 1.6/2.7 ms, Skalieren 1.9/4.0 ms, PPA 23.0/20.3 ms, Ausgabe 27.1 ms, Panel 54.98 Hz
+I (89724) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (90925) esp-x509-crt-bundle: Certificate validated
+I (91711) pudding_p4: Desktop: 18.8 Bilder/s neu, 88.2 übersprungen/s, Fläche 14014 px/Bild, Compositor 0.29 ms/Bild
+I (91733) ns_js: Skript 5094 Byte, 13 ms: ?inline script?
+I (91734) ns_js: Skript 214 Byte, 1 ms: ?inline script?
+I (91880) ns_abruf: 200, 133459 Byte, 2075 ms: https://de.wikipedia.org/wiki/ESP32
+I (93062) esp-x509-crt-bundle: Certificate validated
+I (93322) esp-x509-crt-bundle: Certificate validated
+I (93493) ns_takt: 89 Runden, Arbeit 2112 ms, Warten 3492 ms, Heap 4423 KB (Spitze 4423 KB)
+I (93713) pudding_p4: Desktop: 0.0 Bilder/s neu, 201.8 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (93892) ns_abruf: 200, 67373 Byte, 2011 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=startup&only=scripts&raw=1&skin=vector-2022
+I (94191) ns_js: Skript 1389 Byte, 3 ms: ?inline script?
+I (94196) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 14.1 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (94196) pudding_p4: Ruckler: 80 verpasste Bildwechsel; längstes Bild 46.3 ms (Simulation 0.4, Vorbereiten 30.1, Mithelfen 13.7, Sichern 0.0)
+I (94196) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 2.9 ms je Bild
+I (94196) pudding_p4: Frei: 76 KB intern, 1350 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (94196) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (94196) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.01 ms, Kern 1 4.00 ms; angeschubst seit Start: 0
+I (94196) pudding_p4: 34.2 FPS (640x360 scharf), Frame 3.1 ms, Streifen 15/30, Rendern 1.6/3.1 ms, Skalieren 2.1/4.1 ms, PPA 23.0/20.8 ms, Ausgabe 28.3 ms, Panel 54.98 Hz
+I (94196) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (94542) ns_abruf: 200, 242807 Byte, 2806 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=ext.cite.parsoid.styles%7Cext.cite.styles%7Cext.
+I (95090) esp-x509-crt-bundle: Certificate validated
+I (95545) ns_abruf: 200, 17124 Byte, 1653 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=ext.gadget.citeRef%2CdefaultPlainlinks%2Cdewiki-
+I (95715) pudding_p4: Desktop: 2.0 Bilder/s neu, 184.8 übersprungen/s, Fläche 4404 px/Bild, Compositor 0.01 ms/Bild
+I (95900) esp-x509-crt-bundle: Certificate validated
+I (96199) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.2 ms (0 Dreiecke), Mithelfen 17.5 ms, Rest-PPA 0.3 ms, Warten auf Bildspeicher 0.0 ms
+I (96199) pudding_p4: Ruckler: 15 verpasste Bildwechsel; längstes Bild 30.9 ms (Simulation 0.0, Vorbereiten 0.4, Mithelfen 30.1, Sichern 0.0)
+I (96199) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 9.6 ms je Bild
+I (96199) pudding_p4: Frei: 74 KB intern, 1568 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (96199) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (96199) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.60 ms, Kern 1 3.60 ms; angeschubst seit Start: 0
+I (96199) pudding_p4: 31.4 FPS (640x360 scharf), Frame 29.0 ms, Streifen 16/29, Rendern 3.4/2.9 ms, Skalieren 6.5/5.4 ms, PPA 18.3/18.6 ms, Ausgabe 28.4 ms, Panel 54.97 Hz
+I (96199) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (96286) ns_abruf: 200, 1172 Byte, 1743 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=site.styles&only=styles&skin=vector-2022
+I (96905) esp-x509-crt-bundle: Certificate validated
+I (97459) ns_abruf: 200, 33770 Byte, 1913 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Espressif_ESP-WROOM-32_Wi-Fi_%26_Bluetooth_
+I (97602) esp-x509-crt-bundle: Certificate validated
+I (97718) pudding_p4: Desktop: 2.0 Bilder/s neu, 190.7 übersprungen/s, Fläche 624 px/Bild, Compositor 0.01 ms/Bild
+I (97849) ns_js: Skript 67373 Byte, 1330 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=startup&only=scripts&raw=1&s
+I (98109) ns_abruf: 200, 16384 Byte, 1823 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/ESP32-Dieshot.jpg/250px-ESP32-Dieshot.jpg?u
+I (98241) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 0.2 ms (0 Dreiecke), Mithelfen 12.1 ms, Rest-PPA 0.3 ms, Warten auf Bildspeicher 0.0 ms
+I (98241) pudding_p4: Ruckler: 15 verpasste Bildwechsel; längstes Bild 29.7 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 29.5, Sichern 0.0)
+I (98241) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 7.0 ms je Bild
+I (98241) pudding_p4: Frei: 70 KB intern, 1571 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (98241) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (98241) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.37 ms, Kern 1 3.87 ms; angeschubst seit Start: 0
+I (98241) pudding_p4: 33.5 FPS (640x360 scharf), Frame 0.2 ms, Streifen 19/26, Rendern 2.3/2.9 ms, Skalieren 5.0/4.3 ms, PPA 20.9/19.6 ms, Ausgabe 28.4 ms, Panel 54.98 Hz
+I (98241) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (98501) ns_takt: 29 Runden, Arbeit 4331 ms, Warten 675 ms, Heap 7179 KB (Spitze 7330 KB)
+I (98902) esp-x509-crt-bundle: Certificate validated
+I (99345) ns_abruf: 200, 2734 Byte, 1885 ms: https://de.wikipedia.org/static/favicon/wikipedia.ico
+I (99663) esp-x509-crt-bundle: Certificate validated
+I (99749) pudding_p4: Desktop: 15.8 Bilder/s neu, 110.3 übersprungen/s, Fläche 624 px/Bild, Compositor 0.03 ms/Bild
+I (100097) ns_abruf: 200, 5564 Byte, 1987 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/ESP32_on_Lolin32_Lite_clone_board_cropped.j
+I (100252) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 0.1 ms (0 Dreiecke), Mithelfen 13.9 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (100252) pudding_p4: Ruckler: 87 verpasste Bildwechsel; längstes Bild 29.9 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 28.3, Sichern 0.0)
+I (100252) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (100252) pudding_p4: Frei: 66 KB intern, 1571 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (100252) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (100252) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.99 ms, Kern 1 3.90 ms; angeschubst seit Start: 0
+I (100252) pudding_p4: 33.4 FPS (640x360 scharf), Frame 0.4 ms, Streifen 16/29, Rendern 3.9/3.7 ms, Skalieren 4.4/3.6 ms, PPA 19.2/19.4 ms, Ausgabe 28.8 ms, Panel 54.98 Hz
+I (100252) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (100884) esp-x509-crt-bundle: Certificate validated
+I (101321) ns_abruf: 200, 4852 Byte, 1976 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/ESP32_Espressif_ESP-WROOM-32_Shielded.jpg/1
+I (101650) esp-x509-crt-bundle: Certificate validated
+I (101765) pudding_p4: Desktop: 16.9 Bilder/s neu, 99.2 übersprungen/s, Fläche 624 px/Bild, Compositor 0.02 ms/Bild
+W (101897) ns_ohne_js: Seite nach 12000 ms nicht angezeigt   JavaScript abgeschaltet: https://de.wikipedia.org/wiki/ESP32
+I (102167) ns_abruf: 200, 10317 Byte, 2069 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/RISC-V_ESP32-C6-WROOM-1.devboard.jpg/120px-
+I (102283) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.1 ms (0 Dreiecke), Mithelfen 13.8 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (102283) pudding_p4: Ruckler: 85 verpasste Bildwechsel; längstes Bild 30.0 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 29.6, Sichern 0.0)
+I (102283) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (102283) pudding_p4: Frei: 60 KB intern, 1573 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (102283) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (102283) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.96 ms, Kern 1 4.07 ms; angeschubst seit Start: 0
+I (102283) pudding_p4: 34.0 FPS (640x360 scharf), Frame 0.2 ms, Streifen 17/28, Rendern 2.5/3.3 ms, Skalieren 4.4/5.2 ms, PPA 22.0/19.7 ms, Ausgabe 29.0 ms, Panel 54.97 Hz
+I (102283) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (102817) esp-x509-crt-bundle: Certificate validated
+I (103327) ns_abruf: 200, 13444 Byte, 2005 ms: https://de.wikipedia.org/static/images/icons/wikipedia.png
+I (103554) ns_takt: 242 Runden, Arbeit 904 ms, Warten 4147 ms, Heap 7216 KB (Spitze 7330 KB)
+I (103667) esp-x509-crt-bundle: Certificate validated
+I (103770) pudding_p4: Desktop: 19.0 Bilder/s neu, 89.9 übersprungen/s, Fläche 687 px/Bild, Compositor 0.02 ms/Bild
+I (104084) ns_abruf: 200, 6170 Byte, 1917 ms: https://de.wikipedia.org/static/images/mobile/copyright/wikipedia-wordmark-en.svg
+I (104287) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 0.1 ms (0 Dreiecke), Mithelfen 13.8 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (104287) pudding_p4: Ruckler: 88 verpasste Bildwechsel; längstes Bild 30.5 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 30.3, Sichern 0.0)
+I (104287) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (104287) pudding_p4: Frei: 57 KB intern, 1572 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (104287) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (104287) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.91 ms, Kern 1 3.86 ms; angeschubst seit Start: 0
+I (104287) pudding_p4: 33.4 FPS (640x360 scharf), Frame 0.3 ms, Streifen 15/30, Rendern 1.4/3.2 ms, Skalieren 2.6/3.7 ms, PPA 22.2/19.8 ms, Ausgabe 27.4 ms, Panel 54.98 Hz
+I (104287) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (104886) esp-x509-crt-bundle: Certificate validated
+I (105346) ns_abruf: 200, 11528 Byte, 2019 ms: https://de.wikipedia.org/static/images/mobile/copyright/wikipedia-tagline-de.svg
+I (105619) esp-x509-crt-bundle: Certificate validated
+I (105776) pudding_p4: Desktop: 17.9 Bilder/s neu, 101.0 übersprungen/s, Fläche 624 px/Bild, Compositor 0.02 ms/Bild
+I (106109) ns_abruf: 200, 742 Byte, 2024 ms: https://de.wikipedia.org/static/images/footer/wikimedia.svg
+I (106313) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 0.2 ms (0 Dreiecke), Mithelfen 13.9 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (106313) pudding_p4: Ruckler: 86 verpasste Bildwechsel; längstes Bild 30.3 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 29.9, Sichern 0.0)
+I (106313) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (106313) pudding_p4: Frei: 55 KB intern, 1571 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (106313) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (106313) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.07 ms, Kern 1 3.96 ms; angeschubst seit Start: 0
+I (106313) pudding_p4: 33.5 FPS (640x360 scharf), Frame 0.2 ms, Streifen 15/30, Rendern 1.4/2.9 ms, Skalieren 2.9/3.7 ms, PPA 22.3/20.0 ms, Ausgabe 27.4 ms, Panel 54.97 Hz
+I (106313) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (106874) esp-x509-crt-bundle: Certificate validated
+I (107371) ns_abruf: 200, 4615 Byte, 2024 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/ESP32-S3_on_paper.jpg/120px-ESP32-S3_on_pap
+I (107642) esp-x509-crt-bundle: Certificate validated
+I (107772) pudding_p4: Bilanz 30 s: 7.5 FPS, Arbeit je Bild Mittel 15.5 ms, p99 45.2 ms, max 46.3 ms; verpasste Bildwechsel 529 (32.0 je 100)
+I (107802) pudding_p4: Desktop: 17.8 Bilder/s neu, 97.8 übersprungen/s, Fläche 624 px/Bild, Compositor 0.03 ms/Bild
+I (108090) ns_abruf: 200, 7571 Byte, 1980 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Espressif_ESP32-P4.jpg/120px-Espressif_ESP3
+I (108343) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 0.1 ms (0 Dreiecke), Mithelfen 14.2 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (108345) pudding_p4: Ruckler: 91 verpasste Bildwechsel; längstes Bild 30.3 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 28.6, Sichern 0.0)
+I (108345) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (108345) pudding_p4: Frei: 50 KB intern, 1571 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (108345) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (108345) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.98 ms, Kern 1 3.90 ms; angeschubst seit Start: 0
+I (108345) pudding_p4: 31.0 FPS (640x360 scharf), Frame 28.8 ms, Streifen 17/28, Rendern 2.1/3.5 ms, Skalieren 3.7/3.6 ms, PPA 22.3/19.1 ms, Ausgabe 28.3 ms, Panel 54.98 Hz
+I (108576) ns_takt: 207 Runden, Arbeit 853 ms, Warten 4167 ms, Heap 7244 KB (Spitze 7330 KB)
+I (108927) esp-x509-crt-bundle: Certificate validated
+I (109393) ns_abruf: 200, 3517 Byte, 2022 ms: https://de.wikipedia.org/w/resources/assets/mediawiki_compact.svg
+I (109595) esp-x509-crt-bundle: Certificate validated
+I (109802) pudding_p4: Desktop: 18.0 Bilder/s neu, 92.5 übersprungen/s, Fläche 624 px/Bild, Compositor 0.02 ms/Bild
+I (110008) ns_abruf: 200, 1246 Byte, 1917 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Commons-logo.svg/20px-Commons-logo.svg.png?
+I (110347) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 0.1 ms (0 Dreiecke), Mithelfen 13.4 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (110347) pudding_p4: Ruckler: 85 verpasste Bildwechsel; längstes Bild 31.8 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 31.1, Sichern 0.0)
+I (110347) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.3 ms je Bild
+I (110347) pudding_p4: Frei: 45 KB intern, 1572 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (110347) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (110347) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.91 ms, Kern 1 3.97 ms; angeschubst seit Start: 0
+I (110347) pudding_p4: 33.4 FPS (640x360 scharf), Frame 0.3 ms, Streifen 16/29, Rendern 2.0/4.2 ms, Skalieren 2.3/3.6 ms, PPA 22.4/18.0 ms, Ausgabe 26.8 ms, Panel 54.98 Hz
+I (110991) esp-x509-crt-bundle: Certificate validated
+I (111444) ns_abruf: 200, 3270 Byte, 2050 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=ext.gadget.CommonsDirekt%2COpenStreetMap%2CWikiM
+I (111537) esp-x509-crt-bundle: Certificate validated
+I (111807) pudding_p4: Desktop: 19.0 Bilder/s neu, 91.4 übersprungen/s, Fläche 624 px/Bild, Compositor 0.02 ms/Bild
+I (112352) ns_abruf: 200, 66765 Byte, 2343 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=ext.visualEditor.core.utils.parsing%7Cext.visual
+I (112408) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.2 ms (0 Dreiecke), Mithelfen 14.0 ms, Rest-PPA 0.4 ms, Warten auf Bildspeicher 0.0 ms
+I (112408) pudding_p4: Ruckler: 91 verpasste Bildwechsel; längstes Bild 30.5 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 29.0, Sichern 0.0)
+I (112408) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (112408) pudding_p4: Frei: 45 KB intern, 1619 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (112408) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (112408) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.18 ms, Kern 1 3.85 ms; angeschubst seit Start: 0
+I (112408) pudding_p4: 33.4 FPS (640x360 scharf), Frame 1.0 ms, Streifen 18/27, Rendern 3.4/4.0 ms, Skalieren 7.0/4.1 ms, PPA 17.8/18.7 ms, Ausgabe 28.5 ms, Panel 54.97 Hz
+I (112693) esp-x509-crt-bundle: Certificate validated
+I (113600) ns_takt: 253 Runden, Arbeit 506 ms, Warten 4518 ms, Heap 7450 KB (Spitze 7518 KB)
+I (113819) pudding_p4: Desktop: 18.9 Bilder/s neu, 93.3 übersprungen/s, Fläche 624 px/Bild, Compositor 0.04 ms/Bild
+I (114437) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.1 ms (0 Dreiecke), Mithelfen 14.1 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (114437) pudding_p4: Ruckler: 92 verpasste Bildwechsel; längstes Bild 30.8 ms (Simulation 0.0, Vorbereiten 0.2, Mithelfen 30.0, Sichern 0.0)
+I (114437) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (114437) pudding_p4: Frei: 44 KB intern, 1615 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (114437) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (114437) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.01 ms, Kern 1 3.99 ms; angeschubst seit Start: 0
+I (114437) pudding_p4: 33.4 FPS (640x360 scharf), Frame 0.2 ms, Streifen 15/30, Rendern 1.9/3.3 ms, Skalieren 2.4/4.8 ms, PPA 23.6/19.9 ms, Ausgabe 28.1 ms, Panel 54.98 Hz
+I (115824) pudding_p4: Desktop: 18.5 Bilder/s neu, 91.8 übersprungen/s, Fläche 624 px/Bild, Compositor 0.04 ms/Bild
+I (116463) pudding_p4: Mittel: Simulation 0.1 ms, Bild vorbereiten 0.2 ms (0 Dreiecke), Mithelfen 14.0 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (116463) pudding_p4: Ruckler: 90 verpasste Bildwechsel; längstes Bild 30.2 ms (Simulation 0.0, Vorbereiten 0.4, Mithelfen 28.3, Sichern 0.0)
+I (116463) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (116463) pudding_p4: Frei: 44 KB intern, 1615 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (116463) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (116463) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.81 ms, Kern 1 4.18 ms; angeschubst seit Start: 0
+I (116463) pudding_p4: 33.4 FPS (640x360 scharf), Frame 0.2 ms, Streifen 16/29, Rendern 1.7/2.9 ms, Skalieren 2.7/4.2 ms, PPA 22.7/20.4 ms, Ausgabe 28.1 ms, Panel 54.98 Hz
+I (117517) ns_abruf: 200, 869155 Byte, 6072 ms: https://de.wikipedia.org/w/load.php?lang=de&modules=ext.centralNotice.bannerHistoryLogger%2CchoiceDa
+I (117828) pudding_p4: Desktop: 17.5 Bilder/s neu, 96.3 übersprungen/s, Fläche 624 px/Bild, Compositor 0.04 ms/Bild
+I (118465) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.2 ms (0 Dreiecke), Mithelfen 14.4 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (118465) pudding_p4: Ruckler: 87 verpasste Bildwechsel; längstes Bild 30.5 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 29.0, Sichern 0.0)
+I (118465) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.5 ms je Bild
+I (118465) pudding_p4: Frei: 74 KB intern, 1623 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (118465) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (118465) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.94 ms, Kern 1 4.08 ms; angeschubst seit Start: 0
+I (118466) pudding_p4: 30.9 FPS (640x360 scharf), Frame 29.5 ms, Streifen 16/29, Rendern 2.2/2.8 ms, Skalieren 6.2/5.0 ms, PPA 18.6/19.2 ms, Ausgabe 27.9 ms, Panel 54.97 Hz
+I (118615) ns_takt: 302 Runden, Arbeit 806 ms, Warten 4208 ms, Heap 8285 KB (Spitze 9067 KB)
+I (119201) esp-x509-crt-bundle: Certificate validated
+I (119671) ns_abruf: 200, 6170 Byte, 1723 ms: https://de.wikipedia.org/static/images/mobile/copyright/wikipedia-wordmark-en.svg
+I (119831) pudding_p4: Desktop: 13.0 Bilder/s neu, 124.3 übersprungen/s, Fläche 2939 px/Bild, Compositor 0.04 ms/Bild
+I (120081) esp-x509-crt-bundle: Certificate validated
+I (120468) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 0.4 ms (0 Dreiecke), Mithelfen 13.2 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (120468) pudding_p4: Ruckler: 44 verpasste Bildwechsel; längstes Bild 31.4 ms (Simulation 0.0, Vorbereiten 1.4, Mithelfen 29.6, Sichern 0.0)
+I (120468) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 2.5 ms je Bild
+I (120468) pudding_p4: Frei: 71 KB intern, 1577 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (120468) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (120468) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.16 ms, Kern 1 3.80 ms; angeschubst seit Start: 0
+I (120468) pudding_p4: 33.4 FPS (640x360 scharf), Frame 1.2 ms, Streifen 15/30, Rendern 1.5/3.5 ms, Skalieren 2.0/3.9 ms, PPA 22.6/19.5 ms, Ausgabe 27.1 ms, Panel 54.97 Hz
+I (120642) ns_abruf: 200, 33770 Byte, 1989 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Espressif_ESP-WROOM-32_Wi-Fi_%26_Bluetooth_
+I (120982) esp-x509-crt-bundle: Certificate validated
+I (121379) ns_abruf: 200, 22899 Byte, 1708 ms: https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/ESP32-Dieshot.jpg/250px-ESP32-Dieshot.jpg?u
+I (121834) pudding_p4: Desktop: 11.0 Bilder/s neu, 136.3 übersprungen/s, Fläche 624 px/Bild, Compositor 0.02 ms/Bild
+I (122538) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 0.2 ms (0 Dreiecke), Mithelfen 14.1 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (122538) pudding_p4: Ruckler: 55 verpasste Bildwechsel; längstes Bild 31.1 ms (Simulation 0.0, Vorbereiten 0.1, Mithelfen 29.9, Sichern 0.0)
+I (122538) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 2.3 ms je Bild
+I (122538) pudding_p4: Frei: 66 KB intern, 1573 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (122538) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (122538) pudding_p4: PPA-Aufrufe je Bild: Kern 0 1.10 ms, Kern 1 3.89 ms; angeschubst seit Start: 0
+I (122538) pudding_p4: 33.3 FPS (640x360 scharf), Frame 2.3 ms, Streifen 16/29, Rendern 2.6/2.8 ms, Skalieren 4.0/3.6 ms, PPA 21.6/21.4 ms, Ausgabe 28.3 ms, Panel 54.98 Hz
+I (122700) esp-x509-crt-bundle: Certificate validated
+I (122798) pudding_fw::foto: BILD 5 720 1280 3000000 0
+I (129687) pudding_fw::foto: BILD 5 gesendet
+I (129712) pudding_p4: Desktop: 0.9 Bilder/s neu, 20.2 übersprungen/s, Fläche 33449 px/Bild, Compositor 0.14 ms/Bild
+I (129712) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 10.7 ms (0 Dreiecke), Mithelfen 13.1 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (129712) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 28.8 ms (Simulation 0.3, Vorbereiten 0.9, Mithelfen 26.3, Sichern 0.0)
+I (129712) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 83.2 ms je Bild
+I (129713) pudding_p4: Frei: 46 KB intern, 1575 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (129713) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (129713) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.48 ms, Kern 1 3.89 ms; angeschubst seit Start: 0
+I (129713) pudding_p4: 33.3 FPS (640x360 scharf), Frame 20.7 ms, Streifen 15/30, Rendern 1.6/2.9 ms, Skalieren 2.0/3.7 ms, PPA 22.1/20.6 ms, Ausgabe 27.4 ms, Panel 54.98 Hz
+I (130176) ns_takt: 73 Runden, Arbeit 3504 ms, Warten 1511 ms, Heap 9383 KB (Spitze 9448 KB)
+I (130930) esp-x509-crt-bundle: Certificate validated
+I (131194) esp-x509-crt-bundle: Certificate validated
+I (131328) ns_abruf: 200, 742 Byte, 1965 ms: https://de.wikipedia.org/static/images/footer/wikimedia.svg
+I (131534) ns_abruf: 200, 3517 Byte, 2132 ms: https://de.wikipedia.org/w/resources/assets/mediawiki_compact.svg
+I (131714) pudding_p4: Mittel: Simulation 0.7 ms, Bild vorbereiten 1.8 ms (0 Dreiecke), Mithelfen 13.2 ms, Rest-PPA 0.5 ms, Warten auf Bildspeicher 0.0 ms
+I (131714) pudding_p4: Ruckler: 87 verpasste Bildwechsel; längstes Bild 49.0 ms (Simulation 0.0, Vorbereiten 34.5, Mithelfen 13.0, Sichern 0.0)
+I (131715) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (131715) pudding_p4: Frei: 46 KB intern, 1624 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (131715) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (131715) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.77 ms, Kern 1 4.00 ms; angeschubst seit Start: 0
+I (131715) pudding_p4: 33.3 FPS (640x360 scharf), Frame 44.7 ms, Streifen 15/30, Rendern 2.4/4.0 ms, Skalieren 4.9/4.0 ms, PPA 20.6/20.4 ms, Ausgabe 28.8 ms, Panel 54.97 Hz
+I (131757) pudding_p4: Desktop: 18.3 Bilder/s neu, 89.0 übersprungen/s, Fläche 20047 px/Bild, Compositor 0.50 ms/Bild
+I (132624) esp-x509-crt-bundle: Certificate validated
+I (132878) ns_abruf: 200, 2734 Byte, 1283 ms: https://de.wikipedia.org/static/favicon/wikipedia.ico
+I (133720) pudding_p4: Desktop: 0.0 Bilder/s neu, 193.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (135720) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (137720) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (137914) ns_takt: 164 Runden, Arbeit 332 ms, Warten 7406 ms, Heap 9391 KB (Spitze 9457 KB)
+I (139724) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (141724) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (143724) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (145727) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (147732) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (147797) pudding_fw::foto: BILD 6 720 1280 3000000 0
+I (154685) pudding_fw::foto: BILD 6 gesendet
+I (154690) pudding_p4: Desktop: 0.0 Bilder/s neu, 2.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (156695) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (158068) ns_takt: 1 Runden, Arbeit 0 ms, Warten 9270 ms, Heap 8916 KB (Spitze 9457 KB)
+I (158695) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (160700) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (162700) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (164700) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (166700) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (167800) pudding_fw::foto: BILD 7 720 1280 3000000 0
+I (174688) pudding_fw::foto: BILD 7 gesendet
+I (174693) pudding_p4: Desktop: 0.0 Bilder/s neu, 27.6 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild

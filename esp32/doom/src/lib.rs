@@ -164,6 +164,11 @@ impl Spiel for Doom {
             }
             // SAFETY: Doom läuft nur hier (Spiel-Kern).
             unsafe { ffi::doomgeneric_Tick() };
+            // Entwicklungs-Build: Speichern während des Spiels (Flash-Sperre)
+            if option_env!("DOOM_SPEICHERTEST").is_some() {
+                // SAFETY: Doom-Zustand auf dem Doom-Kern, zwischen zwei Tics.
+                unsafe { ffi::DG_Speichertest(tic) };
+            }
             self.pal = palette();
         }
 

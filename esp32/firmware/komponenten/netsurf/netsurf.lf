@@ -29,6 +29,9 @@ entries:
         data -> iram0_data SURROUND(netsurf_daten),
         bss -> extern_ram SURROUND(netsurf_bss)
     programm_daten (default)
+    # B2: Transport (Anfragen laufen in eigenen Tasks über das Programmende
+    # hinaus, ihre statischen Daten gehören dem System)
+    transport_esp (default)
     # utils/idna_props.h (in idna.c): Unicode-Eigenschaften für IDNA
     idna:idna_derived (netsurf_nur_lesen)
     idna:idna_joiningtype (netsurf_nur_lesen)

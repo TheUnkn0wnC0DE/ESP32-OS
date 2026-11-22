@@ -53,5 +53,23 @@ Plan: `PLAN.md`, Stand/Übergabe: `STATUS.md`.
 - `main` hat keine alte Geschichte (eigener Anfangscommit). Neue Stände von
   `esp32-os` kommen als eigener Commit darauf:
   `git commit-tree <esp32-os-Commit>^{tree} -p main -m …`, dann
-  `git branch -f main <neu>`. Pushen nur nach OK des Nutzers.
-- Der alte Remote heisst `pudding-panik` – dorthin nie pushen.
+  `git branch -f main <neu>`.
+
+## Push-Regeln (vom Nutzer, 22.11.)
+
+Pushen ohne Rückfrage ist erlaubt – nur so:
+
+1. Gepusht wird nur `main`, nur auf `origin` (TheUnkn0wnC0DE/ESP32-OS).
+   Nie `esp32-os` oder andere Branches (die enthalten die alte Geschichte
+   mit dem echten Namen). Nie auf `pudding-panik` oder `lokal`.
+2. Kein force push.
+3. Vor jedem Push: `geheimnis_pruefen.py`, Suche im Tree von `main` nach
+   dem echten Namen und Pfaden mit dem Benutzernamen (Suchbegriffe stehen
+   nur lokal in `.claude/private_suchbegriffe.txt`, nie im Repo) und nach
+   verbotenen Dateien (WAD, pak, `sicherung/`, `wlan.local`). Nur bei 0
+   Treffern pushen.
+4. Commits nur als TheUnkn0wnC0DE mit der noreply-Adresse und in UTC.
+5. Sinnvoll pushen, z. B. nach jedem fertigen Plan-Punkt, nicht nach jeder
+   Kleinigkeit.
+6. GitHub-Releases mit Firmware-Dateien (O8) weiterhin nur mit OK des
+   Nutzers.

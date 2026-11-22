@@ -432,3 +432,51 @@ void DG_Einstellen(void)
     // "joyb_speed = 31"-Trick: immer rennen.
     joybspeed = 29;
 }
+
+// ---- Entwicklungs-Build DOOM_SPEICHERTEST (Flash-Sperre, 22.11.): neues
+// Spiel E1M1, dann während das Level läuft 8-mal alle 2 s speichern
+// (Spielstand 0..5 im Wechsel), jeden Spielstand auf der FAT-Partition
+// prüfen (Datei vorhanden, Grösse > 0), danach Doom regulär beenden.
+// Wird je Tic aufgerufen; `tic` = Tics seit dem Start.
+#include <stdio.h>
+#include <sys/stat.h>
+#include "d_main.h"
+#include "g_game.h"
+
+void DG_Beenden(void);
+
+int DG_Speichertest(int tic)
+{
+    static int start_tic = -1, naechster, n, wartet = -1;
+    if (start_tic < 0) {
+        if (tic < 350)
+            return 0; // 10 s Titel abwarten
+        G_DeferedInitNew(sk_medium, 1, 1);
+        start_tic = tic;
+        naechster = tic + 140;
+        printf("Doom-Speichertest: neues Spiel E1M1\n");
+        return 0;
+    }
+    if (wartet >= 0 && gameaction == ga_nothing) {
+        struct stat st;
+        char *pfad = P_SaveGameFile(wartet);
+        int ok = stat(pfad, &st) == 0 && st.st_size > 0;
+        printf("Doom-Speichertest: Spielstand %d (%s) %s, %ld Byte, Level %d, Modus %d\n", n, pfad,
+               ok ? "gespeichert" : "FEHLT", ok ? (long)st.st_size : 0L, DG_Level(), DG_Modus());
+        wartet = -1;
+        if (n == 8) {
+            printf("Doom-Speichertest: fertig, 8 Spielstände ohne Absturz – Doom beendet\n");
+            DG_Beenden();
+            return 1;
+        }
+    }
+    if (wartet < 0 && tic >= naechster && gamestate == GS_LEVEL && gameaction == ga_nothing) {
+        static char name[SAVESTRINGSIZE];
+        n++;
+        snprintf(name, sizeof name, "TEST %d", n);
+        wartet = (n - 1) % 6;
+        G_SaveGame(wartet, name);
+        naechster = tic + 70;
+    }
+    return 0;
+}

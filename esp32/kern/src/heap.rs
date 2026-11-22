@@ -1,5 +1,18 @@
-//! Eigener Heap je Programm: First-Fit-Freiliste (nach Adresse sortiert) mit
-//! Verschmelzen benachbarter freier Blöcke, über einem festen Speicherbereich.
+//! Eigener Heap je Programm über einem festen Speicherbereich.
+//!
+//! - Kleine Blöcke (bis `KLEIN_MAX` Bytes samt Kopf) haben je Grösse eine
+//!   eigene Freiliste (LIFO): Belegen und Freigeben ohne Suche, O(1).
+//! - Grosse Blöcke: First-Fit-Freiliste nach Adresse sortiert, mit
+//!   Verschmelzen benachbarter freier Blöcke. Kleine Blöcke kommen nie
+//!   hinein – die Liste bleibt kurz.
+//! - Reicht der Platz für einen grossen Block nicht, werden die kleinen
+//!   freien Blöcke zurück in die grosse Liste geführt (nach Adresse
+//!   sortiert, verschmolzen) und erneut gesucht: nichts geht durch die
+//!   Klassen verloren.
+//!
+//! Vorher (bis 22.11.) gab es nur die eine sortierte Liste: beim Laden einer
+//! Wikipedia-Seite im Browser 240 Mio. durchlaufene Knoten (734 je Aufruf),
+//! am Board (Liste im PSRAM) über eine Minute nur dafür.
 //!
 //! Der Verwaltungskopf (`Heap`) liegt am Anfang des Bereichs selbst, damit das
 //! Anlegen keinen weiteren Speicher braucht. Wird das Programm beendet, gibt
@@ -15,10 +28,17 @@ use core::ptr;
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 const W: usize = core::mem::size_of::<usize>();
-/// Ausrichtung aller Blockgrenzen.
-const GRAN: usize = 2 * W;
+/// Ausrichtung aller Blockgrenzen – mindestens 16: Programme belegen über
+/// Funktion 68.12 mit Ausrichtung 16; so liegt jeder Nutzzeiger `b + GRAN`
+/// von selbst richtig und kleine Blöcke kommen aus ihrer Klasse (auch auf
+/// 32 Bit, wo 2 × W nur 8 wäre).
+const GRAN: usize = if 2 * W > 16 { 2 * W } else { 16 };
 /// Kleinster Block: Kopf + Freilisten-Knoten.
 const MIN_BLOCK: usize = 2 * GRAN;
+/// Grösste Blockgrösse (samt Kopf) mit eigener Freiliste.
+const KLEIN_MAX: usize = 1024;
+/// Anzahl Grössenklassen (Index = Blockgrösse / GRAN).
+const KLASSEN: usize = KLEIN_MAX / GRAN + 1;
 
 #[repr(C)]
 struct Frei {
@@ -30,16 +50,33 @@ struct Frei {
 pub struct Heap {
     arena_start: usize,
     arena_ende: usize,
+    /// grosse freie Blöcke, nach Adresse sortiert, verschmolzen
     frei: UnsafeCell<*mut Frei>,
+    /// kleine freie Blöcke je Grösse
+    klassen: UnsafeCell<[*mut Frei; KLASSEN]>,
     belegt: AtomicUsize,
     spitze: AtomicUsize,
     sperre: AtomicBool,
 }
 
-// SAFETY: Zugriff auf `frei` nur unter `sperre`.
+// SAFETY: Zugriff auf `frei` und `klassen` nur unter `sperre`.
 unsafe impl Sync for Heap {}
 // SAFETY: wie oben.
 unsafe impl Send for Heap {}
+
+/// Messung (alle Heaps): Aufrufe von alloc/free und durchlaufene Knoten
+/// der Freiliste – zeigt, wie teuer die Suche ist.
+static AUFRUFE: AtomicUsize = AtomicUsize::new(0);
+static SCHRITTE: AtomicUsize = AtomicUsize::new(0);
+
+/// (Aufrufe, Schritte) seit dem Start bzw. dem letzten Zurücksetzen.
+pub fn zaehler(zuruecksetzen: bool) -> (usize, usize) {
+    if zuruecksetzen {
+        (AUFRUFE.swap(0, Ordering::Relaxed), SCHRITTE.swap(0, Ordering::Relaxed))
+    } else {
+        (AUFRUFE.load(Ordering::Relaxed), SCHRITTE.load(Ordering::Relaxed))
+    }
+}
 
 const fn align_up(x: usize, a: usize) -> usize {
     (x + a - 1) & !(a - 1)
@@ -51,6 +88,54 @@ const fn align_down(x: usize, a: usize) -> usize {
 
 /// Kleinste Bereichsgrösse, in der ein Heap mit Nutzfläche Platz hat.
 pub const MIN_BEREICH: usize = core::mem::size_of::<Heap>() + 4 * GRAN + MIN_BLOCK;
+
+/// Zwei nach Adresse sortierte Listen zu einer.
+///
+/// # Safety
+/// Beide Listen gültig und disjunkt.
+unsafe fn mischen(mut a: *mut Frei, mut b: *mut Frei) -> *mut Frei {
+    let mut kopf: *mut Frei = ptr::null_mut();
+    let mut ende: *mut *mut Frei = &raw mut kopf;
+    // SAFETY: Knoten laut Vertrag gültig.
+    unsafe {
+        while !a.is_null() && !b.is_null() {
+            if (a as usize) < (b as usize) {
+                *ende = a;
+                ende = &raw mut (*a).next;
+                a = (*a).next;
+            } else {
+                *ende = b;
+                ende = &raw mut (*b).next;
+                b = (*b).next;
+            }
+        }
+        *ende = if a.is_null() { b } else { a };
+    }
+    kopf
+}
+
+/// Liste nach Adresse sortieren (Mergesort, ohne zusätzlichen Speicher,
+/// Rekursionstiefe log2 n).
+///
+/// # Safety
+/// Liste gültig.
+unsafe fn sortieren(kopf: *mut Frei) -> *mut Frei {
+    // SAFETY: Knoten laut Vertrag gültig.
+    unsafe {
+        if kopf.is_null() || (*kopf).next.is_null() {
+            return kopf;
+        }
+        let mut langsam = kopf;
+        let mut schnell = (*kopf).next;
+        while !schnell.is_null() && !(*schnell).next.is_null() {
+            langsam = (*langsam).next;
+            schnell = (*(*schnell).next).next;
+        }
+        let zweite = (*langsam).next;
+        (*langsam).next = ptr::null_mut();
+        mischen(sortieren(kopf), sortieren(zweite))
+    }
+}
 
 impl Heap {
     /// Legt einen Heap über `[basis, basis + laenge)` an.
@@ -73,6 +158,7 @@ impl Heap {
                 arena_start: start,
                 arena_ende: ende,
                 frei: UnsafeCell::new(erster),
+                klassen: UnsafeCell::new([ptr::null_mut(); KLASSEN]),
                 belegt: AtomicUsize::new(0),
                 spitze: AtomicUsize::new(0),
                 sperre: AtomicBool::new(false),
@@ -104,16 +190,62 @@ impl Heap {
         self.sperre.store(false, Ordering::Release);
     }
 
+    fn zaehlen(&self, schritte: usize) {
+        AUFRUFE.fetch_add(1, Ordering::Relaxed);
+        SCHRITTE.fetch_add(schritte, Ordering::Relaxed);
+    }
+
     /// Belegt `groesse` Bytes mit Ausrichtung `align` (Zweierpotenz). Null, wenn voll.
     pub fn alloc(&self, groesse: usize, align: usize) -> *mut u8 {
         let align = align.max(GRAN);
         let groesse = groesse.max(1);
         self.sperren();
-        // SAFETY: Freiliste nur unter Sperre, Knoten liegen in der Arena.
+        // SAFETY: Freilisten nur unter Sperre, Knoten liegen in der Arena.
         let p = unsafe {
+            // kleiner Block ohne besondere Ausrichtung: aus seiner Klasse
+            let klein = (align == GRAN)
+                .then(|| groesse.checked_add(GRAN - 1).map(|g| GRAN + (g & !(GRAN - 1))))
+                .flatten()
+                .filter(|&s| s <= KLEIN_MAX);
+            let mut p = ptr::null_mut();
+            if let Some(s) = klein {
+                let liste = &mut (*self.klassen.get())[s / GRAN];
+                let blk = *liste;
+                if !blk.is_null() {
+                    *liste = (*blk).next;
+                    let b = blk as usize;
+                    *(b as *mut usize) = s;
+                    *((b + GRAN - W) as *mut usize) = b;
+                    let neu = self.belegt.fetch_add(s, Ordering::Relaxed) + s;
+                    self.spitze.fetch_max(neu, Ordering::Relaxed);
+                    self.zaehlen(0);
+                    p = (b + GRAN) as *mut u8;
+                }
+            }
+            if p.is_null() {
+                p = self.gross_suchen(groesse, align);
+            }
+            if p.is_null() && self.zusammenfuehren() {
+                p = self.gross_suchen(groesse, align);
+            }
+            p
+        };
+        self.entsperren();
+        p
+    }
+
+    /// First-Fit in der grossen Liste.
+    ///
+    /// # Safety
+    /// Nur unter Sperre.
+    unsafe fn gross_suchen(&self, groesse: usize, align: usize) -> *mut u8 {
+        // SAFETY: laut Vertrag unter Sperre; Knoten in der Arena.
+        unsafe {
             let mut vor: *mut *mut Frei = self.frei.get();
             let mut gefunden = ptr::null_mut();
+            let mut schritte = 0usize;
             while !(*vor).is_null() {
+                schritte += 1;
                 let blk = *vor;
                 let b = blk as usize;
                 let s = (*blk).groesse;
@@ -125,7 +257,17 @@ impl Heap {
                 {
                     let rest = b + s - ende;
                     let next = (*blk).next;
-                    let nutz = if rest >= MIN_BLOCK {
+                    let nutz = if rest >= MIN_BLOCK && rest <= KLEIN_MAX {
+                        // kleiner Rest: in seine Klasse, die grosse Liste
+                        // bleibt frei von kleinen Stücken
+                        let r = ende as *mut Frei;
+                        let liste = &mut (*self.klassen.get())[rest / GRAN];
+                        (*r).groesse = rest;
+                        (*r).next = *liste;
+                        *liste = r;
+                        *vor = next;
+                        ende - b
+                    } else if rest >= MIN_BLOCK {
                         let r = ende as *mut Frei;
                         (*r).groesse = rest;
                         (*r).next = next;
@@ -144,10 +286,79 @@ impl Heap {
                 }
                 vor = &raw mut (*blk).next;
             }
+            self.zaehlen(schritte);
             gefunden
-        };
-        self.entsperren();
-        p
+        }
+    }
+
+    /// Block `[b, b + s)` sortiert in die grosse Liste, mit Verschmelzen.
+    ///
+    /// # Safety
+    /// Nur unter Sperre; der Block ist frei und gehört zur Arena.
+    unsafe fn gross_einfuegen(&self, b: usize, s: usize) {
+        // SAFETY: laut Vertrag.
+        unsafe {
+            let mut vor: *mut *mut Frei = self.frei.get();
+            let mut links: *mut Frei = ptr::null_mut();
+            let mut schritte = 0usize;
+            while !(*vor).is_null() && (*vor as usize) < b {
+                links = *vor;
+                vor = &raw mut (*links).next;
+                schritte += 1;
+            }
+            self.zaehlen(schritte);
+            let rechts = *vor;
+            let neu = b as *mut Frei;
+            (*neu).groesse = s;
+            (*neu).next = rechts;
+            *vor = neu;
+            if !rechts.is_null() && b + s == rechts as usize {
+                (*neu).groesse += (*rechts).groesse;
+                (*neu).next = (*rechts).next;
+            }
+            if !links.is_null() && links as usize + (*links).groesse == b {
+                (*links).groesse += (*neu).groesse;
+                (*links).next = (*neu).next;
+            }
+        }
+    }
+
+    /// Alle kleinen freien Blöcke zurück in die grosse Liste (sortiert,
+    /// verschmolzen). Liefert false, wenn es keine gab.
+    ///
+    /// # Safety
+    /// Nur unter Sperre.
+    unsafe fn zusammenfuehren(&self) -> bool {
+        // SAFETY: laut Vertrag unter Sperre; alle Knoten in der Arena.
+        unsafe {
+            let mut alle: *mut Frei = ptr::null_mut();
+            for liste in (*self.klassen.get()).iter_mut() {
+                let mut x = core::mem::replace(liste, ptr::null_mut());
+                while !x.is_null() {
+                    let n = (*x).next;
+                    (*x).next = alle;
+                    alle = x;
+                    x = n;
+                }
+            }
+            if alle.is_null() {
+                return false;
+            }
+            let liste = mischen(sortieren(alle), *self.frei.get());
+            // Nachbarn verschmelzen
+            let mut k = liste;
+            while !k.is_null() {
+                let n = (*k).next;
+                if !n.is_null() && k as usize + (*k).groesse == n as usize {
+                    (*k).groesse += (*n).groesse;
+                    (*k).next = (*n).next;
+                } else {
+                    k = n;
+                }
+            }
+            *self.frei.get() = liste;
+            true
+        }
     }
 
     /// Gibt einen von `alloc` gelieferten Zeiger zurück.
@@ -161,27 +372,18 @@ impl Heap {
             (b, *(b as *const usize))
         };
         self.sperren();
-        // SAFETY: Freiliste nur unter Sperre.
+        // SAFETY: Freilisten nur unter Sperre.
         unsafe {
             self.belegt.fetch_sub(s, Ordering::Relaxed);
-            let mut vor: *mut *mut Frei = self.frei.get();
-            let mut links: *mut Frei = ptr::null_mut();
-            while !(*vor).is_null() && (*vor as usize) < b {
-                links = *vor;
-                vor = &raw mut (*links).next;
-            }
-            let rechts = *vor;
-            let neu = b as *mut Frei;
-            (*neu).groesse = s;
-            (*neu).next = rechts;
-            *vor = neu;
-            if !rechts.is_null() && b + s == rechts as usize {
-                (*neu).groesse += (*rechts).groesse;
-                (*neu).next = (*rechts).next;
-            }
-            if !links.is_null() && links as usize + (*links).groesse == b {
-                (*links).groesse += (*neu).groesse;
-                (*links).next = (*neu).next;
+            if s <= KLEIN_MAX {
+                let neu = b as *mut Frei;
+                let liste = &mut (*self.klassen.get())[s / GRAN];
+                (*neu).groesse = s;
+                (*neu).next = *liste;
+                *liste = neu;
+                self.zaehlen(0);
+            } else {
+                self.gross_einfuegen(b, s);
             }
         }
         self.entsperren();
@@ -225,12 +427,14 @@ impl Heap {
         (self.arena_start..self.arena_ende).contains(&(p as usize))
     }
 
-    /// Anzahl freier Blöcke (Prüfung des Verschmelzens).
+    /// Anzahl freier Blöcke nach dem Zusammenführen der kleinen Blöcke
+    /// (Prüfung des Verschmelzens).
     pub fn freie_bloecke(&self) -> usize {
         self.sperren();
         let mut n = 0;
         // SAFETY: unter Sperre.
         unsafe {
+            self.zusammenfuehren();
             let mut k = *self.frei.get();
             while !k.is_null() {
                 n += 1;
@@ -325,6 +529,57 @@ mod tests {
             x.join().unwrap();
         }
         let h = unsafe { &*(h as *const Heap) };
+        assert_eq!(h.belegt(), 0);
+        assert_eq!(h.freie_bloecke(), 1);
+    }
+
+    /// Kleine Blöcke kommen ohne Suche aus ihrer Klasse; gleich grosse
+    /// Blöcke werden wiederverwendet.
+    #[test]
+    fn kleine_bloecke_ohne_suche() {
+        let (_v, h) = bereich(1024 * 1024);
+        let h = unsafe { &*h };
+        // Blöcke verschiedener Grösse freigeben (Lücken), dann gleich
+        // grosse wieder belegen: dieselben Adressen, keine Schritte
+        let z: Vec<_> = (0..2000).map(|i| h.alloc(16 + (i % 20) * 8, 8)).collect();
+        for &p in z.iter().step_by(2) {
+            unsafe { h.free(p) };
+        }
+        zaehler(true);
+        let mut wieder = Vec::new();
+        for i in (0..2000).step_by(2) {
+            let p = h.alloc(16 + (i % 20) * 8, 8);
+            assert!(z.contains(&p), "Block {i} wiederverwendet");
+            wieder.push(p);
+        }
+        let (aufrufe, schritte) = zaehler(false);
+        assert!(aufrufe >= 1000);
+        // andere Heaps (parallele Tests) zählen mit: nur grobe Grenze
+        assert!(schritte < aufrufe, "Schritte {schritte} bei {aufrufe} Aufrufen");
+    }
+
+    /// Grosser Block passt erst, wenn die kleinen freien Blöcke wieder
+    /// verschmolzen sind.
+    #[test]
+    fn gross_nach_vielen_kleinen() {
+        let (_v, h) = bereich(64 * 1024);
+        let h = unsafe { &*h };
+        let mut z = Vec::new();
+        loop {
+            let p = h.alloc(40, 8);
+            if p.is_null() {
+                break;
+            }
+            z.push(p);
+        }
+        assert!(h.alloc(8 * 1024, 8).is_null(), "voll");
+        for &p in &z {
+            unsafe { h.free(p) };
+        }
+        // alles klein freigegeben: grosser Block erst nach dem Zusammenführen
+        let g = h.alloc(32 * 1024, 8);
+        assert!(!g.is_null(), "grosser Block nach dem Zusammenführen");
+        unsafe { h.free(g) };
         assert_eq!(h.belegt(), 0);
         assert_eq!(h.freie_bloecke(), 1);
     }

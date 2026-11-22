@@ -25,6 +25,12 @@
 #include <dom/bindings/hubbub/parser.h>
 
 #include "quickjs.h"
+#ifdef ESP_PLATFORM
+/* Board: Meldungen der Skripte und Laufzeiten auf die serielle Konsole
+ * (NetSurfs eigenes Protokoll ist am Board ohne -v stumm) */
+#include "esp_log.h"
+#include "esp_timer.h"
+#endif
 
 #include "utils/errors.h"
 #include "utils/log.h"
@@ -91,16 +97,22 @@ struct jsthread {
 	unsigned css_fertig;
 	bool geplant;
 	bool geladen;
+	/* Zeitpunkt der letzten DOM-Änderung (Ruhe abwarten) */
+	int64_t letzte_aenderung_ms;
 };
 
 bool ns_neu_layout(html_content *htmlc);
 bool ns_neu_layout_laeuft(html_content *htmlc);
 void ns_neu_layout_abbrechen(html_content *htmlc);
 void ns_stylesheets_zaehlen(html_content *htmlc, unsigned *fertig, unsigned *ladend);
+/* c/ohne_js.c: Seite ohne JavaScript neu laden (JS-Speichergrenze) */
+void ns_ohne_js_anfordern(struct browser_window *bw, html_content *htmlc);
+static jsthread *thread_von(JSContext *cx);
 
-/* Änderungen am DOM werden gebündelt: frühestens so lange nach der ersten
- * Änderung wird neu aufgebaut (Skripte ändern oft viele Knoten am Stück) */
-#define NEU_LAYOUT_MS 100
+/* Neu aufgebaut wird erst, wenn das DOM so lange ruhig war (keine Änderung):
+ * Seiten wie Wikipedia ändern nach dem Laden lange Zeit immer wieder etwas;
+ * ein Umbau nach jeder Änderung käme am Board nie zur Ruhe (Nutzer 22.11.) */
+#define NEU_LAYOUT_MS 500
 /* Abstand der Prüfung, solange eingefügte Stylesheets noch laden */
 #define CSS_WARTEN_MS 300
 
@@ -120,6 +132,9 @@ static void protokoll(const char *art, const char *text)
 {
 	size_t l = strlen(art) + strlen(text) + 3;
 	NSLOG(netsurf, WARNING, "JS %s: %s", art, text);
+#ifdef ESP_PLATFORM
+	ESP_LOGW("ns_js", "%s: %.200s", art, text);
+#endif
 	if (konsole_n + l >= sizeof konsole)
 		konsole_n = 0;
 	konsole_n += (size_t)snprintf(konsole + konsole_n, sizeof konsole - konsole_n, "%s: %s\n", art, text);
@@ -265,6 +280,13 @@ static void ausnahme_melden(JSContext *cx)
 	char text[1024];
 	snprintf(text, sizeof text, "%s%s%s", s ? s : "(Ausnahme)", st ? "\n" : "", st ? st : "");
 	protokoll("Fehler", text);
+	/* Skript hat die Speichergrenze der Seite gesprengt: Rückfallebene,
+	 * die Seite ohne JavaScript neu laden (c/ohne_js.c) */
+	if (s != NULL && strstr(s, "out of memory") != NULL) {
+		jsthread *t = thread_von(cx);
+		if (t != NULL && t->htmlc != NULL)
+			ns_ohne_js_anfordern(t->bw, t->htmlc);
+	}
 	if (st)
 		JS_FreeCString(cx, st);
 	if (s)
@@ -321,6 +343,14 @@ static void layout_faellig(void *p)
 	t->geplant = false;
 	if (t->geschlossen)
 		return;
+	/* noch keine Ruhe: Rest der Ruhezeit abwarten */
+	{
+		int64_t still = jetzt_ms() - t->letzte_aenderung_ms;
+		if (t->aenderungen != t->stand && still < NEU_LAYOUT_MS) {
+			layout_planen(t, (int)(NEU_LAYOUT_MS - still));
+			return;
+		}
+	}
 	ns_stylesheets_zaehlen(t->htmlc, &fertig, &ladend);
 	if (t->aenderungen == t->stand && fertig == t->css_fertig) {
 		if (ladend > 0)
@@ -493,6 +523,7 @@ static JSValue fehler(JSContext *cx, const char *was, dom_exception e)
 static void geaendert(jsthread *t)
 {
 	t->aenderungen++;
+	t->letzte_aenderung_ms = jetzt_ms();
 }
 
 /* ------------------------------------------------------------ Grundfunktionen */
@@ -1368,7 +1399,14 @@ bool js_exec(jsthread *thread, const uint8_t *txt, size_t txtlen, const char *na
 	memcpy(quelle, txt, txtlen);
 	quelle[txtlen] = '\0';
 	eintreten(thread);
+#ifdef ESP_PLATFORM
+	int64_t beginn = esp_timer_get_time();
+#endif
 	r = JS_Eval(thread->cx, quelle, txtlen, name ? name : "<skript>", JS_EVAL_TYPE_GLOBAL);
+#ifdef ESP_PLATFORM
+	ESP_LOGI("ns_js", "Skript %u Byte, %lld ms: %.80s", (unsigned)txtlen, (long long)((esp_timer_get_time() - beginn) / 1000),
+		 name ? name : "<skript>");
+#endif
 	free(quelle);
 	if (JS_IsException(r))
 		ausnahme_melden(thread->cx);

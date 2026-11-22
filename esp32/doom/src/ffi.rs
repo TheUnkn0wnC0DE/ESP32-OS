@@ -22,6 +22,8 @@ unsafe extern "C" {
     pub fn DG_SpeicherNameLeer() -> c_int;
     pub fn DG_Level() -> c_int;
     pub fn DG_Einstellen();
+    /// Entwicklungs-Build DOOM_SPEICHERTEST (dg_konsole.c).
+    pub fn DG_Speichertest(tic: c_int) -> c_int;
     /// 320×200 Farbindizes (CMAP256), nach jedem `DG_DrawFrame` aktuell.
     pub static mut DG_ScreenBuffer: *mut u8;
     /// Palette (je Eintrag b | g << 8 | r << 16).

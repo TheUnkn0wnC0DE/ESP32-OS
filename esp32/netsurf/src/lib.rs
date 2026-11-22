@@ -75,6 +75,22 @@ pub fn programm() {
     }
 }
 
+/// Board, Messung (c/flaeche_esp32os.c, Zeile „ns_takt“): belegter Heap
+/// des Browsers und Höchststand in KB.
+#[cfg(target_os = "espidf")]
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_heap_stand_kb(belegt: *mut u32, spitze: *mut u32) {
+    let (b, s) = kern::prozess::liste()
+        .iter()
+        .find(|p| p.name == "browser")
+        .map_or((0, 0), |p| ((p.heap_belegt / 1024) as u32, (p.heap_spitze / 1024) as u32));
+    // SAFETY: Zeiger vom Aufrufer (lokale Variablen).
+    unsafe {
+        *belegt = b;
+        *spitze = s;
+    }
+}
+
 #[cfg(not(target_os = "espidf"))]
 unsafe extern "C" {
     fn ns_probe_html(daten: *const u8, laenge: usize, tag: *const core::ffi::c_char) -> i32;
@@ -86,6 +102,9 @@ unsafe extern "C" {
     fn ns_js_konsole() -> *const core::ffi::c_char;
     fn ns_js_konsole_leeren();
     fn ns_neu_layout_anzahl() -> u32;
+    fn ns_ohne_js_rueckfaelle() -> u32;
+    fn ns_ohne_js_test_setzen(adresse: *const core::ffi::c_char) -> bool;
+    fn ns_eingabe_art(text: *const core::ffi::c_char, aus: *mut u8, max: usize) -> i32;
     fn ns_probe_setenv(name: *const core::ffi::c_char, wert: *const core::ffi::c_char) -> i32;
     fn ns_probe_lauf(
         url: *const core::ffi::c_char,
@@ -179,6 +198,33 @@ pub fn js_konsole(leeren: bool) -> String {
         unsafe { ns_js_konsole_leeren() };
     }
     t
+}
+
+/// Regel der Adressleiste (B2, c/eingabe.c): 0 = Suche, 1 = Adresse wie
+/// eingegeben, 2 = Adresse mit https:// davor; dazu der bereinigte Text.
+#[cfg(not(target_os = "espidf"))]
+pub fn eingabe_art(text: &str) -> (i32, String) {
+    let t = std::ffi::CString::new(text).unwrap_or_default();
+    let mut aus = vec![0u8; 512];
+    // SAFETY: nullterminierter Text, Puffer mit Länge.
+    let art = unsafe { ns_eingabe_art(t.as_ptr(), aus.as_mut_ptr(), aus.len()) };
+    let n = aus.iter().position(|&b| b == 0).unwrap_or(aus.len());
+    (art, String::from_utf8_lossy(&aus[..n]).into_owned())
+}
+
+/// Adresse auf die Liste „ohne JavaScript“ setzen (c/ohne_js.c, Tests).
+#[cfg(not(target_os = "espidf"))]
+pub fn ohne_js_setzen(adresse: &str) -> bool {
+    let a = std::ffi::CString::new(adresse).unwrap_or_default();
+    // SAFETY: nullterminierte Adresse.
+    unsafe { ns_ohne_js_test_setzen(a.as_ptr()) }
+}
+
+/// Anzahl automatischer Rückfälle „ohne JavaScript“ (c/ohne_js.c).
+#[cfg(not(target_os = "espidf"))]
+pub fn ohne_js_rueckfaelle() -> u32 {
+    // SAFETY: liest nur einen Zähler.
+    unsafe { ns_ohne_js_rueckfaelle() }
 }
 
 /// Anzahl abgeschlossener Neu-Layouts nach DOM-Änderungen (B7).
@@ -353,12 +399,14 @@ mod tests {
             return false;
         }
         let aus = std::process::Command::new(std::env::current_exe().expect("Testprogramm"))
-            .args([&format!("tests::{name}"), "--exact", "--test-threads=1", "--nocapture"])
+            .args([&format!("tests::{name}"), "--exact", "--test-threads=1", "--nocapture", "--include-ignored"])
             .env("NS_EINZELN", "1")
             .output()
             .expect("Kindprozess");
         let text = format!("{}{}", String::from_utf8_lossy(&aus.stdout), String::from_utf8_lossy(&aus.stderr));
         assert!(aus.status.success() && text.contains("1 passed"), "{name} im Kindprozess:\n{text}");
+        // Ausgaben des Kindes (nur sichtbar mit --nocapture)
+        print!("{text}");
         true
     }
 
@@ -384,6 +432,9 @@ mod tests {
         assert!(c_umgebung("NETSURF_RES1", &format!("{}/erzeugt/res", ohne_lw(&q))));
         assert!(c_umgebung("NETSURF_RES2", &format!("{}/netsurf/frontends/framebuffer/res", ohne_lw(&q))));
         assert!(c_umgebung("LANGUAGE", "de"));
+        // eigene Ressourcen (Startseite, Suchanbieter)
+        let res = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("res");
+        assert!(c_umgebung("NETSURF_RES3", &ohne_lw(&res.to_string_lossy())));
     }
 
     /// B7: Skripte der Seite laufen in QuickJS und ändern das DOM (vor dem
@@ -637,6 +688,270 @@ setTimeout(() => {
                 std::thread::sleep(Duration::from_millis(5));
             }
         }
+    }
+
+    /// B2: Adressleiste – Adresse oder Suche
+    #[test]
+    fn eingabe_adresse_oder_suche() {
+        c(eingabe_adresse_oder_suche_innen);
+    }
+
+    fn eingabe_adresse_oder_suche_innen() {
+        for (text, art, rein) in [
+            ("esp32", 0, "esp32"),
+            ("was ist esp32", 0, "was ist esp32"),
+            ("1.5", 0, "1.5"),
+            ("wikipedia.org", 2, "wikipedia.org"),
+            ("  de.wikipedia.org/wiki/ESP32 ", 2, "de.wikipedia.org/wiki/ESP32"),
+            ("localhost:8080/test", 2, "localhost:8080/test"),
+            ("192.168.1.10", 2, "192.168.1.10"),
+            ("https://html.duckduckgo.com/html/?q=x", 1, "https://html.duckduckgo.com/html/?q=x"),
+            ("about:blank", 1, "about:blank"),
+            ("file:///nsres/de/start.html", 1, "file:///nsres/de/start.html"),
+            ("", 0, ""),
+        ] {
+            assert_eq!(eingabe_art(text), (art, rein.to_string()), "Eingabe {text:?}");
+        }
+    }
+
+    /// B2: Abruf über http durch NetSurf zu einem Prüfserver: Weiterleitung
+    /// (302, relative Location) mit Set-Cookie, der Cookie kommt bei der
+    /// nächsten Anfrage zurück → grüne Seite (sonst rot); 404 als Seite.
+    #[test]
+    fn abruf_ueber_http() {
+        c(abruf_ueber_http_innen);
+    }
+
+    fn abruf_ueber_http_innen() {
+        if im_eigenen_prozess("abruf_ueber_http") {
+            return;
+        }
+        use std::io::{Read, Write};
+        ressourcen();
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        let anfragen = std::sync::Arc::new(Mutex::new(Vec::<String>::new()));
+        let log = anfragen.clone();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                log.lock().unwrap().push(k.clone());
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                let seite = |farbe: &str| format!("<html><body style='margin:0;background:white'><div style='width:200px;height:100px;background:{farbe}'></div></body></html>");
+                let antwort = match pfad.as_str() {
+                    "/start" => "HTTP/1.0 302 Found\r\nLocation: /ziel\r\nSet-Cookie: probe=keks42; Path=/\r\nContent-Length: 0\r\n\r\n".to_string(),
+                    "/ziel" => {
+                        let farbe = if k.contains("probe=keks42") { "#00ff00" } else { "#ff0000" };
+                        format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n{}", seite(farbe))
+                    }
+                    _ => format!("HTTP/1.0 404 Not Found\r\nContent-Type: text/html\r\n\r\n{}", seite("#0000ff")),
+                };
+                let _ = s.write_all(antwort.as_bytes());
+            }
+        });
+        let (r, bild) = lauf(&format!("http://127.0.0.1:{port}/start"), 480, 320, 3000).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("b2_pc_abruf.png"), spatz::image::encode_png(bild.breite, bild.hoehe, &bild.px)).unwrap();
+        let a = anfragen.lock().unwrap().clone();
+        println!("Anfragen: {a:#?}");
+        assert!(a.iter().any(|k| k.starts_with("GET /start ")), "{a:?}");
+        let ziel = a.iter().find(|k| k.starts_with("GET /ziel ")).expect("Weiterleitung befolgt");
+        assert!(ziel.contains("Cookie: probe=keks42"), "Cookie mitgeschickt: {ziel}");
+        assert!(ziel.contains("NetSurf/3.11"), "{ziel}");
+        let gruen = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_FF00).count();
+        let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
+        assert!(gruen >= 200 * 100 * 9 / 10 && rot == 0, "grün {gruen}, rot {rot}");
+    }
+
+    /// B2: Startseite (eigene Ressource) mit grossem Suchfeld
+    #[test]
+    fn startseite_mit_suchfeld() {
+        c(startseite_mit_suchfeld_innen);
+    }
+
+    fn startseite_mit_suchfeld_innen() {
+        if im_eigenen_prozess("startseite_mit_suchfeld") {
+            return;
+        }
+        ressourcen();
+        let (r, bild) = lauf("resource:welcome.html", 800, 480, 1500).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        // ohne Werkzeugleiste (die Adresszeile zeigt den lokalen Pfad)
+        let oben = 32 * bild.breite as usize;
+        std::fs::write(dir.join("b2_pc_startseite.png"), spatz::image::encode_png(bild.breite, bild.hoehe - 32, &bild.px[oben..])).unwrap();
+        // Kopfbalken (#3a6ea5) und weisses Suchfeld mit blauem Rand
+        let blau = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x3a_6ea5).count();
+        assert!(blau > 800 * 40, "Kopf/Rahmen blau: {blau}");
+    }
+
+    /// Echte Seite über den PC-Proxy (werkzeuge/proxy.py) nachstellen – nur
+    /// auf Anforderung, braucht Netz bzw. eine Ablage:
+    /// `NS_PROXY=127.0.0.1:8899 NS_SEITE=https://… [NS_MS=60000]
+    /// cargo test --release -- --ignored --nocapture seite_ueber_proxy`.
+    /// Bild nach esp32/target/seite_ueber_proxy.png, JS-Ausgaben auf die Konsole.
+    #[test]
+    #[ignore]
+    fn seite_ueber_proxy() {
+        c(seite_ueber_proxy_innen);
+    }
+
+    fn seite_ueber_proxy_innen() {
+        if im_eigenen_prozess("seite_ueber_proxy") {
+            return;
+        }
+        let proxy = std::env::var("NS_PROXY").expect("NS_PROXY=host:port");
+        let seite = std::env::var("NS_SEITE").expect("NS_SEITE=Adresse");
+        let ms: i32 = std::env::var("NS_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(60_000);
+        ressourcen();
+        assert!(c_umgebung("NS_PROXY", &proxy));
+        js_konsole(true);
+        let t = std::time::Instant::now();
+        let (r, bild) = lauf_mit(&seite, 800, 480, ms, true).expect("Bild");
+        println!("Ende {r} nach {:?}, Neu-Layouts {}", t.elapsed(), neu_layouts());
+        #[cfg(target_pointer_width = "32")]
+        {
+            let (aufrufe, schritte) = kern::heap::zaehler(false);
+            println!("Heap: {aufrufe} Aufrufe, {schritte} Schritte, {} je Aufruf", schritte / aufrufe.max(1));
+        }
+        println!("JS:
+{}", js_konsole(true));
+        let ziel = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target/seite_ueber_proxy.png");
+        std::fs::write(&ziel, spatz::image::encode_png(bild.breite, bild.hoehe, &bild.px)).unwrap();
+        println!("Bild: {}", ziel.display());
+    }
+
+    /// Rückfallebene (Nutzer 22.11.): ein Skript sprengt die JS-Speichergrenze
+    /// → JavaScript wird für die Seite abgeschaltet, sie wird ohne weitere
+    /// Skripte angezeigt: das zweite Skript (rot) läuft nicht mehr.
+    #[test]
+    fn ohne_js_rueckfall_speicher() {
+        c(ohne_js_rueckfall_speicher_innen);
+    }
+
+    fn ohne_js_rueckfall_speicher_innen() {
+        if im_eigenen_prozess("ohne_js_rueckfall_speicher") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        let html = r#"<html><body style="margin:0;background:white">
+<div style="width:200px;height:100px;background:#0000ff"></div>
+<div id="r"></div>
+<script>
+const a = []; while (true) a.push(new Array(1000).fill(1));
+</script>
+<script>
+document.getElementById('r').innerHTML = '<div style="width:200px;height:100px;background:#ff0000"></div>';
+</script></body></html>"#;
+        let (r, bild) = lauf_mit(&data_url(html), 480, 320, 4000, true).expect("Bild");
+        assert_eq!(r, 0);
+        let k = js_konsole(true);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("b2_pc_ohne_js.png"), spatz::image::encode_png(bild.breite, bild.hoehe, &bild.px)).unwrap();
+        assert!(k.contains("out of memory"), "{k}");
+        assert_eq!(ohne_js_rueckfaelle(), 1, "ein Rückfall");
+        let blau = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_00FF).count();
+        let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
+        assert!(blau >= 200 * 100 * 9 / 10 && rot == 0, "blau {blau}, rot {rot}");
+    }
+
+    /// Rückfallebene, Zeitgrenze: erscheint eine Seite nicht rechtzeitig
+    /// (hier: Skript vom Prüfserver kommt erst nach 300 ms, Grenze 1 ms per
+    /// NS_RUECKFALL_MS), wird JavaScript für sie abgeschaltet – das Skript
+    /// läuft nicht mehr, die Seite wird nicht neu geholt.
+    #[test]
+    fn ohne_js_rueckfall_zeit() {
+        c(ohne_js_rueckfall_zeit_innen);
+    }
+
+    fn ohne_js_rueckfall_zeit_innen() {
+        if im_eigenen_prozess("ohne_js_rueckfall_zeit") {
+            return;
+        }
+        use std::io::{Read, Write};
+        ressourcen();
+        // gilt nur für diesen Test (i686: alle Tests in einem Prozess)
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_RUECKFALL_MS", "");
+            }
+        }
+        let _zurueck = Zuruecksetzen;
+        assert!(c_umgebung("NS_RUECKFALL_MS", "1"));
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        let anfragen = std::sync::Arc::new(Mutex::new(Vec::<String>::new()));
+        let log = anfragen.clone();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                log.lock().unwrap().push(pfad.clone());
+                let antwort = match pfad.as_str() {
+                    "/seite" => "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body style='margin:0;background:white'>\
+<noscript><div style='width:200px;height:100px;background:#0000ff'></div></noscript><div id='r'></div>\
+<script src='/langsam.js'></script></body></html>"
+                        .to_string(),
+                    "/langsam.js" => {
+                        std::thread::sleep(std::time::Duration::from_millis(300));
+                        "HTTP/1.0 200 OK\r\nContent-Type: text/javascript\r\n\r\n\
+document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;background:#ff0000\"></div>';"
+                            .to_string()
+                    }
+                    _ => "HTTP/1.0 404 Not Found\r\nContent-Type: text/plain\r\n\r\nweg".to_string(),
+                };
+                let _ = s.write_all(antwort.as_bytes());
+            }
+        });
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/seite"), 480, 320, 3000, true).expect("Bild");
+        assert_eq!(r, 0);
+        let a = anfragen.lock().unwrap().clone();
+        assert_eq!(ohne_js_rueckfaelle(), 1, "ein Rückfall; Anfragen {a:?}");
+        assert_eq!(a.iter().filter(|p| p.as_str() == "/seite").count(), 1, "Seite einmal geholt: {a:?}");
+        assert_eq!(a.iter().filter(|p| p.as_str() == "/langsam.js").count(), 1, "Skript einmal geholt: {a:?}");
+        let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
+        assert_eq!(rot, 0, "Skript lief nicht mehr");
+    }
+
+    /// Seite auf der Liste „ohne JavaScript“ (Knopf „Ohne JS“, Neuladen):
+    /// Skripte laufen nicht, `<noscript>` wird angezeigt.
+    #[test]
+    fn ohne_js_liste() {
+        c(ohne_js_liste_innen);
+    }
+
+    fn ohne_js_liste_innen() {
+        if im_eigenen_prozess("ohne_js_liste") {
+            return;
+        }
+        ressourcen();
+        let html = r#"<html><body style="margin:0;background:white">
+<noscript><div style="width:200px;height:100px;background:#0000ff"></div></noscript>
+<div id="r"></div>
+<script>document.getElementById('r').innerHTML = '<div style="width:200px;height:100px;background:#ff0000"></div>';</script>
+</body></html>"#;
+        let adresse = data_url(html);
+        assert!(ohne_js_setzen(&adresse));
+        let (r, bild) = lauf_mit(&adresse, 480, 320, 1500, true).expect("Bild");
+        assert_eq!(r, 0);
+        let blau = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_00FF).count();
+        let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
+        assert!(blau >= 200 * 100 * 9 / 10 && rot == 0, "blau {blau}, rot {rot}");
     }
 
     #[test]

@@ -152,6 +152,12 @@ pub struct FadenZ {
     pub tasten: VecDeque<u32>,
     pub knopf: Option<u32>,
     pub maus_ev: bool,
+    /// Ereignis-Bits wie Funktion 37.3 (8–10 gedrückt, 16–18 losgelassen,
+    /// 15/23 Rollen) – je Faden, nur für Mausereignisse, die er auch bekommt:
+    /// ein kurzes Tippen geht nicht verloren, wenn das Programm den Zustand
+    /// erst nach dem Loslassen liest, und Tippen auf die Bildschirmtastatur
+    /// zählt nicht als Klick ins Fenster darunter.
+    pub maus_ereignisse: u32,
     pub hg_ev: bool,
     pub ipc_ev: bool,
     pub netz_ev: bool,
@@ -169,8 +175,6 @@ pub struct Maus {
     pub x: i32,
     pub y: i32,
     pub tasten: u32,
-    /// Ereignis-Bits wie Funktion 37.3 (8–10 gedrückt, 16–18 losgelassen).
-    pub ereignisse: u32,
 }
 
 pub struct Welt {
@@ -379,6 +383,7 @@ impl Welt {
             tasten: VecDeque::new(),
             knopf: None,
             maus_ev: false,
+            maus_ereignisse: 0,
             hg_ev: false,
             ipc_ev: false,
             netz_ev: false,
@@ -622,7 +627,6 @@ impl Welt {
             self.markiere(neu);
         }
         self.maus.tasten = tasten;
-        self.maus.ereignisse |= (gedrueckt & 7) << 8 | (los & 7) << 16;
         if gedrueckt & 3 != 0 {
             if let Some(s) = self.fenster_bei(x, y) {
                 if self.ebene_von(s) >= -1 {
@@ -672,6 +676,7 @@ impl Welt {
                     && !fz.fenster.as_ref().is_some_and(|f| f.enthaelt(x, y));
                 if !inaktiv_sperre && !aussen {
                     fz.maus_ev = true;
+                    fz.maus_ereignisse |= (gedrueckt & 7) << 8 | (los & 7) << 16;
                 }
             }
         }
@@ -749,8 +754,8 @@ impl Welt {
 
     /// Rollrad/Wischen: an das aktive Fenster (Funktion 37.7).
     pub fn scroll(&mut self, dx: i32, dy: i32) {
-        self.maus.ereignisse |= if dy != 0 { 1 << 15 } else { 0 } | if dx != 0 { 1 << 23 } else { 0 };
         if let Some(fz) = self.aktiv().and_then(|s| self.slots[s].as_mut()) {
+            fz.maus_ereignisse |= if dy != 0 { 1 << 15 } else { 0 } | if dx != 0 { 1 << 23 } else { 0 };
             fz.scroll.0 += dx;
             fz.scroll.1 += dy;
             fz.maus_ev = true;

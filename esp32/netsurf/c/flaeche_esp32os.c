@@ -209,10 +209,42 @@ static int taste_nsfb(uint8_t c)
 	}
 }
 
+/* Eine Maustaste nachführen: `bit` im Zustand, Ereignis-Bits von 37.3
+ * (gedrückt bei bit << 8, losgelassen bei bit << 16). Ein kurzes Tippen, das
+ * schon vorbei ist, wenn der Browser liest (Layout dauert), kommt so trotzdem
+ * als Drücken + Loslassen an. */
+static void taste_nachfuehren(uint32_t e, uint32_t bit, int taste)
+{
+	bool unten = (knoepfe & bit) != 0;
+	bool jetzt = (e & bit) != 0;
+	bool gedrueckt = (e & (bit << 8)) != 0, los = (e & (bit << 16)) != 0;
+	if (unten) {
+		if (los) {
+			einreihen(NSFB_EVENT_KEY_UP, taste);
+			unten = false;
+		}
+		if (gedrueckt && !unten) {
+			einreihen(NSFB_EVENT_KEY_DOWN, taste);
+			unten = true;
+		}
+	} else {
+		if (gedrueckt) {
+			einreihen(NSFB_EVENT_KEY_DOWN, taste);
+			unten = true;
+		}
+		if (los && unten) {
+			einreihen(NSFB_EVENT_KEY_UP, taste);
+			unten = false;
+		}
+	}
+	if (unten != jetzt)
+		einreihen(jetzt ? NSFB_EVENT_KEY_DOWN : NSFB_EVENT_KEY_UP, taste);
+}
+
 static void maus(void)
 {
 	ksys_pos_t p = _ksys_get_mouse_pos(KSYS_MOUSE_WINDOW_POS);
-	uint32_t k = _ksys_get_mouse_buttons();
+	uint32_t e = _ksys_get_mouse_eventstate();
 	uint32_t rad = _ksys_get_mouse_wheels();
 	int16_t dy = (int16_t)(rad & 0xFFFF);
 	if (p.x != mx || p.y != my) {
@@ -220,11 +252,9 @@ static void maus(void)
 		my = p.y;
 		bewegung(mx, my);
 	}
-	if ((k & 1) != (knoepfe & 1))
-		einreihen((k & 1) ? NSFB_EVENT_KEY_DOWN : NSFB_EVENT_KEY_UP, NSFB_KEY_MOUSE_1);
-	if ((k & 2) != (knoepfe & 2))
-		einreihen((k & 2) ? NSFB_EVENT_KEY_DOWN : NSFB_EVENT_KEY_UP, NSFB_KEY_MOUSE_3);
-	knoepfe = k;
+	taste_nachfuehren(e, 1, NSFB_KEY_MOUSE_1);
+	taste_nachfuehren(e, 2, NSFB_KEY_MOUSE_3);
+	knoepfe = e & 3;
 	while (dy != 0) {
 		int t = dy < 0 ? NSFB_KEY_MOUSE_4 : NSFB_KEY_MOUSE_5;
 		einreihen(NSFB_EVENT_KEY_DOWN, t);
@@ -232,6 +262,35 @@ static void maus(void)
 		dy += dy < 0 ? 1 : -1;
 	}
 }
+
+#ifdef ESP_PLATFORM
+/* Board: alle 5 s eine Zeile, wie viel der Browser rechnet und wie lange
+ * er auf Ereignisse wartet (Messung zu B2: langsame Seiten) */
+#include "esp_log.h"
+#include "esp_timer.h"
+static int64_t takt_start, takt_warten;
+static unsigned takt_runden;
+void ns_heap_stand_kb(uint32_t *belegt, uint32_t *spitze);
+
+static void takt(int64_t warten_us)
+{
+	int64_t jetzt = esp_timer_get_time();
+	if (takt_start == 0)
+		takt_start = jetzt;
+	takt_warten += warten_us;
+	takt_runden++;
+	if (jetzt - takt_start >= 5000000) {
+		uint32_t belegt, spitze;
+		ns_heap_stand_kb(&belegt, &spitze);
+		ESP_LOGI("ns_takt", "%u Runden, Arbeit %lld ms, Warten %lld ms, Heap %u KB (Spitze %u KB)", takt_runden,
+			 (long long)((jetzt - takt_start - takt_warten) / 1000), (long long)(takt_warten / 1000),
+			 (unsigned)belegt, (unsigned)spitze);
+		takt_start = jetzt;
+		takt_warten = 0;
+		takt_runden = 0;
+	}
+}
+#endif
 
 static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 {
@@ -244,12 +303,21 @@ static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 		return true;
 	}
 	/* timeout in ms (< 0: unbegrenzt); Funktion 23 zählt in 1/100 s */
+	/* 0: nur nachsehen (Funktion 11) – Funktion 23 mit 0 meldet im Kern
+	 * immer „kein Ereignis“; während langer Arbeit (Box-Aufbau in vielen
+	 * Schritten) kämen sonst keine Eingaben an */
+#ifdef ESP_PLATFORM
+	int64_t warten_ab = esp_timer_get_time();
+#endif
 	if (timeout == 0)
-		ev = _ksys_wait_event_timeout(0);
+		ev = _ksys_check_event();
 	else if (timeout < 0)
 		ev = _ksys_wait_event_timeout(100);
 	else
 		ev = _ksys_wait_event_timeout((uint32_t)((timeout + 9) / 10));
+#ifdef ESP_PLATFORM
+	takt(esp_timer_get_time() - warten_ab);
+#endif
 	switch (ev) {
 	case KSYS_EVENT_REDRAW:
 		fenster_zeichnen(nsfb);
@@ -319,6 +387,7 @@ int ns_esp32os_main(const char *url)
 	fenster_anlegen(&b, &h);
 	snprintf(breite, sizeof breite, "%d", b);
 	snprintf(hoehe, sizeof hoehe, "%d", h);
-	argv[10] = (char *)(url != NULL && url[0] != '\0' ? url : "about:welcome");
+	/* ohne Adresse: Startseite mit Suchfeld (netsurf/res, B2) */
+	argv[10] = (char *)(url != NULL && url[0] != '\0' ? url : "resource:welcome.html");
 	return netsurf_fb_main(11, argv);
 }

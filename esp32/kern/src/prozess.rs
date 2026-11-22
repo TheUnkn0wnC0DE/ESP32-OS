@@ -8,7 +8,7 @@ use crate::heap::{Heap, MIN_BEREICH};
 use crate::plattform::{Lauf, Plattform};
 use core::cell::{Cell, RefCell};
 use core::sync::atomic::Ordering::Relaxed;
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 /// Statisch eingelinktes Programm.
@@ -56,6 +56,26 @@ pub struct Faden {
     pub geschuetzt: AtomicU32,
     pub speicher_voll: Cell<bool>,
     pub panik: RefCell<Option<String>>,
+    /// Das Programm soll enden (gesetzt, wenn `soll_enden` des Prozesses
+    /// gesetzt wird): `pruefe_ende` liest das ohne Kernsperre – sie läuft
+    /// bei jeder Systemfunktion, auch bei jedem malloc/free (68.12/68.13),
+    /// und die Kernsperre hält der Compositor oft lange.
+    pub ende_flag: AtomicBool,
+    /// Zähler für die seltene volle Prüfung in `pruefe_ende`.
+    pub pruef_zaehler: Cell<u32>,
+}
+
+/// Setzt `ende_flag` in allen laufenden Fäden des Prozesses. Nur unter der
+/// Sperre der Prozessliste (Kontexte leben, solange `beendet` nicht gesetzt
+/// ist).
+fn faeden_flaggen(p: &Prozess) {
+    for e in &p.faeden_liste {
+        if !e.beendet && e.kontext != 0 {
+            // SAFETY: Kontext lebt, solange der Eintrag nicht beendet ist
+            // (wir halten die Sperre der Prozessliste).
+            unsafe { (*(e.kontext as *const Faden)).ende_flag.store(true, Relaxed) };
+        }
+    }
 }
 
 struct Prozess {
@@ -362,9 +382,18 @@ fn starte_faden_fuer(
         geschuetzt: AtomicU32::new(0),
         speicher_voll: Cell::new(false),
         panik: RefCell::new(None),
+        ende_flag: AtomicBool::new(false),
+        pruef_zaehler: Cell::new(0),
     })) as usize;
-    if let Some(e) = sperre(&k.prozesse).iter_mut().find(|p| p.pid == pid).and_then(|p| p.faeden_liste.iter_mut().find(|e| e.tid == tid)) {
-        e.kontext = fd;
+    if let Some(p) = sperre(&k.prozesse).iter_mut().find(|p| p.pid == pid) {
+        // Programm soll schon enden: neuer Faden bekommt das Flag gleich mit
+        if p.soll_enden {
+            // SAFETY: eben angelegt, noch nicht gestartet.
+            unsafe { (*(fd as *const Faden)).ende_flag.store(true, Relaxed) };
+        }
+        if let Some(e) = p.faeden_liste.iter_mut().find(|e| e.tid == tid) {
+            e.kontext = fd;
+        }
     }
     let pl = k.pl;
     let lauf = Box::new(move || {
@@ -425,6 +454,7 @@ fn faden_ende(grund: Ende) {
             }
             if grund != Ende::Normal {
                 p.soll_enden = true;
+                faeden_flaggen(p);
             }
             if p.ende.is_none() || (p.ende == Some(Ende::Normal) && grund != Ende::Normal) {
                 p.ende = Some(grund);
@@ -461,6 +491,20 @@ pub fn pruefe_ende() {
         beende_selbst(Ende::SpeicherVoll);
     }
     // SAFETY: eigener Faden.
+    if unsafe { (*fd).ende_flag.load(Relaxed) } {
+        beende_selbst(Ende::Beendet);
+    }
+    // Sicherheitsnetz (z. B. Faden, der beim Setzen gerade erst startete):
+    // jede 1024. Prüfung mit Blick in die Prozessliste – selten genug, dass
+    // die Kernsperre nicht bremst.
+    // SAFETY: eigener Faden.
+    let n = unsafe { (*fd).pruef_zaehler.get() };
+    // SAFETY: eigener Faden.
+    unsafe { (*fd).pruef_zaehler.set(n.wrapping_add(1)) };
+    if n % 1024 != 0 {
+        return;
+    }
+    // SAFETY: eigener Faden.
     let pid = unsafe { (*fd).pid };
     let soll = kern_abschnitt(|| sperre(&kern().prozesse).iter().any(|p| p.pid == pid && p.soll_enden));
     if soll {
@@ -476,6 +520,7 @@ pub fn beende(pid: u32) -> bool {
         match l.iter_mut().find(|p| p.pid == pid) {
             Some(p) => {
                 p.soll_enden = true;
+                faeden_flaggen(p);
                 if p.ende.is_none() {
                     p.ende = Some(Ende::Beendet);
                 }

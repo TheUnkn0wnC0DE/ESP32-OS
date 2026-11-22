@@ -60,6 +60,7 @@ enum Modus {
 }
 
 /// Eine Bibliothek: Dateien, Pfade, Defines.
+#[derive(Clone)]
 struct Gruppe {
     name: &'static str,
     dateien: Vec<PathBuf>,
@@ -198,7 +199,7 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     for d in ["WITH_BMP", "WITH_GIF", "WITH_UTF8PROC", "nsframebuffer"] {
         g.d(d, None);
     }
-    g.d("NETSURF_HOMEPAGE", Some("\"about:welcome\"")).d("NETSURF_LOG_LEVEL", Some("WARNING"));
+    g.d("NETSURF_HOMEPAGE", Some("\"resource:welcome.html\"")).d("NETSURF_LOG_LEVEL", Some("WARNING"));
     g.d("NETSURF_BUILTIN_LOG_FILTER", Some("\"(level:WARNING || cat:jserrors)\""));
     g.d("NETSURF_BUILTIN_VERBOSE_FILTER", Some("\"(level:VERBOSE || cat:jserrors)\""));
     for (dir, dateien) in KERN {
@@ -207,12 +208,41 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
         }
     }
     if board {
-        // Board: JS-Laufzeit im 10-MB-Heap des Programms, Stapel 384 KB
-        g.d("NS_JS_SPEICHER", Some("(4u*1024u*1024u)")).d("NS_JS_STAPEL", Some("(192u*1024u)"));
+        // Board: JS-Laufzeit im 10-MB-Heap des Programms, Stapel 384 KB.
+        // 2 MB: ein JS-lastiger erster Versuch (Wikipedia/MediaWiki) darf den
+        // Heap nicht so füllen, dass die Seite danach ohne JS nicht mehr
+        // passt (gemessen 22.11.: 4 MB → Heap voll beim Neuladen)
+        g.d("NS_JS_SPEICHER", Some("(2u*1024u*1024u)")).d("NS_JS_STAPEL", Some("(192u*1024u)"));
     }
-    g.f(c("iconv.c")).f(c("js_quickjs.c")).f(c("neu_layout.c"));
+    g.f(c("iconv.c")).f(c("js_quickjs.c")).f(c("neu_layout.c")).f(c("eingabe.c")).f(c("ohne_js.c"));
+    // html.c als geprüfte Kopie: Seiten auf der Liste „ohne JavaScript“
+    // (c/ohne_js.c) laden ohne Skripte
+    g.f(html_kopie(q, aus));
     g.proben.push(c("probe_kern.c"));
+    // B2: content/fetch.c mit WITH_CURL (ruft fetch_curl_register, das
+    // c/abruf.c bereitstellt) – nur diese Datei, utils/time.c bliebe sonst
+    // bei curl_getdate; gleiche Einstellungen wie der Kern
+    let mut a = Gruppe::neu("netsurf_abruf", Modus::Voll);
+    a.pfade = g.pfade.clone();
+    a.defines = g.defines.clone();
+    a.d("WITH_CURL", None);
+    a.f(ns.join("content/fetch.c")).f(c("abruf.c"));
     v.push(g);
+    v.push(a);
+    // Transport: am Board esp_http_client (ausserhalb des Neustart-Abschnitts,
+    // netsurf.lf), am PC http über Winsock zum Prüfserver (ohne
+    // ns_programm.h: eigener Speicher der C-Laufzeit)
+    if board {
+        let mut t = Gruppe::neu("netsurf_transport", Modus::Voll);
+        t.msvc_compat = false;
+        t.f(c("transport_esp.c"));
+        v.push(t);
+    } else {
+        let mut t = Gruppe::neu("netsurf_transport", Modus::Ohne);
+        t.msvc_compat = false;
+        t.f(c("transport_pc.c"));
+        v.push(t);
+    }
 
     // Framebuffer-Frontend (S_FRONTEND, fbtk, interne Schrift; Bilder und
     // Schrift erzeugt das Holskript). `main` heisst netsurf_fb_main.
@@ -225,14 +255,17 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     }
     g.p(&erzeugt).p(bib("libnsfb").join("src")).standard();
     g.d("nsframebuffer", None).d("small", None).d("main", Some("netsurf_fb_main"));
-    g.d("NETSURF_LOG_LEVEL", Some("WARNING")).d("NETSURF_HOMEPAGE", Some("\"about:welcome\""));
+    g.d("NETSURF_LOG_LEVEL", Some("WARNING")).d("NETSURF_HOMEPAGE", Some("\"resource:welcome.html\""));
     // Ressourcen: am Board aus dem Firmware-Abbild über das schreibgeschützte
     // Dateisystem /nsres (firmware/komponenten/esp32os/eingebettet.c), in
     // den PC-Tests über Umgebungsvariablen (je Eintrag expandiert, ':' trennt)
     if board {
         g.d("NETSURF_FB_RESPATH", Some("\"/nsres/\""));
+        // B3: Zwischenspeicher (llcache) 2 MB statt 12 MB – NetSurfs
+        // Untergrenze; davon 25 % für Bilder. Der Browser hat 10 MB Heap.
+        g.d("NS_SPEICHER_CACHE", Some("(2*1024*1024)"));
     } else {
-        g.d("NETSURF_FB_RESPATH", Some("\"${NETSURF_RES1}:${NETSURF_RES2}\""));
+        g.d("NETSURF_FB_RESPATH", Some("\"${NETSURF_RES3}:${NETSURF_RES1}:${NETSURF_RES2}\""));
     }
     g.d("NETSURF_FB_FONTPATH", Some("\"/nsres/\""));
     for (n, w) in [
@@ -250,7 +283,9 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
         let w = format!("\"{w}\"");
         g.d(&format!("NETSURF_FB_FONT_{n}"), Some(&w));
     }
-    for f in "gui.c framebuffer.c schedule.c bitmap.c fetch.c findfile.c corewindow.c local_history.c clipboard.c font_internal.c".split_whitespace() {
+    // gui.c als geprüfte Kopie (Suche aus der Adressleiste, Suchanbieter)
+    g.f(gui_kopie(q, aus));
+    for f in "framebuffer.c schedule.c bitmap.c fetch.c findfile.c corewindow.c local_history.c clipboard.c font_internal.c".split_whitespace() {
         g.f(fe.join(f));
     }
     for f in "fbtk.c event.c fill.c bitmap.c user.c window.c text.c scroll.c osk.c".split_whitespace() {
@@ -345,6 +380,8 @@ fn main() {
         d.flag("-Wno-everything").flag("/O2").file("c/programm_daten.c");
         d.compile("netsurf_programm");
     }
+    // Transport der PC-Tests (c/transport_pc.c)
+    println!("cargo:rustc-link-lib=ws2_32");
 }
 
 /// Ressourcen fürs Board (CSS, Messages de/en, Willkommensseiten, Symbole)
@@ -354,12 +391,19 @@ fn main() {
 fn ressourcen_liste(q: &Path) {
     let res = q.join("netsurf/frontends/framebuffer/res");
     let mut liste: Vec<(String, PathBuf)> = Vec::new();
-    for f in ["adblock.css", "credits.html", "default.css", "favicon.png", "internal.css", "licence.html", "netsurf.png", "quirks.css", "welcome.html"] {
+    for f in ["adblock.css", "credits.html", "default.css", "favicon.png", "internal.css", "licence.html", "netsurf.png", "quirks.css"] {
         liste.push((f.into(), res.join(f)));
     }
     for s in ["de", "en"] {
-        liste.push((format!("{s}/welcome.html"), res.join(s).join("welcome.html")));
         liste.push((format!("{s}/Messages"), q.join("erzeugt/res").join(s).join("Messages")));
+    }
+    // eigene Ressourcen (netsurf/res): Startseite mit Suchfeld (ersetzt die
+    // welcome.html des Frontends – resource: kennt nur feste Namen),
+    // Suchanbieter
+    let eigen = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR")).join("res");
+    println!("cargo:rerun-if-changed={}", eigen.display());
+    for f in ["SearchEngines", "welcome.html", "de/welcome.html", "en/welcome.html"] {
+        liste.push((f.into(), eigen.join(f)));
     }
     let icons = q.join("netsurf/resources/icons");
     let mut png: Vec<PathBuf> =
@@ -390,6 +434,133 @@ fn ressourcen_liste(q: &Path) {
     t.push_str("];\n");
     let aus = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR"));
     std::fs::write(aus.join("ressourcen.rs"), t).expect("ressourcen.rs");
+}
+
+/// `frontends/framebuffer/gui.c` als geprüfte Kopie in `ziel` (B2):
+/// - die Adressleiste deutet Eingaben über `ns_eingabe_zu_url` (c/eingabe.c):
+///   Adresse oder – bei Wörtern – Suche beim eingestellten Anbieter;
+/// - nach `netsurf_init` die Suchanbieter aus der Ressource `SearchEngines`
+///   (eigene Liste in netsurf/res, DuckDuckGo-HTML zuerst).
+/// Jede Ersetzung prüft den Originaltext; das Original bleibt unverändert.
+fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    let quelle = q.join("netsurf/frontends/framebuffer/gui.c");
+    println!("cargo:rerun-if-changed={}", quelle.display());
+    let mut t = std::fs::read_to_string(&quelle).expect("gui.c").replace("\r\n", "\n");
+    for (alt, neu) in [
+        (
+            "#include \"framebuffer/local_history.h\"\n",
+            "#include \"framebuffer/local_history.h\"\n#include \"desktop/searchweb.h\"\n\
+             /* ESP32-OS (B2): Eingabe der Adressleiste → Adresse oder Suche */\n\
+             nserror ns_eingabe_zu_url(const char *text, struct nsurl **url);\n",
+        ),
+        ("\terror = nsurl_create(text, &url);\n", "\terror = ns_eingabe_zu_url(text, &url);\n"),
+        // B3: Zwischenspeicher am Board begrenzen (vor netsurf_init)
+        (
+            "\tnsoption_commandline(&argc, argv, nsoptions);\n",
+            "\tnsoption_commandline(&argc, argv, nsoptions);\n\
+             #ifdef NS_SPEICHER_CACHE\n\
+             \t/* ESP32-OS (B3): Zwischenspeicher begrenzt (Heap des Browsers 10 MB) */\n\
+             \tnsoption_set_int(memory_cache_size, NS_SPEICHER_CACHE);\n\
+             #endif\n",
+        ),
+        // Knopf „Ohne JS“/„Mit JS“ (c/ohne_js.c) in der Werkzeugleiste
+        ("#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrutc\"", "#define NSFB_TOOLBAR_DEFAULT_LAYOUT \"blfsrjutc\""),
+        (
+            "\tbrowser_window_reload(bw, true);\n\treturn 1;\n}\n",
+            "\tbrowser_window_reload(bw, true);\n\treturn 1;\n}\n\n\
+             /* ESP32-OS: Seite ohne bzw. wieder mit JavaScript laden (c/ohne_js.c) */\n\
+             void ns_ohne_js_umschalten(struct browser_window *bw);\n\
+             const char *ns_ohne_js_knopftext(struct nsurl *url);\n\
+             void ns_ohne_js_ladestart(struct browser_window *bw);\n\
+             #define NS_JS_KNOPF_BREITE 70\n\
+             static fbtk_widget_t *ns_js_knopf;\n\nvoid ns_js_knopf_text(const char *text)\n{\n\tif (ns_js_knopf != NULL)\n\t\tfbtk_set_text(ns_js_knopf, text);\n}\n\n\
+             static int\nns_js_knopf_klick(fbtk_widget_t *widget, fbtk_callback_info *cbi)\n{\n\
+             \tif (cbi->event->type != NSFB_EVENT_KEY_UP)\n\t\treturn 0;\n\
+             \tns_ohne_js_umschalten(cbi->context);\n\treturn 1;\n}\n",
+        ),
+        (
+            "\t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = fbtk_create_bitmap(",
+            "\t\tcase 'j': /* ESP32-OS: ohne/mit JavaScript */\n\
+             \t\t\twidget = fbtk_create_text_button(toolbar,\n\
+             \t\t\t\t\t\t(xdir == 1) ? xpos : xpos - NS_JS_KNOPF_BREITE,\n\
+             \t\t\t\t\t\tpadding, NS_JS_KNOPF_BREITE, -padding,\n\
+             \t\t\t\t\t\tframe_col, FB_COLOUR_BLACK,\n\
+             \t\t\t\t\t\tns_js_knopf_klick, gw->bw);\n\
+             \t\t\tfbtk_set_text(widget, \"Ohne JS\");\n\
+             \t\t\tns_js_knopf = widget;\n\t\t\tbreak;\n\n\
+             \t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = fbtk_create_bitmap(",
+        ),
+        (
+            "\t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = gw->throbber;\n",
+            "\t\tcase 'j': /* ESP32-OS: ohne/mit JavaScript */\n\
+             \t\t\twidget = ns_js_knopf;\n\
+             \t\t\tx = (xdir == 1) ? xpos : xpos - NS_JS_KNOPF_BREITE;\n\
+             \t\t\ty = padding;\n\t\t\tw = NS_JS_KNOPF_BREITE;\n\t\t\th = -padding;\n\t\t\tbreak;\n\n\
+             \t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = gw->throbber;\n",
+        ),
+        (
+            "\tfbtk_set_text(g->url, nsurl_access(url));\n\treturn NSERROR_OK;\n",
+            "\tfbtk_set_text(g->url, nsurl_access(url));\n\
+             \tif (ns_js_knopf != NULL)\n\t\tfbtk_set_text(ns_js_knopf, ns_ohne_js_knopftext(url));\n\
+             \treturn NSERROR_OK;\n",
+        ),
+        (
+            "\tg->throbber_index = 0;\n\tframebuffer_schedule(100, throbber_advance, g);\n",
+            "\tg->throbber_index = 0;\n\tframebuffer_schedule(100, throbber_advance, g);\n\
+             \t/* ESP32-OS: Rückfall ohne JavaScript, wenn die Seite nicht erscheint */\n\
+             \tns_ohne_js_ladestart(g->bw);\n",
+        ),
+        (
+            "\tret = netsurf_init(NULL);\n\tif (ret != NSERROR_OK) {\n\t\tdie(\"NetSurf failed to initialise\");\n\t}\n",
+            "\tret = netsurf_init(NULL);\n\tif (ret != NSERROR_OK) {\n\t\tdie(\"NetSurf failed to initialise\");\n\t}\n\n\
+             \t/* ESP32-OS (B2): Suchanbieter (SearchEngines, DuckDuckGo-HTML zuerst) */\n\
+             \t{\n\t\tchar *anbieter = filepath_find(respaths, \"SearchEngines\");\n\
+             \t\tsearch_web_init(anbieter);\n\t\tfree(anbieter);\n\
+             \t\tsearch_web_select_provider(nsoption_int(search_provider));\n\t}\n",
+        ),
+    ] {
+        assert_eq!(t.matches(alt).count(), 1, "gui.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
+        t = t.replacen(alt, neu, 1);
+    }
+    let t = format!("/* Erzeugt von esp32/netsurf/build.rs (gui_kopie) aus frontends/framebuffer/gui.c. */\n{t}");
+    let datei = ziel.join("gui.c");
+    std::fs::create_dir_all(ziel).expect("Ordner");
+    if std::fs::read_to_string(&datei).ok().as_deref() != Some(t.as_str()) {
+        std::fs::write(&datei, t).expect("gui.c");
+    }
+    datei
+}
+
+/// `content/handlers/html/html.c` als geprüfte Kopie: eine Seite auf der
+/// Liste „ohne JavaScript“ (c/ohne_js.c, Rückfallebene und Knopf) wird ohne
+/// Skripte angelegt (`enable_scripting`, wirkt auf Parser, Skripte und
+/// `<noscript>`).
+fn html_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    let quelle = q.join("netsurf/content/handlers/html/html.c");
+    println!("cargo:rerun-if-changed={}", quelle.display());
+    let mut t = std::fs::read_to_string(&quelle).expect("html.c").replace("\r\n", "\n");
+    for (alt, neu) in [
+        (
+            "#include \"html/layout.h\"\n",
+            "#include \"html/layout.h\"\n\
+             /* ESP32-OS: Seiten ohne JavaScript (c/ohne_js.c) */\n\
+             bool ns_ohne_js(struct nsurl *url);\n",
+        ),
+        (
+            "\tc->enable_scripting = nsoption_bool(enable_javascript);\n",
+            "\tc->enable_scripting = nsoption_bool(enable_javascript) && !ns_ohne_js(content_get_url(&c->base));\n",
+        ),
+    ] {
+        assert_eq!(t.matches(alt).count(), 1, "html.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
+        t = t.replacen(alt, neu, 1);
+    }
+    let t = format!("/* Erzeugt von esp32/netsurf/build.rs (html_kopie) aus content/handlers/html/html.c. */\n{t}");
+    let datei = ziel.join("html.c");
+    std::fs::create_dir_all(ziel).expect("Ordner");
+    if std::fs::read_to_string(&datei).ok().as_deref() != Some(t.as_str()) {
+        std::fs::write(&datei, t).expect("html.c");
+    }
+    datei
 }
 
 /// `utils/config.h` fürs Board: NetSurf wählt Funktionen nach der
@@ -517,7 +688,7 @@ fn board_liste(q: &Path) {
 /// Quellen des NetSurf-Kerns (Ordner, Dateien) – aus content/Makefile,
 /// content/fetchers/…, content/handlers/…, utils/…, desktop/Makefile.
 const KERN: &[(&str, &str)] = &[
-    ("content", "content.c content_factory.c fetch.c hlcache.c llcache.c mimesniff.c textsearch.c urldb.c no_backing_store.c"),
+    ("content", "content.c content_factory.c hlcache.c llcache.c mimesniff.c textsearch.c urldb.c no_backing_store.c"),
     ("content/fetchers", "data.c resource.c"),
     (
         "content/fetchers/about",
@@ -532,7 +703,7 @@ const KERN: &[(&str, &str)] = &[
     (
         "content/handlers/html",
         "box_construct.c box_inspect.c box_manipulate.c box_normalise.c box_special.c box_textarea.c css.c css_fetcher.c \
-         dom_event.c font.c form.c forms.c html.c imagemap.c interaction.c layout.c layout_flex.c object.c redraw.c \
+         dom_event.c font.c form.c forms.c imagemap.c interaction.c layout.c layout_flex.c object.c redraw.c \
          redraw_border.c script.c table.c textselection.c",
     ),
     ("content/handlers/text", "textplain.c"),

@@ -54,8 +54,30 @@ Firmware-Abbild statt im Flash-Dateisystem, Browser-Heap 10 MB.
 Danach der Flash-Absturz geklärt und behoben (Abschnitt „Flash-Absturz“):
 Flash-Schreiben parallel zu abgebildetem Lesen; Flash-Sperre, Nachweis
 120 s Dauerlast ohne Neustart.
-**Nächster Punkt laut Plan:** B2 HTTPS (Abrufer über esp_http_client,
-Zertifikatsbündel, Cookies), dann B3–B10.
+**22.11. abends – Veröffentlichung:** Repo anonymisiert (Subagent im
+Worktree), `main` ohne alte Geschichte auf GitHub TheUnkn0wnC0DE/ESP32-OS
+(790d419), danach Lizenztexte/O:-Prüfung/UTC (26d99fb, gepusht).
+Commits ab jetzt als TheUnkn0wnC0DE, in UTC; Push-Regeln in CLAUDE.md
+(nur `main`, nur `origin`, kein force, vorher Prüfungen).
+
+**B2 HTTPS abgeschlossen (Details PLAN B2, `docs/nachweise/b2/`):** HTTPS
+mit Zertifikatsprüfung, Zertifikatsfehler abgelehnt, Suche aus der
+Adressleiste und Startseite (DuckDuckGo HTML), Touch-Suche → Ergebnis
+antippen → Wikipedia-Artikel angezeigt. Wikipedia ist am Board lesbar, aber
+langsam (~40 s nach dem Antippen). Unterwegs gefunden und behoben:
+- interner RAM (malloc < 1 KB intern statt < 16 KB, Abschnitt „Interner RAM“);
+- Programm-Heap: Grössenklassen statt einer sortierten Liste (vorher 240
+  Mio. Listenschritte für eine Seite);
+- jede Systemfunktion nahm in `pruefe_ende` die Kernsperre (auch jedes
+  malloc/free) – jetzt Merker je Faden;
+- Funktion 37.3 je Fenster (kurzes Tippen ging im Browser verloren);
+- Rückfallebene ohne JavaScript (12 s / JS-Grenze) mit Knopf „Ohne JS“ –
+  Abweichung in PLAN: automatisch an Ort und Stelle statt Neuladen;
+- Zwischenspeicher 2 MB, JS-Grenze 2 MB am Board.
+Werkzeug für B9/B10: `esp32/netsurf/werkzeuge/proxy.py` + PC-Test
+`seite_ueber_proxy` stellt echte HTTPS-Seiten am PC nach.
+**Nächster Schritt laut Nutzer:** B5 (Touch-Scrollen, Pinch-Zoom); B3/B4
+stehen im Plan davor (B3 begonnen: Cache-Grenze gesetzt).
 
 ## Browser-Architektur (Auftrag 13.9, Entscheidung 22.11.)
 
@@ -578,6 +600,40 @@ powershell -File firmware\bauen_flashen.ps1 -NurBauen -Nur esp32os > log 2>&1
 - **Folge:** Während eines Updates (Löschen des Zielplatzes in
   `esp_ota_begin`) warten andere Schreibvorgänge, bis es fertig ist –
   sie blockieren, statt das System zu gefährden.
+- **Doom und Quake (eigene Programme doomapp/quakeapp):** beide binden
+  dieselbe Firmware-Komponente ein und richten die Sperre beim Start ein
+  (Log „flash_sperre: eingerichtet“; Symbole per `nm` in beiden Abbildern).
+  Abgebildeten Flash liest dort nur `esp_ota_*` (Rückkehr zu ESP32-OS) –
+  über `slots.rs`, also gesperrt. Die Doom-WAD liest Doom über FAT in den
+  PSRAM (kein mmap), Quakes pak0.pak kommt von der SD-Karte; eine Suche im
+  ganzen Repo nach `esp_partition_mmap`/`spi_flash_mmap` findet keine
+  weiteren Leser.
+- **Nachweis Doom:** Entwicklungs-Haken `DOOM_SPEICHERTEST` (nur zur
+  Build-Zeit, `doom/doomgeneric/dg_konsole.c` `DG_Speichertest`): neues
+  Spiel E1M1, dann während des Spiels alle 2 s speichern, 8-mal
+  hintereinander (je 25 350 Byte ins Flash-Dateisystem, mit `stat`
+  geprüft), danach normal beenden – zwei Durchläufe, kein Absturz, kein
+  Neustart (`docs/nachweise/flash/doom_speichern_waehrend_spiel.txt`).
+  **Achtung:** Dieser Test hat die Spielstände 1–6 auf dem Board
+  überschrieben (vorher nicht gesichert – Fehler meinerseits). Künftige
+  Test-Haken sichern Nutzerdaten vorher oder nutzen eigene Testpfade.
+
+## Interner RAM (22.11. abends, B2)
+
+- **Befund:** Mit Browser und WLAN fiel der interne RAM auf 0 KB. Folgen:
+  lwIP-Thread-Semaphoren (`thread_sem_init: out of memory`) → DNS und neue
+  Verbindungen scheitern; newlib-Sperre bei `fopen` → `abort`; QuickJS
+  `js_mutex_init` → `abort`; Flash-Lesen ohne Hilfspuffer
+  (`wl_read failed 0x101`). Schon beim Desktop-Start waren nur 32 KB frei.
+- **Ursache:** `CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=16384` (Standard): jeder
+  malloc-Block unter 16 KB – auch jede kleine Rust-Allokation von Kern und
+  Desktop – kommt zuerst in den internen RAM, bis er voll ist.
+- **Abhilfe:** Schwelle 1 KB (`sdkconfig.defaults`). Gemessen: Desktop-Start
+  104 KB frei (vorher 32), beim Laden von Wikipedia mindestens 48 KB, danach
+  80 KB; Desktop weiter 33 FPS. Dazu der Abrufer mit 2 festen Arbeiter-Tasks
+  (Stapel im PSRAM) statt eines Tasks je Abruf.
+- Doom/Quake bauen mit derselben Einstellung, sobald sie neu gebaut werden –
+  dort beim nächsten Bau prüfen.
 
 ## Offen
 

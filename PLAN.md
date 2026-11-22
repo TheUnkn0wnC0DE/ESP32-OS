@@ -566,10 +566,63 @@ NetSurf für HTML/CSS/Layout (B1 begonnen), moderne JavaScript-Engine statt
 Duktape (QuickJS-ng, ES2020+) mit eigener DOM-/Web-API-Anbindung;
 Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
 
-- [ ] **B2 HTTPS** über mbedTLS + Zertifikatsbündel, Netz über
+- [x] **B2 HTTPS** über mbedTLS + Zertifikatsbündel, Netz über
   esp_http_client/lwIP, Cookies. Nachweis: https://de.wikipedia.org lädt,
   Foto; Zertifikatsfehler wird abgelehnt.
+  Dazu (Nutzer 22.11.): Standard-Suchmaschine DuckDuckGo HTML
+  (html.duckduckgo.com/html/); Wörter statt Adresse in der Adressleiste →
+  Suche; Startseite mit grossem Suchfeld. Nachweis am Board: per Touch
+  suchen, ein Ergebnis antippen, die Seite lädt.
+  Stand 22.11. nachts (PC): eigener Abrufer `netsurf/c/abruf.c` (ersetzt
+  NetSurfs curl-Abrufer, http+https) über die Transport-Schicht
+  `c/transport.h` – Board `transport_esp.c` (esp_http_client mit
+  Zertifikatsbündel, je Abruf ein Task, höchstens 2 gleichzeitig), PC
+  `transport_pc.c` (nur http, für Tests); Cookies über NetSurfs urldb.
+  Adressleiste `c/eingabe.c` (Regel: Schema → wie eingegeben; ein Wort mit
+  Punkt, IPv4, localhost → https://; sonst Suche über SearchEngines,
+  DuckDuckGo HTML zuerst). Startseite `netsurf/res/{de,en}/welcome.html`.
+  PC-Tests `eingabe_adresse_oder_suche`, `abruf_ueber_http` (302 mit
+  Set-Cookie → Cookie kommt bei der nächsten Anfrage mit, grüne Seite),
+  `startseite_mit_suchfeld` – 64 Bit 13/13, i686 15/15 grün.
+  Stand 22.11. abends (Board, `docs/nachweise/b2/`): HTTPS geht – alle
+  Abrufe von de.wikipedia.org/wikimedia/duckduckgo 200, Zertifikate geprüft;
+  expired.badssl.com wird abgelehnt (Fehlerseite, Foto + Log). Touch-Suche
+  per Autopilot: Startseite → Suchfeld → Tastatur (Taskleiste) → „esp32“ →
+  Enter → DuckDuckGo-Ergebnisse (Fotos) → blättern → „More at Wikipedia“
+  antippen → Abruf von de.wikipedia.org/wiki/ESP32 startet.
+  Dafür behoben: interner RAM (CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL 16 KB →
+  1 KB: beim Desktop-Start 104 statt 32 KB frei, vorher Abstürze in
+  pthread/newlib/lwIP), Abrufer mit 2 festen Arbeitern statt Task je
+  Abruf, Funktion 37.3 je Fenster (Kern-Test `maus_ereignisse_je_fenster`;
+  kurzes Tippen geht im Browser nicht mehr verloren).
+  Stand 22.11. nachts – Wikipedia lesbar: Ursachen gemessen und behoben:
+  (1) Programm-Heap: eine nach Adresse sortierte Freiliste, 240 Mio.
+  Listenschritte für eine Wikipedia-Seite (734 je malloc/free) → kleine
+  Blöcke je Grössenklasse ohne Suche (2 Schritte je Aufruf; Kern-Tests
+  `kleine_bloecke_ohne_suche`, `gross_nach_vielen_kleinen`); (2) jede
+  Systemfunktion – auch jedes malloc/free – nahm in `pruefe_ende` die
+  Kernsperre, die der Compositor lange hält → Merker je Faden ohne Sperre;
+  (3) Rückfallebene ohne JavaScript (Nutzer 22.11., `c/ohne_js.c`): wird eine
+  Seite nach 12 s nicht angezeigt oder sprengt ein Skript die JS-Grenze,
+  wird JavaScript für die Seite abgeschaltet; Knopf „Ohne JS“/„Mit JS“ in
+  der Werkzeugleiste lädt neu (PC-Tests `ohne_js_rueckfall_speicher`,
+  `ohne_js_rueckfall_zeit`, `ohne_js_liste`); (4) Neu-Layout erst nach
+  500 ms ohne DOM-Änderung; (5) Zwischenspeicher am Board 2 MB statt 12 MB,
+  JS-Grenze 2 MB statt 4 MB. Werkzeug: `netsurf/werkzeuge/proxy.py` +
+  Test `seite_ueber_proxy` (echte Seiten am PC nachstellen).
+  Nachweis (Board, `docs/nachweise/b2/`): Zertifikatsfehler abgelehnt
+  (`b2_board_zertifikat_abgelehnt.png`, Log); Wikipedia direkt geladen und
+  angezeigt (`b2_board_wikipedia_direkt.png`, „Fertiggestellt 25.8 s“);
+  Touch per Autopilot: Startseite → Suchfeld → Tastatur → „esp32“ → Enter →
+  DuckDuckGo-Ergebnisse → blättern → „More at Wikipedia“ antippen → Artikel
+  angezeigt (`b2_board_wikipedia_nach_touch.png`, Log
+  `b2_board_log_touchsuche.txt`). PC: 64 Bit 16/16, i686 18/18 grün.
+  Bekannt langsam (B10): jeder Abruf baut TLS neu auf (1,5–2 s), Box-Aufbau
+  und Layout einer Wikipedia-Seite dauern am Board ~20 s.
 - [ ] **B3 Cache im PSRAM begrenzt**. Nachweis: Konfigwert + Speicherlog.
+  Stand 22.11.: Grenze am Board gesetzt (`NS_SPEICHER_CACHE` 2 MB, NetSurfs
+  Untergrenze; Bilder 25 %), Heap des Browsers im Log „ns_takt“ alle 5 s.
+  Offen: Nachweis, dass der Zwischenspeicher die Grenze hält.
 - [ ] **B4 Adressleiste, Lesezeichen, Verlauf** per Touch. Nachweis: Autopilot,
   Fotos.
 - [ ] **B5 Touch-Scrollen und Pinch-Zoom**. Nachweis: Autopilot, Fotos.
@@ -623,6 +676,8 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   (einfach bis JavaScript-lastig: Wikipedia, Suchmaschine, Nachrichten,
   GitHub, Formulare, Menüs …), alle am Board getestet; Tabelle in STATUS
   (geht / teilweise / geht nicht, Grund). Nachweis: Tabelle + Fotos.
+  Fest auf der Liste (Nutzer 22.11.): Google (www.google.com) und
+  DuckDuckGo HTML (Standardsuche).
 - [ ] **B10 Verbessern** – was in B9 am meisten bringt, beheben, Tabelle
   aktualisieren. Nachweis: Tabelle vorher/nachher.
 - [ ] **B-Review** – Review-Subagent.
@@ -707,7 +762,8 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   optimieren, vorher/nachher in STATUS. Nachweis: Boot-Log mit Zeitstempeln.
 - [ ] **O8 GitHub-Veröffentlichung** (Auftrag 12.10, letzter Punkt) –
   `LICENSE` (GPL-2.0), README auf Englisch mit Fotos und Flash-Anleitung,
-  Release v1.0 mit fertiger Firmware, Web-Flasher. Nichts pushen ohne OK.
+  Release v1.0 mit fertiger Firmware, Web-Flasher. Releases nur mit OK des
+  Nutzers (Push-Regeln in CLAUDE.md).
   README nennt als bekannte Einschränkung: WLAN-Passwort unverschlüsselt im
   NVS (Auftrag 13.5, keine eFuses).
   **Release-Firmware nie mit `-Wlan` bauen.** Dafür baut man mit
@@ -724,6 +780,15 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   KolibriOS-C-Programme.
 
 ## Abweichungen
+
+- **B2, Rückfallebene ohne JavaScript (22.11.):** Gewünscht war „die Seite
+  ohne JavaScript anzeigen“. Automatisch (Zeitgrenze 12 s, JS-Speicher-
+  grenze) wird JavaScript an Ort und Stelle abgeschaltet statt die Seite
+  neu zu laden – am Board passten die alte Seite (mit JS) und die neu
+  geladene zusammen nicht in den 10-MB-Heap (gemessen: 10,3 MB → Fehler-
+  seite). Folge: `<noscript>`-Inhalte erscheinen dabei nicht. Der Knopf
+  „Ohne JS“ lädt die Seite wirklich ohne JavaScript neu (dann mit
+  `<noscript>`). JS-Speichergrenze am Board 2 MB statt 4 MB.
 
 - **K1 Beenden von aussen ist in K1 kooperativ:** Ein Programm endet bei
   seiner nächsten Systemfunktion. Zwangsweises Beenden hängender Programme

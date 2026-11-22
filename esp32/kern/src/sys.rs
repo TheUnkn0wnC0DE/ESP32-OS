@@ -623,9 +623,8 @@ pub fn maus(sub: u32) -> u32 {
             }
             2 => m.tasten & 0x1F,
             3 => {
-                let r = m.tasten & 0x1F | w.maus.ereignisse;
-                w.maus.ereignisse = 0;
-                r
+                let fz = w.slots[s].as_mut().unwrap_or_else(|| unreachable!());
+                m.tasten & 0x1F | std::mem::take(&mut fz.maus_ereignisse)
             }
             7 => {
                 let fz = w.slots[s].as_mut().unwrap_or_else(|| unreachable!());

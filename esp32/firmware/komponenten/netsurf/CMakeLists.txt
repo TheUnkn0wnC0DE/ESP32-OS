@@ -9,7 +9,7 @@
 # Erster Durchlauf von ESP-IDF (nur Abhängigkeiten, Skript-Modus: dort ist
 # set_source_files_properties nicht erlaubt)
 if(CMAKE_BUILD_EARLY_EXPANSION)
-    idf_component_register(REQUIRES kolibri_c heap esp_psram lwip)
+    idf_component_register(REQUIRES kolibri_c heap esp_psram lwip esp_http_client esp-tls mbedtls esp_timer)
     return()
 endif()
 
@@ -30,7 +30,7 @@ set(NS_DATEN "${CMAKE_CURRENT_LIST_DIR}/../../../netsurf/c/programm_daten.c")
 
 idf_component_register(SRCS ${NS_QUELLEN} "${NS_DATEN}"
                        LDFRAGMENTS "netsurf.lf"
-                       REQUIRES kolibri_c heap esp_psram lwip)
+                       REQUIRES kolibri_c heap esp_psram lwip esp_http_client esp-tls mbedtls esp_timer)
 
 # -msmall-data-limit=0: keine .sdata/.sbss (lägen sonst ausserhalb der
 # umrahmten Bereiche); -fno-common: alles in .bss

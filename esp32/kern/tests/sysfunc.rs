@@ -18,6 +18,8 @@ static MAUS_EV: AtomicU32 = AtomicU32::new(0);
 static WERT: AtomicU32 = AtomicU32::new(0);
 static WERT2: AtomicU32 = AtomicU32::new(0);
 static ZAHL: AtomicUsize = AtomicUsize::new(0);
+static LATCH: AtomicU32 = AtomicU32::new(0);
+static OBEN_BEREIT: AtomicBool = AtomicBool::new(false);
 
 const BLAU: u32 = 0x3060A0;
 
@@ -104,6 +106,36 @@ fn prog_maus() {
     }
 }
 
+/// Liest die Maus erst 100 ms nach dem Ereignis (wie ein beschäftigtes
+/// Programm, z. B. der Browser beim Layout) – über Funktion 37.3.
+fn prog_maus_spaet() {
+    sys::maske(0x27);
+    loop {
+        match sys::warte_ereignis() {
+            1 => {
+                sys::fenster(100 << 16 | 199, 100 << 16 | 149, 0x34_E0E0E0, 0, Some("Spät"));
+                BEREIT.store(true, Ordering::SeqCst);
+            }
+            6 => {
+                std::thread::sleep(Duration::from_millis(100));
+                LATCH.fetch_or(sys::maus(3) & 0xFF_FF00, Ordering::SeqCst);
+                MAUS_EV.fetch_add(1, Ordering::SeqCst);
+            }
+            _ => {}
+        }
+    }
+}
+
+/// System-Fenster der obersten Ebene (wie die Bildschirmtastatur)
+fn prog_oben() {
+    sys::fenster(110 << 16 | 59, 130 << 16 | 39, 0x01_000000, 0, None);
+    sys::fensterebene(2, u32::MAX, 1);
+    OBEN_BEREIT.store(true, Ordering::SeqCst);
+    loop {
+        sys::warte_ereignis_max(2);
+    }
+}
+
 fn prog_zeit() {
     let t0 = sys::zeitzaehler();
     let n0 = sys::zeit_ns();
@@ -175,6 +207,8 @@ fn prog_info() {
 static PROGRAMME: &[ProgrammEintrag] = &[
     ProgrammEintrag { name: "zeichnen", heap_kb: 512, stapel_kb: 128, start: prog_zeichnen },
     ProgrammEintrag { name: "maus", heap_kb: 256, stapel_kb: 128, start: prog_maus },
+    ProgrammEintrag { name: "maus_spaet", heap_kb: 256, stapel_kb: 128, start: prog_maus_spaet },
+    ProgrammEintrag { name: "oben", heap_kb: 64, stapel_kb: 64, start: prog_oben },
     ProgrammEintrag { name: "zeit", heap_kb: 64, stapel_kb: 64, start: prog_zeit },
     ProgrammEintrag { name: "zeit2", heap_kb: 64, stapel_kb: 64, start: prog_zeit2 },
     ProgrammEintrag { name: "info", heap_kb: 256, stapel_kb: 128, start: prog_info },
@@ -193,6 +227,8 @@ fn init() -> std::sync::MutexGuard<'static, ()> {
     MAUS_EV.store(0, Ordering::SeqCst);
     WERT.store(0, Ordering::SeqCst);
     WERT2.store(0, Ordering::SeqCst);
+    LATCH.store(0, Ordering::SeqCst);
+    OBEN_BEREIT.store(false, Ordering::SeqCst);
     g
 }
 
@@ -270,6 +306,41 @@ fn zeichnen_text_bilder_erwartungsbild() {
     assert_eq!(ende(pid), Ende::Normal);
     let (_, _, px) = sys::foto();
     assert!(px.iter().all(|&p| p == kern::grafik::von565(kern::grafik::zu565(0x3A6EA5))), "Fenster nicht weg");
+}
+
+/// 37.3 je Fenster: ein kurzes Tippen (Drücken und Loslassen, bevor das
+/// Programm liest) kommt als „gedrückt + losgelassen“ an; Tippen auf ein
+/// System-Fenster darüber (Bildschirmtastatur) kommt nicht an.
+#[test]
+fn maus_ereignisse_je_fenster() {
+    let _g = init();
+    let pid = kern::starte_name("maus_spaet").unwrap();
+    bis(|| BEREIT.load(Ordering::SeqCst), "Fenster");
+    // kurzes Tippen im Fenster (ausserhalb des späteren System-Fensters)
+    sys::eingabe::maus(250, 220, 1);
+    sys::eingabe::maus(250, 220, 0);
+    bis(|| LATCH.load(Ordering::SeqCst) & (1 << 8 | 1 << 16) == 1 << 8 | 1 << 16, "Tippen trotz spätem Lesen");
+    std::thread::sleep(Duration::from_millis(250));
+    let oben = kern::starte_name("oben").unwrap();
+    bis(|| OBEN_BEREIT.load(Ordering::SeqCst), "System-Fenster");
+    std::thread::sleep(Duration::from_millis(50));
+    LATCH.store(0, Ordering::SeqCst);
+    // Tippen auf das System-Fenster: das Fenster darunter merkt nichts
+    sys::eingabe::maus(130, 150, 1);
+    sys::eingabe::maus(130, 150, 0);
+    std::thread::sleep(Duration::from_millis(300));
+    // Zeiger ohne Drücken ins eigene Fenster: das Programm liest 37.3 – ein
+    // gemeinsamer (globaler) Speicher hätte hier noch das Tippen von oben
+    let n = MAUS_EV.load(Ordering::SeqCst);
+    sys::eingabe::maus(260, 225, 0);
+    bis(|| MAUS_EV.load(Ordering::SeqCst) > n, "Bewegung kommt an");
+    assert_eq!(LATCH.load(Ordering::SeqCst), 0, "Tippen aufs System-Fenster darf nicht ankommen");
+    // danach wieder im eigenen Fenster: kommt an (Programm lebt noch)
+    sys::eingabe::maus(250, 220, 1);
+    sys::eingabe::maus(250, 220, 0);
+    bis(|| LATCH.load(Ordering::SeqCst) & (1 << 8 | 1 << 16) == 1 << 8 | 1 << 16, "Tippen danach");
+    beenden(oben);
+    beenden(pid);
 }
 
 #[test]
