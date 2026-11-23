@@ -1038,6 +1038,12 @@ pub fn programm_speicher_frei() -> Option<usize> {
     prozess::eigener_heap().map(|h| h.groesse().saturating_sub(h.belegt()))
 }
 
+/// Grösster freie Block im Heap des eigenen Programms (None = kein eigener
+/// Heap): ob eine grosse Belegung am Stück gelingt.
+pub fn programm_speicher_groesster_block() -> Option<usize> {
+    prozess::eigener_heap().map(|h| h.groesster_freier_block())
+}
+
 /// Funktion 68.12: Speicherblock im Heap des Programms.
 pub fn speicher_holen(groesse: usize) -> *mut u8 {
     pruefe_ende();
@@ -1273,6 +1279,33 @@ pub fn komponieren(ziel: &mut Puffer, immer: bool) -> bool {
     })
 }
 
+/// Zusammenzusetzende Rechtecke eines Bildes (aktuelle und die des vorigen
+/// Bildes, siehe [`Schirm`]): Rechtecke, die in einem anderen liegen,
+/// entfallen (beim Scrollen kommt dasselbe Feld aus beiden Bildern); ist
+/// ihre Hülle nicht grösser als ihre Summe (überlappend, aneinander), wird
+/// die Hülle zusammengesetzt, sonst jedes einzeln (O1: vorher der ganze Bildschirm, sobald die doppelt
+/// gezählten Flächen den halben Bildschirm überstiegen – beim Scrollen im
+/// Browser 230 400 statt ~165 000 Bildpunkte je Bild).
+pub fn rechtecke_zusammenfassen(rects: Vec<Clip>) -> Vec<Clip> {
+    let enthalten = |a: &Clip, b: &Clip| a.x0 >= b.x0 && a.y0 >= b.y0 && a.x1 <= b.x1 && a.y1 <= b.y1;
+    let mut aus: Vec<Clip> = Vec::with_capacity(rects.len());
+    for (i, r) in rects.iter().enumerate() {
+        if r.leer() {
+            continue;
+        }
+        // in einem anderen enthalten (bei gleichen nur das erste behalten)
+        let weg = rects.iter().enumerate().any(|(j, o)| j != i && !o.leer() && enthalten(r, o) && (!enthalten(o, r) || j < i));
+        if !weg {
+            aus.push(*r);
+        }
+    }
+    let Some(huelle) = aus.iter().copied().reduce(|a, b| a.vereinigung(b)) else {
+        return aus;
+    };
+    let summe: i64 = aus.iter().map(|r| r.flaeche()).sum();
+    if summe >= huelle.flaeche() { vec![huelle] } else { aus }
+}
+
 /// Doppelpuffer für die Anzeige mit Dirty-Rects: setzt nur geänderte
 /// Bereiche zusammen. Weil zwei Puffer abwechseln, bekommt jeder Puffer auch
 /// die Änderungen des vorigen Bildes nachgetragen.
@@ -1282,11 +1315,20 @@ pub struct Schirm {
     naechster: usize,
     /// Zusammengesetzte Fläche im letzten Aufruf (Messung).
     pub letzte_flaeche: i64,
+    /// Zeilen (von, bis), die der letzte Aufruf zusammengesetzt hat – das
+    /// neue Bild unterscheidet sich vom vorigen nur darin (O1).
+    pub letzte_zeilen: Option<(usize, usize)>,
 }
 
 impl Default for Schirm {
     fn default() -> Schirm {
-        Schirm { puffer: [Puffer::neu(1, 1, 0), Puffer::neu(1, 1, 0)], vorige: Vec::new(), naechster: 0, letzte_flaeche: 0 }
+        Schirm {
+            puffer: [Puffer::neu(1, 1, 0), Puffer::neu(1, 1, 0)],
+            vorige: Vec::new(),
+            naechster: 0,
+            letzte_flaeche: 0,
+            letzte_zeilen: None,
+        }
     }
 }
 
@@ -1309,11 +1351,12 @@ impl Schirm {
                 }
                 let mut alle = rects.clone();
                 alle.extend_from_slice(&self.vorige);
-                let summe: i64 = alle.iter().map(|r| r.flaeche()).sum();
-                if summe > ganz.flaeche() / 2 {
-                    alle = vec![ganz];
-                }
+                let alle = rechtecke_zusammenfassen(alle);
                 self.letzte_flaeche = alle.iter().map(|r| r.flaeche()).sum();
+                self.letzte_zeilen = alle
+                    .iter()
+                    .map(|r| (r.y0.max(0) as usize, r.y1.clamp(0, w.h) as usize))
+                    .reduce(|a, b| (a.0.min(b.0), a.1.max(b.1)));
                 for r in &alle {
                     w.komponieren_teil(&mut self.puffer[i], *r);
                 }

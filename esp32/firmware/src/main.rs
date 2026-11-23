@@ -499,6 +499,11 @@ fn main() {
     let mut drawing = FrameData::new();
     let mut naechstes = FrameData::new();
     let mut stats = FrameStats::default();
+    // Geänderte Zeilen der letzten Bilder (O1): Die Anzeige hat FB_COUNT
+    // Bildspeicher reihum – ein Speicher hält das Bild von vor FB_COUNT
+    // Bildern. Ausgegeben werden nur Streifen, die sich seither geändert
+    // haben (Vereinigung über die letzten FB_COUNT Bilder); None = alles.
+    let mut zeilen_verlauf: [Option<(usize, usize)>; pudding_fw::display::FB_COUNT] = [None; pudding_fw::display::FB_COUNT];
     let mut desktop_log = hw::now_us();
     log_heap("Spiel geladen");
     if slots::hier(SpielId::Konsole) {
@@ -778,8 +783,13 @@ fn main() {
         let fb = disp.acquire();
         LOOP_STAGE.store(10, Ordering::Relaxed);
         let wait_us = hw::now_us() - wait_start;
+        zeilen_verlauf.rotate_right(1);
+        zeilen_verlauf[0] = rahmen.geaenderte_zeilen();
+        let zeilen = zeilen_verlauf.iter().try_fold(None::<(usize, usize)>, |acc, z| {
+            z.map(|(a, b)| Some(acc.map_or((a, b), |(c, d)| (c.min(a), d.max(b)))))
+        }).flatten();
         // SAFETY: `drawing` und `fb` bleiben bis zum `join` oben unverändert.
-        unsafe { pipeline.start(&drawing, Frame { w, h, smooth, flip, fb }) };
+        unsafe { pipeline.start(&drawing, Frame { w, h, smooth, flip, fb, zeilen }) };
         pending = true;
 
         let now = hw::now_us();

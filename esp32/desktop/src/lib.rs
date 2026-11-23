@@ -314,6 +314,10 @@ impl Spiel for Desktop {
     fn unveraendert(&self) -> bool {
         self.unveraendert
     }
+
+    fn geaenderte_zeilen(&self) -> Option<(usize, usize)> {
+        self.schirm.letzte_zeilen
+    }
 }
 
 /// Messprogramm K5: 10 s ruhig, dann Fenster im Kreis verschieben.

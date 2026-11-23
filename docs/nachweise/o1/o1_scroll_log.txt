@@ -1,0 +1,78 @@
+# O1 Teil 2: Scrollen im Browser (Board, B5-Ablauf: de.wikipedia.org/wiki/ESP32, Autopilot b5, je Wischbewegung 15 Schritte)
+# Zeilen 'Wischen' von NetSurf (c/flaeche_esp32os.c), 'Desktop'/'FPS'/'Mittel' von der Anzeige (firmware/src/main.rs)
+
+## Stufe 0 – vorher (Stand nach B7, mit Bild-Prüfung am Stück)
+I (64215) ns_takt: Wischen: 1 Schritte, 1 Bilder in 269 ms (3.7 Bilder/s)
+I (64215) ns_takt: Wischen je Bild: Verschieben 1828 us, Seite 256758 us (1 Bereiche, 7344 px), Ausgabe 5 us, davon Kern 6353 us
+I (66889) ns_takt: Wischen: 14 Schritte, 2 Bilder in 137 ms (14.5 Bilder/s)
+I (66889) ns_takt: Wischen je Bild: Verschieben 15320 us, Seite 3224 us (2 Bereiche, 51408 px), Ausgabe 7 us, davon Kern 6308 us
+I (68026) ns_takt: Wischen: 15 Schritte, 8 Bilder in 896 ms (8.9 Bilder/s)
+I (68026) ns_takt: Wischen je Bild: Verschieben 26592 us, Seite 31673 us (8 Bereiche, 13770 px), Ausgabe 4 us, davon Kern 6279 us
+I (72859) ns_takt: Wischen: 15 Schritte, 8 Bilder in 658 ms (12.1 Bilder/s)
+I (72859) ns_takt: Wischen je Bild: Verschieben 27904 us, Seite 5454 us (8 Bereiche, 13770 px), Ausgabe 5 us, davon Kern 6197 us
+I (75857) ns_takt: Wischen: -15 Schritte, 8 Bilder in 658 ms (12.1 Bilder/s)
+I (75857) ns_takt: Wischen je Bild: Verschieben 26761 us, Seite 2066 us (8 Bereiche, 13770 px), Ausgabe 4 us, davon Kern 6045 us
+I (77892) ns_takt: Wischen: 17 Schritte, 0 Bilder in 1 ms (0.0 Bilder/s)
+I (77892) ns_takt: Wischen je Bild: Verschieben 0 us, Seite 0 us (0 Bereiche, 0 px), Ausgabe 0 us, davon Kern 0 us
+I (64175) pudding_p4: Mittel: Simulation 2.7 ms, Bild vorbereiten 17.2 ms (0 Dreiecke), Mithelfen 8.6 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (64176) pudding_p4: 33.3 FPS (640x360 scharf), Frame 18.5 ms, Streifen 15/30, Rendern 1.6/3.1 ms, Skalieren 1.9/4.0 ms, PPA 22.9/19.8 ms, Ausgabe 27.1 ms, Panel 54.97 Hz
+I (65759) pudding_p4: Desktop: 3.0 Bilder/s neu, 174.0 übersprungen/s, Fläche 230400 px/Bild, Compositor 0.30 ms/Bild
+I (66917) pudding_p4: Mittel: Simulation 1.9 ms, Bild vorbereiten 17.6 ms (0 Dreiecke), Mithelfen 8.8 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+
+## Versuch PPA-Kopie im Browser (verworfen: PPA durch die Anzeige ausgelastet)
+I (64224) ns_takt: Wischen: 1 Schritte, 1 Bilder in 281 ms (3.5 Bilder/s)
+I (64224) ns_takt: Wischen je Bild: Verschieben 13978 us, Seite 257064 us (1 Bereiche, 7344 px), Ausgabe 5 us, davon Kern 6385 us
+I (66472) ns_takt: Wischen: 14 Schritte, 1 Bilder in 47 ms (21.2 Bilder/s)
+I (66472) ns_takt: Wischen je Bild: Verschieben 3038 us, Seite 5398 us (1 Bereiche, 102816 px), Ausgabe 9 us, davon Kern 6091 us
+I (69892) ns_takt: Wischen: 15 Schritte, 7 Bilder in 877 ms (7.9 Bilder/s)
+I (69892) ns_takt: Wischen je Bild: Verschieben 41559 us, Seite 36582 us (7 Bereiche, 15737 px), Ausgabe 3 us, davon Kern 6157 us
+I (72858) ns_takt: Wischen: 15 Schritte, 7 Bilder in 633 ms (11.0 Bilder/s)
+I (72858) ns_takt: Wischen je Bild: Verschieben 41547 us, Seite 1993 us (7 Bereiche, 15737 px), Ausgabe 4 us, davon Kern 6177 us
+I (75859) ns_takt: Wischen: -15 Schritte, 7 Bilder in 630 ms (11.1 Bilder/s)
+I (75859) ns_takt: Wischen je Bild: Verschieben 37371 us, Seite 5874 us (7 Bereiche, 15737 px), Ausgabe 4 us, davon Kern 6046 us
+I (65778) pudding_p4: Desktop: 2.0 Bilder/s neu, 183.1 übersprungen/s, Fläche 230400 px/Bild, Compositor 0.19 ms/Bild
+I (66930) pudding_p4: Mittel: Simulation 2.1 ms, Bild vorbereiten 13.9 ms (0 Dreiecke), Mithelfen 10.3 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (66931) pudding_p4: 32.4 FPS (640x360 scharf), Frame 18.8 ms, Streifen 15/30, Rendern 1.8/2.7 ms, Skalieren 1.9/3.7 ms, PPA 22.6/20.3 ms, Ausgabe 26.8 ms, Panel 54.97 Hz
+I (67806) pudding_p4: Desktop: 7.0 Bilder/s neu, 142.1 übersprungen/s, Fläche 230400 px/Bild, Compositor 0.82 ms/Bild
+
+## Stufe 1 – Anzeige wartet blockierend auf den PPA statt mit yield_now
+I (64999) ns_takt: Wischen: 15 Schritte, 15 Bilder in 771 ms (19.4 Bilder/s)
+I (64999) ns_takt: Wischen je Bild: Verschieben 5462 us, Seite 8282 us (15 Bereiche, 7344 px), Ausgabe 8 us, davon Kern 12409 us
+I (69873) ns_takt: Wischen: 15 Schritte, 15 Bilder in 800 ms (18.7 Bilder/s)
+I (69873) ns_takt: Wischen je Bild: Verschieben 4330 us, Seite 4787 us (15 Bereiche, 7344 px), Ausgabe 7 us, davon Kern 11742 us
+I (72843) ns_takt: Wischen: 15 Schritte, 15 Bilder in 806 ms (18.6 Bilder/s)
+I (72843) ns_takt: Wischen je Bild: Verschieben 4221 us, Seite 5842 us (15 Bereiche, 7344 px), Ausgabe 8 us, davon Kern 11796 us
+I (74994) ns_takt: Wischen: -15 Schritte, 15 Bilder in 800 ms (18.7 Bilder/s)
+I (74994) ns_takt: Wischen je Bild: Verschieben 4120 us, Seite 5279 us (15 Bereiche, 7344 px), Ausgabe 61 us, davon Kern 11683 us
+I (65743) pudding_p4: Desktop: 9.5 Bilder/s neu, 113.4 übersprungen/s, Fläche 230400 px/Bild, Compositor 1.66 ms/Bild
+I (66902) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 21.5 ms (0 Dreiecke), Mithelfen 21.0 ms, Rest-PPA 1.3 ms, Warten auf Bildspeicher 0.0 ms
+I (66902) pudding_p4: 27.1 FPS (640x360 scharf), Frame 15.2 ms, Streifen 15/30, Rendern 1.6/2.7 ms, Skalieren 1.9/3.9 ms, PPA 22.9/20.3 ms, Ausgabe 27.0 ms, Panel 54.98 Hz
+I (67756) pudding_p4: Desktop: 9.9 Bilder/s neu, 113.7 übersprungen/s, Fläche 230400 px/Bild, Compositor 1.67 ms/Bild
+
+## Stufe 2 – Rechtecke zusammenfassen (Doppelpuffer zählte das Feld doppelt → ganzer Schirm)
+I (66878) ns_takt: Wischen: 15 Schritte, 15 Bilder in 641 ms (23.4 Bilder/s)
+I (66878) ns_takt: Wischen je Bild: Verschieben 4317 us, Seite 5884 us (15 Bereiche, 7344 px), Ausgabe 8 us, davon Kern 12285 us
+I (69876) ns_takt: Wischen: 15 Schritte, 15 Bilder in 636 ms (23.5 Bilder/s)
+I (69876) ns_takt: Wischen je Bild: Verschieben 4255 us, Seite 4704 us (15 Bereiche, 7344 px), Ausgabe 8 us, davon Kern 12226 us
+I (72845) ns_takt: Wischen: 15 Schritte, 15 Bilder in 640 ms (23.4 Bilder/s)
+I (72845) ns_takt: Wischen je Bild: Verschieben 4111 us, Seite 5801 us (15 Bereiche, 7344 px), Ausgabe 9 us, davon Kern 12024 us
+I (74001) ns_takt: Wischen: -15 Schritte, 15 Bilder in 634 ms (23.6 Bilder/s)
+I (74001) ns_takt: Wischen je Bild: Verschieben 4305 us, Seite 5296 us (15 Bereiche, 7344 px), Ausgabe 8 us, davon Kern 11794 us
+I (65743) pudding_p4: Desktop: 10.0 Bilder/s neu, 127.0 übersprungen/s, Fläche 132930 px/Bild, Compositor 0.44 ms/Bild
+I (66898) pudding_p4: Mittel: Simulation 0.4 ms, Bild vorbereiten 6.0 ms (0 Dreiecke), Mithelfen 27.5 ms, Rest-PPA 1.1 ms, Warten auf Bildspeicher 0.0 ms
+I (66899) pudding_p4: 30.7 FPS (640x360 scharf), Frame 10.1 ms, Streifen 15/30, Rendern 1.6/2.7 ms, Skalieren 1.9/4.3 ms, PPA 22.9/20.1 ms, Ausgabe 27.2 ms, Panel 54.98 Hz
+I (67743) pudding_p4: Desktop: 10.0 Bilder/s neu, 127.5 übersprungen/s, Fläche 132930 px/Bild, Compositor 0.44 ms/Bild
+
+## Stufe 3 – nur geänderte Streifen ausgeben (3 Bildspeicher berücksichtigt)
+I (66890) ns_takt: Wischen: 15 Schritte, 5 Bilder in 351 ms (14.2 Bilder/s)
+I (66890) ns_takt: Wischen je Bild: Verschieben 4586 us, Seite 47707 us (5 Bereiche, 22032 px), Ausgabe 9 us, davon Kern 11010 us
+I (69893) ns_takt: Wischen: 15 Schritte, 15 Bilder in 694 ms (21.6 Bilder/s)
+I (69893) ns_takt: Wischen je Bild: Verschieben 4285 us, Seite 18773 us (15 Bereiche, 7344 px), Ausgabe 8 us, davon Kern 11143 us
+I (72858) ns_takt: Wischen: 15 Schritte, 15 Bilder in 466 ms (32.1 Bilder/s)
+I (72858) ns_takt: Wischen je Bild: Verschieben 4296 us, Seite 3356 us (15 Bereiche, 7344 px), Ausgabe 8 us, davon Kern 11521 us
+I (73808) ns_takt: Wischen: -15 Schritte, 15 Bilder in 464 ms (32.3 Bilder/s)
+I (73808) ns_takt: Wischen je Bild: Verschieben 4224 us, Seite 3501 us (15 Bereiche, 7344 px), Ausgabe 9 us, davon Kern 11158 us
+I (65755) pudding_p4: Desktop: 4.5 Bilder/s neu, 181.0 übersprungen/s, Fläche 105070 px/Bild, Compositor 0.12 ms/Bild
+I (66909) pudding_p4: Mittel: Simulation 2.3 ms, Bild vorbereiten 5.2 ms (0 Dreiecke), Mithelfen 11.0 ms, Rest-PPA 1.1 ms, Warten auf Bildspeicher 0.0 ms
+I (66909) pudding_p4: 42.1 FPS (640x360 scharf), Frame 9.1 ms, Streifen 10/18, Rendern 1.0/1.6 ms, Skalieren 1.3/2.2 ms, PPA 14.5/11.8 ms, Ausgabe 17.0 ms, Panel 54.97 Hz
+I (67759) pudding_p4: Desktop: 10.5 Bilder/s neu, 145.7 übersprungen/s, Fläche 132930 px/Bild, Compositor 0.41 ms/Bild

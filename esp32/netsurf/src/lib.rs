@@ -283,12 +283,15 @@ pub unsafe extern "C" fn ns_bild_masse(daten: *const u8, laenge: usize, breite: 
 /// Bildpunkt: Ausgabe 4 Byte, progressives JPEG bis 6 Byte Koeffizienten +
 /// 3 Byte Ebenen, PNG ~5 Byte entpackt → 16 Byte, dazu die Reserve des Kerns
 /// und 256 KB für den Rest der Seite.
+/// Dazu muss die grösste einzelne Belegung des Dekoders am Stück passen
+/// (O1, Board: ein progressives JPEG beendete den Browser bei zerstückeltem
+/// Heap, obwohl insgesamt genug frei war): Ausgabe 4 Byte, entpackte
+/// PNG-Zeilen ~5 Byte je Bildpunkt → 6 Byte, dazu 64 KB.
 #[cfg(target_pointer_width = "32")]
 fn bild_passt(pixel: u64) -> bool {
-    match kern::sys::programm_speicher_frei() {
-        Some(frei) => frei as u64 >= pixel * 16 + 512 * 1024,
-        None => true,
-    }
+    let gesamt = kern::sys::programm_speicher_frei().is_none_or(|frei| frei as u64 >= pixel * 16 + 512 * 1024);
+    let am_stueck = kern::sys::programm_speicher_groesster_block().is_none_or(|g| g as u64 >= pixel * 6 + 64 * 1024);
+    gesamt && am_stueck
 }
 
 #[cfg(not(target_pointer_width = "32"))]

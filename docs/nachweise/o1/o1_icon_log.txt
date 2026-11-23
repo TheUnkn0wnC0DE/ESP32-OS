@@ -1,0 +1,7 @@
+# O1 Teil 1: Desktop-Symbole (@icon) beim Start, Board, normaler Start, Zeit ab Einschalten
+## vorher (Symbole aus dem ganzen Streifen, jeder Zeichenaufruf einzeln an den Kern)
+I (2171) pudding_p4: ESP32-OS startet …
+I (4295) pudding_p4: [debug] @icon: gezeichnet in 923 ms (Grund 112, Symbole 455, Mischen 119, Text 136)
+## nachher (Symbole beim Bauen zerlegt/vorskaliert, Desktop im eigenen Puffer, ein Aufruf)
+I (2247) pudding_p4: ESP32-OS startet …
+I (3361) pudding_p4: [debug] @icon: gezeichnet in 162 ms (Grund 64, Symbole 22, Mischen 7, Text 1, Ausgabe 65)

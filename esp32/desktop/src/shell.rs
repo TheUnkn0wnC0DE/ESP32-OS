@@ -6,7 +6,7 @@
 
 use kern::sys;
 use kolibri::dekoder::Rgba;
-use std::sync::{Mutex, OnceLock};
+use std::sync::Mutex;
 
 /// NVS-Schlüssel des früheren Merkers „Spiele“ (Neustart in den alten
 /// Launcher); den Launcher gibt es nicht mehr – die Firmware löscht ihn nur.
@@ -69,17 +69,22 @@ fn haken() -> Option<Haken> {
 
 // ------------------------------------------------------------ Symbole
 
-static SYMBOLE: OnceLock<Rgba> = OnceLock::new();
+/// Symbole einzeln aus `daten/icons32.png`, beim Bauen zerlegt (build.rs,
+/// O1): entpackt wird nur, was gezeigt wird.
+mod erzeugt {
+    include!(concat!(env!("OUT_DIR"), "/symbole.rs"));
+}
 
-fn streifen() -> &'static Rgba {
-    SYMBOLE.get_or_init(|| {
-        kern::kern_abschnitt(|| {
-            kolibri::dekoder::dekodieren(include_bytes!("../daten/icons32.png"))
-                .ok()
-                .and_then(|(_, mut v)| v.pop())
-                .unwrap_or(Rgba { w: 32, h: 32, px: vec![0; 1024], delay: 0 })
-        })
-    })
+/// Symbol `i` aus der Tabelle `t` (Kantenlänge `g`) entpacken.
+fn symbol_entpacken(t: &[(usize, usize)], i: usize, g: u32) -> Rgba {
+    let n = (g * g) as usize;
+    let (a, l) = t[i];
+    let px = kolibri::dekoder::inflate(&erzeugt::SYMBOLE_BLOB[a..a + l], 4 * n)
+        .ok()
+        .filter(|d| d.len() == 4 * n)
+        .map(|d| d.chunks_exact(4).map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect())
+        .unwrap_or_else(|| vec![0; n]);
+    Rgba { w: g, h: g, px, delay: 0 }
 }
 
 /// Bereits skalierte Symbole (System-Heap; Skalieren kostet am Board viel
@@ -91,15 +96,13 @@ static SYMBOL_CACHE: Mutex<Vec<(usize, u32, Rgba)>> = Mutex::new(Vec::new());
 
 /// Symbol `i` in Grösse `g`.
 pub fn symbol(i: usize, g: u32) -> Rgba {
-    let s = streifen();
-    let n = (s.h / 32) as usize;
-    let i = i.min(n - 1);
+    let i = i.min(erzeugt::SYMBOLE_ANZAHL - 1);
     let gespeichert = kern::kern_abschnitt(|| SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).iter().find(|(k, gr, _)| *k == i && *gr == g).map(|(_, _, b)| b.clone()));
     if let Some(b) = gespeichert {
         return b;
     }
     kern::kern_abschnitt(|| {
-        let b = Rgba { w: 32, h: 32, px: s.px[i * 1024..(i + 1) * 1024].to_vec(), delay: 0 };
+        let b = symbol_entpacken(&erzeugt::SYMBOLE_32, i, 32);
         let b = if g == 32 { b } else { kolibri::libimg::skalieren(&b, g, g, true) };
         SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).push((i, g, b.clone()));
         b
@@ -128,12 +131,6 @@ fn text(x: i32, y: i32, t: &str, farbe: u32) {
 
 fn text_gross(x: i32, y: i32, t: &str, farbe: u32, faktor: u32) {
     sys::text((x as u32) << 16 | y as u32 & 0xFFFF, 0x3000_0000 | (faktor - 1) << 24 | farbe & 0xFF_FFFF, t.as_bytes(), t.chars().count() as u32, 0);
-}
-
-/// Text mit Schatten (auf Bildern lesbar).
-fn text_schatten(x: i32, y: i32, t: &str) {
-    text(x + 1, y + 1, t, 0x101010);
-    text(x, y, t, 0xFFFFFF);
 }
 
 pub fn bildschirm() -> (i32, i32) {
@@ -351,43 +348,101 @@ pub fn hintergrund_grund(hg: &crate::konfig::Hintergrund, w: i32, h: i32) -> Gru
 }
 
 fn icon_zeichnen(w: i32, h: i32, grund: &Grund) {
+    use kern::grafik::zu565;
     let t0 = sys::zeit_ns();
-    sys::neuzeichnen(1);
-    sys::fenster((w - 1) as u32, (h - 1) as u32, 0x41_000000, 0, None);
+    // Ganzer Desktop erst im eigenen Puffer (RGB565 wie der Fensterpuffer),
+    // dann in einem Aufruf ins Fenster (O1): jeder Zeichenaufruf wartet sonst
+    // auf die Kernsperre, die der Compositor oft hält – am Board 923 ms für
+    // Grund, Symbole und Beschriftung. Gleiche Rechnung wie die Aufrufe
+    // (Rechteck, Funktion 65 mit 32 bpp, Funktion 4), also gleiche Bildpunkte.
+    let (bw, bh) = (w.max(1) as usize, h.max(1) as usize);
+    let mut p = kern::grafik::Puffer::neu(bw, bh, 0);
     match grund {
         Grund::Verlauf(oben, unten) => {
-            // Bänder gleicher Panelfarbe (RGB565) in einem Aufruf: wenige
-            // Dutzend statt 360 Aufrufe (Neuzeichnen am Board viel schneller)
-            let mut y0 = 0;
-            while y0 < h {
-                let c = kern::grafik::zu565(verlauf(*oben, *unten, y0, h));
-                let mut y1 = y0 + 1;
-                while y1 < h && kern::grafik::zu565(verlauf(*oben, *unten, y1, h)) == c {
-                    y1 += 1;
-                }
-                sys::rechteck(w as u32, (y0 as u32) << 16 | (y1 - y0) as u32, kern::grafik::von565(c));
-                y0 = y1;
+            for y in 0..bh {
+                let c = zu565(verlauf(*oben, *unten, y as i32, h));
+                p.px[y * bw..(y + 1) * bw].fill(c);
             }
         }
-        Grund::Bild(b) => kolibri::libimg::zeichnen(b, 0, 0, b.w, b.h, 0, 0),
+        Grund::Bild(b) => {
+            for y in 0..bh.min(b.h as usize) {
+                for x in 0..bw.min(b.w as usize) {
+                    p.px[y * bw + x] = zu565(b.px[y * b.w as usize + x] & 0xFF_FFFF);
+                }
+            }
+        }
     }
-    let hg_farbe = |x: i32, y: i32, _h: i32| match grund {
+    let t_grund = sys::zeit_ns() - t0;
+    let (mut t_sym, mut t_misch, mut t_text) = (0u64, 0u64, 0u64);
+    let hg_farbe = |x: i32, y: i32| match grund {
         Grund::Verlauf(oben, unten) => verlauf(*oben, *unten, y, h),
         Grund::Bild(b) => b.px[(y.clamp(0, h - 1) * w + x.clamp(0, w - 1)) as usize] & 0xFF_FFFF,
     };
     let zeilen = ((h - LEISTE_H - 8) / ZELLE_H).max(1);
+    let mut knoepfe = Vec::new();
     for (i, a) in anwendungen().iter().filter(|a| a.auf_desktop).enumerate() {
         let (sp, ze) = (i as i32 / zeilen, i as i32 % zeilen);
         let (x, y) = (8 + sp * ZELLE_W, 8 + ze * ZELLE_H);
-        sys::knopf((x as u32) << 16 | (ZELLE_W - 1) as u32, (y as u32) << 16 | (ZELLE_H - 1) as u32, 0x4000_0000 | (10 + i as u32), 0);
-        bild_auf(&symbol(a.symbol, SYM), x + (ZELLE_W - SYM as i32) / 2, y + 4, |xx, yy| hg_farbe(xx, yy, h));
+        knoepfe.push(((x as u32) << 16 | (ZELLE_W - 1) as u32, (y as u32) << 16 | (ZELLE_H - 1) as u32, 0x4000_0000 | (10 + i as u32)));
+        let z0 = sys::zeit_ns();
+        let s = symbol(a.symbol, SYM);
+        let z1 = sys::zeit_ns();
+        // Alpha über den bekannten Untergrund mischen (wie bild_auf)
+        let (sx, sy) = (x + (ZELLE_W - SYM as i32) / 2, y + 4);
+        for yy in 0..s.h as i32 {
+            for xx in 0..s.w as i32 {
+                let (px, py) = (sx + xx, sy + yy);
+                if px < 0 || py < 0 || px >= w || py >= h {
+                    continue;
+                }
+                let q = s.px[(yy as u32 * s.w + xx as u32) as usize];
+                let al = q >> 24;
+                let u = hg_farbe(px, py);
+                let k = |sh: u32| ((q >> sh & 255) * al + (u >> sh & 255) * (255 - al)) / 255;
+                p.px[py as usize * bw + px as usize] = zu565(k(16) << 16 | k(8) << 8 | k(0));
+            }
+        }
+        let z2 = sys::zeit_ns();
+        // Beschriftung mit Schatten (wie text_schatten, Schrift 8×16 UTF-8)
         let t: String = a.name().chars().take(13).collect();
         let tw = 8 * t.chars().count() as i32;
-        text_schatten(x + (ZELLE_W - tw) / 2, y + 8 + SYM as i32, &t);
+        let zeichen = kern::schrift::zeichen(t.as_bytes(), kern::schrift::Kodierung::Utf8, false, t.chars().count());
+        let mut z = kern::grafik::Zeichner::neu(&mut p);
+        for (dx, farbe) in [(1, 0x101010), (0, 0xFF_FFFF)] {
+            let c = zu565(farbe);
+            kern::schrift::zeichnen(
+                &zeichen,
+                kern::schrift::Kodierung::Utf8,
+                1,
+                x + (ZELLE_W - tw) / 2 + dx,
+                y + 8 + SYM as i32 + dx,
+                &mut |rx, ry, rw, rh| z.fuellen565(rx, ry, rw, rh, c),
+                None,
+            );
+        }
+        t_sym += z1 - z0;
+        t_misch += z2 - z1;
+        t_text += sys::zeit_ns() - z2;
+    }
+    let z_aus = sys::zeit_ns();
+    let roh: Vec<u8> = p.px.iter().flat_map(|v| v.to_le_bytes()).collect();
+    sys::neuzeichnen(1);
+    sys::fenster((w - 1) as u32, (h - 1) as u32, 0x41_000000, 0, None);
+    sys::palettenbild(&roh, (bw as u32) << 16 | bh as u32, 0, 16, &[], 0);
+    for (kx, ky, id) in knoepfe {
+        sys::knopf(kx, ky, id, 0);
     }
     sys::neuzeichnen(2);
     ICON_GEZEICHNET.store(true, core::sync::atomic::Ordering::Relaxed);
-    sys::debug_text(&format!("@icon: gezeichnet in {} ms\n", (sys::zeit_ns() - t0) / 1_000_000));
+    sys::debug_text(&format!(
+        "@icon: gezeichnet in {} ms (Grund {}, Symbole {}, Mischen {}, Text {}, Ausgabe {})\n",
+        (sys::zeit_ns() - t0) / 1_000_000,
+        t_grund / 1_000_000,
+        t_sym / 1_000_000,
+        t_misch / 1_000_000,
+        t_text / 1_000_000,
+        (sys::zeit_ns() - z_aus) / 1_000_000
+    ));
 }
 
 /// Bildschirm-Mitte des Desktop-Symbols von `programm` – für Tests und den
@@ -852,6 +907,22 @@ pub fn info() {
                 }
             }
             _ => {}
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// O1: Die beim Bauen zerlegten Symbole stimmen mit dem Streifen überein.
+    #[test]
+    fn symbole_wie_streifen() {
+        let s = kolibri::dekoder::dekodieren(include_bytes!("../daten/icons32.png")).expect("PNG").1.pop().expect("Bild");
+        assert_eq!(s.h as usize / 32, erzeugt::SYMBOLE_ANZAHL);
+        for i in 0..erzeugt::SYMBOLE_ANZAHL {
+            let k = symbol_entpacken(&erzeugt::SYMBOLE_32, i, 32);
+            assert_eq!(k.px, s.px[i * 1024..(i + 1) * 1024], "Symbol {i} 32×32");
         }
     }
 }

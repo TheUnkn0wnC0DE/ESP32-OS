@@ -444,6 +444,26 @@ impl Heap {
         self.entsperren();
         n
     }
+
+    /// Nutzbare Grösse des grössten freien Blocks (nach dem Zusammenführen
+    /// der kleinen): passt eine grosse Belegung am Stück? (O1: ein Bild im
+    /// Browser bei zerstückeltem Heap – vorher zählte nur der freie Platz
+    /// insgesamt, die Belegung scheiterte und beendete das Programm.)
+    pub fn groesster_freier_block(&self) -> usize {
+        self.sperren();
+        let mut g = 0;
+        // SAFETY: unter Sperre.
+        unsafe {
+            self.zusammenfuehren();
+            let mut k = *self.frei.get();
+            while !k.is_null() {
+                g = g.max((*k).groesse);
+                k = (*k).next;
+            }
+        }
+        self.entsperren();
+        g.saturating_sub(GRAN)
+    }
 }
 
 #[cfg(test)]
@@ -486,6 +506,29 @@ mod tests {
         assert_eq!(h.belegt(), 0);
         assert_eq!(h.freie_bloecke(), 1);
         assert!(h.spitze() > 0);
+    }
+
+    /// O1: Zerstückelt ist viel frei, aber kein grosser Block am Stück –
+    /// `groesster_freier_block` sagt, was wirklich noch passt.
+    #[test]
+    fn groesster_freier_block_bei_zerstueckelung() {
+        let (_v, h) = bereich(256 * 1024);
+        let h = unsafe { &*h };
+        let leer = h.groesster_freier_block();
+        assert!(leer > 250 * 1024, "leer fast alles am Stück: {leer}");
+        let bloecke: Vec<*mut u8> = (0..60).map(|_| h.alloc(4000, 16)).collect();
+        assert!(bloecke.iter().all(|p| !p.is_null()));
+        // jeder zweite frei: ~120 KB frei, aber nur in 4-KB-Stücken (plus Rest am Ende)
+        for p in bloecke.iter().step_by(2) {
+            unsafe { h.free(*p) };
+        }
+        let g = h.groesster_freier_block();
+        let p = h.alloc(g, 16);
+        assert!(!p.is_null(), "der gemeldete grösste Block lässt sich belegen ({g})");
+        unsafe { h.free(p) };
+        assert!(h.alloc(g + 64, 16).is_null(), "etwas Grösseres nicht");
+        let frei = h.groesse() - h.belegt();
+        assert!(frei > g + 100 * 1024, "insgesamt viel mehr frei ({frei}) als am Stück ({g})");
     }
 
     #[test]

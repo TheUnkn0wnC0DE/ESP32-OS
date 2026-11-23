@@ -29,7 +29,7 @@ use crate::board::{LCD_H, LCD_W};
 use crate::display::FB_BYTES;
 use crate::hw::{alloc_pixels, now_us, spawn_pinned, zeroed};
 use core::ffi::c_void;
-use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
 use esp_idf_svc::sys::{self, EspError, esp};
 use pudding_core::app::{App, FrameData, MAX_MESH_VERTICES};
 use pudding_core::present::{CHUNK_PX, Layout, STRIP_PX, upscale_nearest};
@@ -83,6 +83,13 @@ const STUCK_US: i64 = 3000;
 /// Mini-Aufträge seit Start (Messung).
 pub static KICKS: AtomicUsize = AtomicUsize::new(0);
 
+/// Tasks, die gerade auf den PPA warten (je Kern höchstens einer): Der
+/// Interrupt am Ende eines Auftrags weckt sie (O1). Vorher warteten sie mit
+/// `yield_now`, das unter FreeRTOS nur gleich oder höher priorisierte Tasks
+/// laufen lässt – die Programme (Priorität 3, z. B. der Browser beim
+/// Scrollen) standen dabei auf beiden Kernen bis zu 20 ms je Bild still.
+static WARTENDE: [AtomicPtr<c_void>; 2] = [const { AtomicPtr::new(core::ptr::null_mut()) }; 2];
+
 /// Zeit in `ppa_do_scale_rotate_mirror` je Kern (µs, Messung).
 pub static SUBMIT_US: [core::sync::atomic::AtomicU32; 2] = [const { core::sync::atomic::AtomicU32::new(0) }; 2];
 
@@ -112,6 +119,16 @@ pub struct Frame {
     pub smooth: bool,
     pub flip: bool,
     pub fb: *mut u16,
+    /// Nur Streifen in diesen Zeilen ausgeben (von, bis); die übrigen stehen
+    /// im Bildspeicher `fb` schon richtig (O1, siehe main.rs). None = alle.
+    pub zeilen: Option<(usize, usize)>,
+}
+
+impl Frame {
+    /// Muss der Streifen mit den Zeilen `y0..y1` ausgegeben werden?
+    fn noetig(&self, y0: usize, y1: usize) -> bool {
+        self.zeilen.is_none_or(|(a, b)| y0 < b && a < y1)
+    }
 }
 
 /// Wo die Puffer eines Kerns gelandet sind (für die Startmeldung).
@@ -155,7 +172,18 @@ unsafe extern "C" fn on_ppa_done(
     if !user_data.is_null() {
         unsafe { (*(user_data as *const AtomicBool)).store(false, Ordering::Release) };
     }
-    false
+    // Wartende wecken (beide: `finish` wartet auf Kern 0 auch auf die
+    // Aufträge von Kern 1; ein überflüssiges Wecken prüft nur erneut).
+    let mut geweckt: sys::BaseType_t = 0;
+    for w in &WARTENDE {
+        let t = w.load(Ordering::Acquire);
+        if !t.is_null() {
+            // SAFETY: `t` ist der Handle eines Tasks, der in `wait_flag`
+            // wartet (eingetragen nur während des Wartens).
+            unsafe { sys::vTaskGenericNotifyGiveFromISR(t.cast(), 0, &mut geweckt) };
+        }
+    }
+    geweckt != 0
 }
 
 impl CoreCtx {
@@ -225,15 +253,29 @@ impl CoreCtx {
 
     /// Wartet, bis `flag` frei ist; schubst den PPA an, falls ein Auftrag
     /// liegen geblieben ist (siehe [`STUCK_US`]).
+    ///
+    /// Blockiert, bis der Interrupt des PPA weckt (höchstens 1 Tick = 1 ms,
+    /// dann erneut prüfen und ggf. anschubsen) – die CPU ist währenddessen
+    /// frei für Tasks jeder Priorität (siehe [`WARTENDE`]).
     fn wait_flag(&self, flag: &AtomicBool) {
         let mut since = now_us();
+        let platz = &WARTENDE[self.core.min(1)];
+        // SAFETY: Handle des laufenden Tasks.
+        let ich = unsafe { sys::xTaskGetCurrentTaskHandle() };
         while flag.load(Ordering::Acquire) {
             if now_us() - since > STUCK_US {
                 self.kick();
                 since = now_us();
             }
-            std::thread::yield_now();
+            platz.store(ich.cast(), Ordering::Release);
+            // fertig geworden, bevor der Task als wartend eingetragen war?
+            if !flag.load(Ordering::Acquire) {
+                break;
+            }
+            // SAFETY: wartet auf die eigene Benachrichtigung (Index 0).
+            unsafe { sys::ulTaskGenericNotifyTake(0, 1, 1) };
         }
+        platz.store(core::ptr::null_mut(), Ordering::Release);
     }
 
     /// 16×16-Mini-Auftrag ohne Merker: Sein Interrupt startet einen
@@ -360,6 +402,9 @@ impl CoreCtx {
                 // einer Gruppe liegen lückenlos hintereinander in einem Platz.
                 let (k0, k1) = (u * GRUPPE, ((u + 1) * GRUPPE).min(l.strips()));
                 let (y0, y1) = (l.strip(k0).0, l.strip(k1 - 1).1);
+                if !f.noetig(y0, y1) {
+                    continue;
+                }
                 let ci = gruppen % slots;
                 gruppen += 1;
                 let t0 = now_us();
@@ -397,6 +442,9 @@ impl CoreCtx {
             }
             // Scharf: Streifen einzeln; die CPU vergrößert, der PPA dreht.
             let (y0, y1) = l.strip(u);
+            if !f.noetig(y0, y1) {
+                continue;
+            }
             let n = (y1 - y0) * f.w;
             strips += 1;
             let t1 = now_us();

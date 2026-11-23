@@ -340,18 +340,6 @@ Planreihenfolge. V3/V4 laufen nebenher (klein).
   Board: Einstellungen gelöscht (`ESP32OS_ERSTEINRICHTUNG=1`) → Assistent
   startet, Autopilot bis „Fertig“, Fotos `docs/nachweise/p4_board_*.png`;
   normale Firmware nach Neustart: „schon erledigt“ (`p4_board_log.txt`).
-- [ ] **P5 Standby und Akku** (Auftrag 12.2; 13.1: Strommessung und
-  Akkuteiler macht der Auftraggeber beim Einlöten des Akkus, Anleitung in
-  STATUS – bis dahin offen) – Bildschirm nach einstellbarer
-  Zeit aus, Ruhezustand, Aufwachen per Power-Knopf oder Touch, Akkustand in
-  der Taskleiste. Nachweis: Log Abschalten + Aufwachen (Knopf und Touch),
-  Foto Taskleiste, Stromverbrauch im Standby gemessen (STATUS).
-  Stand 22.11.: Bildschirm aus / Ruhezustand / Aufwecken per Touch /
-  Ruhezustand aus dem Startmenü am Board nachgewiesen
-  (`docs/nachweise/p5_board_*`), Energie-Seite und Akku in der Taskleiste
-  per PC-Test (`desktop/tests/energie.rs`). Offen (wartet auf Nutzer):
-  PWR-Knopf (Knopfsuche gebaut, braucht Drücken am Board), Strommessung
-  (kein Messgerät), Akkuanzeige am Board (Spannungsteiler).
 - [x] **P6 Screenshot** (Auftrag 12.3) – per Taskleiste oder Geste ein
   Bildschirmfoto als PNG auf die SD-Karte. Nachweis: Autopilot, PNG von der
   SD als Nachweis, Dateiliste im Log.
@@ -381,9 +369,6 @@ Planreihenfolge. V3/V4 laufen nebenher (klein).
   Nachweis: `docs/nachweise/w1_board_log.txt` – SDIO 4 Bit 40 MHz, C6
   erkannt, „Transport zum C6 bereit, WLAN gestartet in 2066 ms“, verbunden
   in 4,7 s mit IP (esp_hosted 3.1.0, esp_wifi_remote 1.6.5).
-- [ ] **W2 C6-Firmware versionsgleich** + Update vom P4 aus. Nachweis: Log mit
-  gleichen Host/Slave-Versionen nach OTA vom P4. Auftrag 13.2: jetzt nicht
-  (WLAN läuft); Anleitung mit Rückweg in STATUS (V4). W5 wartet darauf.
 - [x] **W3 Netze suchen + verbinden per Touch** (dazu der WLAN-Schritt der
   Ersteinrichtung aus P4) (WPA2/WPA3, 802.11ax
   2,4 GHz). Nachweis: Autopilot in Einstellungen, Foto, Log mit PHY-Modus HE.
@@ -404,10 +389,6 @@ Planreihenfolge. V3/V4 laufen nebenher (klein).
   Nachweis: `docs/nachweise/w4_board_log.txt` – normaler Build, Neustart:
   „1 bekannte Netze“ → „automatischer Versuch“ → „verbunden in 4537 ms“;
   PC `kern/tests/wlan.rs` (Abbruch → Wiederverbinden, Trennen von Hand hält an).
-- [ ] **W5 iTWT** zum Stromsparen. Nachweis: Log iTWT-Setup ok.
-  Stand 22.11.: Code fertig (iTWT beim Abdunkeln, Abbau beim Aufwachen);
-  die C6-Firmware 0.0.0 beantwortet die Anfrage nicht
-  (`docs/nachweise/w5_board_log.txt`) → wartet auf W2 (Abweichung).
 - [x] **W6 Signalstärke in der Taskleiste**. Nachweis: Foto.
   Nachweis: `docs/nachweise/w6_board_taskleiste.png` (4 Balken, verbunden);
   Antippen öffnet Einstellungen → WLAN.
@@ -1129,8 +1110,37 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 
 ## H. Optimierung und Abnahme (Auftrag 9)
 
-- [ ] **O1 Optimierung** (Dirty-Rects, IRAM-Hotpaths, PSRAM-Heaps) – Messwerte
-  vorher/nachher in STATUS.
+- [x] **O1 Optimierung** (Dirty-Rects, IRAM-Hotpaths, PSRAM-Heaps) – Messwerte
+  vorher/nachher in STATUS. Nutzer 23.11.: dazu der Umbau für 30 Bilder/s
+  beim Scrollen im Browser (Weg aus der Abweichung „B5, Scrollen mit 30
+  Bildern/s“: NetSurf direkt in den Fensterpuffer, Verschieben per PPA).
+  Nachweis 23.11. (`docs/nachweise/o1/`, Board):
+  - Scrollen im Browser (B5-Ablauf, Wikipedia „ESP32“): **12,1 → 32,2
+    Bilder/s** je Wischbewegung (`o1_scroll_log.txt`, Foto
+    `o1_scroll_nachher.png` ohne Reste). Ursachen und Umbau: (1) die
+    Anzeige wartete mit `yield_now` auf den PPA – unter FreeRTOS laufen
+    dabei nur gleich hohe Prioritäten, der Browser stand auf beiden Kernen
+    bis zu 20 ms je Bild still; jetzt weckt der PPA-Interrupt
+    (`firmware/src/pipeline.rs`) → Verschieben 27 → 4 ms, 19 Bilder/s;
+    (2) der Doppelpuffer des Bildschirms zählte dasselbe Feld aus beiden
+    Bildern doppelt und setzte dann den ganzen Schirm zusammen
+    (`kern::sys::rechtecke_zusammenfassen`) → Zusammensetzen 21 → 6 ms,
+    23,5 Bilder/s; (3) ausgegeben werden nur Streifen, die sich in den
+    letzten drei Bildern geändert haben (3 Bildspeicher,
+    `Spiel::geaenderte_zeilen`) → Ausgabe 27 → 17 ms, 32,2 Bilder/s.
+    Verworfen: Verschieben per PPA (37–41 ms statt 27 – der PPA ist durch
+    die Anzeige ausgelastet) und NetSurf direkt in den Fensterpuffer
+    (nicht mehr nötig).
+  - Desktop-Symbole beim Start: `@icon` 923 → 162 ms, Desktop fertig 4,30
+    → 3,36 s nach dem Einschalten (`o1_icon_log.txt`,
+    `o1_desktop_nachher.png`): Symbole beim Bauen einzeln gepackt
+    (`desktop/build.rs`, 50 KB), Desktop im eigenen Puffer gezeichnet und
+    in einem Aufruf übergeben; Bild gleich (Prüfsummen der PC-Tests).
+  - Gefunden beim Messen: der Browser wurde auf der Wikipedia-Seite beendet
+    („Speicher des Programms voll“) – ein progressives JPEG passte bei
+    zerstückeltem Heap nicht am Stück; die Bildprüfung fragt jetzt den
+    grössten freien Block (`kern::heap::groesster_freier_block`, Test).
+  PC: `kern` (schirm, heap), `desktop` (symbole_wie_streifen) grün.
 - [x] **O2 ELF-Lader von SD prüfen** (`espressif/elf_loader` auf P4) –
   Ergebnis in STATUS, umsetzen falls tragfähig.
   Ergebnis 23.11. (Komponentenseite und README/CHANGELOG von
@@ -1195,8 +1205,37 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   durch). Offen vor O8: GPL-2.0 (NetSurf/KolibriOS) gegen Apache-2.0
   (ESP-IDF/esp_hosted) für das Binär-Release klären.
   Nachweis: Dateien im Repo, Release-Entwurf; Push erst nach Freigabe.
+  Nutzer 23.11.: lokal vorbereiten – Release-Firmware mit `-Release`
+  bauen, Web-Flasher-Seite im Repo, Release-Text auf Englisch; kein
+  Release veröffentlichen, bis der Nutzer OK sagt.
 - [ ] **Wenn Zeit bleibt:** PDF-Betrachter, Kamera-App (OV5647), weitere
-  KolibriOS-C-Programme.
+  KolibriOS-C-Programme. Reihenfolge (Nutzer 23.11.): zuerst
+  PDF-Betrachter, dann Kamera-App.
+
+## Später (v1.1)
+
+Vom Nutzer am 23.11. aus v1.0 genommen – kommt mit einem späteren Update,
+blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
+
+- [ ] **P5 Standby und Akku** (Auftrag 12.2; 13.1: Strommessung und
+  Akkuteiler macht der Auftraggeber beim Einlöten des Akkus, Anleitung in
+  STATUS – bis dahin offen) – Bildschirm nach einstellbarer
+  Zeit aus, Ruhezustand, Aufwachen per Power-Knopf oder Touch, Akkustand in
+  der Taskleiste. Nachweis: Log Abschalten + Aufwachen (Knopf und Touch),
+  Foto Taskleiste, Stromverbrauch im Standby gemessen (STATUS).
+  Stand 22.11.: Bildschirm aus / Ruhezustand / Aufwecken per Touch /
+  Ruhezustand aus dem Startmenü am Board nachgewiesen
+  (`docs/nachweise/p5_board_*`), Energie-Seite und Akku in der Taskleiste
+  per PC-Test (`desktop/tests/energie.rs`). Offen (wartet auf Nutzer):
+  PWR-Knopf (Knopfsuche gebaut, braucht Drücken am Board), Strommessung
+  (kein Messgerät), Akkuanzeige am Board (Spannungsteiler).
+- [ ] **W2 C6-Firmware versionsgleich** + Update vom P4 aus. Nachweis: Log mit
+  gleichen Host/Slave-Versionen nach OTA vom P4. Auftrag 13.2: jetzt nicht
+  (WLAN läuft); Anleitung mit Rückweg in STATUS (V4). W5 wartet darauf.
+- [ ] **W5 iTWT** zum Stromsparen. Nachweis: Log iTWT-Setup ok.
+  Stand 22.11.: Code fertig (iTWT beim Abdunkeln, Abbau beim Aufwachen);
+  die C6-Firmware 0.0.0 beantwortet die Anfrage nicht
+  (`docs/nachweise/w5_board_log.txt`) → wartet auf W2 (Abweichung).
 
 ## Abweichungen
 
@@ -1293,6 +1332,9 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   B5). Weg zu 30 Bildern/s: NetSurf direkt in den Fensterpuffer des Kerns
   zeichnen lassen (spart eine volle Kopie je Bild) und das Verschieben über
   die PPA-Einheit (2D-DMA) statt der CPU – je ein eigener Kern-Eingriff.
+  **Erledigt mit O1 (23.11.): 32,2 Bilder/s** – die Ursache war eine andere
+  (die Anzeige liess beim Warten auf den PPA keine Programme laufen), siehe
+  O1.
 
 - **B2, Rückfallebene ohne JavaScript (22.11.):** Gewünscht war „die Seite
   ohne JavaScript anzeigen“. Automatisch (Zeitgrenze 12 s, JS-Speicher-

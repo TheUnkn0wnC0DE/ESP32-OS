@@ -106,6 +106,13 @@ pub trait Spiel {
     fn unveraendert(&self) -> bool {
         false
     }
+    /// Zeilen (von, bis ausschliesslich), in denen sich das zuletzt
+    /// vorbereitete Bild gegenüber dem vorigen geändert hat; None = alles
+    /// (Standard). Die Firmware gibt dann nur Streifen in diesen Zeilen neu
+    /// aus (O1: Scrollen im Browser).
+    fn geaenderte_zeilen(&self) -> Option<(usize, usize)> {
+        None
+    }
 }
 
 /// Rahmen um jedes Spiel: Home-Taste (Finger auf der Taste erreicht das
@@ -236,6 +243,15 @@ impl Rahmen {
     /// Siehe [`Spiel::unveraendert`].
     pub fn unveraendert(&self) -> bool {
         self.spiel.unveraendert()
+    }
+
+    /// Siehe [`Spiel::geaenderte_zeilen`]; zeichnet der Rahmen selbst etwas
+    /// darüber (Home-Taste, FPS), ändert sich das Bild auch dort → alles.
+    pub fn geaenderte_zeilen(&self) -> Option<(usize, usize)> {
+        if !self.spiel.eigene_home_taste() || !self.spiel.eigene_fps() {
+            return None;
+        }
+        self.spiel.geaenderte_zeilen()
     }
 }
 

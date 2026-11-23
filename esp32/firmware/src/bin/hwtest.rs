@@ -313,7 +313,7 @@ fn main() {
         let t0 = hw::now_us();
         let fb = disp.acquire();
         let wait = hw::now_us() - t0;
-        stats = pipeline.render(&pic, Frame { w, h, smooth, flip, fb });
+        stats = pipeline.render(&pic, Frame { w, h, smooth, flip, fb, zeilen: None });
         disp.present();
         // Arbeitszeit ohne Warten auf den freien Bildspeicher (VSync).
         work_us = (hw::now_us() - start - wait) as u32;

@@ -67,6 +67,11 @@ fn dirty_rects_gleich_vollbild_und_klein() {
         }
         std::thread::sleep(Duration::from_millis(5));
         flaechen.push(vergleiche(&mut schirm));
+        if s == 1 {
+            // O1: nur die Zeile des Pixels hat sich geändert
+            let z = schirm.letzte_zeilen.expect("Zeilen");
+            assert!(z.1 - z.0 <= 2 && z.0 > 0, "Zeilen nach dem Pixel: {z:?}");
+        }
         if s == 0 {
             // Start: beide Puffer wurden neu angelegt, einmal leer nachziehen
             vergleiche(&mut schirm);
@@ -82,4 +87,25 @@ fn dirty_rects_gleich_vollbild_und_klein() {
     assert!(flaechen[3] <= 2 * 200 * 150 && flaechen[3] < 640 * 360 / 2, "Verschieben: {}", flaechen[3]);
     eprintln!("Flächen je Schritt: {flaechen:?}");
     kern::beende(pid);
+}
+
+/// O1: Gleiche Felder aus beiden Bildern des Doppelpuffers zählen einmal;
+/// statt des ganzen Bildschirms wird höchstens die Hülle zusammengesetzt.
+#[test]
+fn rechtecke_zusammenfassen_scrollen() {
+    use kern::grafik::Clip;
+    let feld = Clip { x0: 5, y0: 40, x1: 635, y1: 300 };
+    // Scrollen: dasselbe Feld jetzt und im vorigen Bild, dazu der Rollbalken
+    let balken = Clip { x0: 630, y0: 40, x1: 640, y1: 300 };
+    let r = sys::rechtecke_zusammenfassen(vec![feld, balken, feld]);
+    let huelle = Clip { x0: 5, y0: 40, x1: 640, y1: 300 };
+    assert_eq!(r, vec![huelle], "ein Feld plus Rollbalken → Hülle");
+    assert!(huelle.flaeche() < 640 * 360, "nicht der ganze Bildschirm");
+    // enthaltenes Rechteck entfällt, getrennte kleine bleiben einzeln
+    let klein = Clip { x0: 10, y0: 50, x1: 20, y1: 60 };
+    assert_eq!(sys::rechtecke_zusammenfassen(vec![feld, klein]), vec![feld]);
+    let a = Clip { x0: 0, y0: 0, x1: 10, y1: 10 };
+    let b = Clip { x0: 600, y0: 300, x1: 610, y1: 310 };
+    assert_eq!(sys::rechtecke_zusammenfassen(vec![a, b, a]), vec![a, b]);
+    assert!(sys::rechtecke_zusammenfassen(vec![]).is_empty());
 }

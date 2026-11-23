@@ -77,7 +77,11 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   localStorage dauerhaft, Masse aus dem Layout, DOMContentLoaded früh,
   Formulare mit input/submit/change, Verlauf; am Board JS-Seite mit
   Neu-Layout nach Klick und Eingabe. Grenzen als Abweichung in PLAN.
-  Weiter: O1, O4, O6.
+- ✔ O1 Optimierung: Scrollen im Browser 12,1 → 32,2 Bilder/s (die Anzeige
+  liess beim Warten auf den PPA keine Programme laufen; Bildschirm nur noch
+  wo geändert zusammengesetzt und ausgegeben), Desktop-Symbole 923 → 162 ms.
+  Nebenbei: Browser-Absturz bei grossem JPEG und zerstückeltem Heap behoben.
+  Weiter: O4, O6.
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 
@@ -600,6 +604,12 @@ Logisch 640×360, PPA ×2 scharf → Panel 1280×720 quer, ≈ 294 ppi:
 
 ## Messwerte
 
+- O1 Scrollen im Browser (23.11., Board, Wikipedia „ESP32“, je
+  Wischbewegung): vorher 12,1 Bilder/s, nachher 32,2 Bilder/s (Verschieben
+  27 → 4 ms, Zusammensetzen 21 → 6 ms, Ausgabe 27 → 17 ms je Bild;
+  `docs/nachweise/o1/o1_scroll_log.txt`).
+- O1 Desktop-Symbole beim Start: `@icon` 923 → 162 ms, Desktop fertig 4,30 →
+  3,36 s nach dem Einschalten (`o1_icon_log.txt`).
 - O7 Startzeit (23.11., ab Einschalten bis Desktop mit Symbolen): vorher
   5,57 s, nachher 4,16 s. Davon ~2,0 s Bootloader/Laden/PSRAM bis
   „ESP32-OS startet“, 0,13 s bis zu den Einstellungen, ~0,8 s Symbole.
@@ -621,7 +631,8 @@ Logisch 640×360, PPA ×2 scharf → Panel 1280×720 quer, ≈ 294 ppi:
 - P3 `@icon` (Desktop) zeichnet am Board in 360–650 ms neu (nach „alles
   neu zeichnen“, z. B. Sprache/Hintergrund). Währenddessen reagiert ein
   anderes Programm verzögert; Tipps in sein eigenes Neuzeichnen gehen wie
-  in KolibriOS verloren → in O1 beschleunigen.
+  in KolibriOS verloren → in O1 beschleunigen. Erledigt (O1): 162 ms beim
+  Start.
 
 - P2 JPEG 640×480 (4:2:0) am Board: Hardware-JPEG 55,8 ms inkl.
   YUV→RGB in Software (63 ms im Betrachter inkl. Lesen), Software-Dekoder
@@ -632,7 +643,9 @@ Logisch 640×360, PPA ×2 scharf → Panel 1280×720 quer, ≈ 294 ppi:
   gezeichnete Bilder/s (Compositor-Prüfung 0,01 ms); Fenster 240×160 im
   Kreis verschieben: 55,0 FPS, Compositor 7,3 ms/Bild für ~95 000 px
   (Dirty-Rects, Doppelpuffer), Streifen + PPA ~10–11 ms Ausgabe, p99
-  14,5 ms. Optimierung (Hintergrund unter Fenstern nicht füllen) → O1.
+  14,5 ms. Optimierung (Hintergrund unter Fenstern nicht füllen) → O1:
+  war schon in B5 erledigt (unter einem deckenden Fenster wird nichts
+  gefüllt).
 - K1 Board: 40 Programmstarts (normal/Absturz/Speicher voll/beendet) in
   ~5 s, PSRAM-Verlust ab Runde 2: 0 B.
 

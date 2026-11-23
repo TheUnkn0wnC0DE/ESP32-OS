@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32-OS Web Flasher</title>
+<!-- ESP Web Tools (Apache-2.0): flashing from the browser over Web Serial -->
+<script type="module" src="https://unpkg.com/esp-web-tools@10.1.0/dist/web/install-button.js?module"></script>
+<style>
+  :root { --text: #1d2330; --muted: #5a6475; --bg: #f6f7f9; --card: #ffffff; --accent: #2f6fd6; --warn: #8a5a00; --warnbg: #fff4dd; }
+  @media (prefers-color-scheme: dark) {
+    :root { --text: #e6e9ef; --muted: #a5adbb; --bg: #14171c; --card: #1d2129; --accent: #6d9cf0; --warn: #ffd27a; --warnbg: #3a2e12; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  .card { background: var(--card); border-radius: 10px; padding: 20px 22px; margin: 0 0 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  h2 { font-size: 1.15rem; margin: 0 0 10px; }
+  ol, ul { padding-left: 1.3em; margin: 0; }
+  li { margin: 4px 0; }
+  .warn { background: var(--warnbg); color: var(--warn); border-radius: 8px; padding: 12px 14px; margin: 14px 0 0; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .92em; }
+  a { color: var(--accent); }
+  esp-web-install-button { display: inline-block; margin: 8px 0 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ESP32-OS Web Flasher</h1>
+  <p class="sub">Install ESP32-OS on a Waveshare ESP32-P4-WIFI6-Touch-LCD-5 directly from your browser.</p>
+
+  <div class="card">
+    <h2>Install</h2>
+    <esp-web-install-button manifest="firmware/manifest.json">
+      <span slot="unsupported">Your browser does not support Web Serial. Please use Chrome or Edge on a desktop computer.</span>
+      <span slot="not-allowed">Web Serial needs a secure connection (https).</span>
+    </esp-web-install-button>
+    <ol>
+      <li>Connect the board's <strong>USB TO UART</strong> port to your computer.</li>
+      <li>Click <em>Connect</em> and pick the serial port of the board.</li>
+      <li>If the board is not detected: hold <strong>BOOT</strong>, press <strong>RESET</strong>, release <strong>BOOT</strong>, then try again.</li>
+      <li>After flashing, press <strong>RESET</strong>. The first start opens the setup assistant (language, keyboard, Wi-Fi).</li>
+    </ol>
+    <p class="warn">Choosing <em>Erase device</em> deletes everything on the internal flash, including saved settings, Wi-Fi networks and game saves. Without erasing, ESP32-OS, Doom and Quake are replaced and your data partition is kept.</p>
+  </div>
+
+  <div class="card">
+    <h2>What gets installed</h2>
+    <ul>
+      <li>Bootloader with automatic rollback, partition table</li>
+      <li>ESP32-OS (slot A), the Doom and Quake programs</li>
+      <li>No game data: Doom and Quake need the shareware files on the microSD card (see the README).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Manual flashing</h2>
+    <p>With <a href="https://github.com/esp-rs/espflash">espflash</a> and the files of the release:</p>
+    <p><code>espflash write-bin 0x2000 bootloader.bin</code><br>
+       <code>espflash write-bin 0x8000 partition-table.bin</code><br>
+       <code>espflash write-bin 0x10000 otadata-leer.bin</code><br>
+       <code>espflash write-bin 0x20000 esp32os.bin</code><br>
+       <code>espflash write-bin 0xC00000 doomapp.bin</code><br>
+       <code>espflash write-bin 0xE00000 quakeapp.bin</code></p>
+    <p>Check the files against <code>SHA256SUMS</code> from the release first.</p>
+  </div>
+
+  <p class="sub">ESP32-OS is an experimental hobby project. Source code and licenses: <a href="https://github.com/TheUnkn0wnC0DE/ESP32-OS">github.com/TheUnkn0wnC0DE/ESP32-OS</a>.</p>
+</main>
+</body>
+</html>
