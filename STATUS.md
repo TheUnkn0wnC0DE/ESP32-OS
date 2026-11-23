@@ -62,7 +62,12 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   Ablageort. Abweichung: kein Herunterladen per WLAN (keine offizielle
   Quelle der losen Dateien). Nebenbei: Notizen/Musik ohne SD-Karte zeigten
   auf einen Pfad, den der Kern nicht kennt (jetzt `/rd/1/…`).
-  Weiter: S-Review, Block H, Rest von B7.
+- ✔ S-Review: 3 Befunde – unbrauchbare Spieldaten führten in den alten
+  Launcher (jetzt ganz weg: zurück in den Desktop mit Hinweis, am Board
+  gezeigt), Pudding ohne Home-Taste als Abweichung, Release-Prüfung lehnt
+  jetzt alle Entwicklungs-Schalter ab.
+- ✔ O3 Lizenz: Ordner `LICENSES/` mit allen Lizenztexten, README verweist.
+  Weiter: Block H (O1, O2, O4–O7), Rest von B7.
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 

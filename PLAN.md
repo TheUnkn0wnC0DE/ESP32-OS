@@ -1070,7 +1070,27 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Hinweis“, Foto `s5_board_hinweis.png`; Quake von der SD: S4.
   Abweichungen: kein Herunterladen per WLAN, Doom-Erststart am Board nicht
   erneut ausgelöst (siehe Abweichungen).
-- [ ] **S-Review** – Review-Subagent.
+- [x] **S-Review** – Review-Subagent.
+  Nachweis 23.11.: Review des Diffs 8641d23..42645ad (Block G) gegen PLAN und
+  Auftrag 9/12.8/13.8: Start- und Rückweg, Ordner, Symbole, Quake-Abfrage,
+  S5-Hinweis und -Prüfung stimmen; drei Befunde, behoben:
+  1. Liessen sich Doom/Quake-Daten im Spiel-Programm nicht laden (Datei da,
+     aber beschädigt/abgeschnitten – die Prüfung im Desktop sieht nur, ob
+     sie da ist), fiel die Firmware in den alten Launcher zurück. Der
+     Launcher ist jetzt ganz aus der Firmware; stattdessen Merker im NVS,
+     Neustart in den Desktop, dort Hinweis „Spieldaten unbrauchbar“
+     (Selbsttest-Builds bleiben nach dem Test stehen).
+     Board (Runde 64, `docs/nachweise/s_review/`; Quake-Programm mit
+     `ESP32OS_SPIELDATEN_TEST` sucht die PAK in einem leeren Testordner):
+     Quake-Symbol → quakeapp → „Spieldaten nicht ladbar – zurück in den
+     Desktop“ → Neustart → „Spieldaten unbrauchbar – Hinweis im Desktop“,
+     Foto mit dem Hinweis.
+  2. Pudding-Panik ohne Home-Taste des Rahmens – als Abweichung
+     eingetragen (Ersatz „ZUM DESKTOP“).
+  3. Die Release-Prüfung von `bauen_flashen.ps1 -Release` lehnte nur
+     WLAN-Variablen ab – jetzt alle Entwicklungs-Schalter (`ESP32OS_*`,
+     `KERN_*TEST`, `KONSOLE_AUTOPILOT/BILDER/RUNDGANG/START/WEICH`);
+     am PC geprüft: mit `ESP32OS_SPIELDATEN_TEST` bricht `-Release` ab.
 
 ## H. Optimierung und Abnahme (Auftrag 9)
 
@@ -1078,8 +1098,16 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   vorher/nachher in STATUS.
 - [ ] **O2 ELF-Lader von SD prüfen** (`espressif/elf_loader` auf P4) –
   Ergebnis in STATUS, umsetzen falls tragfähig.
-- [ ] **O3 Lizenz** – GPL-2.0-Vermerk für übernommenen KolibriOS-/NetSurf-Code
+- [x] **O3 Lizenz** – GPL-2.0-Vermerk für übernommenen KolibriOS-/NetSurf-Code
   und -Daten im Repo. Nachweis: Datei `LICENSES/…` + README-Abschnitt.
+  Nachweis 23.11.: `LICENSE` (GPL-2.0, gilt für ESP32-OS als Ganzes),
+  neuer Ordner `LICENSES/` mit den Lizenztexten aller fremden Teile, aus den
+  heruntergeladenen Quellen unverändert übernommen (GPL-2.0, NetSurf-
+  COPYING, MIT je NetSurf-Bibliothek mit ihrer Copyright-Zeile, utf8proc,
+  QuickJS-ng aus dem Kopf von `quickjs.h`, zlib, nanomp3 MIT/Apache-2.0,
+  minimp3 CC0, Apache-2.0 für ESP-IDF/esp_hosted) und `LICENSES/README.md`
+  (welche Datei für welchen Teil); README-Abschnitt „License“ verweist
+  darauf, `THIRD_PARTY_NOTICES.md` listet Copyright und Herkunft.
 - [ ] **O4 Abnahme-Durchlauf 9** – jeder Punkt aus 9 einmal per Autopilot am
   Board. Nachweis: Fotos/Logs.
 - [ ] **O5 1 h Langtest am Board** (inkl. Browser + WLAN) ohne Absturz.
@@ -1108,6 +1136,12 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 
 ## Abweichungen
 
+- **S1, Pudding-Panik ohne Home-Taste des Rahmens (23.11., S-Review):**
+  Auftrag 13.8 nennt „mit der Home-Taste zurück“. Pudding-Panik hat seit der
+  Konsole eine eigene Steuerung (Pause-/Menü-Knopf, der Rahmen zeichnet für
+  dieses Spiel keine Home-Taste, `eigene_home_taste`), oben links liegt
+  Spielinhalt. Ersatz: der Eintrag „ZUM DESKTOP“ im Hauptmenü des Spiels
+  (vorher „ZUR KONSOLE“), am Board per Touch nachgewiesen (S1).
 - **S5, Spieldaten per WLAN herunterladen (23.11.):** Der Auftrag lässt
   „von der SD-Karte laden oder per WLAN herunterladen“ zu; umgesetzt ist die
   SD-Karte. Für das Herunterladen fehlt eine Quelle der Rohdateien: die

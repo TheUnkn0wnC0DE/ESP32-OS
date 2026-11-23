@@ -1,0 +1,21 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2187) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2311) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2839) pudding_p4: Spiel geladen: intern frei 102 KB (größter Block 31 KB), DMA-fähig 64 KB
+I (2840) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (29083) pudding_p4: [debug] Spiel starten: Quake
+I (29800) pudding_p4: Spiel Some(Quake) (Neustart ins Spiel)
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2018) pudding_p4: Programm „esp32os_a“, Startziel Quake
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (1351) pudding_p4: Programm „quakeapp“, Startziel Quake
+I (1383) pudding_fw::slots: Programm „quakeapp“ als gültig markiert (war in Prüfung, Code 0)
+I (2701) pudding_p4: Startziel Quake, Spielstand neu
+E (2759) pudding_fw::quake_board: Quake: /sdcard/ESP32-OS/Spieldaten_Test/quake/pak0.pak: No such file or directory (os error 2)
+E (3279) pudding_p4: Quake: Spieldaten nicht ladbar – zurück in den Desktop
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2033) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2152) pudding_p4: Startziel Konsole, Spielstand geladen
+W (2680) pudding_p4: Quake: Spieldaten unbrauchbar – Hinweis im Desktop
+I (2681) pudding_p4: Spiel geladen: intern frei 101 KB (größter Block 31 KB), DMA-fähig 62 KB
+I (2714) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (war in Prüfung, Code 0)

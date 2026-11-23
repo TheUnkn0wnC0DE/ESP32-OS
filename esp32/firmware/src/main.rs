@@ -19,7 +19,6 @@
 //! Bibliotheken wie in der PC-Simulation.
 
 use core::sync::atomic::{AtomicU32, Ordering};
-use konsole::launcher::Launcher;
 use konsole::start::{self, Speicher};
 use konsole::{Rahmen, Spiel, SpielId, Wechsel};
 use pudding_core::app::{FrameData, Perf};
@@ -383,6 +382,17 @@ fn main() {
                 log::error!("@start: {e:?}");
             }
             let prog = option_env!("ESP32OS_START").unwrap_or("@start");
+            // Doom/Quake konnten ihre Spieldaten nicht laden → Hinweis (S5)
+            if let Some(n) = nvs.as_deref()
+                && let Some(id) = n.lesen(desktop::shell::SPIEL_FEHLER_SCHLUESSEL)
+            {
+                n.loeschen(desktop::shell::SPIEL_FEHLER_SCHLUESSEL);
+                if let Some(id) = id.first().copied().and_then(SpielId::aus_u8) {
+                    log::warn!("{id:?}: Spieldaten unbrauchbar – Hinweis im Desktop");
+                    let (titel, text) = desktop::shell::spieldaten_hinweis(id, true);
+                    desktop::shell::melden(titel, &text);
+                }
+            }
             if let Some((name, grund)) = &absturz {
                 log::warn!("Letzter Neustart nach Absturz von „{name}“: {grund}");
                 desktop::shell::absturz_melden(name, grund);
@@ -406,8 +416,29 @@ fn main() {
             (SpielId::Konsole, Box::new(d) as Box<dyn Spiel>)
         }
         _ => {
-            let auswahl = nvs.as_deref().map(|n| start::launcher_auswahl(n)).unwrap_or(SpielId::Pudding);
-            (SpielId::Konsole, Box::new(Launcher::new(auswahl)))
+            // Den alten Launcher gibt es nicht mehr (S0). Hierher kommen nur
+            // Selbsttest-Builds (bleiben stehen) und Doom/Quake, deren
+            // Spieldaten sich nicht laden liessen (beschädigt, abgeschnitten):
+            // zurück in den Desktop, der den Hinweis zeigt (S-Review).
+            if selbsttest || dateitest {
+                log::info!("Selbsttest fertig – das Board bleibt stehen");
+                loop {
+                    std::thread::sleep(std::time::Duration::from_secs(3600));
+                }
+            }
+            log::error!("{ziel:?}: Spieldaten nicht ladbar – zurück in den Desktop");
+            if ziel != SpielId::Konsole
+                && let Some(n) = nvs.as_deref()
+            {
+                n.schreiben(desktop::shell::SPIEL_FEHLER_SCHLUESSEL, &[ziel.als_u8()]);
+            }
+            slots::umschalten(SpielId::Konsole);
+            // SAFETY: Neustart in den Desktop; der Merker steht im NVS.
+            unsafe { esp_idf_svc::sys::esp_restart() };
+            #[allow(unreachable_code)]
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
         }
     };
     let mut rahmen = Rahmen::new(spiel);

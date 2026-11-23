@@ -9,8 +9,14 @@ use std::sync::Mutex;
 
 /// Ordner für Quake (Konfiguration), ohne „/“ am Ende.
 pub const ORDNER: &str = "/daten/quake";
-/// Spieldaten auf der SD-Karte (mit `fopen` lesbar).
-pub const PAK_DATEI: &str = "/sdcard/ESP32-OS/quake/pak0.pak";
+/// Spieldaten auf der SD-Karte (mit `fopen` lesbar). Entwicklungs-Build
+/// `ESP32OS_SPIELDATEN_TEST`: leerer Testordner – stellt unbrauchbare Daten
+/// nach, ohne die vorhandenen anzufassen (S-Review-Nachweis).
+pub const PAK_DATEI: &str = if option_env!("ESP32OS_SPIELDATEN_TEST").is_some() {
+    "/sdcard/ESP32-OS/Spieldaten_Test/quake/pak0.pak"
+} else {
+    "/sdcard/ESP32-OS/quake/pak0.pak"
+};
 
 static DATEI: Mutex<Option<std::fs::File>> = Mutex::new(None);
 

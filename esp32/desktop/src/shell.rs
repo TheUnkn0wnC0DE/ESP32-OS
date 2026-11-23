@@ -160,11 +160,33 @@ pub fn spieldaten_fehlen(id: konsole::SpielId) -> Option<(&'static str, String)>
     // Testordner
     let test = option_env!("ESP32OS_SPIELDATEN_TEST").is_some();
     let da = |p: &str| crate::dateimanager::art(&if test { p.replace("/ESP32-OS/", "/ESP32-OS/Spieldaten_Test/").replace("/sys/", "/sys/Spieldaten_Test/") } else { p.to_string() }) == Some(false);
-    let (name, datei, ordner) = match id {
-        konsole::SpielId::Doom if !DOOM_WAD.iter().any(|p| da(p)) => ("Doom", "DOOM1.WAD", "doom"),
-        konsole::SpielId::Quake if !da(QUAKE_PAK) => ("Quake", "pak0.pak", "quake"),
-        _ => return None,
-    };
+    match id {
+        konsole::SpielId::Doom if !DOOM_WAD.iter().any(|p| da(p)) => Some(spieldaten_hinweis(id, false)),
+        konsole::SpielId::Quake if !da(QUAKE_PAK) => Some(spieldaten_hinweis(id, false)),
+        _ => None,
+    }
+}
+
+/// NVS-Schlüssel: das Spiel-Programm (Doom/Quake) konnte seine Spieldaten
+/// nicht laden (beschädigt, abgeschnitten) und ist in den Desktop zurück –
+/// der Desktop zeigt beim Start den Hinweis (`spieldaten_hinweis(id, true)`).
+pub const SPIEL_FEHLER_SCHLUESSEL: &str = "spiel_fehler";
+
+/// Hinweis (Titel, Text) zu den Spieldaten von Doom/Quake; `unbrauchbar`:
+/// die Datei war da, liess sich aber nicht laden.
+pub fn spieldaten_hinweis(id: konsole::SpielId, unbrauchbar: bool) -> (&'static str, String) {
+    let (name, datei, ordner) = if id == konsole::SpielId::Quake { ("Quake", "pak0.pak", "quake") } else { ("Doom", "DOOM1.WAD", "doom") };
+    if unbrauchbar {
+        let text = match kern::sprache::aktuell() {
+            kern::sprache::Sprache::Deutsch => format!(
+                "{name} konnte {datei} nicht laden (beschädigt oder unvollständig). Shareware von id Software, nicht in ESP32-OS; nur unverändert und kostenlos weitergeben. Datei neu nach ESP32-OS/{ordner}/ auf die SD-Karte legen."
+            ),
+            kern::sprache::Sprache::Englisch => format!(
+                "{name} could not load {datei} (damaged or incomplete). Shareware by id Software, not in ESP32-OS; pass on only unchanged and free of charge. Put the file again in ESP32-OS/{ordner}/ on the SD card."
+            ),
+        };
+        return (kern::sprache::t("Game data unusable", "Spieldaten unbrauchbar"), text);
+    }
     let text = match kern::sprache::aktuell() {
         kern::sprache::Sprache::Deutsch => format!(
             "{name} braucht {datei} (Shareware von id Software, nicht in ESP32-OS enthalten; darf nur unverändert und kostenlos weitergegeben werden). Lege die Datei auf die SD-Karte nach ESP32-OS/{ordner}/."
@@ -173,7 +195,7 @@ pub fn spieldaten_fehlen(id: konsole::SpielId) -> Option<(&'static str, String)>
             "{name} needs {datei} (shareware by id Software, not included in ESP32-OS; may only be passed on unchanged and free of charge). Put the file on the SD card in ESP32-OS/{ordner}/."
         ),
     };
-    Some((kern::sprache::t("Game data missing", "Spieldaten fehlen"), text))
+    (kern::sprache::t("Game data missing", "Spieldaten fehlen"), text)
 }
 
 /// Programm starten (wie Funktion 70.7 mit /sys/<name>).

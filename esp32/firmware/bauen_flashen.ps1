@@ -70,11 +70,14 @@ if ($Release) {
     foreach ($ziel in 'Process', 'User', 'Machine') {
         $alle = [Environment]::GetEnvironmentVariables($ziel)
         foreach ($k in $alle.Keys) {
-            if ($k -like 'ESP32OS_WLAN*') { $gesetzt += "$k ($ziel)" }
+            # WLAN-Zugangsdaten und alle Entwicklungs-Schalter (Autopilot,
+            # Testordner, Spiel-Tippen, Selbsttests, Fotos …) – sie wirken
+            # zur Übersetzungszeit und gehören nie in ein Release
+            if ($k -like 'ESP32OS_*' -or $k -like 'KERN_*TEST' -or $k -in 'KONSOLE_AUTOPILOT', 'KONSOLE_BILDER', 'KONSOLE_RUNDGANG', 'KONSOLE_START', 'KONSOLE_WEICH') { $gesetzt += "$k ($ziel)" }
         }
     }
     if ($gesetzt.Count -gt 0) {
-        throw ('Release: WLAN-Umgebungsvariablen gesetzt, bitte entfernen: ' + ($gesetzt -join ', '))
+        throw ('Release: WLAN- bzw. Entwicklungs-Variablen gesetzt, bitte entfernen: ' + ($gesetzt -join ', '))
     }
 }
 # Prüfung 3: Abbild enthält weder SSID noch Passwort aus wlan.local. Gibt nur

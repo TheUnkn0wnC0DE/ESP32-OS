@@ -217,8 +217,8 @@ ESP32-OS as a whole – in particular everything under `esp32/` and the
 firmware built from it – is licensed under the **GNU General Public License
 v2.0** – see [`LICENSE`](LICENSE). It contains code and data from KolibriOS
 (GPL-2.0), doomgeneric and quakegeneric (GPL-2.0-or-later) and builds on
-NetSurf (GPL-2.0-only), its MIT-licensed libraries, QuickJS-ng (MIT) and
-zlib.
+NetSurf (GPL-2.0-only), its MIT-licensed libraries, QuickJS-ng (MIT),
+zlib and the MP3 decoder nanomp3 (MIT OR Apache-2.0, based on minimp3, CC0).
 
 Exception: the stand-alone crates of the root Cargo workspace, **`spatz`**
 (software 3D engine) and **`pudding`** (PC version of the game), are
@@ -228,6 +228,7 @@ licensed under **MIT OR Apache-2.0**, as declared in their `Cargo.toml`
 When they are built into the ESP32-OS firmware, the firmware as a whole is
 GPL-2.0.
 
-Details: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+Details: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md); the license
+texts of all third-party components are in [`LICENSES/`](LICENSES/README.md).
 
 Doom and Quake game data are not included.
