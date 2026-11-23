@@ -1,0 +1,21 @@
+O5 – 1 h Langtest am Board (23.11., Waveshare ESP32-P4, WLAN über C6)
+
+Ablauf: Firmware mit Autopilot (Start nach WLAN), Desktop startet NetSurf
+mit https://de.m.wikipedia.org/wiki/Spezial:Zufällige_Seite, danach lädt
+der Autopilot die Seite immer wieder neu; Fotos nach 600, 1800 und 3500 s.
+Laufzeit 3700 s (letzte Zeile I (3697938)).
+
+Ergebnis:
+- ein einziger Start (rst:0x1 POWERON beim Einschalten), kein weiterer
+  Reset, keine Panic, kein Guru Meditation, kein Stacküberlauf, kein assert
+- 36 Neuladungen des Artikels (Luka_Hodak), Abrufe gleichmässig über die
+  Stunde verteilt (je 10 Minuten 73–79 Abrufe), alle mit 200/301/302/304
+- Browser-Heap am Ende 4410 KB, Spitze 7444 KB von 10 MB; Zwischenspeicher
+  1256 KB (Grenze 1536 KB)
+- Fotos: Artikel fertig geladen, WLAN-Symbol und Taskleiste da
+  (o5_board_600s.png, o5_board_1800s.png, o5_board_3500s.png)
+
+Log: o5_board_log.txt (geschwärzt mit log_schwaerzen: „keine Zugangsdaten
+im Log“). Weggelassen sind nur die 1836 Zeilen „pudding_p4: Desktop: …
+Bilder/s“ (Bildrate des Compositors alle 2 s), alles andere vollständig;
+Ablagepfade der Fotos auf den Dateinamen gekürzt.

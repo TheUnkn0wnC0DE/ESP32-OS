@@ -1,0 +1,26 @@
+B7 Board (23.11., Autopilot, Start nach WLAN):
+  browser --daten=/daten/netsurf_test data:text/html,<button onclick=p.append('+')>Klick</button>
+          <p style=height:7em>?</p><input oninput=p.textContent=this.value>
+          <script>p=document.querySelector('p');p.textContent='JS';p.style.background='#0c0'</script>
+  (eigener Datenordner für Tests; Programmargumente höchstens 256 Zeichen, darum so knapp)
+
+Autopilot (logische Koordinaten 640x360, ms ab Start):
+  40 s   Foto                                  -> Skript lief: Block grün mit „JS“
+                                                  (b7_board_js_seite.png, Log: ns_js Skript 74 Byte, 3 ms)
+  48000  „Klick“ antippen (30,100)             -> onclick hängt „+“ an
+  51000  „Klick“ nochmals antippen             -> „JS++“, Neu-Layout nach Klick
+  56 s   Foto                                  -> b7_board_nach_klick.png
+                                                  (Statuszeile „Daten können nicht gesendet werden“: NetSurf
+                                                  meldet so einen Knopf ohne Formular)
+  64000  Feld antippen (60,275)                -> Bildschirmtastatur
+  68000–69550  drei Tasten antippen            -> angekommen ist ein Zeichen „y“ (die Tastatur lag anders
+                                                  als bei B6, die Tastenlagen von B6 passten nicht)
+  75 s   Foto                                  -> „y“ im Feld, oninput hat es in den Block geschrieben:
+                                                  Eingabe → Ereignis → Neu-Layout (b7_board_nach_eingabe.png)
+
+Ein Start (rst:0x1 POWERON), kein Reset, keine Panic. Log: b7_board_log.txt (geschwärzt, ohne die
+37 Zeilen „pudding_p4: Desktop: … Bilder/s“, Fotopfade auf den Dateinamen gekürzt).
+
+PC-Tests dazu (64 Bit und i686): javascript_aendert_seite, javascript_neu_layout, javascript_formular
+(Tippen/Antippen), javascript_auswahl, javascript_fetch_xhr, javascript_localstorage, javascript_masse,
+javascript_fenster_hilfen, javascript_grenzen, javascript_modern.

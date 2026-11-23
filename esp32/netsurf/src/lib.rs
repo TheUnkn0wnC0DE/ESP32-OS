@@ -725,6 +725,535 @@ mod tests {
 
     /// B7: Skripte der Seite laufen in QuickJS und ändern das DOM (vor dem
     /// Layout), Ereignisse, Timer, Promise-Aufträge, console, Fehler.
+    /// Kleiner HTTP-Prüfserver: Pfad → (Kopfzeilen, Inhalt); POST-Inhalt
+    /// kommt bei „/post“ als Antwort zurück.
+    fn pruefserver(antworten: fn(&str) -> (u16, &'static str, String)) -> u16 {
+        use std::io::{Read, Write};
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                std::thread::spawn(move || {
+                    let mut s = s;
+                    let mut kopf = Vec::new();
+                    let mut b = [0u8; 1];
+                    while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                        kopf.push(b[0]);
+                    }
+                    let k = String::from_utf8_lossy(&kopf).to_string();
+                    let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                    let laenge = k.lines().find_map(|z| z.to_ascii_lowercase().strip_prefix("content-length:").map(|v| v.trim().parse::<usize>().unwrap_or(0))).unwrap_or(0);
+                    let mut rumpf = vec![0u8; laenge];
+                    let _ = s.read_exact(&mut rumpf);
+                    let (status, zusatz, inhalt) = if pfad == "/post" {
+                        (200, "Content-Type: text/plain\r\n", format!("erhalten:{}", String::from_utf8_lossy(&rumpf)))
+                    } else if pfad == "/cookie" {
+                        // Cookies der Anfrage zurück
+                        let c = k.lines().find_map(|z| z.strip_prefix("Cookie:").or_else(|| z.strip_prefix("cookie:"))).unwrap_or("").trim().to_string();
+                        (200, "Content-Type: text/plain\r\n", format!("cookies:{c}"))
+                    } else if pfad == "/setzen" {
+                        (200, "Content-Type: text/plain\r\nSet-Cookie: srv=2; Path=/\r\n", "gesetzt".into())
+                    } else {
+                        antworten(&pfad)
+                    };
+                    let _ = s.write_all(format!("HTTP/1.0 {status} X\r\n{zusatz}Content-Length: {}\r\n\r\n{inhalt}", inhalt.len()).as_bytes());
+                });
+            }
+        });
+        port
+    }
+
+    /// B7: fetch und XMLHttpRequest über NetSurfs Abruf – JSON, Status 404,
+    /// POST mit Inhalt, XHR mit responseType „json“, fremde Herkunft nur mit
+    /// Access-Control-Allow-Origin; das Ergebnis ändert die Seite.
+    #[test]
+    fn javascript_fetch_xhr() {
+        c(javascript_fetch_xhr_innen);
+    }
+
+    fn javascript_fetch_xhr_innen() {
+        if im_eigenen_prozess("javascript_fetch_xhr") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        // fremde Herkunft (anderer Port)
+        let fremd = pruefserver(|pfad| match pfad {
+            "/offen" => (200, "Content-Type: text/plain\r\nAccess-Control-Allow-Origin: *\r\n", "frei".into()),
+            _ => (200, "Content-Type: text/plain\r\n", "geheim".into()),
+        });
+        FREMD.store(fremd, std::sync::atomic::Ordering::Relaxed);
+        static FREMD: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(0);
+        let port = pruefserver(|pfad| match pfad {
+            "/daten.json" => (200, "Content-Type: application/json\r\n", r#"{"wert":42,"text":"Grüße"}"#.into()),
+            "/langsam.png" => {
+                // DOMContentLoaded wartet nicht auf das Bild
+                std::thread::sleep(std::time::Duration::from_millis(1500));
+                (200, "Content-Type: image/png\r\n", "x".into())
+            }
+            "/" => {
+                let f = FREMD.load(std::sync::atomic::Ordering::Relaxed);
+                (
+                    200,
+                    "Content-Type: text/html; charset=utf-8\r\n",
+                    format!(
+                        r#"<html><body style="margin:0;background:white"><div id="z" style="width:200px;height:100px;background:red">x</div>
+<img src="/langsam.png" width="10" height="10">
+<script>
+let dclZeit = -1;
+document.addEventListener('DOMContentLoaded', () => {{ dclZeit = performance.now(); console.log('dcl frueh', dclZeit < 1000, document.readyState); }});
+window.addEventListener('load', () => console.log('load nach dcl', dclZeit >= 0, document.readyState));
+fetch('/daten.json').then(r => {{ console.log('fetch', r.status, r.ok, r.headers.get('content-type')); return r.json(); }})
+  .then(j => {{ console.log('json', j.wert, j.text); const z = document.getElementById('z'); z.textContent = j.wert; z.style.background = 'lime'; }});
+fetch('/fehlt').then(r => console.log('404', r.status, r.ok));
+fetch('/post', {{ method: 'POST', body: 'a=1&b=2' }}).then(r => r.text()).then(t => console.log('post', t));
+const x = new XMLHttpRequest();
+x.responseType = 'json';
+x.onload = () => console.log('xhr', x.status, x.response.wert, x.readyState);
+x.open('GET', '/daten.json');
+x.send();
+fetch('http://127.0.0.1:{f}/offen').then(r => r.text()).then(t => console.log('cors', t));
+fetch('http://127.0.0.1:{f}/zu').then(r => r.text()).then(t => console.log('FALSCH: gelesen', t)).catch(e => console.log('cors blockiert', e instanceof TypeError));
+try {{ fetch('/x', {{ method: 'PUT' }}).catch(e => console.log('methode', e.message)); }} catch (e) {{ console.log('methode sofort', e.message); }}
+document.cookie = 'js=1; path=/';
+fetch('/setzen').then(r => r.text()).then(() => {{
+  console.log('doc.cookie', document.cookie.split('; ').sort().join(','));
+  return fetch('/cookie');
+}}).then(r => r.text()).then(t => console.log('server', t.replace('cookies:', '').split(/;\s*/).sort().join(',')));
+</script></body></html>"#
+                    ),
+                )
+            }
+            _ => (404, "Content-Type: text/plain\r\n", "fehlt".into()),
+        });
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 480, 320, 4000, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        println!("{k}");
+        for z in [
+            "log: fetch 200 true application/json",
+            "log: json 42 Grüße",
+            "log: 404 404 false",
+            "log: post erhalten:a=1&b=2",
+            "log: xhr 200 42 4",
+            "log: cors frei",
+            "log: cors blockiert true",
+            "log: methode fetch: Methode PUT nicht unterstützt (GET, HEAD, POST)",
+            // Cookies: von JS gesetzt geht an den Server, vom Server gesetzt
+            // sieht JS
+            "log: doc.cookie js=1,srv=2",
+            // DOMContentLoaded gleich nach dem Parsen – nicht erst nach dem
+            // Bild, das 1,5 s braucht; load danach
+            "log: dcl frueh true interactive",
+            "log: load nach dcl true complete",
+            "log: server js=1,srv=2",
+        ] {
+            assert!(k.contains(z), "fehlt in der Konsole: {z}");
+        }
+        assert!(!k.contains("FALSCH"), "{k}");
+        // das Ergebnis des Abrufs hat die Seite geändert (grün)
+        let px = bild.px[50 * bild.breite as usize + 100] & 0xFF_FFFF;
+        assert_eq!(px, 0x00_FF00, "Block nach fetch grün");
+    }
+
+    // Cookie-Fix in urldb.c: Test nur lokal (build.rs, urldb_kopie)
+    #[cfg(ns_cookie_fix)]
+    include!("cookie_fix_test.local.rs");
+
+    /// B7: Masse aus dem Layout – getBoundingClientRect, offset*/client*,
+    /// getComputedStyle, display:none und entfernte Knoten (0, kein Absturz),
+    /// scrollTo/scrollIntoView, normalize.
+    #[test]
+    fn javascript_masse() {
+        c(javascript_masse_innen);
+    }
+
+    fn javascript_masse_innen() {
+        if im_eigenen_prozess("javascript_masse") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        let html = r#"<html><head><style>body{margin:0} #a{width:200px;height:100px;padding:10px;border:5px solid black;background:#ff0000;color:#0000ff;font-size:20px}</style></head>
+<body><div id="a">x</div><div id="lang" style="height:3000px"></div><div id="b" style="height:20px">b</div><div style="height:1000px"></div><span id="w" style="display:none">w</span>
+<script>
+setTimeout(() => {
+  const a = document.getElementById('a');
+  const r = a.getBoundingClientRect();
+  console.log('rechteck', r.x, r.y, r.width, r.height, r.right, r.bottom);
+  console.log('offset', a.offsetWidth, a.offsetHeight, a.offsetLeft, a.offsetTop, 'client', a.clientWidth, a.clientHeight);
+  const s = getComputedStyle(a);
+  console.log('stil', s.display, s.width, s.height, s.color, s.backgroundColor, s.fontSize, s.getPropertyValue('position'));
+  console.log('versteckt', document.getElementById('w').getBoundingClientRect().width, getComputedStyle(document.getElementById('w')).display);
+  const weg = document.getElementById('lang');
+  weg.remove();
+  console.log('entfernt', weg.getBoundingClientRect().width, weg.offsetHeight);
+  document.body.insertBefore(weg, document.getElementById('b'));
+  console.log('fenster', innerWidth > 0, innerHeight > 0, scrollY);
+  scrollTo(0, 500);
+  console.log('gerollt', scrollY, document.documentElement.scrollTop);
+  document.getElementById('b').scrollIntoView();
+  console.log('ins bild', scrollY > 2500, Math.round(document.getElementById('b').getBoundingClientRect().top));
+  const p = document.createElement('p');
+  p.appendChild(document.createTextNode('a'));
+  p.appendChild(document.createTextNode(''));
+  p.appendChild(document.createTextNode('b'));
+  p.normalize();
+  console.log('normalize', p.childNodes.length, p.textContent);
+}, 500);
+</script></body></html>"#;
+        let (r, _bild) = lauf_mit(&data_url(html), 480, 320, 2500, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        println!("{k}");
+        for z in [
+            "log: rechteck 0 0 230 130 230 130",
+            "log: offset 230 130 0 0 client 220 120",
+            "log: stil block 200px 100px rgb(0, 0, 255) rgb(255, 0, 0) 20px static",
+            "log: versteckt 0 none",
+            "log: entfernt 0 0",
+            "log: fenster true true 0",
+            "log: gerollt 500 500",
+            "log: ins bild true 0",
+            "log: normalize 1 ab",
+        ] {
+            assert!(k.contains(z), "fehlt in der Konsole: {z}");
+        }
+    }
+
+    /// B7: Formulare mit Skript, per Tippen und Antippen bedient – „input“
+    /// je Zeichen, „submit“ vor dem Abschicken (abbrechbar), value/focus()
+    /// setzen NetSurfs Feld (Tippen ohne Antippen landet dort), select()
+    /// lässt das nächste Zeichen alles ersetzen, abgebrochener Klick folgt
+    /// dem Link nicht, checked/reset() ziehen NetSurfs Kästchen nach,
+    /// submit() schickt ohne Ereignis ab. Das Neu-Layout nach der Eingabe
+    /// zeigt die neue Höhe.
+    #[test]
+    fn javascript_formular() {
+        c(javascript_formular_innen);
+    }
+
+    fn javascript_formular_innen() {
+        if im_eigenen_prozess("javascript_formular") {
+            return;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        js_konsole(true);
+        static ANFRAGEN: Mutex<Vec<String>> = Mutex::new(Vec::new());
+        ANFRAGEN.lock().unwrap().clear();
+        let port = pruefserver(|pfad| {
+            ANFRAGEN.lock().unwrap().push(pfad.to_string());
+            if pfad != "/" {
+                return (200, "Content-Type: text/html\r\n", "<html><body style='background:#0000ff'>Ziel</body></html>".into());
+            }
+            (
+                200,
+                "Content-Type: text/html; charset=utf-8\r\n",
+                r#"<html><body style="margin:0;background:white">
+<form id="f" action="/ziel" method="get">
+<input id="q" name="q" style="display:block;margin:0;border:0;padding:0;width:300px;height:40px;font-size:24px;background:#eee">
+<input id="k" type="checkbox" name="k" style="display:block;margin:0;width:40px;height:40px">
+<textarea id="t" name="t" style="display:block;margin:0;border:0;padding:0;width:300px;height:60px">vorgabe</textarea>
+</form>
+<a id="l" href="/weg" style="display:block;width:200px;height:40px;background:#ccc">link</a>
+<div id="aus"></div>
+<script>
+const q = document.getElementById('q'), f = document.getElementById('f'), k = document.getElementById('k');
+const t = document.getElementById('t'), aus = document.getElementById('aus');
+let n = 0, runde = 0;
+q.addEventListener('input', () => n++);
+f.addEventListener('submit', (e) => {
+  runde++;
+  console.log('submit', runde, q.value, n, document.activeElement === q);
+  e.preventDefault();
+  if (runde === 1) { aus.style.cssText = 'height:50px;background:#00ff00'; q.select(); }
+  if (runde === 2) setTimeout(() => {
+    console.log('aus hoehe', aus.offsetHeight);
+    f.reset();
+    console.log('reset', JSON.stringify([q.value, t.value, k.checked]));
+  }, 200);
+});
+document.getElementById('l').addEventListener('click', (e) => { e.preventDefault(); console.log('klick verhindert', location.pathname); });
+k.addEventListener('click', () => console.log('kaestchen klick', k.checked));
+k.addEventListener('change', () => console.log('kaestchen change', k.checked));
+setTimeout(() => {
+  q.value = 'vor'; q.focus();
+  console.log('fokus', document.activeElement === q, q.value, q.defaultValue === '', t.value, t.defaultValue);
+  t.value = 'neu'; console.log('textarea', t.value, t.defaultValue);
+  k.checked = true; console.log('kaestchen', k.checked, k.defaultChecked);
+}, 300);
+setTimeout(() => f.submit(), 3000);
+</script></body></html>"#
+                    .into(),
+            )
+        });
+        // Seite ab y 30 (Werkzeugleiste): q 30–70, k 70–110, t ab 110
+        // (NetSurf nimmt die Höhe aus rows: 37), Link 147–187. Tippen ohne Antippen (Fokus vom Skript), Eingabe,
+        // „z“ ersetzt die Auswahl, Link antippen, Kästchen antippen.
+        assert!(c_umgebung("NS_TEST_EINGABE", "1000:T:abc\\n;1600:T:z\\n;2200:100:167;2600:20:90"));
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 4500, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        let a = ANFRAGEN.lock().unwrap().clone();
+        println!("{k}\nAnfragen {a:?}");
+        for z in [
+            "log: fokus true vor true vorgabe vorgabe",
+            "log: textarea neu vorgabe",
+            "log: kaestchen true false",
+            "log: submit 1 vorabc 3 true",
+            "log: submit 2 z 4 true",
+            "log: aus hoehe 50",
+            r#"log: reset ["","vorgabe",false]"#,
+            "log: klick verhindert /",
+            "log: kaestchen klick true",
+            "log: kaestchen change true",
+        ] {
+            assert!(k.contains(z), "fehlt in der Konsole: {z}");
+        }
+        assert!(!k.contains("submit 3"), "submit() ohne Ereignis");
+        assert!(!a.iter().any(|p| p == "/weg"), "abgebrochener Klick folgt dem Link nicht: {a:?}");
+        assert!(a.iter().any(|p| p == "/ziel?q=&k=on&t=vorgabe"), "submit() schickt den zurückgesetzten Stand ab: {a:?}");
+    }
+
+    /// B7: Hilfen der Fensterumgebung – console.group/count, performance-
+    /// Marken und -Messungen, matchMedia mit Hörer, XHR mit
+    /// overrideMimeType (Bytes einzeln), document.cookie nur mit bekannten
+    /// Merkmalen, fremde Herkunft mit Cookies nur mit genauer Freigabe und
+    /// Allow-Credentials, AbortController stoppt einen langsamen Abruf,
+    /// defaultValue, history.length und history.back() über NetSurfs
+    /// Verlauf (Seite a → b → zurück auf a).
+    #[test]
+    fn javascript_fenster_hilfen() {
+        c(javascript_fenster_hilfen_innen);
+    }
+
+    fn javascript_fenster_hilfen_innen() {
+        if im_eigenen_prozess("javascript_fenster_hilfen") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        static BESUCHE_A: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+        BESUCHE_A.store(0, std::sync::atomic::Ordering::Relaxed);
+        static HAUPT: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(0);
+        static FREMD: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(0);
+        // fremde Herkunft (anderer Port, gleicher Rechner: bekommt die Cookies mit)
+        let fremd = pruefserver(|pfad| {
+            let herkunft = format!("http://127.0.0.1:{}", HAUPT.load(std::sync::atomic::Ordering::Relaxed));
+            match pfad {
+                "/stern" => (200, "Content-Type: text/plain\r\nAccess-Control-Allow-Origin: *\r\n", "x".into()),
+                "/genau" => (200, Box::leak(format!("Content-Type: text/plain\r\nAccess-Control-Allow-Origin: {herkunft}\r\nAccess-Control-Allow-Credentials: true\r\n").into_boxed_str()), "x".into()),
+                _ => (200, Box::leak(format!("Content-Type: text/plain\r\nAccess-Control-Allow-Origin: {herkunft}\r\n").into_boxed_str()), "x".into()),
+            }
+        });
+        FREMD.store(fremd, std::sync::atomic::Ordering::Relaxed);
+        let port = pruefserver(|pfad| match pfad {
+            "/text" => (200, "Content-Type: text/plain\r\n", "ä".into()),
+            "/fremdport" => (200, "Content-Type: text/plain\r\n", FREMD.load(std::sync::atomic::Ordering::Relaxed).to_string()),
+            "/langsam" => {
+                std::thread::sleep(std::time::Duration::from_millis(2000));
+                (200, "Content-Type: text/plain\r\n", "spaet".into())
+            }
+            "/b" => (
+                200,
+                "Content-Type: text/html\r\nCache-Control: no-store\r\n",
+                "<html><body><script>addEventListener('load', () => setTimeout(() => { console.log('b laenge', history.length); history.back(); }, 300));</script></body></html>".into(),
+            ),
+            _ if BESUCHE_A.fetch_add(1, std::sync::atomic::Ordering::Relaxed) == 0 => (
+                200,
+                "Content-Type: text/html\r\nCache-Control: no-store\r\n",
+                r#"<html><body><script>
+console.group('g'); console.log('innen'); console.groupEnd(); console.log('aussen');
+console.count('z'); console.count('z');
+performance.mark('m1');
+console.log('marken', performance.getEntriesByType('mark').length, performance.measure('dauer', 'm1').entryType, performance.getEntriesByName('dauer').length);
+const mm = matchMedia('(max-width: 800px)'); mm.addListener(() => {});
+console.log('medien', mm.matches, matchMedia('(min-width: 800px)').matches, matchMedia('screen and (orientation: landscape), print').matches, matchMedia('not (hover: hover)').matches);
+const x = new XMLHttpRequest();
+x.open('GET', '/text');
+x.overrideMimeType('text/plain; charset=x-user-defined');
+x.onload = () => {
+  console.log('binaer', x.responseText.length, x.responseText.charCodeAt(0), x.responseText.charCodeAt(1));
+};
+// Cookies aus Skripten, CORS mit Cookies, Abbrechen, defaultValue
+async function pruefen() {
+  document.cookie = 'hb=2; path=/';
+  document.cookie = 'ha=1; unbekannt';
+  console.log('cookie', document.cookie.includes('hb=2'), document.cookie.includes('ha=1'));
+  const f = 'http://127.0.0.1:' + await (await fetch('/fremdport')).text();
+  for (const p of ['stern', 'genau', 'genau_ohne']) {
+    try { await (await fetch(f + '/' + p)).text(); console.log('cors', p, 'frei'); } catch (e) { console.log('cors', p, 'blockiert'); }
+  }
+  const ac = new AbortController(); let gemeldet = false;
+  ac.signal.addEventListener('abort', () => { gemeldet = true; });
+  const t0 = performance.now();
+  const p = fetch('/langsam', { signal: ac.signal });
+  setTimeout(() => ac.abort(), 100);
+  try { await p; console.log('abbruch nein'); } catch (e) { console.log('abbruch', e.name, gemeldet, performance.now() - t0 < 1000); }
+  const i = document.createElement('input'); document.body.appendChild(i);
+  i.defaultValue = 'x'; console.log('vorgabe', i.value, i.defaultValue);
+  document.cookie = 'hb=; max-age=0; path=/';
+}
+const fertig = pruefen().catch((e) => console.log('pruefen fehler', e));
+// NetSurf nimmt eine Seite erst in den Verlauf, wenn sie fertig ist
+addEventListener('load', () => fertig.then(() => setTimeout(() => { console.log('a laenge', history.length); location.href = '/b'; }, 300)));
+x.send();
+</script></body></html>"#
+                    .into(),
+            ),
+            _ => (
+                200,
+                "Content-Type: text/html\r\nCache-Control: no-store\r\n",
+                "<html><body><script>console.log('a wieder', history.length);</script></body></html>".into(),
+            ),
+        });
+        HAUPT.store(port, std::sync::atomic::Ordering::Relaxed);
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/a"), 640, 360, 6000, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        println!("{k}");
+        for z in [
+            "log: g\n",
+            "log:   innen\n",
+            "log: aussen\n",
+            "log: z: 1\n",
+            "log: z: 2\n",
+            "log: marken 1 measure 1\n",
+            "log: medien true false true true\n",
+            "log: binaer 2 195 164\n",
+            "log: cookie true false\n",
+            "log: cors stern blockiert\n",
+            "log: cors genau frei\n",
+            "log: cors genau_ohne blockiert\n",
+            "log: abbruch AbortError true true\n",
+            "log: vorgabe x x\n",
+            "log: a laenge 1\n",
+            "log: b laenge 2\n",
+            "log: a wieder 2\n",
+        ] {
+            assert!(k.contains(z), "fehlt in der Konsole: {z:?}");
+        }
+    }
+
+    /// B7: Auswahlliste mit Skript – value/selectedIndex aus dem Skript
+    /// ziehen NetSurfs Liste nach (Anzeige und Markierung im Menü), Auswahl
+    /// per Tippen meldet „input“ und „change“.
+    #[test]
+    fn javascript_auswahl() {
+        c(javascript_auswahl_innen);
+    }
+
+    fn javascript_auswahl_innen() {
+        if im_eigenen_prozess("javascript_auswahl") {
+            return;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        js_konsole(true);
+        let html = r#"<html><body style="margin:0;background:white">
+<select id="s" style="display:block;width:200px"><option value="1">eins<option value="2" selected>zwei<option value="3">drei</select>
+<script>
+const s = document.getElementById('s');
+s.addEventListener('input', () => console.log('auswahl input', s.value));
+s.addEventListener('change', () => console.log('auswahl change', s.value, s.selectedIndex));
+setTimeout(() => { s.value = '3'; console.log('gesetzt', s.value, s.selectedIndex, s.options[2].selected); }, 300);
+setTimeout(() => { s.selectedIndex = 2; console.log('index', s.value); }, 1800);
+</script></body></html>"#;
+        // Liste ab y 30: Menü öffnet darunter, Einträge bei y 69/88/108
+        // (Bild beim Erkunden). „eins“ wählen, später Menü offen lassen.
+        assert!(c_umgebung("NS_TEST_EINGABE", "1000:50:42;1400:40:69;2200:50:42"));
+        let (r, bild) = lauf_mit(&data_url(html), 800, 480, 2700, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        println!("{k}");
+        for z in ["log: gesetzt 3 2 true\n", "log: auswahl input 1\n", "log: auswahl change 1 0\n", "log: index 3\n"] {
+            assert!(k.contains(z), "fehlt in der Konsole: {z:?}");
+        }
+        // Menü offen: die markierte Zeile (blau) ist „drei“ (vom Skript), nicht „eins“
+        let px = |x: usize, y: usize| bild.px[y * bild.breite as usize + x] & 0xFF_FFFF;
+        let blau = |c: u32| (c & 0xFF) > 0xC0 && ((c >> 16) & 0xFF) < 0xA0;
+        assert!(blau(px(150, 108)), "„drei“ markiert: {:06x}", px(150, 108));
+        assert!(!blau(px(150, 69)), "„eins“ nicht markiert: {:06x}", px(150, 69));
+    }
+
+    /// B7: localStorage dauerhaft je Herkunft – Seite 1 schreibt und geht
+    /// weiter, Seite 2 (neue JS-Laufzeit) liest den Wert aus der Datei im
+    /// Datenordner; mehr als 512 KB → QuotaExceededError.
+    #[test]
+    fn javascript_localstorage() {
+        c(javascript_localstorage_innen);
+    }
+
+    fn javascript_localstorage_innen() {
+        if im_eigenen_prozess("javascript_localstorage") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        let ordner = std::env::temp_dir().join(format!("ns_ls_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&ordner);
+        std::fs::create_dir_all(&ordner).unwrap();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_DATEN_ORDNER", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        assert!(c_umgebung("NS_DATEN_ORDNER", &ordner.to_string_lossy().replace('\\', "/")));
+        let port = pruefserver(|pfad| match pfad {
+            "/ls1" => (
+                200,
+                "Content-Type: text/html\r\n",
+                r#"<html><body><script>
+console.log('ls1 vorher', localStorage.getItem('wert'));
+localStorage.setItem('wert', 'gespeichert');
+localStorage.setItem('zahl', 7);
+try { localStorage.setItem('gross', 'x'.repeat(600 * 1024)); console.log('FALSCH: kein Fehler'); }
+catch (e) { console.log('quota', e.name, localStorage.getItem('gross')); }
+sessionStorage.setItem('kurz', '1');
+setTimeout(() => { location.href = '/ls2'; }, 100);
+</script></body></html>"#
+                    .into(),
+            ),
+            "/ls2" => (
+                200,
+                "Content-Type: text/html\r\n",
+                r#"<html><body><script>
+console.log('ls2', localStorage.getItem('wert'), localStorage.getItem('zahl'), localStorage.length, sessionStorage.getItem('kurz'));
+</script></body></html>"#
+                    .into(),
+            ),
+            _ => (404, "Content-Type: text/plain\r\n", "fehlt".into()),
+        });
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/ls1"), 480, 320, 3000, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        println!("{k}");
+        for z in ["log: ls1 vorher null", "log: quota QuotaExceededError null", "log: ls2 gespeichert 7 2 null"] {
+            assert!(k.contains(z), "fehlt in der Konsole: {z}");
+        }
+        assert!(!k.contains("FALSCH"), "{k}");
+        // eine Datei je Herkunft im Datenordner
+        let dateien: Vec<_> = std::fs::read_dir(ordner.join("speicher")).expect("Ordner speicher").flatten().collect();
+        assert_eq!(dateien.len(), 1, "eine Datei: {:?}", dateien.iter().map(|d| d.file_name()).collect::<Vec<_>>());
+        let inhalt = std::fs::read_to_string(dateien[0].path()).unwrap();
+        assert!(inhalt.contains("gespeichert") && !inhalt.contains("xxxx"), "{inhalt}");
+    }
+
     #[test]
     fn javascript_aendert_seite() {
         c(javascript_aendert_seite_innen);

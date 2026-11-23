@@ -14,11 +14,13 @@
  * - Die DOM-Klassen (Node, Element, Document, EventTarget, querySelector,
  *   classList, Timer-API …) stehen in JavaScript in js/vorspann.js.
  */
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 
 #include <dom/dom.h>
@@ -43,6 +45,8 @@
 #include "html/private.h"
 #include "javascript/js.h"
 #include "javascript/content.h"
+#include "content/llcache.h"
+#include "content/urldb.h"
 
 #include "vorspann.h"
 
@@ -95,6 +99,8 @@ struct jsthread {
 	struct tabelle knoten;
 	struct tabelle ereignisse;
 	struct zeitgeber *zeitgeber;
+	/* laufende fetch/XHR-Abrufe (B7) */
+	struct abruf *abrufe;
 	bool geschlossen;
 	unsigned aenderungen;
 	/* Neu-Layout (c/neu_layout.c): Stand der Änderungen und fertig
@@ -1122,6 +1128,929 @@ static JSValue g_zeitgeber_weg(ARGS)
 	return JS_UNDEFINED;
 }
 
+/* --- fetch/XMLHttpRequest (B7) über NetSurfs llcache
+ *
+ * Abgerufen wird wie bei Bildern und Stylesheets (Cookies, HTTPS mit
+ * Zertifikatsprüfung, Zwischenspeicher). Die Antwort geht an
+ * __ns_abruf(id, status, typ, text, daten, fehler) in vorspann.js.
+ * Fremde Herkunft: nur lesbar, wenn Access-Control-Allow-Origin sie
+ * erlaubt. NetSurf schickt vorhandene Cookies immer mit – dann gilt wie
+ * bei Anfragen mit Anmeldedaten: genau die Herkunft der Seite und
+ * Access-Control-Allow-Credentials: true; „*“ nur ohne Cookies. Sonst
+ * könnte eine Seite fremde Inhalte mit der Anmeldung des Nutzers lesen. Methoden: GET, HEAD, POST (Rumpf als
+ * Text, Content-Type application/x-www-form-urlencoded wie bei NetSurf). */
+
+long ns_llcache_http_code(const llcache_handle *h);
+
+struct abruf {
+	jsthread *t;
+	int id;
+	llcache_handle *h;
+	bool kopf;		/* HEAD: Rumpf verwerfen */
+	bool mit_cookies;	/* Anfrage trug Cookies (CORS) */
+	struct abruf *next;
+};
+
+/* Antwort bzw. Fehler an JavaScript; Abruf aus der Liste nehmen */
+static void abruf_melden(struct abruf *a, long status, const char *typ, const uint8_t *daten, size_t n, const char *fehler)
+{
+	jsthread *t = a->t;
+	struct abruf **pp;
+	for (pp = &t->abrufe; *pp != NULL; pp = &(*pp)->next) {
+		if (*pp == a) {
+			*pp = a->next;
+			break;
+		}
+	}
+	if (!t->geschlossen) {
+		JSValue argv[6];
+		eintreten(t);
+		argv[0] = JS_NewInt32(t->cx, a->id);
+		argv[1] = JS_NewInt32(t->cx, (int32_t)status);
+		argv[2] = typ ? JS_NewString(t->cx, typ) : JS_NULL;
+		argv[3] = daten ? JS_NewStringLen(t->cx, (const char *)daten, n) : JS_NewString(t->cx, "");
+		argv[4] = daten ? JS_NewArrayBufferCopy(t->cx, daten, n) : JS_NewArrayBufferCopy(t->cx, (const uint8_t *)"", 0);
+		argv[5] = fehler ? JS_NewString(t->cx, fehler) : JS_NULL;
+		JS_FreeValue(t->cx, rufen(t, "__ns_abruf", 6, (JSValueConst *)argv));
+		for (int i = 0; i < 6; i++)
+			JS_FreeValue(t->cx, argv[i]);
+		austreten(t);
+	}
+}
+
+/* Darf die Seite die Antwort lesen? Gleiche Herkunft oder CORS-Kopf */
+static bool abruf_erlaubt(jsthread *t, llcache_handle *h, bool mit_cookies)
+{
+	nsurl *seite = t->htmlc ? content_get_url(&t->htmlc->base) : NULL;
+	nsurl *ziel = llcache_handle_get_url(h);
+	const char *acao, *acac;
+	char *herkunft = NULL;
+	size_t l = 0;
+	bool ok;
+	if (seite == NULL || ziel == NULL)
+		return false;
+	if (nsurl_compare(seite, ziel, NSURL_SCHEME | NSURL_HOST | NSURL_PORT))
+		return true;
+	acao = llcache_handle_get_header(h, "Access-Control-Allow-Origin");
+	if (acao == NULL)
+		return false;
+	while (*acao == ' ')
+		acao++;
+	if (strcmp(acao, "*") == 0)
+		return !mit_cookies;
+	if (mit_cookies) {
+		acac = llcache_handle_get_header(h, "Access-Control-Allow-Credentials");
+		while (acac != NULL && *acac == ' ')
+			acac++;
+		if (acac == NULL || strcmp(acac, "true") != 0)
+			return false;
+	}
+	if (nsurl_get(seite, NSURL_SCHEME | NSURL_HOST | NSURL_PORT, &herkunft, &l) != NSERROR_OK)
+		return false;
+	/* nsurl_get liefert „https://host/“ – ohne den Schrägstrich vergleichen */
+	if (l > 0 && herkunft[l - 1] == '/')
+		herkunft[--l] = '\0';
+	ok = strcmp(acao, herkunft) == 0;
+	free(herkunft);
+	return ok;
+}
+
+static nserror abruf_ereignis(llcache_handle *h, const llcache_event *e, void *pw)
+{
+	struct abruf *a = pw;
+	switch (e->type) {
+	case LLCACHE_EVENT_DONE: {
+		size_t n = 0;
+		const uint8_t *d = llcache_handle_get_source_data(h, &n);
+		if (!abruf_erlaubt(a->t, h, a->mit_cookies)) {
+			abruf_melden(a, 0, NULL, NULL, 0, "CORS: fremde Herkunft nicht freigegeben (Access-Control-Allow-Origin/-Credentials)");
+		} else {
+			/* Status aus dem Objekt (llcache_kopie, build.rs); unbekannt
+			 * (z. B. data:-Adresse) gilt als 200 */
+			long code = ns_llcache_http_code(h);
+			long status = code > 0 ? code : 200;
+			abruf_melden(a, status, llcache_handle_get_header(h, "Content-Type"), a->kopf ? NULL : d, a->kopf ? 0 : n, NULL);
+		}
+		llcache_handle_release(h);
+		free(a);
+		break;
+	}
+	case LLCACHE_EVENT_ERROR:
+		abruf_melden(a, 0, NULL, NULL, 0, e->data.error.msg ? e->data.error.msg : "Netzwerkfehler");
+		llcache_handle_abort(h);
+		llcache_handle_release(h);
+		free(a);
+		break;
+	default:
+		break;
+	}
+	return NSERROR_OK;
+}
+
+/* N.abruf(id, url, methode, rumpf|null) – Fehler beim Start: Ausnahme */
+static JSValue g_abruf(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	int32_t id = 0;
+	const char *url = NULL, *methode = NULL, *rumpf = NULL;
+	nsurl *basis, *ziel = NULL;
+	struct abruf *a = NULL;
+	llcache_post_data post;
+	nserror err;
+	JSValue r = JS_UNDEFINED;
+	UNBENUTZT;
+	JS_ToInt32(cx, &id, argv[0]);
+	url = JS_ToCString(cx, argv[1]);
+	methode = JS_ToCString(cx, argv[2]);
+	if (!JS_IsNull(argv[3]) && !JS_IsUndefined(argv[3]))
+		rumpf = JS_ToCString(cx, argv[3]);
+	if (url == NULL || methode == NULL || t->htmlc == NULL) {
+		r = JS_ThrowTypeError(cx, "fetch: ungültige Anfrage");
+		goto ende;
+	}
+	if (strcmp(methode, "GET") != 0 && strcmp(methode, "HEAD") != 0 && strcmp(methode, "POST") != 0) {
+		r = JS_ThrowTypeError(cx, "fetch: Methode %s nicht unterstützt (GET, HEAD, POST)", methode);
+		goto ende;
+	}
+	basis = t->htmlc->base_url ? t->htmlc->base_url : content_get_url(&t->htmlc->base);
+	if (basis == NULL || nsurl_join(basis, url, &ziel) != NSERROR_OK) {
+		r = JS_ThrowTypeError(cx, "fetch: ungültige Adresse %s", url);
+		goto ende;
+	}
+	a = calloc(1, sizeof *a);
+	if (a == NULL) {
+		r = JS_ThrowOutOfMemory(cx);
+		goto ende;
+	}
+	a->t = t;
+	a->id = id;
+	a->kopf = strcmp(methode, "HEAD") == 0;
+	{
+		char *c = urldb_get_cookie(ziel, true);
+		a->mit_cookies = c != NULL && c[0] != '\0';
+		free(c);
+	}
+	post.type = LLCACHE_POST_URL_ENCODED;
+	post.data.urlenc = (char *)(rumpf ? rumpf : "");
+	/* ohne LLCACHE_RETRIEVE_NO_ERROR_PAGES: auch 404 usw. kommen als Antwort */
+	err = llcache_handle_retrieve(ziel, 0, content_get_url(&t->htmlc->base),
+			strcmp(methode, "POST") == 0 ? &post : NULL, abruf_ereignis, a, &a->h);
+	if (err != NSERROR_OK) {
+		free(a);
+		r = JS_ThrowTypeError(cx, "fetch: Abruf von %s nicht möglich", nsurl_access(ziel));
+		goto ende;
+	}
+	a->next = t->abrufe;
+	t->abrufe = a;
+ende:
+	if (ziel)
+		nsurl_unref(ziel);
+	JS_FreeCString(cx, url);
+	JS_FreeCString(cx, methode);
+	JS_FreeCString(cx, rumpf);
+	return r;
+}
+
+/* N.abrufStoppen(id): einen laufenden Abruf abbrechen (AbortController,
+ * XMLHttpRequest.abort) – kommt danach nichts mehr an JavaScript */
+static JSValue g_abruf_stoppen(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct abruf **pp;
+	int32_t id = 0;
+	UNBENUTZT;
+	JS_ToInt32(cx, &id, argv[0]);
+	for (pp = &t->abrufe; *pp != NULL; pp = &(*pp)->next) {
+		struct abruf *a = *pp;
+		if (a->id == id) {
+			*pp = a->next;
+			llcache_handle_abort(a->h);
+			llcache_handle_release(a->h);
+			free(a);
+			return JS_TRUE;
+		}
+	}
+	return JS_FALSE;
+}
+
+/* Seite geschlossen: laufende Abrufe abbrechen */
+static void abrufe_stoppen(jsthread *t)
+{
+	while (t->abrufe != NULL) {
+		struct abruf *a = t->abrufe;
+		t->abrufe = a->next;
+		llcache_handle_abort(a->h);
+		llcache_handle_release(a->h);
+		free(a);
+	}
+}
+
+/* --- document.cookie (B7) über NetSurfs Cookie-Ablage (urldb): dieselben
+ * Cookies wie bei Abrufen, dauerhaft gespeichert. Nur für http(s)-Seiten
+ * – sonst null (vorspann.js
+ * nimmt dann eine Ablage nur für die Seite). */
+
+static nsurl *seiten_url_http(jsthread *t)
+{
+	nsurl *u = t->htmlc ? content_get_url(&t->htmlc->base) : NULL;
+	return (u != NULL && strncmp(nsurl_access(u), "http", 4) == 0) ? u : NULL;
+}
+
+static JSValue g_cookie(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	nsurl *u = seiten_url_http(t);
+	char *c;
+	JSValue r;
+	(void)this_val; (void)argc; (void)argv;
+	if (u == NULL)
+		return JS_NULL;
+	c = urldb_get_cookie(u, false);
+	r = JS_NewString(cx, c ? c : "");
+	free(c);
+	return r;
+}
+
+/* Skripte (Nicht-HTTP-Schnittstelle, RFC 6265 5.3) dürfen nur diese
+ * Merkmale setzen; ein Cookie, das Skripten verborgen ist (in der Ablage,
+ * aber nicht in document.cookie), dürfen sie nicht überschreiben */
+static bool name_in(const char *liste, const char *name, size_t nl)
+{
+	const char *p = liste;
+	while (p != NULL && *p != '\0') {
+		while (*p == ' ' || *p == ';')
+			p++;
+		if (strncmp(p, name, nl) == 0 && p[nl] == '=')
+			return true;
+		p = strchr(p, ';');
+	}
+	return false;
+}
+
+static bool skript_cookie_erlaubt(const char *s, nsurl *u)
+{
+	static const char *const merkmale[] = { "expires", "max-age", "domain", "path", "secure", "samesite" };
+	const char *p = strchr(s, ';'), *gl = strchr(s, '=');
+	char name[256], *alle, *offen;
+	size_t nl;
+	bool verborgen;
+	while (p != NULL) {
+		size_t i, l;
+		bool bekannt = false;
+		p++;
+		while (*p == ' ')
+			p++;
+		l = strcspn(p, "=; ");
+		for (i = 0; i < sizeof merkmale / sizeof merkmale[0]; i++)
+			if (l == strlen(merkmale[i]) && strncasecmp(p, merkmale[i], l) == 0)
+				bekannt = true;
+		if (!bekannt && l > 0)
+			return false;
+		p = strchr(p, ';');
+	}
+	if (gl == NULL)
+		return false;
+	while (*s == ' ')
+		s++;
+	nl = (size_t)(gl - s);
+	while (nl > 0 && s[nl - 1] == ' ')
+		nl--;
+	if (nl == 0 || nl >= sizeof name)
+		return false;
+	memcpy(name, s, nl);
+	name[nl] = '\0';
+	alle = urldb_get_cookie(u, true);
+	offen = urldb_get_cookie(u, false);
+	verborgen = name_in(alle, name, nl) && !name_in(offen, name, nl);
+	free(alle);
+	free(offen);
+	return !verborgen;
+}
+
+static JSValue g_cookie_setzen(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	nsurl *u = seiten_url_http(t);
+	const char *s;
+	bool ok;
+	UNBENUTZT;
+	if (u == NULL)
+		return JS_NULL;
+	s = JS_ToCString(cx, argv[0]);
+	if (s == NULL)
+		return JS_EXCEPTION;
+	ok = skript_cookie_erlaubt(s, u) && urldb_set_cookie(s, u, NULL);
+	JS_FreeCString(cx, s);
+	return JS_NewBool(cx, ok);
+}
+
+/* --- localStorage (B7): dauerhaft je Herkunft (Schema, Rechner, Port) als
+ * JSON-Datei im Datenordner (c/lesezeichen.c, ns_speicher_ordner); Name =
+ * FNV-1a der Herkunft. Höchstens SPEICHER_MAX Byte je Herkunft. Nur für
+ * http(s)-Seiten – sonst null (vorspann.js hält die Ablage dann nur für die
+ * Seite). */
+
+#define SPEICHER_MAX (512u * 1024u)
+const char *ns_speicher_ordner(void);
+
+static bool speicher_datei(jsthread *t, char *buf, size_t n)
+{
+	nsurl *u = seiten_url_http(t);
+	const char *o = ns_speicher_ordner();
+	char *herkunft = NULL;
+	size_t l = 0;
+	uint64_t h = 0xcbf29ce484222325ull;
+	if (u == NULL || o == NULL || nsurl_get(u, NSURL_SCHEME | NSURL_HOST | NSURL_PORT, &herkunft, &l) != NSERROR_OK)
+		return false;
+	for (size_t i = 0; i < l; i++)
+		h = (h ^ (uint8_t)herkunft[i]) * 0x100000001b3ull;
+	free(herkunft);
+	snprintf(buf, n, "%s/%016llx.json", o, (unsigned long long)h);
+	return true;
+}
+
+static JSValue g_speicher_lesen(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	char pfad[300];
+	FILE *f;
+	long n;
+	char *d;
+	JSValue r;
+	(void)this_val; (void)argc; (void)argv;
+	if (!speicher_datei(t, pfad, sizeof pfad))
+		return JS_NULL;
+	f = fopen(pfad, "rb");
+	if (f == NULL)
+		return JS_NewString(cx, "");
+	fseek(f, 0, SEEK_END);
+	n = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	if (n < 0 || n > (long)SPEICHER_MAX) {
+		fclose(f);
+		return JS_NewString(cx, "");
+	}
+	d = malloc((size_t)n + 1);
+	if (d == NULL) {
+		fclose(f);
+		return JS_ThrowOutOfMemory(cx);
+	}
+	n = (long)fread(d, 1, (size_t)n, f);
+	fclose(f);
+	r = JS_NewStringLen(cx, d, (size_t)n);
+	free(d);
+	return r;
+}
+
+/* true geschrieben, false zu gross/Fehler, null ohne Ablage */
+static JSValue g_speicher_schreiben(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	char pfad[300], neu[310];
+	size_t n = 0;
+	const char *s;
+	FILE *f;
+	bool ok;
+	UNBENUTZT;
+	if (!speicher_datei(t, pfad, sizeof pfad))
+		return JS_NULL;
+	s = JS_ToCStringLen(cx, &n, argv[0]);
+	if (s == NULL)
+		return JS_EXCEPTION;
+	if (n > SPEICHER_MAX) {
+		JS_FreeCString(cx, s);
+		return JS_FALSE;
+	}
+	/* erst neben die alte Datei schreiben, dann tauschen (Stromausfall) */
+	snprintf(neu, sizeof neu, "%s.neu", pfad);
+	f = fopen(neu, "wb");
+	ok = f != NULL && fwrite(s, 1, n, f) == n;
+	if (f != NULL)
+		ok = (fclose(f) == 0) && ok;
+	JS_FreeCString(cx, s);
+	if (ok) {
+		remove(pfad);
+		ok = rename(neu, pfad) == 0;
+	}
+	return JS_NewBool(cx, ok);
+}
+
+/* --- Masse aus dem Layout (B7): getBoundingClientRect, offset*, client*,
+ * getComputedStyle, Rollen. Die Box eines Knotens steht in seinen
+ * Nutzdaten (box_for_node); c/neu_layout.c hält sie beim Neuaufbau
+ * aktuell – aber nur für Knoten im Dokument: ein entfernter Knoten
+ * behielte den Zeiger in einen schon freigegebenen Baum, daher vorher
+ * prüfen, dass er noch im Dokument hängt. */
+
+#include "html/box.h"
+#include "html/box_inspect.h"
+#include "html/box_construct.h"
+#include "netsurf/window.h"
+#include "desktop/browser_private.h"
+#include "desktop/textarea.h"
+#include "desktop/browser_history.h"
+#include "netsurf/keypress.h"
+#include "html/form_internal.h"
+#include "html/interaction.h"
+
+static bool im_dokument(dom_node *n)
+{
+	dom_node *x = n ? dom_node_ref(n) : NULL;
+	while (x != NULL) {
+		dom_node_type typ;
+		dom_node *eltern = NULL;
+		if (dom_node_get_node_type(x, &typ) == DOM_NO_ERR && typ == DOM_DOCUMENT_NODE) {
+			dom_node_unref(x);
+			return true;
+		}
+		dom_node_get_parent_node(x, &eltern);
+		dom_node_unref(x);
+		x = eltern;
+	}
+	return false;
+}
+
+/* Box zum Knoten; während eines Neu-Layouts (c/neu_layout.c) keine –
+ * box_for_node zeigte dann in den halb gebauten neuen Baum */
+static struct box *box_von(jsthread *t, dom_node *n)
+{
+	if (n == NULL || t->htmlc == NULL || t->htmlc->layout == NULL || !im_dokument(n) ||
+	    ns_neu_layout_laeuft(t->htmlc))
+		return NULL;
+	return box_for_node(n);
+}
+
+/* Fenster des Browsers (bei Rahmen das oberste) */
+static struct browser_window *oberstes(jsthread *t)
+{
+	struct browser_window *bw = t->bw;
+	while (bw != NULL && bw->window == NULL && bw->parent != NULL)
+		bw = bw->parent;
+	return (bw != NULL && bw->window != NULL) ? bw : NULL;
+}
+
+/* N.masse(knoten) → [x, y, breite, höhe, client-breite, client-höhe,
+ * inhalt-breite, inhalt-höhe] (Rahmenbox in Dokumentkoordinaten; client =
+ * Polsterbox) oder null */
+static JSValue g_masse(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct box *b;
+	int x = 0, y = 0, cw, ch;
+	JSValue a;
+	UNBENUTZT;
+	b = box_von(t, knoten(cx, argv[0]));
+	if (b == NULL)
+		return JS_NULL;
+	box_coords(b, &x, &y);
+	cw = b->padding[LEFT] + b->width + b->padding[RIGHT];
+	ch = b->padding[TOP] + b->height + b->padding[BOTTOM];
+	a = JS_NewArray(cx);
+	JS_SetPropertyUint32(cx, a, 0, JS_NewInt32(cx, x - b->border[LEFT].width));
+	JS_SetPropertyUint32(cx, a, 1, JS_NewInt32(cx, y - b->border[TOP].width));
+	JS_SetPropertyUint32(cx, a, 2, JS_NewInt32(cx, cw + b->border[LEFT].width + b->border[RIGHT].width));
+	JS_SetPropertyUint32(cx, a, 3, JS_NewInt32(cx, ch + b->border[TOP].width + b->border[BOTTOM].width));
+	JS_SetPropertyUint32(cx, a, 4, JS_NewInt32(cx, cw));
+	JS_SetPropertyUint32(cx, a, 5, JS_NewInt32(cx, ch));
+	JS_SetPropertyUint32(cx, a, 6, JS_NewInt32(cx, b->width));
+	JS_SetPropertyUint32(cx, a, 7, JS_NewInt32(cx, b->height));
+	return a;
+}
+
+static const char *farbe_text(css_color c, char *buf, size_t n)
+{
+	unsigned a = (c >> 24) & 0xff;
+	if (a == 0)
+		return "rgba(0, 0, 0, 0)";
+	if (a == 0xff)
+		snprintf(buf, n, "rgb(%u, %u, %u)", (unsigned)((c >> 16) & 0xff), (unsigned)((c >> 8) & 0xff), (unsigned)(c & 0xff));
+	else
+		snprintf(buf, n, "rgba(%u, %u, %u, %.2f)", (unsigned)((c >> 16) & 0xff), (unsigned)((c >> 8) & 0xff), (unsigned)(c & 0xff), a / 255.0);
+	return buf;
+}
+
+/* N.stil(knoten) → {display, visibility, position, color, backgroundColor,
+ * fontSize} aus dem berechneten Stil der Box oder null */
+static JSValue g_stil(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct box *b;
+	const css_computed_style *st;
+	const char *anz = "", *sicht = "", *lage = "";
+	char f[48], hg[48], gr[24];
+	css_color farbe = 0;
+	css_fixed laenge = 0;
+	css_unit einheit = CSS_UNIT_PX;
+	JSValue o;
+	UNBENUTZT;
+	b = box_von(t, knoten(cx, argv[0]));
+	if (b == NULL || b->style == NULL)
+		return JS_NULL;
+	st = b->style;
+	switch (css_computed_display(st, b->parent == NULL)) {
+	case CSS_DISPLAY_INLINE: anz = "inline"; break;
+	case CSS_DISPLAY_BLOCK: anz = "block"; break;
+	case CSS_DISPLAY_LIST_ITEM: anz = "list-item"; break;
+	case CSS_DISPLAY_RUN_IN: anz = "run-in"; break;
+	case CSS_DISPLAY_INLINE_BLOCK: anz = "inline-block"; break;
+	case CSS_DISPLAY_TABLE: anz = "table"; break;
+	case CSS_DISPLAY_INLINE_TABLE: anz = "inline-table"; break;
+	case CSS_DISPLAY_TABLE_ROW_GROUP: anz = "table-row-group"; break;
+	case CSS_DISPLAY_TABLE_HEADER_GROUP: anz = "table-header-group"; break;
+	case CSS_DISPLAY_TABLE_FOOTER_GROUP: anz = "table-footer-group"; break;
+	case CSS_DISPLAY_TABLE_ROW: anz = "table-row"; break;
+	case CSS_DISPLAY_TABLE_COLUMN_GROUP: anz = "table-column-group"; break;
+	case CSS_DISPLAY_TABLE_COLUMN: anz = "table-column"; break;
+	case CSS_DISPLAY_TABLE_CELL: anz = "table-cell"; break;
+	case CSS_DISPLAY_TABLE_CAPTION: anz = "table-caption"; break;
+	case CSS_DISPLAY_NONE: anz = "none"; break;
+	case CSS_DISPLAY_FLEX: anz = "flex"; break;
+	case CSS_DISPLAY_INLINE_FLEX: anz = "inline-flex"; break;
+	case CSS_DISPLAY_GRID: anz = "grid"; break;
+	case CSS_DISPLAY_INLINE_GRID: anz = "inline-grid"; break;
+	default: break;
+	}
+	switch (css_computed_visibility(st)) {
+	case CSS_VISIBILITY_VISIBLE: sicht = "visible"; break;
+	case CSS_VISIBILITY_HIDDEN: sicht = "hidden"; break;
+	case CSS_VISIBILITY_COLLAPSE: sicht = "collapse"; break;
+	default: break;
+	}
+	switch (css_computed_position(st)) {
+	case CSS_POSITION_STATIC: lage = "static"; break;
+	case CSS_POSITION_RELATIVE: lage = "relative"; break;
+	case CSS_POSITION_ABSOLUTE: lage = "absolute"; break;
+	case CSS_POSITION_FIXED: lage = "fixed"; break;
+	case CSS_POSITION_STICKY: lage = "sticky"; break;
+	default: break;
+	}
+	o = JS_NewObject(cx);
+	JS_SetPropertyStr(cx, o, "display", JS_NewString(cx, anz));
+	JS_SetPropertyStr(cx, o, "visibility", JS_NewString(cx, sicht));
+	JS_SetPropertyStr(cx, o, "position", JS_NewString(cx, lage));
+	css_computed_color(st, &farbe);
+	JS_SetPropertyStr(cx, o, "color", JS_NewString(cx, farbe_text(farbe, f, sizeof f)));
+	farbe = 0;
+	css_computed_background_color(st, &farbe);
+	JS_SetPropertyStr(cx, o, "backgroundColor", JS_NewString(cx, farbe_text(farbe, hg, sizeof hg)));
+	if (css_computed_font_size(st, &laenge, &einheit) == CSS_FONT_SIZE_DIMENSION && einheit == CSS_UNIT_PX) {
+		snprintf(gr, sizeof gr, "%gpx", FIXTOFLT(laenge));
+		JS_SetPropertyStr(cx, o, "fontSize", JS_NewString(cx, gr));
+	}
+	return o;
+}
+
+/* N.ansicht() → [breite, höhe, rollen-x, rollen-y] des Fensters */
+static JSValue g_ansicht(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct browser_window *bw = oberstes(t);
+	int w = 0, h = 0, sx = 0, sy = 0;
+	JSValue a;
+	(void)this_val; (void)argc; (void)argv;
+	if (bw != NULL) {
+		/* Fenster rechnet mit Zoom, Skripte in CSS-Pixeln (B8) */
+		float z = browser_window_get_scale(bw);
+		browser_window_get_dimensions(bw, &w, &h);
+		guit->window->get_scroll(bw->window, &sx, &sy);
+		if (z > 0.0f) {
+			w = (int)(w / z);
+			h = (int)(h / z);
+			sx = (int)(sx / z);
+			sy = (int)(sy / z);
+		}
+	}
+	a = JS_NewArray(cx);
+	JS_SetPropertyUint32(cx, a, 0, JS_NewInt32(cx, w));
+	JS_SetPropertyUint32(cx, a, 1, JS_NewInt32(cx, h));
+	JS_SetPropertyUint32(cx, a, 2, JS_NewInt32(cx, sx));
+	JS_SetPropertyUint32(cx, a, 3, JS_NewInt32(cx, sy));
+	return a;
+}
+
+/* N.rollenNach(x, y): Fenster dorthin rollen (scrollTo, scrollIntoView) */
+static JSValue g_rollen_nach(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct browser_window *bw = oberstes(t);
+	int32_t x = 0, y = 0;
+	struct rect r;
+	UNBENUTZT;
+	JS_ToInt32(cx, &x, argv[0]);
+	JS_ToInt32(cx, &y, argv[1]);
+	if (bw == NULL)
+		return JS_UNDEFINED;
+	{
+		float z = browser_window_get_scale(bw);
+		if (z > 0.0f) {
+			x = (int32_t)(x * z);
+			y = (int32_t)(y * z);
+		}
+	}
+	r.x0 = x < 0 ? 0 : x;
+	r.y0 = y < 0 ? 0 : y;
+	r.x1 = r.x0;
+	r.y1 = r.y0;
+	guit->window->set_scroll(bw->window, &r);
+	return JS_UNDEFINED;
+}
+
+/* ------------------------------------------------ Verlauf (B7) */
+
+struct verlauf_suche {
+	int rest;
+	int anzahl;
+	const struct history_entry *treffer;
+};
+
+static bool verlauf_zaehlen(const struct browser_window *bw, int x0, int y0, int x1, int y1,
+		const struct history_entry *e, void *pw)
+{
+	struct verlauf_suche *s = pw;
+	(void)bw; (void)x0; (void)y0; (void)x1; (void)y1;
+	s->anzahl++;
+	if (s->treffer == NULL && --s->rest == 0)
+		s->treffer = e;
+	return true;
+}
+
+/* N.verlauf(n): history.go(n) – 0 lädt neu, sonst n Schritte zurück bzw.
+ * vor über NetSurfs Verlauf; ausserhalb des Verlaufs nichts (Standard) */
+static JSValue g_verlauf(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct browser_window *bw = oberstes(t);
+	struct verlauf_suche s = { 0, 0, NULL };
+	int32_t n = 0;
+	UNBENUTZT;
+	JS_ToInt32(cx, &n, argv[0]);
+	if (bw == NULL)
+		return JS_UNDEFINED;
+	if (n == 0) {
+		browser_window_reload(bw, false);
+		return JS_UNDEFINED;
+	}
+	s.rest = n < 0 ? -n : n;
+	if (n < 0)
+		browser_window_history_enumerate_back(bw, verlauf_zaehlen, &s);
+	else
+		browser_window_history_enumerate_forward(bw, verlauf_zaehlen, &s);
+	if (s.treffer != NULL)
+		browser_window_history_go(bw, (struct history_entry *)s.treffer, false);
+	return JS_UNDEFINED;
+}
+
+/* N.verlaufLaenge() → Einträge zurück + aktueller + vor (history.length) */
+static JSValue g_verlauf_laenge(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct browser_window *bw = oberstes(t);
+	struct verlauf_suche s = { 0, 0, NULL };
+	(void)this_val; (void)argc; (void)argv;
+	if (bw == NULL)
+		return JS_NewInt32(cx, 1);
+	browser_window_history_enumerate_back(bw, verlauf_zaehlen, &s);
+	browser_window_history_enumerate_forward(bw, verlauf_zaehlen, &s);
+	return JS_NewInt32(cx, s.anzahl + 1);
+}
+
+/* ------------------------------------------------ Formularfelder (B7) */
+
+void ns_feld_vorgabe_sichern(dom_node *n);
+
+static dom_html_element_type elementart(dom_node *n)
+{
+	dom_node_type typ;
+	dom_html_element_type art = DOM_HTML_ELEMENT_TYPE__UNKNOWN;
+	if (n != NULL && dom_node_get_node_type(n, &typ) == DOM_NO_ERR && typ == DOM_ELEMENT_NODE)
+		dom_html_element_get_tag_type((dom_html_element *)n, &art);
+	return art;
+}
+
+/* Bedienelement NetSurfs zum Knoten (nur mit Box im Layout) oder NULL */
+static struct form_control *bedienelement(jsthread *t, dom_node *n)
+{
+	struct box *b = box_von(t, n);
+	return b != NULL ? b->gadget : NULL;
+}
+
+static bool ist_textfeld(struct form_control *g)
+{
+	return g != NULL && g->box != NULL && g->data.text.ta != NULL &&
+		(g->type == GADGET_TEXTBOX || g->type == GADGET_PASSWORD || g->type == GADGET_TEXTAREA);
+}
+
+static JSValue text_oder_leer(JSContext *cx, dom_string *s)
+{
+	return s != NULL ? als_text(cx, s) : JS_NewString(cx, "");
+}
+
+/* N.textareaWert(el) → aktueller Text eines textarea (mit Getipptem) */
+static JSValue g_textarea_wert(ARGS)
+{
+	dom_node *n = knoten(cx, argv[0]);
+	dom_string *s = NULL;
+	UNBENUTZT;
+	if (elementart(n) != DOM_HTML_ELEMENT_TYPE_TEXTAREA ||
+	    dom_html_text_area_element_get_value((dom_html_text_area_element *)n, &s) != DOM_NO_ERR)
+		s = NULL;
+	return text_oder_leer(cx, s);
+}
+
+/* N.feldSetzen(el, text): Wert von input/textarea setzen und NetSurfs
+ * Textfeld nachziehen (Vorgabewert bleibt) */
+static JSValue g_feld_setzen(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	dom_node *n = knoten(cx, argv[0]);
+	dom_html_element_type art = elementart(n);
+	struct form_control *g;
+	dom_string *s;
+	UNBENUTZT;
+	if (art != DOM_HTML_ELEMENT_TYPE_INPUT && art != DOM_HTML_ELEMENT_TYPE_TEXTAREA)
+		return JS_UNDEFINED;
+	s = zu_dom(cx, argv[1]);
+	if (s == NULL)
+		return JS_EXCEPTION;
+	if (art == DOM_HTML_ELEMENT_TYPE_TEXTAREA) {
+		dom_html_text_area_element_set_value((dom_html_text_area_element *)n, s);
+	} else {
+		ns_feld_vorgabe_sichern(n);
+		dom_html_input_element_set_value((dom_html_input_element *)n, s);
+	}
+	dom_string_unref(s);
+	g = bedienelement(t, n);
+	if (ist_textfeld(g)) {
+		form_gadget_sync_with_dom(g);
+		html__redraw_a_box(t->htmlc, g->box);
+	}
+	return JS_UNDEFINED;
+}
+
+/* N.vorgabe(el) → [Vorgabewert, vorgabe angehakt] eines input
+ * (defaultValue, defaultChecked, reset(); bei textarea ist die Vorgabe der
+ * Inhalt, das regelt vorspann.js) */
+static JSValue g_vorgabe(ARGS)
+{
+	dom_node *n = knoten(cx, argv[0]);
+	dom_html_element_type art = elementart(n);
+	dom_string *s = NULL;
+	bool an = false;
+	JSValue a;
+	UNBENUTZT;
+	if (art == DOM_HTML_ELEMENT_TYPE_INPUT) {
+		if (dom_html_input_element_get_default_value((dom_html_input_element *)n, &s) != DOM_NO_ERR)
+			s = NULL;
+		if (dom_html_input_element_get_default_checked((dom_html_input_element *)n, &an) != DOM_NO_ERR)
+			an = false;
+	}
+	a = JS_NewArray(cx);
+	JS_SetPropertyUint32(cx, a, 0, text_oder_leer(cx, s));
+	JS_SetPropertyUint32(cx, a, 1, JS_NewBool(cx, an));
+	return a;
+}
+
+/* N.vorgabeSetzen(input, text): defaultValue setzen */
+static JSValue g_vorgabe_setzen(ARGS)
+{
+	dom_node *n = knoten(cx, argv[0]);
+	dom_string *s;
+	UNBENUTZT;
+	if (elementart(n) != DOM_HTML_ELEMENT_TYPE_INPUT)
+		return JS_UNDEFINED;
+	s = zu_dom(cx, argv[1]);
+	if (s == NULL)
+		return JS_EXCEPTION;
+	dom_html_input_element_set_default_value((dom_html_input_element *)n, s);
+	dom_string_unref(s);
+	return JS_UNDEFINED;
+}
+
+/* N.anhaken(el, an): Kästchen/Optionsfeld setzen und NetSurfs Anzeige
+ * nachziehen (die Gruppe eines Optionsfelds regelt vorspann.js) */
+static JSValue g_anhaken(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	dom_node *n = knoten(cx, argv[0]);
+	bool an = JS_ToBool(cx, argv[1]);
+	struct form_control *g;
+	UNBENUTZT;
+	if (elementart(n) != DOM_HTML_ELEMENT_TYPE_INPUT)
+		return JS_UNDEFINED;
+	dom_html_input_element_set_checked((dom_html_input_element *)n, an);
+	g = bedienelement(t, n);
+	if (g != NULL && (g->type == GADGET_CHECKBOX || g->type == GADGET_RADIO)) {
+		g->selected = an;
+		html__redraw_a_box(t->htmlc, g->box);
+	}
+	return JS_UNDEFINED;
+}
+
+/* N.auswahlNachziehen(select, zuruecksetzen): NetSurfs Auswahlliste nach
+ * dem DOM richten (selected der option-Elemente, von Skripten gesetzt);
+ * mit zuruecksetzen vorher jede Option auf ihre Vorgabe (reset()) */
+static JSValue g_auswahl_nachziehen(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	dom_node *n = knoten(cx, argv[0]);
+	bool zurueck = JS_ToBool(cx, argv[1]);
+	struct form_control *g;
+	struct form_option *o;
+	int i, erste = -1;
+	UNBENUTZT;
+	if (elementart(n) != DOM_HTML_ELEMENT_TYPE_SELECT)
+		return JS_UNDEFINED;
+	g = bedienelement(t, n);
+	if (g == NULL || g->type != GADGET_SELECT || g->box == NULL)
+		return JS_UNDEFINED;
+	for (i = 0, o = g->data.select.items; o != NULL; i++, o = o->next) {
+		bool im_dom = false;
+		if (zurueck)
+			dom_html_option_element_set_selected(o->node, o->initial_selected);
+		if (dom_html_option_element_get_selected(o->node, &im_dom) != DOM_NO_ERR)
+			im_dom = false;
+		if (g->data.select.multiple) {
+			/* schaltet um, wo NetSurf und DOM verschieden sind */
+			if (im_dom != o->selected)
+				form_select_process_selection(g, i);
+		} else if (im_dom) {
+			erste = i;
+		}
+	}
+	/* eine Auswahl: die letzte gewählte (wie NetSurfs form_add_option),
+	 * sonst die erste Option (Standard) */
+	if (!g->data.select.multiple && g->data.select.items != NULL)
+		form_select_process_selection(g, erste < 0 ? 0 : erste);
+	return JS_UNDEFINED;
+}
+
+/* N.feldFokus(el, an) → true bei einem Textfeld: Schreibmarke ans Ende
+ * setzen (öffnet am Board die Bildschirmtastatur) bzw. wegnehmen */
+static JSValue g_feld_fokus(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct form_control *g = bedienelement(t, knoten(cx, argv[0]));
+	UNBENUTZT;
+	if (!ist_textfeld(g) || t->htmlc->bw == NULL)
+		return JS_FALSE;
+	if (JS_ToBool(cx, argv[1])) {
+		textarea_set_caret(g->data.text.ta, INT_MAX);
+	} else if (t->htmlc->focus_type == HTML_FOCUS_TEXTAREA && t->htmlc->focus_owner.textarea == g->box) {
+		union html_focus_owner selbst;
+		selbst.self = true;
+		textarea_set_caret(g->data.text.ta, -1);
+		html_set_focus(t->htmlc, HTML_FOCUS_SELF, selbst, true, 0, 0, 0, NULL);
+	}
+	return JS_TRUE;
+}
+
+/* N.feldAuswahl(el) → true bei einem Textfeld: Fokus und ganzen Text
+ * auswählen (select()) */
+static JSValue g_feld_auswahl(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct form_control *g = bedienelement(t, knoten(cx, argv[0]));
+	UNBENUTZT;
+	if (!ist_textfeld(g))
+		return JS_FALSE;
+	if (t->htmlc->bw != NULL)
+		textarea_set_caret(g->data.text.ta, INT_MAX);
+	textarea_keypress(g->data.text.ta, NS_KEY_SELECT_ALL);
+	return JS_TRUE;
+}
+
+/* N.aktivesFeld() → Textfeld mit der Schreibmarke oder null */
+static JSValue g_aktives_feld(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	struct box *b;
+	(void)this_val; (void)argc; (void)argv;
+	if (t->htmlc == NULL || t->htmlc->focus_type != HTML_FOCUS_TEXTAREA)
+		return JS_NULL;
+	b = t->htmlc->focus_owner.textarea;
+	if (b == NULL || b->gadget == NULL || b->gadget->node == NULL)
+		return JS_NULL;
+	return huelle(t, b->gadget->node);
+}
+
+/* N.absenden(form) → true, wenn NetSurf das Formular abschickt
+ * (form.submit(): ohne „submit“-Ereignis, wie im Standard) */
+static JSValue g_absenden(ARGS)
+{
+	jsthread *t = thread_von(cx);
+	dom_node *n = knoten(cx, argv[0]);
+	struct form *f;
+	UNBENUTZT;
+	if (n == NULL || t->htmlc == NULL || t->htmlc->bw == NULL)
+		return JS_FALSE;
+	for (f = t->htmlc->forms; f != NULL; f = f->prev)
+		if (f->node == n)
+			break;
+	if (f == NULL)
+		return JS_FALSE;
+	return JS_NewBool(cx, form_submit(content_get_url(&t->htmlc->base), t->htmlc->bw, f, NULL) == NSERROR_OK);
+}
+
 /* --- Sonstiges */
 
 static JSValue g_protokoll(ARGS)
@@ -1199,6 +2128,28 @@ static const JSCFunctionListEntry grundfunktionen[] = {
 	JS_CFUNC_DEF("adresse", 0, g_adresse),
 	JS_CFUNC_DEF("geheZu", 1, g_gehe_zu),
 	JS_CFUNC_DEF("aenderungen", 0, g_aenderungen),
+	JS_CFUNC_DEF("abruf", 4, g_abruf),
+	JS_CFUNC_DEF("cookie", 0, g_cookie),
+	JS_CFUNC_DEF("cookieSetzen", 1, g_cookie_setzen),
+	JS_CFUNC_DEF("speicherLesen", 0, g_speicher_lesen),
+	JS_CFUNC_DEF("speicherSchreiben", 1, g_speicher_schreiben),
+	JS_CFUNC_DEF("masse", 1, g_masse),
+	JS_CFUNC_DEF("stil", 1, g_stil),
+	JS_CFUNC_DEF("ansicht", 0, g_ansicht),
+	JS_CFUNC_DEF("rollenNach", 2, g_rollen_nach),
+	JS_CFUNC_DEF("textareaWert", 1, g_textarea_wert),
+	JS_CFUNC_DEF("feldSetzen", 2, g_feld_setzen),
+	JS_CFUNC_DEF("vorgabe", 1, g_vorgabe),
+	JS_CFUNC_DEF("anhaken", 2, g_anhaken),
+	JS_CFUNC_DEF("feldFokus", 2, g_feld_fokus),
+	JS_CFUNC_DEF("feldAuswahl", 1, g_feld_auswahl),
+	JS_CFUNC_DEF("aktivesFeld", 0, g_aktives_feld),
+	JS_CFUNC_DEF("absenden", 1, g_absenden),
+	JS_CFUNC_DEF("abrufStoppen", 1, g_abruf_stoppen),
+	JS_CFUNC_DEF("vorgabeSetzen", 2, g_vorgabe_setzen),
+	JS_CFUNC_DEF("auswahlNachziehen", 2, g_auswahl_nachziehen),
+	JS_CFUNC_DEF("verlauf", 1, g_verlauf),
+	JS_CFUNC_DEF("verlaufLaenge", 0, g_verlauf_laenge),
 };
 
 /* ------------------------------------------------------------ js.h */
@@ -1391,9 +2342,16 @@ nserror js_closethread(jsthread *thread)
 {
 	if (thread == NULL)
 		return NSERROR_OK;
+	/* localStorage: noch nicht geschriebene Änderungen sichern (B7) */
+	if (!thread->geschlossen && thread->cx != NULL) {
+		eintreten(thread);
+		JS_FreeValue(thread->cx, rufen(thread, "__ns_speicher_sichern", 0, NULL));
+		austreten(thread);
+	}
 	thread->geschlossen = true;
 	zeitgeber_stoppen(thread);
 	layout_stoppen(thread);
+	abrufe_stoppen(thread);
 	return NSERROR_OK;
 }
 
@@ -1406,6 +2364,7 @@ void js_destroythread(jsthread *thread)
 	thread->geschlossen = true;
 	zeitgeber_stoppen(thread);
 	layout_stoppen(thread);
+	abrufe_stoppen(thread);
 	tabelle_freigeben(thread->cx, &thread->ereignisse);
 	tabelle_freigeben(thread->cx, &thread->knoten);
 	JS_FreeContext(thread->cx);

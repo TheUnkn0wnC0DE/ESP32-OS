@@ -78,6 +78,18 @@ static void ordner_anlegen(const char *p)
 		NSLOG(netsurf, WARNING, "Datenordner %s nicht angelegt", p);
 }
 
+/* B7 (localStorage, c/js_quickjs.c): Ordner für die Ablage je Herkunft,
+ * angelegt; NULL ohne Datenordner. */
+const char *ns_speicher_ordner(void)
+{
+	static char sp[220];
+	if (ordner[0] == '\0')
+		return NULL;
+	snprintf(sp, sizeof sp, "%s/speicher", ordner);
+	ordner_anlegen(sp);
+	return sp;
+}
+
 /* B8 (c/download.c): Ordner für Downloads, angelegt; NULL ohne Datenordner.
  * Am Board neben dem Datenordner (/daten/Downloads), in Tests darin. */
 const char *ns_download_ordner(void)

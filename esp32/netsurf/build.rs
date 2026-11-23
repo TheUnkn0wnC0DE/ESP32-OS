@@ -118,10 +118,15 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     g.p(bib("libdom")).standard().d("WITHOUT_ICONV_FILTER", None).d("WITH_HUBBUB_BINDING", None);
     for n in ["libwapcaplet", "libparserutils", "libhubbub", "libdom"] {
         for f in dir_sources(&bib(n)) {
+            // B7: als Kopie (dom_textarea_kopie)
+            if f.ends_with("html/html_text_area_element.c") {
+                continue;
+            }
             g.f(f);
         }
     }
     g.f(bib("libdom").join("bindings/hubbub/parser.c"));
+    g.f(dom_textarea_kopie(q, &aus.join("dom")));
     g.proben.push(c("probe.c"));
     v.push(g);
 
@@ -231,6 +236,11 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     // llcache.c als geprüfte Kopie: Grösse des Zwischenspeichers nach jedem
     // Aufräumen messbar (B3)
     g.f(llcache_kopie(q, aus));
+    // urldb.c als Kopie (B7, Cookie-Fix in urldb.c, siehe urldb_kopie)
+    g.f(urldb_kopie(q, aus));
+    // box_textarea.c und interaction.c als Kopien, c/formular.c (B7:
+    // Formular-Ereignisse input/submit, abgebrochener Klick)
+    g.f(box_textarea_kopie(q, aus)).f(interaction_kopie(q, aus)).f(form_kopie(q, aus)).f(c("formular.c"));
     g.proben.push(c("probe_kern.c"));
     // B2: content/fetch.c mit WITH_CURL (ruft fetch_curl_register, das
     // c/abruf.c bereitstellt) – nur diese Datei, utils/time.c bliebe sonst
@@ -788,6 +798,13 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
             "\tnsfb_update(fbtk_get_nsfb(widget), &bwidget->redraw_box);\n\n\tbwidget->redraw_box.y0 = bwidget->redraw_box.x0 = INT_MAX;\n",
             "\tNS_MESS(ns_mess_ausgabe_us, nsfb_update(fbtk_get_nsfb(widget), &bwidget->redraw_box));\n\n\tbwidget->redraw_box.y0 = bwidget->redraw_box.x0 = INT_MAX;\n",
         ),
+        (
+            // B7: Rollen ist im Framebuffer nur vorgemerkt (pan, beim
+            // nächsten Zeichnen) – die Lage zählt das Vorgemerkte mit, sonst
+            // sähe scrollTo → scrollY die alte Lage
+            "\t*sx = bwidget->scrollx;\n\t*sy = bwidget->scrolly;\n",
+            "\t/* ESP32-OS (B7): vorgemerktes Rollen mitzählen */\n\t*sx = bwidget->scrollx + bwidget->panx;\n\t*sy = bwidget->scrolly + bwidget->pany;\n",
+        ),
     ] {
         assert_eq!(t.matches(alt).count(), 1, "gui.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
         t = t.replacen(alt, neu, 1);
@@ -819,6 +836,45 @@ fn html_kopie(q: &Path, ziel: &Path) -> PathBuf {
         (
             "\tc->enable_scripting = nsoption_bool(enable_javascript);\n",
             "\tc->enable_scripting = nsoption_bool(enable_javascript) && !ns_ohne_js(content_get_url(&c->base));\n",
+        ),
+        (
+            // B7: DOMContentLoaded früh – html_begin_conversion wartet auf alle
+            // Abrufe (auch Bilder); DCL gehört ans Ende des Parsens (nach den
+            // aufgeschobenen Skripten). Den Parse wie dort abschliessen, falls
+            // kein synchrones Skript mehr aussteht.
+            "static bool html_convert(struct content *c)\n{\n",
+            "/* ESP32-OS (B7): DOMContentLoaded, sobald das Parsen fertig ist und alle\n\
+             \x20* aufgeschobenen Skripte da sind (nicht erst nach allen Bildern). */\n\
+             static void ns_dcl_frueh(html_content *htmlc)\n{\n\
+             \tunsigned int i;\n\
+             \tif (htmlc->jsthread == NULL)\n\t\treturn;\n\
+             \tif (htmlc->parse_completed == false) {\n\
+             \t\tdom_hubbub_error e = dom_hubbub_parser_completed(htmlc->parser);\n\
+             \t\tif (e != DOM_HUBBUB_OK)\n\
+             \t\t\treturn; /* synchrones Skript steht aus: später in html_begin_conversion */\n\
+             \t\thtmlc->parse_completed = true;\n\t}\n\
+             \tfor (i = 0; i != htmlc->scripts_count; i++) {\n\
+             \t\tstruct html_script *s = &htmlc->scripts[i];\n\
+             \t\tif (s->already_started || s->type != HTML_SCRIPT_DEFER)\n\t\t\tcontinue;\n\
+             \t\tif (s->data.handle == NULL)\n\t\t\treturn;\n\
+             \t\tif (content_get_status(s->data.handle) != CONTENT_STATUS_DONE &&\n\
+             \t\t    content_get_status(s->data.handle) != CONTENT_STATUS_ERROR)\n\
+             \t\t\treturn; /* aufgeschobenes Skript lädt noch */\n\t}\n\
+             \thtml_script_exec(htmlc, true);\n\
+             \tjs_fire_event(htmlc->jsthread, \"DOMContentLoaded\", htmlc->document, NULL);\n}\n\n\
+             static bool html_convert(struct content *c)\n{\n",
+        ),
+        (
+            "\thtmlc->base.active--; /* the html fetch is no longer active */\n\tNSLOG(netsurf, INFO, \"%d fetches active (%p)\", htmlc->base.active, c);\n",
+            "\thtmlc->base.active--; /* the html fetch is no longer active */\n\tNSLOG(netsurf, INFO, \"%d fetches active (%p)\", htmlc->base.active, c);\n\
+             \tns_dcl_frueh(htmlc); /* ESP32-OS (B7) */\n",
+        ),
+        (
+            // B7: DOMContentLoaded – NetSurf hat an dieser Stelle nur den Kommentar
+            "\t/* fire a simple event that bubbles named DOMContentLoaded at\n\t * the Document.\n\t */\n",
+            "\t/* fire a simple event that bubbles named DOMContentLoaded at\n\t * the Document.\n\t */\n\
+             \tif (htmlc->jsthread != NULL) /* ESP32-OS (B7) */\n\
+             \t\tjs_fire_event(htmlc->jsthread, \"DOMContentLoaded\", htmlc->document, NULL);\n",
         ),
     ] {
         assert_eq!(t.matches(alt).count(), 1, "html.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
@@ -1012,6 +1068,201 @@ fn text_kopie(q: &Path, ziel: &Path) -> PathBuf {
     )
 }
 
+/// `content/handlers/html/box_textarea.c` als geprüfte Kopie (B7): nach
+/// einem Tastendruck, der den Text eines Feldes ändert, „input“ ans Feld;
+/// vor dem Abschicken mit der Eingabetaste „submit“ ans Formular, das ein
+/// Skript abbrechen kann (c/formular.c).
+fn box_textarea_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "content/handlers/html/box_textarea.c",
+        "box_textarea.c",
+        &[
+            (
+                "nserror box_textarea_keypress(html_content *html, struct box *box, uint32_t key)\n{\n",
+                "/* ESP32-OS (B7): Formular-Ereignisse für Skripte (c/formular.c) */\n\
+                 bool ns_formular_absenden_erlaubt(struct form *form);\n\
+                 void ns_feld_eingabe_melden(struct form_control *g, const char *vorher);\n\
+                 void ns_feld_vorgabe_sichern(dom_node *n);\n\
+                 static nserror ns_tastendruck(html_content *html, struct box *box, uint32_t key);\n\
+                 \n\
+                 nserror box_textarea_keypress(html_content *html, struct box *box, uint32_t key)\n{\n\
+                 \tstruct form_control *g = box->gadget;\n\
+                 \tchar *vorher = g->value != NULL ? strdup(g->value) : NULL;\n\
+                 \tnserror res;\n\
+                 \tif (g->type == GADGET_TEXTBOX || g->type == GADGET_PASSWORD)\n\
+                 \t\tns_feld_vorgabe_sichern(g->node);\n\
+                 \tres = ns_tastendruck(html, box, key);\n\
+                 \t/* Eingabetaste im einzeiligen Feld ändert den Text nicht;\n\
+                 \t * was ein submit-Hörer setzt, ist keine Eingabe */\n\
+                 \tif (g->type == GADGET_TEXTAREA || (key != NS_KEY_NL && key != NS_KEY_CR))\n\
+                 \t\tns_feld_eingabe_melden(g, vorher);\n\
+                 \tfree(vorher);\n\
+                 \treturn res;\n\
+                 }\n\
+                 \n\
+                 static nserror ns_tastendruck(html_content *html, struct box *box, uint32_t key)\n{\n",
+            ),
+            (
+                "\t\tif (form) {\n\t\t\tres = form_submit(content_get_url(c),\n",
+                "\t\tif (form && ns_formular_absenden_erlaubt(form)) {\n\t\t\tres = form_submit(content_get_url(c),\n",
+            ),
+        ],
+    )
+}
+
+/// `content/handlers/html/form.c` als geprüfte Kopie (B7): Auswahl in der
+/// Liste eines select per Tippen → „input“ und „change“ (c/formular.c).
+fn form_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "content/handlers/html/form.c",
+        "form.c",
+        &[
+            (
+                "static void form_select_menu_clicked(struct form_control *control, int x, int y)\n{\n",
+                "/* ESP32-OS (B7): Formular-Ereignisse für Skripte (c/formular.c) */\n\
+                 void ns_bedienung_gewechselt(dom_node *n);\n\
+                 \n\
+                 static void form_select_menu_clicked(struct form_control *control, int x, int y)\n{\n",
+            ),
+            (
+                "\tif (option != NULL) {\n\t\tform__select_process_selection(html, control, i);\n\t}\n",
+                "\tif (option != NULL) {\n\
+                 \t\t/* ESP32-OS (B7): Ereignisse nur bei geänderter Auswahl */\n\
+                 \t\tbool gleich = !control->data.select.multiple && option->selected;\n\
+                 \t\tform__select_process_selection(html, control, i);\n\
+                 \t\tif (!gleich)\n\
+                 \t\t\tns_bedienung_gewechselt(control->node);\n\
+                 \t}\n",
+            ),
+        ],
+    )
+}
+
+/// `content/handlers/html/interaction.c` als geprüfte Kopie (B7): bricht
+/// ein Skript den Klick ab (preventDefault), folgt NetSurf weder Link noch
+/// Absendeknopf und nimmt das Umschalten eines Kästchens zurück, sonst
+/// „input“/„change“ an ein umgeschaltetes Kästchen oder Optionsfeld; vor
+/// dem Abschicken über einen Knopf „submit“ ans Formular (c/formular.c).
+fn interaction_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "content/handlers/html/interaction.c",
+        "interaction.c",
+        &[
+            (
+                "#include \"html/interaction.h\"\n",
+                "#include \"html/interaction.h\"\n\n\
+                 /* ESP32-OS (B7): Formular-Ereignisse für Skripte (c/formular.c) */\n\
+                 bool ns_ereignis_frei(dom_string *typ, dom_node *ziel, bool sprudelt, bool abbrechbar);\n\
+                 bool ns_formular_absenden_erlaubt(struct form *form);\n\
+                 void ns_bedienung_gewechselt(dom_node *n);\n\
+                 /* Kästchen/Optionsfeld beim letzten Klick umgeschaltet */\n\
+                 static bool ns_umgeschaltet;\n",
+            ),
+            (
+                "\t\tif (mouse & BROWSER_MOUSE_CLICK_1) {\n\t\t\tmas->gadget.control->selected = !mas->gadget.control->selected;\n",
+                "\t\tif (mouse & BROWSER_MOUSE_CLICK_1) {\n\t\t\tns_umgeschaltet = true;\n\t\t\tmas->gadget.control->selected = !mas->gadget.control->selected;\n",
+            ),
+            (
+                "\t\tif (mouse & BROWSER_MOUSE_CLICK_1) {\n\t\t\tform_radio_set(mas->gadget.control);\n",
+                "\t\tif (mouse & BROWSER_MOUSE_CLICK_1) {\n\t\t\tns_umgeschaltet = !mas->gadget.control->selected;\n\t\t\tform_radio_set(mas->gadget.control);\n",
+            ),
+            (
+                "\tif (mouse & BROWSER_MOUSE_CLICK_1) {\n\t\tfire_generic_dom_event(corestring_dom_click, mas.node, true, true);\n\t}\n",
+                "\tif (mouse & BROWSER_MOUSE_CLICK_1) {\n\
+                 \t\t/* ESP32-OS (B7): abgebrochener Klick – keine Folgeaktion */\n\
+                 \t\tif (!ns_ereignis_frei(corestring_dom_click, mas.node, true, true)) {\n\
+                 \t\t\tif (mas.gadget.control != NULL && mas.gadget.control->type == GADGET_CHECKBOX) {\n\
+                 \t\t\t\tmas.gadget.control->selected = !mas.gadget.control->selected;\n\
+                 \t\t\t\tdom_html_input_element_set_checked(\n\
+                 \t\t\t\t\t(dom_html_input_element *)(mas.gadget.control->node),\n\
+                 \t\t\t\t\tmas.gadget.control->selected);\n\
+                 \t\t\t\thtml__redraw_a_box(html, mas.gadget.box);\n\
+                 \t\t\t}\n\
+                 \t\t\tmas.result.action = ACTION_NONE;\n\
+                 \t\t} else if (ns_umgeschaltet && mas.gadget.control != NULL) {\n\
+                 \t\t\tns_bedienung_gewechselt(mas.gadget.control->node);\n\
+                 \t\t}\n\
+                 \t\tns_umgeschaltet = false;\n\
+                 \t}\n",
+            ),
+            (
+                "\tcase ACTION_SUBMIT:\n\t\tres = form_submit(content_get_url(c),\n",
+                "\tcase ACTION_SUBMIT:\n\
+                 \t\t/* ESP32-OS (B7): „submit“ ans Formular, abbrechbar */\n\
+                 \t\tif (!ns_formular_absenden_erlaubt(mas.gadget.control->form))\n\
+                 \t\t\tbreak;\n\
+                 \t\tres = form_submit(content_get_url(c),\n",
+            ),
+        ],
+    )
+}
+
+/// `libdom/src/html/html_text_area_element.c` als geprüfte Kopie (B7):
+/// value ist vom Inhalt getrennt wie im Standard (upstream überschrieb
+/// `set_value` den Inhalt – der ist aber die Vorgabe, defaultValue/reset();
+/// NetSurf liest den Wert nur über `get_value`), und `get_value` gibt den
+/// vorigen Text frei, solange der Wert noch dem Inhalt folgt.
+fn dom_textarea_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "../libdom/src/html/html_text_area_element.c",
+        "dom_html_text_area_element.c",
+        &[
+            (
+                "\tif (ele->value_set == false) {\n\t\terr = dom_node_get_text_content((dom_node *)ele,\n\t\t\t\t\t\t&ele->value);\n\t\tif (err == DOM_NO_ERR) {\n\t\t\tele->default_value_set = true;\n",
+                "\tif (ele->value_set == false) {\n\
+                 \t\t/* ESP32-OS (B7): vorigen Text freigeben */\n\
+                 \t\tdom_string *inhalt = NULL;\n\
+                 \t\terr = dom_node_get_text_content((dom_node *)ele, &inhalt);\n\
+                 \t\tif (err == DOM_NO_ERR) {\n\
+                 \t\t\tif (ele->value != NULL)\n\
+                 \t\t\t\tdom_string_unref(ele->value);\n\
+                 \t\t\tele->value = inhalt;\n\
+                 \t\t\tele->default_value_set = true;\n",
+            ),
+            (
+                "\treturn dom_node_set_text_content((dom_node *)ele, ele->value);\n}\n",
+                "\t/* ESP32-OS (B7): Inhalt (= Vorgabe) bleibt */\n\treturn DOM_NO_ERR;\n}\n",
+            ),
+        ],
+    )
+}
+
+/// `content/urldb.c` als Kopie (B7, Cookie-Fix in urldb.c): ist die lokale
+/// Datei `urldb_fix.local.txt` da (nicht im Repo; Zeilen: Originaltext,
+/// Ersatz, erwartete Anzahl), wird sie angewandt und `cfg(ns_cookie_fix)`
+/// gesetzt (zugehöriger Test lokal); sonst unverändert wie bei NetSurf.
+fn urldb_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    let quelle = q.join("netsurf/content/urldb.c");
+    println!("cargo:rerun-if-changed={}", quelle.display());
+    println!("cargo:rustc-check-cfg=cfg(ns_cookie_fix)");
+    let fix = Path::new(env!("CARGO_MANIFEST_DIR")).join("urldb_fix.local.txt");
+    println!("cargo:rerun-if-changed={}", fix.display());
+    let mut t = std::fs::read_to_string(&quelle).expect("urldb.c").replace("\r\n", "\n");
+    if let Ok(f) = std::fs::read_to_string(&fix) {
+        let z: Vec<&str> = f.lines().collect();
+        assert!(z.len() >= 3, "urldb_fix.local.txt: drei Zeilen erwartet");
+        let anzahl: usize = z[2].trim().parse().expect("urldb_fix.local.txt: Anzahl");
+        assert_eq!(t.matches(z[0]).count(), anzahl, "urldb.c: Stellen für urldb_fix.local.txt nicht wie erwartet");
+        t = t.replace(z[0], z[1]);
+        println!("cargo:rustc-cfg=ns_cookie_fix");
+    }
+    let t = format!("/* Erzeugt von esp32/netsurf/build.rs (urldb_kopie) aus content/urldb.c. */\n{t}");
+    let datei = ziel.join("urldb.c");
+    std::fs::create_dir_all(ziel).expect("Ordner");
+    if std::fs::read_to_string(&datei).ok().as_deref() != Some(t.as_str()) {
+        std::fs::write(&datei, t).expect("urldb.c");
+    }
+    datei
+}
+
 /// `content/llcache.c` als geprüfte Kopie (B3): am Ende jedes Aufräumens
 /// (`llcache_clean`) Gesamtgrösse, Grenze und den freigebbaren Teil
 /// (Objekte ohne Nutzer und ohne laufenden Abruf) festhalten – die Grenze
@@ -1028,6 +1279,10 @@ fn llcache_kopie(q: &Path, ziel: &Path) -> PathBuf {
              static uint32_t ns_cache_groesse, ns_cache_grenze, ns_cache_frei;\n\
              void ns_llcache_stand(uint32_t *groesse, uint32_t *grenze, uint32_t *frei)\n{\n\
              \t*groesse = ns_cache_groesse;\n\t*grenze = ns_cache_grenze;\n\t*frei = ns_cache_frei;\n}\n\n\
+             /* ESP32-OS (B7): HTTP-Status für fetch/XHR (beim Abruf im Objekt\n \
+             * festgehalten, siehe llcache_fetch_callback; 0 = unbekannt) */\n\
+             long ns_llcache_http_code(const llcache_handle *h)\n{\n\
+             \treturn (h != NULL && h->object != NULL) ? h->object->ns_http_code : 0;\n}\n\n\
              void llcache_clean(bool purge)\n{\n",
         ),
         (
@@ -1046,6 +1301,18 @@ fn llcache_kopie(q: &Path, ziel: &Path) -> PathBuf {
              \t\tns_cache_grenze = limit;\n\
              \t\tns_cache_frei = frei;\n\
              \t}\n}\n",
+        ),
+        (
+            "\tnsurl *url;\t\t     /**< Post-redirect URL for object */\n",
+            "\tnsurl *url;\t\t     /**< Post-redirect URL for object */\n\
+             \tlong ns_http_code;\t     /**< ESP32-OS (B7): HTTP-Status des Abrufs */\n",
+        ),
+        (
+            "\tNSLOG(llcache, DEBUG, \"Fetch event %d for %p\", msg->type, object);\n",
+            "\tNSLOG(llcache, DEBUG, \"Fetch event %d for %p\", msg->type, object);\n\
+             \t/* ESP32-OS (B7): HTTP-Status festhalten, sobald bekannt (fetch/XHR) */\n\
+             \tif (object->fetch.fetch != NULL && fetch_http_code(object->fetch.fetch) > 0)\n\
+             \t\tobject->ns_http_code = fetch_http_code(object->fetch.fetch);\n",
         ),
     ] {
         assert_eq!(t.matches(alt).count(), 1, "llcache.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");
@@ -1185,7 +1452,7 @@ fn board_liste(q: &Path) {
 /// Quellen des NetSurf-Kerns (Ordner, Dateien) – aus content/Makefile,
 /// content/fetchers/…, content/handlers/…, utils/…, desktop/Makefile.
 const KERN: &[(&str, &str)] = &[
-    ("content", "content.c content_factory.c hlcache.c mimesniff.c textsearch.c urldb.c no_backing_store.c"),
+    ("content", "content.c content_factory.c hlcache.c mimesniff.c textsearch.c no_backing_store.c"),
     ("content/fetchers", "data.c resource.c"),
     (
         "content/fetchers/about",
@@ -1199,8 +1466,8 @@ const KERN: &[(&str, &str)] = &[
     ("content/handlers/javascript", "fetcher.c content.c"),
     (
         "content/handlers/html",
-        "box_construct.c box_inspect.c box_manipulate.c box_normalise.c box_special.c box_textarea.c css.c css_fetcher.c \
-         dom_event.c font.c form.c forms.c imagemap.c interaction.c layout.c layout_flex.c object.c redraw.c \
+        "box_construct.c box_inspect.c box_manipulate.c box_normalise.c box_special.c css.c css_fetcher.c \
+         dom_event.c font.c forms.c imagemap.c layout.c layout_flex.c object.c redraw.c \
          redraw_border.c script.c table.c textselection.c",
     ),
     ("content/handlers/text", "textplain.c"),

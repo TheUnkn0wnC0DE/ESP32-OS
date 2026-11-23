@@ -71,7 +71,13 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   Startbild entfernt).
 - ✔ O2 ELF-Lader geprüft: auf dem P4 tragfähig, nicht umgesetzt
   (Abweichung: Programme statisch eingelinkt, eigene Bau-Kette nötig).
-  Weiter: O1, O4, O5, O6, Rest von B7.
+- ✔ O5 Langtest: 1 h am Board über WLAN, Wikipedia-Artikel 36-mal neu
+  geladen, kein Reset, keine Panic, Browser-Heap Spitze 7,4 von 10 MB.
+- ✔ B7 JavaScript: fetch/XHR, document.cookie (Cookie-Fix in urldb.c),
+  localStorage dauerhaft, Masse aus dem Layout, DOMContentLoaded früh,
+  Formulare mit input/submit/change, Verlauf; am Board JS-Seite mit
+  Neu-Layout nach Klick und Eingabe. Grenzen als Abweichung in PLAN.
+  Weiter: O1, O4, O6.
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 

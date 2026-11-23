@@ -71,7 +71,10 @@
   const STOPP_SOFORT = Symbol('stoppSofort');
 
   class EventTarget {
+    // ohne „window.“ gerufen (addEventListener('load', …)) ist this
+    // undefined – dann gilt das Fenster
     addEventListener(typ, fn, opt) {
+      if (this == null) return EventTarget.prototype.addEventListener.call(G, typ, fn, opt);
       if (!fn) return;
       const capture = typeof opt === 'boolean' ? opt : !!(opt && opt.capture);
       const once = !!(opt && typeof opt === 'object' && opt.once);
@@ -81,6 +84,7 @@
       anmelden(this, String(typ));
     }
     removeEventListener(typ, fn, opt) {
+      if (this == null) return EventTarget.prototype.removeEventListener.call(G, typ, fn, opt);
       const capture = typeof opt === 'boolean' ? opt : !!(opt && opt.capture);
       const l = hoererListe(this, String(typ), capture, false);
       if (!l) return;
@@ -88,6 +92,7 @@
       if (i >= 0) l.splice(i, 1);
     }
     dispatchEvent(ev) {
+      if (this == null) return EventTarget.prototype.dispatchEvent.call(G, ev);
       if (!(ev instanceof Event) && !(ev instanceof NativesEreignis)) throw new TypeError('dispatchEvent: kein Event');
       if (this === G || !(this instanceof Node)) {
         ev.target = this; ev.currentTarget = this; ev.eventPhase = 2;
@@ -491,7 +496,22 @@
     isSameNode(o) { return o === this; }
     getRootNode() { let n = this; while (n.parentNode) n = n.parentNode; return n; }
     compareDocumentPosition(o) { return this.contains(o) ? 20 : o.contains(this) ? 10 : 4; }
-    normalize() { /* libdom hält Text bereits zusammen, wo es zählt */ }
+    // benachbarte Textknoten zusammenlegen, leere entfernen (rekursiv)
+    normalize() {
+      let k = this.firstChild;
+      while (k) {
+        const n = k.nextSibling;
+        if (k.nodeType === TEXT) {
+          if (k.data === '') { this.removeChild(k); k = n; continue; }
+          let m = n;
+          while (m && m.nodeType === TEXT) { const w = m.nextSibling; k.data += m.data; this.removeChild(m); m = w; }
+          k = m;
+          continue;
+        }
+        if (k.nodeType === ELEMENT) k.normalize();
+        k = n;
+      }
+    }
   }
   Node.ELEMENT_NODE = ELEMENT; Node.TEXT_NODE = TEXT; Node.COMMENT_NODE = COMMENT;
   Node.DOCUMENT_NODE = DOCUMENT; Node.DOCUMENT_FRAGMENT_NODE = FRAGMENT; Node.DOCUMENT_TYPE_NODE = DOCTYPE;
@@ -596,6 +616,9 @@
     });
   }
 
+  function rechteck(x, y, w, h) {
+    return { x, y, width: w, height: h, top: y, left: x, right: x + w, bottom: y + h, toJSON() { return { x, y, width: w, height: h, top: y, left: x, right: x + w, bottom: y + h }; } };
+  }
   class Element extends Node {
     get tagName() { return this.nodeName; }
     get localName() { return this.nodeName.toLowerCase(); }
@@ -657,14 +680,29 @@
     get dir() { return this.getAttribute('dir') || ''; }
     get tabIndex() { return +(this.getAttribute('tabindex') || -1); }
     click() { this.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); }
-    focus() { this.dispatchEvent(new FocusEvent('focus')); }
-    blur() { this.dispatchEvent(new FocusEvent('blur')); }
-    // Ohne Layout-Rückmeldung (siehe STATUS): Maße 0
-    getBoundingClientRect() { return { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 }; }
-    getClientRects() { return []; }
-    get offsetWidth() { return 0; } get offsetHeight() { return 0; } get offsetTop() { return 0; } get offsetLeft() { return 0; }
-    get clientWidth() { return 0; } get clientHeight() { return 0; } get scrollWidth() { return 0; } get scrollHeight() { return 0; }
-    scrollIntoView() {} // Blättern übernimmt NetSurf nicht für Skripte
+    // Textfelder bekommen bzw. verlieren NetSurfs Schreibmarke (B7)
+    focus() { if (N.aktivesFeld() === this) return; N.feldFokus(this, true); this.dispatchEvent(new FocusEvent('focus')); }
+    blur() { N.feldFokus(this, false); this.dispatchEvent(new FocusEvent('blur')); }
+    // Masse aus NetSurfs Layout (B7, c/js_quickjs.c: N.masse, N.ansicht);
+    // ohne Box (noch nicht gesetzt, display:none, entfernt) 0
+    getBoundingClientRect() {
+      const m = N.masse(this), a = N.ansicht();
+      return m ? rechteck(m[0] - a[2], m[1] - a[3], m[2], m[3]) : rechteck(0, 0, 0, 0);
+    }
+    getClientRects() { const r = this.getBoundingClientRect(); return r.width || r.height ? [r] : []; }
+    get offsetWidth() { const m = N.masse(this); return m ? m[2] : 0; }
+    get offsetHeight() { const m = N.masse(this); return m ? m[3] : 0; }
+    get offsetLeft() { const m = N.masse(this); return m ? m[0] : 0; }
+    get offsetTop() { const m = N.masse(this); return m ? m[1] : 0; }
+    get offsetParent() { return N.masse(this) ? document.body : null; }
+    get clientWidth() { if (this === document.documentElement) return N.ansicht()[0]; const m = N.masse(this); return m ? m[4] : 0; }
+    get clientHeight() { if (this === document.documentElement) return N.ansicht()[1]; const m = N.masse(this); return m ? m[5] : 0; }
+    get scrollWidth() { const m = N.masse(this); return m ? m[4] : 0; }
+    get scrollHeight() { const m = N.masse(this); return m ? m[5] : 0; }
+    get scrollTop() { return this === document.documentElement || this === document.body ? N.ansicht()[3] : 0; }
+    set scrollTop(v) { if (this === document.documentElement || this === document.body) N.rollenNach(N.ansicht()[2], Number(v) || 0); }
+    get scrollLeft() { return this === document.documentElement || this === document.body ? N.ansicht()[2] : 0; }
+    scrollIntoView() { const m = N.masse(this); if (m) N.rollenNach(N.ansicht()[2], m[1]); }
   }
   mischen(Element.prototype, Eltern);
   mischen(Element.prototype, Kind);
@@ -690,29 +728,119 @@
   class HTMLElement extends Element {}
   const P = HTMLElement.prototype;
   for (const [n, a, t] of [['href', 'href', 'url'], ['src', 'src', 'url'], ['action', 'action', 'url'], ['name', 'name'], ['type', 'type'],
-    ['alt', 'alt'], ['rel', 'rel'], ['target', 'target'], ['placeholder', 'placeholder'], ['htmlFor', 'for'], ['checked', 'checked', 'bool'],
-    ['disabled', 'disabled', 'bool'], ['selected', 'selected', 'bool'], ['readOnly', 'readonly', 'bool'], ['required', 'required', 'bool'],
-    ['multiple', 'multiple', 'bool'], ['width', 'width', 'zahl'], ['height', 'height', 'zahl'], ['method', 'method'], ['content', 'content'],
-    ['defaultValue', 'value']]) attrEigenschaft(P, n, a, t);
+    ['alt', 'alt'], ['rel', 'rel'], ['target', 'target'], ['placeholder', 'placeholder'], ['htmlFor', 'for'],
+    ['disabled', 'disabled', 'bool'], ['readOnly', 'readonly', 'bool'], ['required', 'required', 'bool'],
+    ['multiple', 'multiple', 'bool'], ['width', 'width', 'zahl'], ['height', 'height', 'zahl'], ['method', 'method'], ['content', 'content']])
+    attrEigenschaft(P, n, a, t);
+  // Formularfelder (B7): libdom hält den aktuellen Wert eines input im
+  // Attribut value (NetSurf schreibt Getipptes dorthin), den eines
+  // textarea gesondert; Setzen zieht NetSurfs Feld nach (N.feldSetzen,
+  // N.anhaken), die Vorgaben (defaultValue/defaultChecked) bleiben
+  const feldArt = (el) => (el.getAttribute('type') || 'text').toLowerCase();
+  Object.defineProperty(P, 'defaultValue', {
+    configurable: true,
+    get() {
+      if (this.nodeName === 'TEXTAREA') return this.textContent; // Vorgabe = Inhalt (Standard)
+      return this.nodeName === 'INPUT' ? N.vorgabe(this)[0] : (this.getAttribute('value') || '');
+    },
+    set(v) {
+      if (this.nodeName === 'TEXTAREA') { this.textContent = v; return; }
+      if (this.nodeName !== 'INPUT') { this.setAttribute('value', v); return; }
+      // neue Vorgabe; ein noch nicht geänderter Wert folgt ihr (Standard)
+      const unveraendert = this.value === N.vorgabe(this)[0];
+      N.vorgabeSetzen(this, String(v));
+      if (unveraendert) N.feldSetzen(this, String(v));
+    },
+  });
+  Object.defineProperty(P, 'defaultChecked', {
+    configurable: true,
+    get() { return this.nodeName === 'INPUT' ? N.vorgabe(this)[1] : false; },
+  });
+  // Auswahllisten: selected der option-Elemente ist der Stand (libdom),
+  // NetSurfs Liste zieht nach (N.auswahlNachziehen)
+  const liste = (o) => o.closest && o.closest('select');
+  Object.defineProperty(P, 'selected', {
+    configurable: true,
+    get() { return this.getAttribute('selected') !== null; },
+    set(v) {
+      const s = this.nodeName === 'OPTION' ? liste(this) : null;
+      if (v && s && !s.multiple) for (const o of s.querySelectorAll('option')) if (o !== this) o.removeAttribute('selected');
+      this.toggleAttribute('selected', !!v);
+      if (s) N.auswahlNachziehen(s, false);
+    },
+  });
+  Object.defineProperty(P, 'selectedIndex', {
+    configurable: true,
+    get() {
+      if (this.nodeName !== 'SELECT') return -1;
+      const o = [...this.querySelectorAll('option')];
+      const i = o.findIndex(x => x.getAttribute('selected') !== null);
+      return i >= 0 || this.multiple ? i : (o.length ? 0 : -1);
+    },
+    set(i) {
+      if (this.nodeName !== 'SELECT') return;
+      const o = [...this.querySelectorAll('option')];
+      o.forEach((x, j) => x.toggleAttribute('selected', j === Number(i)));
+      N.auswahlNachziehen(this, false);
+    },
+  });
+  Object.defineProperty(P, 'checked', {
+    configurable: true,
+    get() { return this.getAttribute('checked') !== null; },
+    set(v) {
+      if (this.nodeName !== 'INPUT') return;
+      if (v && feldArt(this) === 'radio' && this.name) {
+        // nur ein Optionsfeld je Gruppe (gleiches Formular, gleicher Name)
+        const f = this.form;
+        for (const o of (f || document).querySelectorAll('input[type=radio]'))
+          if (o !== this && o.name === this.name && o.form === f && o.checked) N.anhaken(o, false);
+      }
+      N.anhaken(this, !!v);
+    },
+  });
   Object.defineProperty(P, 'value', {
     configurable: true,
     get() {
-      if (this.nodeName === 'TEXTAREA') return this.textContent;
+      if (this.nodeName === 'TEXTAREA') return N.textareaWert(this);
+      if (this.nodeName === 'INPUT') {
+        const v = this.getAttribute('value');
+        if (v !== null) return v;
+        return feldArt(this) === 'checkbox' || feldArt(this) === 'radio' ? 'on' : '';
+      }
       if (this.nodeName === 'SELECT') { const o = this.querySelector('option[selected]') || this.querySelector('option'); return o ? (o.getAttribute('value') ?? o.textContent) : ''; }
       return this.getAttribute('value') ?? (this.nodeName === 'OPTION' ? this.textContent : '');
     },
     set(v) {
-      if (this.nodeName === 'TEXTAREA') this.textContent = v;
-      else if (this.nodeName === 'SELECT') { for (const o of this.querySelectorAll('option')) o.toggleAttribute('selected', (o.getAttribute('value') ?? o.textContent) === String(v)); }
+      if (this.nodeName === 'TEXTAREA' || this.nodeName === 'INPUT') N.feldSetzen(this, String(v ?? ''));
+      else if (this.nodeName === 'SELECT') {
+        for (const o of this.querySelectorAll('option')) o.toggleAttribute('selected', (o.getAttribute('value') ?? o.textContent) === String(v));
+        N.auswahlNachziehen(this, false);
+      }
       else this.setAttribute('value', v);
     },
   });
   Object.defineProperty(P, 'options', { configurable: true, get() { return this.querySelectorAll('option'); } });
   Object.defineProperty(P, 'elements', { configurable: true, get() { return this.querySelectorAll('input,select,textarea,button'); } });
   Object.defineProperty(P, 'form', { configurable: true, get() { return this.closest('form'); } });
-  P.submit = function () { this.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); };
-  P.reset = function () { this.dispatchEvent(new Event('reset', { bubbles: true, cancelable: true })); };
-  P.select = function () {};
+  // submit() schickt ohne Ereignis ab (wie im Standard), requestSubmit()
+  // erst nach „submit“, das ein Skript abbrechen kann
+  P.submit = function () { if (this.nodeName === 'FORM') N.absenden(this); };
+  P.requestSubmit = function () {
+    if (this.nodeName === 'FORM' && this.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))) N.absenden(this);
+  };
+  // reset(): nach „reset“ (abbrechbar) alle Felder auf ihre Vorgabe
+  P.reset = function () {
+    if (this.nodeName !== 'FORM' || !this.dispatchEvent(new Event('reset', { bubbles: true, cancelable: true }))) return;
+    for (const el of this.querySelectorAll('input,textarea')) {
+      const art = feldArt(el), [wert, an] = N.vorgabe(el);
+      if (el.nodeName === 'TEXTAREA') { N.feldSetzen(el, el.textContent); continue; }
+      if (art === 'checkbox' || art === 'radio') N.anhaken(el, an);
+      else if (!['submit', 'button', 'reset', 'image', 'file'].includes(art)) N.feldSetzen(el, wert);
+    }
+    for (const s of this.querySelectorAll('select')) N.auswahlNachziehen(s, true);
+  };
+  // ganzen Text eines Textfelds auswählen (mit Fokus)
+  P.select = function () { if (N.feldAuswahl(this)) this.dispatchEvent(new Event('select', { bubbles: true })); };
 
   class DocumentFragment extends Node {}
   mischen(DocumentFragment.prototype, Eltern);
@@ -741,11 +869,20 @@
     get compatMode() { return 'CSS1Compat'; }
     get visibilityState() { return 'visible'; }
     get hidden() { return false; }
-    get activeElement() { return this.body; }
+    get activeElement() { return N.aktivesFeld() || this.body; }
     get referrer() { return ''; }
     get domain() { try { return new URL(N.adresse()).hostname; } catch (e) { return ''; } }
-    get cookie() { return [...cookies].map(([k, v]) => `${k}=${v}`).join('; '); }
-    set cookie(s) { const [kv] = String(s).split(';'); const i = kv.indexOf('='); if (i > 0) cookies.set(kv.slice(0, i).trim(), kv.slice(i + 1).trim()); }
+    // http(s): NetSurfs Cookie-Ablage (B7; $Version/$Path
+    // der RFC-2965-Form weglassen); sonst nur für diese Seite
+    get cookie() {
+      const c = N.cookie();
+      if (c === null) return [...cookies].map(([k, v]) => `${k}=${v}`).join('; ');
+      return c.split(';').map(x => x.trim()).filter(x => x && x[0] !== '$').join('; ');
+    }
+    set cookie(s) {
+      if (N.cookieSetzen(String(s)) !== null) return;
+      const [kv] = String(s).split(';'); const i = kv.indexOf('='); if (i > 0) cookies.set(kv.slice(0, i).trim(), kv.slice(i + 1).trim());
+    }
     get forms() { return this.querySelectorAll('form'); }
     get images() { return this.querySelectorAll('img'); }
     get links() { return this.querySelectorAll('a[href],area[href]'); }
@@ -763,7 +900,8 @@
     write(...t) { const b = this.body || this.documentElement; if (b) b.insertAdjacentHTML('beforeend', t.join('')); }
     writeln(...t) { this.write(...t, '\n'); }
     open() { return this; }
-    close() {}
+    // write() fügt sofort ein (oben), close() hat nichts mehr zu leeren
+    close() { return undefined; }
     elementFromPoint() { return null; }
   }
   mischen(Document.prototype, Eltern);
@@ -803,11 +941,20 @@
   };
 
   // Fensterereignisse von NetSurf (load)
+  // DOMContentLoaded kommt nach dem Parsen und den aufgeschobenen Skripten
+  // (html.c-Kopie, B7), load danach; ohne DCL holt load es nach
+  let dclGefeuert = false;
+  function dclFeuern() {
+    if (dclGefeuert) return;
+    dclGefeuert = true;
+    bereit = 'interactive';
+    document.dispatchEvent(new Event('readystatechange'));
+    document.dispatchEvent(new Event('DOMContentLoaded', { bubbles: true }));
+  }
   G.__ns_fenster_ereignis = (typ) => {
+    if (typ === 'DOMContentLoaded') dclFeuern();
     if (typ === 'load') {
-      bereit = 'interactive';
-      const dcl = new Event('DOMContentLoaded', { bubbles: true });
-      document.dispatchEvent(dcl);
+      dclFeuern();
       bereit = 'complete';
       document.dispatchEvent(new Event('readystatechange'));
       const ev = new Event('load');
@@ -853,16 +1000,42 @@
     try { return JSON.stringify(x) ?? String(x); } catch (e) { return String(x); }
   }
   const konsole = {};
-  for (const art of ['log', 'info', 'warn', 'error', 'debug', 'trace']) konsole[art] = (...a) => N.protokoll(art, a.map(text).join(' '));
   konsole.assert = (b, ...a) => { if (!b) N.protokoll('assert', a.map(text).join(' ')); };
-  konsole.group = konsole.groupCollapsed = konsole.groupEnd = konsole.time = konsole.timeEnd = konsole.count = () => {};
+  // Gruppen rücken ein, Zeitmessung und Zähler je Bezeichnung
+  let einzug = '';
+  for (const art of ['log', 'info', 'warn', 'error', 'debug', 'trace']) konsole[art] = (...a) => N.protokoll(art, einzug + a.map(text).join(' '));
+  konsole.group = konsole.groupCollapsed = (...a) => { if (a.length) konsole.log(...a); einzug += '  '; };
+  konsole.groupEnd = () => { einzug = einzug.slice(2); };
+  const uhren = new Map(), zaehler = new Map();
+  konsole.time = (l = 'default') => { uhren.set(String(l), performance.now()); };
+  konsole.timeLog = (l = 'default', ...a) => { const s = uhren.get(String(l)); if (s !== undefined) konsole.log(`${l}: ${performance.now() - s} ms`, ...a); };
+  konsole.timeEnd = (l = 'default') => { konsole.timeLog(l); uhren.delete(String(l)); };
+  konsole.count = (l = 'default') => { const n = (zaehler.get(String(l)) || 0) + 1; zaehler.set(String(l), n); konsole.log(`${l}: ${n}`); };
+  konsole.countReset = (l = 'default') => { zaehler.delete(String(l)); };
   konsole.table = (x) => N.protokoll('table', text(x));
   konsole.dir = (x) => N.protokoll('dir', text(x));
   G.console = konsole;
 
   // performance
   const start = Date.now();
-  G.performance = { now: () => Date.now() - start, timeOrigin: start, mark() {}, measure() {}, getEntriesByType: () => [] };
+  // Marken und Messungen (User Timing)
+  const eintraege = [];
+  const zeitVon = (x) => typeof x === 'number' ? x : (x === undefined ? undefined : (eintraege.filter(e => e.name === x).pop() || { startTime: 0 }).startTime);
+  G.performance = {
+    now: () => Date.now() - start, timeOrigin: start,
+    mark(name, o = {}) { const e = { name: String(name), entryType: 'mark', startTime: o.startTime ?? performance.now(), duration: 0, detail: o.detail ?? null }; eintraege.push(e); return e; },
+    measure(name, a, b) {
+      const o = a !== null && typeof a === 'object' ? a : { start: a, end: b };
+      const s = zeitVon(o.start) ?? 0, z = zeitVon(o.end) ?? performance.now();
+      const e = { name: String(name), entryType: 'measure', startTime: s, duration: z - s, detail: o.detail ?? null };
+      eintraege.push(e); return e;
+    },
+    getEntries: () => eintraege.slice(),
+    getEntriesByType: (t) => eintraege.filter(e => e.entryType === t),
+    getEntriesByName: (n, t) => eintraege.filter(e => e.name === n && (t === undefined || e.entryType === t)),
+    clearMarks: (n) => { for (let i = eintraege.length - 1; i >= 0; i--) if (eintraege[i].entryType === 'mark' && (n === undefined || eintraege[i].name === n)) eintraege.splice(i, 1); },
+    clearMeasures: (n) => { for (let i = eintraege.length - 1; i >= 0; i--) if (eintraege[i].entryType === 'measure' && (n === undefined || eintraege[i].name === n)) eintraege.splice(i, 1); },
+  };
 
   // URL und URLSearchParams (QuickJS hat keine)
   class URLSearchParams {
@@ -988,32 +1161,160 @@
     sendBeacon() { return false; },
   };
   G.screen = { width: 1280, height: 720, availWidth: 1280, availHeight: 672, colorDepth: 16, pixelDepth: 16, orientation: { type: 'landscape-primary', angle: 0 } };
-  G.innerWidth = 640; G.innerHeight = 312; G.outerWidth = 640; G.outerHeight = 360;
+  // Fenstergrösse und Rollen aus NetSurf (B7)
+  for (const [name, i] of [['innerWidth', 0], ['innerHeight', 1], ['scrollX', 2], ['scrollY', 3], ['pageXOffset', 2], ['pageYOffset', 3]])
+    Object.defineProperty(G, name, { get: () => N.ansicht()[i], configurable: true });
+  G.outerWidth = 640; G.outerHeight = 360;
   G.devicePixelRatio = 2;
-  G.scrollX = G.scrollY = G.pageXOffset = G.pageYOffset = 0;
-  G.scrollTo = G.scroll = G.scrollBy = () => {};
-  G.history = { length: 1, state: null, back() {}, forward() {}, go() {}, pushState(s) { this.state = s; }, replaceState(s) { this.state = s; } };
+  G.scrollTo = G.scroll = (x, y) => {
+    const a = N.ansicht();
+    if (x !== null && typeof x === 'object') N.rollenNach(x.left ?? a[2], x.top ?? a[3]);
+    else N.rollenNach(Number(x) || 0, Number(y) || 0);
+  };
+  G.scrollBy = (x, y) => {
+    const a = N.ansicht();
+    if (x !== null && typeof x === 'object') N.rollenNach(a[2] + (x.left || 0), a[3] + (x.top || 0));
+    else N.rollenNach(a[2] + (Number(x) || 0), a[3] + (Number(y) || 0));
+  };
+  // Verlauf über NetSurf (B7); pushState/replaceState merken nur den
+  // Zustand – die Adresse ändert sich nicht (PLAN B7, Abweichungen)
+  G.history = {
+    get length() { return N.verlaufLaenge(); }, state: null, scrollRestoration: 'auto',
+    back() { N.verlauf(-1); }, forward() { N.verlauf(1); }, go(n = 0) { N.verlauf(Math.trunc(Number(n) || 0)); },
+    pushState(s) { this.state = s; }, replaceState(s) { this.state = s; },
+  };
   G.alert = (t) => N.protokoll('alert', String(t));
   G.confirm = (t) => { N.protokoll('confirm', String(t)); return false; };
   G.prompt = (t) => { N.protokoll('prompt', String(t)); return null; };
-  G.print = () => {};
-  G.focus = G.blur = () => {};
-  G.matchMedia = (q) => ({ matches: /max-width\s*:\s*(\d+)/.test(q) ? +RegExp.$1 >= 640 : /prefers-color-scheme\s*:\s*light/.test(q), media: q, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
-  G.getComputedStyle = (el) => el.style;
+  // ESP32-OS hat keinen Druckdienst: print() meldet das in der Konsole
+  // (PLAN B7, Abweichungen)
+  G.print = () => { N.protokoll('warn', 'print(): kein Drucker'); };
+  // NetSurf hat ein Fenster, das immer vorn ist: Fokus ändert nichts
+  G.focus = G.blur = () => undefined;
+  // Medienabfragen (B7): Fenstergrösse, Ausrichtung, helles Farbschema,
+  // keine reduzierte Bewegung, Touch (kein Hover, grober Zeiger);
+  // „,“ = oder, „and“ = und, „not“ kehrt eine Abfrage um
+  const medienPasst = (q) => String(q).split(',').some((teil) => {
+    let t = teil.trim().toLowerCase(), nicht = false;
+    if (t.startsWith('not ')) { nicht = true; t = t.slice(4); }
+    const w = innerWidth, h = innerHeight;
+    const ok = t.split(/\s+and\s+/).every((b) => {
+      b = b.trim().replace(/^only\s+/, '');
+      if (b === '' || b === 'all' || b === 'screen') return true;
+      const m = /^\(\s*([a-z-]+)\s*(?::\s*([^)]*?))?\s*\)$/.exec(b);
+      if (!m) return false;
+      const name = m[1], wert = (m[2] || '').trim();
+      const px = parseFloat(wert) * (/r?em$/.test(wert) ? 16 : 1);
+      switch (name) {
+        case 'min-width': return w >= px;
+        case 'max-width': return w <= px;
+        case 'min-height': return h >= px;
+        case 'max-height': return h <= px;
+        case 'width': return w === px;
+        case 'height': return h === px;
+        case 'orientation': return wert === (w >= h ? 'landscape' : 'portrait');
+        case 'prefers-color-scheme': return wert === 'light';
+        case 'prefers-reduced-motion': return wert === 'no-preference';
+        case 'hover': case 'any-hover': return wert === 'none';
+        case 'pointer': case 'any-pointer': return wert === 'coarse';
+        case 'color': return true;
+        default: return false;
+      }
+    });
+    return nicht ? !ok : ok;
+  });
+  // Bildschirm und Farbschema ändern sich nie – angemeldete Hörer
+  // werden darum nie gerufen
+  G.matchMedia = (q) => {
+    const m = new EventTarget();
+    Object.defineProperty(m, 'matches', { get: () => medienPasst(q), configurable: true });
+    m.media = q; m.onchange = null;
+    m.addListener = (f) => m.addEventListener('change', f);
+    m.removeListener = (f) => m.removeEventListener('change', f);
+    return m;
+  };
+  // Berechneter Stil (B7): display, visibility, position, color,
+  // background-color, font-size aus NetSurf (N.stil), width/height aus dem
+  // Layout (Inhaltsbox), sonst der style-Eintrag
+  G.getComputedStyle = (el) => {
+    const s = (el && N.stil(el)) || {};
+    const m = el && N.masse(el);
+    const werte = { display: s.display, visibility: s.visibility, position: s.position, color: s.color,
+      'background-color': s.backgroundColor, 'font-size': s.fontSize,
+      width: m ? `${m[6]}px` : undefined, height: m ? `${m[7]}px` : undefined };
+    const holen = (k) => {
+      k = String(k).toLowerCase();
+      if (werte[k]) return werte[k];
+      return (el && el.getAttribute && stilLesen(el).get(k)) || '';
+    };
+    return new Proxy({ getPropertyValue: holen }, {
+      get(o, k) {
+        if (k in o) return o[k];
+        if (typeof k !== 'string') return undefined;
+        return holen(k.replace(/[A-Z]/g, c => '-' + c.toLowerCase()));
+      },
+    });
+  };
   G.CSS = { escape: (s) => String(s).replace(/([^\w-])/g, '\\$1'), supports: () => false };
 
-  // Storage (je Seite im Speicher; Ablage je Herkunft folgt)
+  // Storage: sessionStorage je Seite; localStorage dauerhaft je Herkunft
+  // (B7, c/js_quickjs.c: Datei im Datenordner, höchstens 512 KB) – geladen
+  // beim Start, geschrieben am Ende der laufenden Aufgabe (Mikroaufgabe:
+  // mehrere setItem eines Skripts = ein Schreiben; NetSurf schliesst die
+  // alte Seite erst, wenn die nächste schon läuft) und sicherheitshalber
+  // beim Schliessen der Seite (__ns_speicher_sichern)
+  // Grösse in Byte wie die Datei (UTF-8), nicht in Zeichen
+  function utf8Laenge(t) {
+    let n = 0;
+    for (let i = 0; i < t.length; i++) {
+      const c = t.charCodeAt(i);
+      if (c < 0x80) n += 1;
+      else if (c < 0x800) n += 2;
+      else if (c >= 0xD800 && c < 0xDC00) { n += 4; i++; }
+      else n += 3;
+    }
+    return n;
+  }
   class Storage {
-    constructor() { Object.defineProperty(this, '_m', { value: new Map() }); }
+    constructor(dauerhaft) {
+      Object.defineProperty(this, '_m', { value: new Map() });
+      Object.defineProperty(this, '_d', { value: { dauerhaft: false, geplant: false }, writable: true });
+      if (dauerhaft) {
+        const j = N.speicherLesen();
+        if (j !== null) {
+          this._d.dauerhaft = true;
+          try { for (const [k, v] of JSON.parse(j || '[]')) this._m.set(String(k), String(v)); } catch (e) { /* beschädigt: leer beginnen */ }
+        }
+      }
+    }
     get length() { return this._m.size; }
     key(i) { return [...this._m.keys()][i] ?? null; }
     getItem(k) { return this._m.has(String(k)) ? this._m.get(String(k)) : null; }
-    setItem(k, v) { this._m.set(String(k), String(v)); }
-    removeItem(k) { this._m.delete(String(k)); }
-    clear() { this._m.clear(); }
+    setItem(k, v) {
+      const alt = this._m.get(String(k));
+      this._m.set(String(k), String(v));
+      if (this._d.dauerhaft && utf8Laenge(JSON.stringify([...this._m])) > 512 * 1024) {
+        if (alt === undefined) this._m.delete(String(k)); else this._m.set(String(k), alt);
+        throw new DOMException('localStorage voll (512 KB je Herkunft)', 'QuotaExceededError');
+      }
+      this._planen();
+    }
+    removeItem(k) { if (this._m.delete(String(k))) this._planen(); }
+    clear() { if (this._m.size) { this._m.clear(); this._planen(); } }
+    _planen() {
+      if (!this._d.dauerhaft || this._d.geplant) return;
+      this._d.geplant = true;
+      Promise.resolve().then(() => this._sichern());
+    }
+    _sichern() {
+      if (!this._d.geplant) return;
+      this._d.geplant = false;
+      if (N.speicherSchreiben(JSON.stringify([...this._m])) === false) console.warn('localStorage: nicht gespeichert');
+    }
   }
-  G.localStorage = new Storage();
-  G.sessionStorage = new Storage();
+  G.localStorage = new Storage(true);
+  G.sessionStorage = new Storage(false);
+  G.__ns_speicher_sichern = () => G.localStorage._sichern();
 
   // Base64
   const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -1040,11 +1341,188 @@
     return r;
   };
 
+  // fetch / XMLHttpRequest (B7): abgerufen über NetSurf (c/js_quickjs.c,
+  // g_abruf) – Cookies und HTTPS wie bei der Seite; fremde Herkunft nur mit
+  // Access-Control-Allow-Origin. Methoden GET, HEAD, POST.
+  const abrufe = new Map();
+  let abrufNr = 0;
+  G.__ns_abruf = (id, status, typ, text, daten, fehler) => {
+    const f = abrufe.get(id);
+    if (!f) return;
+    abrufe.delete(id);
+    f({ status, typ, text, daten, fehler });
+  };
+  function abrufen(methode, url, rumpf, fertig) {
+    const id = ++abrufNr;
+    abrufe.set(id, fertig);
+    try {
+      N.abruf(id, String(url), methode, rumpf == null ? null : String(rumpf));
+    } catch (e) {
+      abrufe.delete(id);
+      throw e;
+    }
+    return id;
+  }
+  const STATUSTEXT = { 200: 'OK', 201: 'Created', 204: 'No Content', 301: 'Moved Permanently', 302: 'Found', 304: 'Not Modified',
+    400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 500: 'Internal Server Error', 503: 'Service Unavailable' };
+  class Headers {
+    constructor(init) {
+      Object.defineProperty(this, '_m', { value: new Map() });
+      if (init instanceof Headers) init.forEach((v, k) => this.set(k, v));
+      else if (Array.isArray(init)) for (const [k, v] of init) this.append(k, v);
+      else if (init) for (const k of Object.keys(init)) this.append(k, init[k]);
+    }
+    get(k) { const v = this._m.get(String(k).toLowerCase()); return v === undefined ? null : v; }
+    has(k) { return this._m.has(String(k).toLowerCase()); }
+    set(k, v) { this._m.set(String(k).toLowerCase(), String(v)); }
+    append(k, v) { const a = this.get(k); this.set(k, a === null ? v : `${a}, ${v}`); }
+    delete(k) { this._m.delete(String(k).toLowerCase()); }
+    forEach(f, t) { for (const [k, v] of this._m) f.call(t, v, k, this); }
+    keys() { return this._m.keys(); }
+    values() { return this._m.values(); }
+    entries() { return this._m.entries(); }
+    [Symbol.iterator]() { return this._m.entries(); }
+  }
+  class Request {
+    constructor(input, init = {}) {
+      this.url = input instanceof Request ? input.url : new URL(String(input), location.href).href;
+      this.method = String(init.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+      this.headers = new Headers(init.headers || (input instanceof Request ? input.headers : undefined));
+      this.body = init.body !== undefined ? init.body : (input instanceof Request ? input.body : null);
+    }
+  }
+  class Response {
+    constructor(body = null, init = {}) {
+      this.status = init.status === undefined ? 200 : init.status;
+      this.statusText = init.statusText !== undefined ? init.statusText : (STATUSTEXT[this.status] || '');
+      this.headers = new Headers(init.headers);
+      this.url = init.url || '';
+      this.type = 'basic';
+      this.redirected = false;
+      Object.defineProperty(this, '_text', { value: body === null ? '' : String(body), writable: true });
+      Object.defineProperty(this, '_daten', { value: init._daten || null, writable: true });
+      Object.defineProperty(this, '_gelesen', { value: false, writable: true });
+    }
+    get ok() { return this.status >= 200 && this.status < 300; }
+    get bodyUsed() { return this._gelesen; }
+    _lesen() {
+      if (this._gelesen) return Promise.reject(new TypeError('Response: Inhalt schon gelesen'));
+      this._gelesen = true;
+      return Promise.resolve();
+    }
+    text() { return this._lesen().then(() => this._text); }
+    json() { return this.text().then(t => JSON.parse(t)); }
+    arrayBuffer() { return this._lesen().then(() => this._daten ? this._daten.slice(0) : new ArrayBuffer(0)); }
+    clone() { return new Response(this._text, { status: this.status, statusText: this.statusText, headers: this.headers, url: this.url, _daten: this._daten }); }
+  }
+  G.fetch = (input, init = {}) => new Promise((ja, nein) => {
+    const r = new Request(input, init);
+    const sig = init.signal;
+    if (sig && sig.aborted) { nein(sig.reason ?? new DOMException('Abgebrochen', 'AbortError')); return; }
+    try {
+      const id = abrufen(r.method, r.url, r.body, (a) => {
+        if (sig && sig.removeEventListener) sig.removeEventListener('abort', stopp);
+        if (a.fehler !== null) { nein(new TypeError(`Failed to fetch: ${a.fehler}`)); return; }
+        const h = new Headers();
+        if (a.typ) h.set('content-type', a.typ);
+        ja(new Response(a.text, { status: a.status, headers: h, url: r.url, _daten: a.daten }));
+      });
+      // Abbruch: Abruf in NetSurf stoppen, Antwort kommt nicht mehr
+      function stopp() { abrufe.delete(id); N.abrufStoppen(id); nein(sig.reason ?? new DOMException('Abgebrochen', 'AbortError')); }
+      if (sig && sig.addEventListener) sig.addEventListener('abort', stopp);
+    } catch (e) { nein(e); }
+  });
+  class DOMException extends Error { constructor(m = '', n = 'Error') { super(m); this.name = n; } }
+
+  class XMLHttpRequest extends EventTarget {
+    constructor() {
+      super();
+      this.readyState = 0; this.status = 0; this.statusText = ''; this.responseType = ''; this.responseURL = '';
+      this.responseText = ''; this.response = ''; this.timeout = 0; this.withCredentials = false;
+      Object.defineProperty(this, '_k', { value: { kopf: new Headers(), id: 0, typ: null }, writable: true });
+    }
+    open(methode, url, async = true) {
+      if (async === false) throw new DOMException('synchrones XMLHttpRequest wird nicht unterstützt', 'InvalidAccessError');
+      this._k = { kopf: new Headers(), id: 0, typ: null, methode: String(methode).toUpperCase(), url: new URL(String(url), location.href).href };
+      this.readyState = 1; this.status = 0; this.responseText = ''; this.response = '';
+      this._ereignis('readystatechange');
+    }
+    setRequestHeader(k, v) { if (this.readyState !== 1) throw new DOMException('setRequestHeader vor open', 'InvalidStateError'); this._k.kopf.append(k, v); }
+    getResponseHeader(k) { return String(k).toLowerCase() === 'content-type' ? this._k.typ : null; }
+    getAllResponseHeaders() { return this._k.typ ? `content-type: ${this._k.typ}\r\n` : ''; }
+    // Zeichensatz der Antwort vorgeben (charset=… im MIME-Typ): ausser
+    // UTF-8 werden die Bytes einzeln als Zeichen gelesen (Latin-1,
+    // x-user-defined für Binärdaten)
+    overrideMimeType(m) {
+      if (this.readyState >= 3) throw new DOMException('overrideMimeType nach dem Laden', 'InvalidStateError');
+      this._k.mime = String(m);
+    }
+    abort() { if (this._k.id) { abrufe.delete(this._k.id); N.abrufStoppen(this._k.id); this._k.id = 0; } this.readyState = 0; this._ereignis('abort'); this._ereignis('loadend'); }
+    _ereignis(typ) {
+      const ev = new Event(typ);
+      this.dispatchEvent(ev);
+      const h = this[`on${typ}`];
+      if (typeof h === 'function') { try { h.call(this, ev); } catch (e) { melden(e); } }
+    }
+    send(rumpf = null) {
+      if (this.readyState !== 1) throw new DOMException('send vor open', 'InvalidStateError');
+      this._ereignis('loadstart');
+      try {
+        this._k.id = abrufen(this._k.methode, this._k.url, rumpf, (a) => {
+          this._k.id = 0;
+          if (a.fehler !== null) {
+            this.readyState = 4; this.status = 0;
+            this._ereignis('readystatechange'); this._ereignis('error'); this._ereignis('loadend');
+            return;
+          }
+          this._k.typ = a.typ;
+          this.status = a.status; this.statusText = STATUSTEXT[a.status] || ''; this.responseURL = this._k.url;
+          this.readyState = 2; this._ereignis('readystatechange');
+          this.readyState = 3; this._ereignis('readystatechange');
+          const zs = (/charset\s*=\s*"?([^";]+)/i.exec(this._k.mime || '') || [])[1];
+          if (zs && !/^utf-?8$/i.test(zs.trim()) && a.daten) {
+            const b = new Uint8Array(a.daten);
+            let s = '';
+            for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192));
+            a.text = s;
+          }
+          this.responseText = a.text;
+          if (this.responseType === 'json') { try { this.response = JSON.parse(a.text); } catch (e) { this.response = null; } }
+          else if (this.responseType === 'arraybuffer') this.response = a.daten;
+          else this.response = a.text;
+          this.readyState = 4;
+          this._ereignis('readystatechange'); this._ereignis('load'); this._ereignis('loadend');
+        });
+      } catch (e) {
+        this.readyState = 4;
+        setTimeout(() => { this._ereignis('readystatechange'); this._ereignis('error'); this._ereignis('loadend'); }, 0);
+      }
+    }
+  }
+  Object.assign(XMLHttpRequest, { UNSENT: 0, OPENED: 1, HEADERS_RECEIVED: 2, LOADING: 3, DONE: 4 });
+  // Abbrechen: das Signal meldet „abort“, laufende Abrufe stoppen (B7)
+  class AbortSignal extends EventTarget {
+    constructor() { super(); this.aborted = false; this.reason = undefined; this.onabort = null; }
+    throwIfAborted() { if (this.aborted) throw this.reason; }
+    _abbrechen(grund) {
+      if (this.aborted) return;
+      this.aborted = true;
+      this.reason = grund === undefined ? new DOMException('Abgebrochen', 'AbortError') : grund;
+      const ev = new Event('abort');
+      this.dispatchEvent(ev);
+      if (typeof this.onabort === 'function') { try { this.onabort.call(this, ev); } catch (e) { melden(e); } }
+    }
+    static abort(grund) { const s = new AbortSignal(); s._abbrechen(grund); return s; }
+    static timeout(ms) { const s = new AbortSignal(); setTimeout(() => s._abbrechen(new DOMException('Zeit abgelaufen', 'TimeoutError')), ms); return s; }
+  }
+  class AbortController { constructor() { this.signal = new AbortSignal(); } abort(grund) { this.signal._abbrechen(grund); } }
+
   // Klassen und Fensterobjekte global
   Object.assign(G, {
     EventTarget, Event, CustomEvent, UIEvent, MouseEvent, KeyboardEvent, FocusEvent, InputEvent,
     Node, CharacterData, Text, Comment, Element, HTMLElement, Document, HTMLDocument: Document, DocumentFragment,
     DocumentType, NodeList, HTMLCollection: NodeList, DOMTokenList, Storage,
+    Headers, Request, Response, XMLHttpRequest, AbortController, AbortSignal, DOMException,
     document, window: G, self: G, top: G, parent: G, frames: G, globalThis: G,
   });
   for (const t of ['Div', 'Span', 'Anchor', 'Image', 'Input', 'Button', 'Form', 'Select', 'Option', 'TextArea', 'Script', 'Style', 'Link',

@@ -29,3 +29,8 @@ esp32/firmware/komponenten/netsurf/quellen_stand.txt
 .claude/
 __pycache__/
 AUFTRAG-KolibriOS-P4.md
+
+# Lokale Notizen und Berichte, nie ins Repo
+*.local.md
+*.local.txt
+*.local.rs

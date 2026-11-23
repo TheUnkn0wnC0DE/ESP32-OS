@@ -693,7 +693,7 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   `b6_board_tastatur_von_selbst.png`), „esp32“ tippen
   (`b6_board_tippen.png`), Enter → Suchergebnisse zu „Esp32“, Tastatur
   wieder zu (`b6_board_ergebnis.png`); Ablauf `b6_board_ablauf.txt`.
-- [ ] **B7 JavaScript** (Auftrag 13.9) – moderne Engine (ES2020+), Web-
+- [x] **B7 JavaScript** (Auftrag 13.9) – moderne Engine (ES2020+), Web-
   Funktionen DOM, Ereignisse, Timer, fetch/XHR, localStorage; Speicher pro
   Seite begrenzt (Seite bricht ab, Browser und System laufen weiter).
   Nachweis: PC-Tests (Skripte ändern DOM, Timer, fetch, localStorage,
@@ -727,13 +727,48 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   dem Laden färbt um, fügt einen Block ein, ein später eingefügtes
   `<style>` verbreitert ihn; Formularfeld, freies Feld und iframe bleiben;
   ≥ 2 Neu-Layouts), Bild `netsurf/tests/erwartet/b7_pc_neu_layout.png`.
-  Offen in B7: Neu-Layout nach Klick/Eingabe am Board prüfen (am PC gibt
-  der Prüflauf keine Eingaben), localStorage dauerhaft je Herkunft (jetzt nur im Speicher),
-  document.cookie über NetSurfs Cookie-Ablage (B2), fetch/XHR (B2),
-  Masse aus dem Layout (getBoundingClientRect, offset*, getComputedStyle
-  liefern noch 0 bzw. nur das style-Attribut; scrollIntoView, select(),
-  normalize() tun noch nichts), DOMContentLoaded kommt erst mit load
-  (NetSurf meldet das Ende des Parsens nicht), Board.
+  Stand 23.11.: Rest von B7 umgesetzt (`netsurf/c/js_quickjs.c`,
+  `netsurf/js/vorspann.js`, `netsurf/c/formular.c`, geprüfte Kopien in
+  `netsurf/build.rs`):
+  - fetch/XMLHttpRequest über NetSurfs Abruf: GET/HEAD/POST, JSON, Status
+    aus dem HTTP-Kopf (auch 404), fremde Herkunft nur mit
+    Access-Control-Allow-Origin, AbortController, overrideMimeType;
+  - document.cookie über NetSurfs Cookie-Ablage (B2), Cookie-Fix in urldb.c;
+  - localStorage dauerhaft je Herkunft (Datei im Datenordner, 512 KB, sonst
+    QuotaExceededError), sessionStorage;
+  - Masse aus dem Layout: getBoundingClientRect, offset*/client*/scroll*,
+    getComputedStyle, innerWidth/innerHeight, scrollX/scrollY, scrollTo/By,
+    scrollIntoView (vorgemerktes Rollen des Framebuffers zählt mit),
+    matchMedia (Grösse, Ausrichtung, Touch), normalize();
+  - DOMContentLoaded gleich nach dem Parsen (vor Bildern und späten
+    Stilen), am PC jede Anfrage in einem eigenen Faden wie am Board;
+  - Formulare: „input“ je Zeichen, „submit“ vor dem Abschicken (abbrechbar),
+    „change“ bei Kästchen/Optionsfeld/Auswahlliste, abgebrochener Klick folgt
+    keinem Link; value, checked, selected, selectedIndex, defaultValue,
+    defaultChecked, focus()/blur()/select()/activeElement über NetSurfs
+    Felder, form.submit()/requestSubmit()/reset(); libdom-Textfeld: value
+    getrennt vom Inhalt (Kopie von html_text_area_element.c);
+  - history.back/forward/go/length über NetSurfs Verlauf, console.group/
+    time/count, performance.mark/measure; addEventListener ohne „window.“.
+  Grenzen: siehe Abweichungen „B7, Grenzen der Web-Funktionen“.
+  Nachweis PC (64 Bit und i686): `javascript_fetch_xhr`,
+  `javascript_localstorage`, `javascript_masse`, `javascript_formular` und
+  `javascript_auswahl` (per Tippen/Antippen), `javascript_fenster_hilfen`.
+  Nachweis Board (`docs/nachweise/b7/`): JS-Seite läuft (Block grün, „JS“,
+  `b7_board_js_seite.png`), zweimal „Klick“ angetippt → „JS++“, Neu-Layout
+  nach Klick (`b7_board_nach_klick.png`), Feld angetippt und über die
+  Bildschirmtastatur getippt → oninput schreibt das Zeichen in den Block
+  (`b7_board_nach_eingabe.png`); Ablauf `b7_board_ablauf.txt`.
+  Review (nur Diff, 23.11.): 10 Befunde – behoben: keine Boxen während
+  eines Neu-Layouts, CORS bei mitgeschickten Cookies nur mit genauer
+  Herkunft und Allow-Credentials, document.cookie nur mit bekannten
+  Merkmalen und ohne Überschreiben verborgener Cookies, AbortController
+  stoppt den Abruf, defaultValue, keine Ereignisse ohne Änderung, mehrere
+  selected → das letzte, Zoom bei Massen und Rollen, Abbruch im
+  PC-Abruf wartet nicht, localStorage-Grenze in Byte (geprüft in
+  `javascript_fenster_hilfen`); als Abweichung: Anfrageköpfe, iframes.
+  Alle Tests grün (64 Bit: kern 44, kolibri 9, desktop 27, netsurf; i686:
+  kern 44, kolibri 11, netsurf).
 - [x] **B8 Bedienung** (Auftrag 13.9) – Tabs, Adressleiste mit Suche,
   Downloads, Zoom, Text markieren und kopieren (Zwischenablage), progressive
   JPEGs (B0b). Nachweis: Autopilot + Fotos je Funktion.
@@ -1122,8 +1157,14 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   darauf, `THIRD_PARTY_NOTICES.md` listet Copyright und Herkunft.
 - [ ] **O4 Abnahme-Durchlauf 9** – jeder Punkt aus 9 einmal per Autopilot am
   Board. Nachweis: Fotos/Logs.
-- [ ] **O5 1 h Langtest am Board** (inkl. Browser + WLAN) ohne Absturz.
+- [x] **O5 1 h Langtest am Board** (inkl. Browser + WLAN) ohne Absturz.
   Nachweis: Log 60 min, keine Panics/Resets.
+  Nachweis 23.11. (`docs/nachweise/o5/`): 3700 s über WLAN, NetSurf lädt
+  per Autopilot einen Wikipedia-Artikel 36-mal neu (Abrufe gleichmässig
+  über die Stunde, alle 200/301/302/304); ein einziger Start, kein Reset,
+  keine Panic; Browser-Heap Spitze 7,4 MB von 10 MB, am Ende 4,4 MB;
+  Fotos nach 600/1800/3500 s zeigen die fertige Seite
+  (`o5_auswertung.txt`, `o5_board_log.txt`, `o5_board_*.png`).
 - [ ] **O6 STATUS.md aktuell** (was läuft, Messwerte, offen). Nachweis: Datei.
 - [x] **O7 Startzeit** (Auftrag 12.9) – Zeit bis zum Desktop messen,
   optimieren, vorher/nachher in STATUS. Nachweis: Boot-Log mit Zeitstempeln.
@@ -1201,6 +1242,41 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   vorherigem Tippen auf die Titelleiste). Ursache noch nicht gefunden; in
   B10 nicht behoben (dort gingen die Abstürze und leeren Seiten vor) –
   bleibt offen.
+
+- **B7, Grenzen der Web-Funktionen (23.11.):** Was NetSurf 3.11 von sich
+  aus nicht kann und für B7 nicht nachgebaut wurde:
+  - `load` kommt am Ende der Umwandlung, nicht erst nach allen Bildern
+    (NetSurf lädt Bilder danach weiter); DOMContentLoaded kommt richtig
+    früh.
+  - fetch/XMLHttpRequest nur mit GET, HEAD und POST (NetSurfs Abruf kennt
+    keine anderen Methoden; andere → TypeError), kein synchrones XHR, von
+    den Antwortköpfen nur Content-Type. Eigene Anfrageköpfe (headers bei
+    fetch, setRequestHeader) schickt NetSurfs Abruf nicht mit, ein
+    POST-Rumpf geht immer als application/x-www-form-urlencoded (JSON-POSTs
+    also mit falschem Typ). Cookies gehen immer mit (credentials lässt sich
+    nicht abstellen) – darum liest eine Seite fremde Antworten nur mit
+    genauer Freigabe ihrer Herkunft und Access-Control-Allow-Credentials.
+  - In iframes beziehen sich innerWidth/innerHeight, Rollen und
+    history.go(0) auf das Hauptfenster.
+  - `history.pushState`/`replaceState` merken nur den Zustand; die Adresse
+    ändert sich nicht, `popstate` kommt nicht (NetSurf kennt keine Adresse
+    ohne Laden). back/forward/go/length gehen über NetSurfs Verlauf; eine
+    Seite steht dort erst, wenn sie fertig geladen ist.
+  - `getComputedStyle` liefert display, visibility, position, color,
+    background-color, font-size, width und height aus NetSurf, alle übrigen
+    Eigenschaften nur aus dem style-Attribut.
+  - `change` kommt bei Kästchen, Optionsfeldern und Auswahllisten, bei
+    Textfeldern nicht (dort `input` je Zeichen und `submit`); NetSurfs
+    Felder haben keinen Platz für den Wert beim Fokuswechsel. Ein
+    abgebrochener Klick auf ein Optionsfeld wird nicht zurückgenommen
+    (Kästchen schon). `focus`/`blur` kommen nur von focus()/blur() aus
+    Skripten, nicht beim Antippen.
+  - sessionStorage gilt je Seite (nicht je Tab), `print()` meldet nur
+    „kein Drucker“ (ESP32-OS hat keinen Druckdienst), Elemente sind nicht
+    über ihre id als globale Variablen erreichbar.
+  Ersatz: keiner nötig für die geforderten Punkte (DOM, Ereignisse, Timer,
+  fetch/XHR, localStorage, Speichergrenze); die Liste ist der Stand für
+  spätere Arbeit.
 
 - **B5, Scrollen mit 30 Bildern/s nicht erreicht (23.11.):** Gefordert
   (Nutzer, Nacht 23.11.) waren mindestens 30 Bilder/s beim Wischen.
