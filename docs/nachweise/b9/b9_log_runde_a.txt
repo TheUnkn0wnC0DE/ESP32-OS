@@ -1,0 +1,21 @@
+[58890] ns_abruf: 200, 92409 Byte, 918 ms: https://www.google.com/
+[60022] ns_abruf: 200, 2478 Byte, 743 ms: https://www.google.com/images/branding/google_wordmark/v1/1x/googlelogo_color_white_background_272x9
+[61537] ns_abruf: 200, 0 Byte, 755 ms: https://www.google.com/xjs/_/ss/k=xjs.hp.6N8Nu0Ab-OY.L.X.O/am=AAAAIAAAAAAAAAAAAgAAAAAAAAAAAAACAAAAAA
+[62335] ns_abruf: 200, 369386 Byte, 1541 ms: https://www.google.com/xjs/_/js/k=xjs.hp.en.uljKKRRlu-E.es5.O/am=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+W (62795) ns_ohne_js: JS-Speichergrenze überschritten – JavaScript abgeschaltet: https://www.google.com/
+[63677] ns_abruf: 200, 12263 Byte, 684 ms: https://www.google.com/images/nav_logo229.png
+[64330] ns_abruf: 200, 5430 Byte, 627 ms: https://www.google.com/favicon.ico
+[125912] ns_abruf: 200, 51891 Byte, 1334 ms: https://html.duckduckgo.com/html/?q=esp32
+[201211] ns_abruf: 200, 577 Byte, 1025 ms: https://example.com/
+[202335] ns_abruf: 200, 1963 Byte, 972 ms: https://example.com/s.js
+[281192] ns_abruf: 200, 34182 Byte, 3614 ms: https://news.ycombinator.com/
+W (289627) ns_ohne_js: Seite nach 12000 ms nicht angezeigt – JavaScript abgeschaltet: https://news.ycombinator.com/
+[347513] ns_abruf: 200, 267235 Byte, 2722 ms: https://lite.cnn.com/
+[349515] ns_abruf: 200, 11502 Byte, 1874 ms: https://lite.cnn.com/media/sites/cnn/favicon.ico
+[421644] ns_abruf: 200, 262144 Byte, 1832 ms: https://www.tagesschau.de/
+[491255] ns_abruf: 200, 413696 Byte, 2437 ms: https://www.heise.de/
+[575911] ns_abruf: 200, 339968 Byte, 2437 ms: https://github.com/espressif/esp-idf
+[643541] ns_abruf: 200, 1397 Byte, 2269 ms: https://httpbin.org/forms/post
+[646314] ns_abruf: 404, 233 Byte, 2370 ms: https://httpbin.org/favicon.ico
+[706331] ns_abruf: 302, 0 Byte, 349 ms: https://old.reddit.com/
+[708194] ns_abruf: 200, 340326 Byte, 1801 ms: https://old.reddit.com/login/?reason=lor2&dest=https%3A%2F%2Fold.reddit.com%2F

@@ -208,7 +208,10 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
             g.f(ns.join(dir).join(f));
         }
     }
-    if board {
+    // NS_JS_WIE_BOARD=1 (PC): JS-Grenzen wie am Board, um Fehler dort am PC
+    // nachzustellen
+    println!("cargo:rerun-if-env-changed=NS_JS_WIE_BOARD");
+    if board || std::env::var("NS_JS_WIE_BOARD").is_ok_and(|v| v == "1") {
         // Board: JS-Laufzeit im 10-MB-Heap des Programms, Stapel 384 KB.
         // 2 MB: ein JS-lastiger erster Versuch (Wikipedia/MediaWiki) darf den
         // Heap nicht so füllen, dass die Seite danach ohne JS nicht mehr

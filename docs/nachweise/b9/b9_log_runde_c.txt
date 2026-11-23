@@ -1,0 +1,16 @@
+[58357] ns_abruf: 200, 49178 Byte, 796 ms: https://www.w3.org/
+[144907] ns_abruf: 200, 361380 Byte, 2344 ms: https://www.srf.ch/
+[155999] W ns_ohne_js: JS-Speichergrenze überschritten – JavaScript abgeschaltet: https://www.srf.ch/
+[234038] ns_abruf: 301, 0 Byte, 1394 ms: https://de.wikipedia.org/
+[236541] ns_abruf: 200, 244526 Byte, 2472 ms: https://de.wikipedia.org/wiki/Wikipedia:Hauptseite
+[242198] W ns_ohne_js: JS-Speichergrenze überschritten – JavaScript abgeschaltet: https://de.wikipedia.org/wiki/Wikipedia:Hauptseite
+[316955] W ns_ohne_js: JS-Speichergrenze überschritten – JavaScript abgeschaltet: https://www.spiegel.de/
+[317151] ns_abruf: 200, 196608 Byte, 1388 ms: https://www.spiegel.de/
+[414057] ns_abruf: 403, 5561 Byte, 1314 ms: https://stackoverflow.com/questions
+[414419] W ns_js: Fehler: null
+[490023] W ns_js: Fehler: null
+[490359] ns_abruf: 200, 200704 Byte, 1414 ms: https://www.bbc.com/news
+[576971] ns_abruf: 200, 31811 Byte, 627 ms: https://www.openstreetmap.org/
+[577170] W ns_ohne_js: JS-Speichergrenze überschritten – JavaScript abgeschaltet: https://www.openstreetmap.org/
+[657415] ns_abruf: 200, 16384 Byte, 867 ms: https://www.youtube.com/
+[657926] W ns_ohne_js: JS-Speichergrenze überschritten – JavaScript abgeschaltet: https://www.youtube.com/

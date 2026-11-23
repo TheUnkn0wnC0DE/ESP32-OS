@@ -771,12 +771,16 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   Markieren: Halten, dann Ziehen → Statuszeile „Text kopiert“, Log „browser:
   kopiert (209 Zeichen)“ (`b8_board_markiert_kopiert.png`). Offen: der
   markierte Bereich am Board (siehe Abweichungen). PC 64 Bit / i686 grün.
-- [ ] **B9 20-Seiten-Test** (Auftrag 13.9) – Liste mit 20 echten Webseiten
+- [x] **B9 20-Seiten-Test** (Auftrag 13.9) – Liste mit 20 echten Webseiten
   (einfach bis JavaScript-lastig: Wikipedia, Suchmaschine, Nachrichten,
   GitHub, Formulare, Menüs …), alle am Board getestet; Tabelle in STATUS
   (geht / teilweise / geht nicht, Grund). Nachweis: Tabelle + Fotos.
   Fest auf der Liste (Nutzer 22.11.): Google (www.google.com) und
   DuckDuckGo HTML (Standardsuche).
+  Nachweis: Tabelle in STATUS.md („B9: 20 echte Webseiten“), Fotos je Seite
+  und Log-Auszüge in `docs/nachweise/b9/` (drei Autopilot-Runden, jede
+  Adresse über die Bildschirmtastatur getippt). Ergebnis vor B10: 7 geht,
+  2 teilweise, 11 geht nicht.
 - [ ] **B10 Verbessern** – was in B9 am meisten bringt, beheben, Tabelle
   aktualisieren. Nachweis: Tabelle vorher/nachher.
 - [ ] **B-Review** – Review-Subagent.

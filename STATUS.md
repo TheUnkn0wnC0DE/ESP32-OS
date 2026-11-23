@@ -25,6 +25,46 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   → Zwischenablage des Systems. Unterwegs: Grossbuchstaben, Umlaute, „%“
   und „{|}~“ der Bildschirmtastatur kamen im Browser falsch an (behoben).
   Offen: markierter Bereich am Board stimmt nicht (Abweichung, in B10).
+- ✔ B9: 20 echte Seiten am Board getestet (Tabelle oben): 7 geht,
+  2 teilweise, 11 geht nicht – Hauptursache JS-Grenze/JS-Umgebung und der
+  volle Heap (bei MDN hängt der Browser). Das ist jetzt B10.
+
+## B9: 20 echte Webseiten am Board (Nacht 23.11.)
+
+Jede Seite per Autopilot über die Adressleiste getippt (Bildschirmtastatur),
+Foto ~50 s danach; Fotos und Log-Auszug in `docs/nachweise/b9/`.
+Bewertung: geht / teilweise / geht nicht, mit Grund.
+
+Stand vor B10 (Runden A–C, 23.11. nachts):
+
+| # | Seite | Ergebnis | Grund |
+|---|---|---|---|
+| 1 | www.google.com | teilweise | Logo, Gmail/Bilder/Anmelden; Skripte sprengen die JS-Grenze (2 MB) → JS aus, Suchfeld nicht sichtbar |
+| 2 | DuckDuckGo HTML (Suche „esp32“ aus der Adressleiste) | geht | Ergebnisse mit Text und Bildern, 4,5 s |
+| 3 | example.com | geht | 1,3 s |
+| 4 | news.ycombinator.com | geht | Liste vollständig; JS nach 12 s abgeschaltet (Rückfallebene) |
+| 5 | lite.cnn.com | geht | Liste vollständig, 2,3 s |
+| 6 | www.tagesschau.de | teilweise | nur Sprunglinks sichtbar; JS-Umgebung fehlte („window is not defined“) |
+| 7 | www.heise.de | geht nicht | leere Seite; JS-Umgebung fehlte, Seite 400 KB |
+| 8 | github.com/espressif/esp-idf | geht nicht | „Zu wenig Speicher“ – Heap des Browsers (10 MB) voll |
+| 9 | httpbin.org/forms/post | geht | Formular mit Feldern und Auswahl |
+| 10 | old.reddit.com | geht nicht | leitet auf eine Anmeldeseite um, die leer bleibt |
+| 11 | www.bbc.com/news | geht nicht | leer; JS-Umgebung fehlte („Fehler: null“) |
+| 12 | stackoverflow.com/questions | geht nicht | Server antwortet 403 (Prüfseite, die JS braucht) |
+| 13 | docs.python.org/3 | geht | Startseite der Doku, 22 s |
+| 14 | developer.mozilla.org/de | geht nicht | Heap voll → **Browser hängt**, später hängt auch die Anzeige |
+| 15 | www.openstreetmap.org | geht nicht | leer; JS-Grenze → JS aus (Karte braucht JS) |
+| 16 | www.youtube.com | geht nicht | leer; JS-Grenze → JS aus |
+| 17 | www.srf.ch | geht nicht | leer nach JS-Grenze → JS aus |
+| 18 | www.w3.org | geht | Navigation und Text; japanische/chinesische Namen als Kästchen (Schrift) |
+| 19 | www.spiegel.de | geht nicht | nach JS-Grenze zeigt die Seite ihren `<head>` (Titel, JSON, CSS) als Text |
+| 20 | de.wikipedia.org (Hauptseite) | geht nicht | leer nach JS-Grenze (Artikel wie „ESP32“ gehen, siehe B2/B8) |
+
+Summe: 7 geht, 2 teilweise, 11 geht nicht. Häufigste Ursache: die JS-Grenze
+(2 MB) wird gesprengt, JavaScript wird mitten in der Seite abgeschaltet –
+die Seite bleibt leer oder kaputt; dazu am Board „Fehler: null“ beim Anlegen
+der JS-Umgebung (die Laufzeit des Fensters ist von vorigen Seiten schon voll)
+und der volle 10-MB-Heap (GitHub, MDN – dort hängt der Browser). → B10.
 
 ## Fragen an dich (Nacht 23.11.)
 

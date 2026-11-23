@@ -1,0 +1,24 @@
+[62850] ns_abruf: 200, 375671 Byte, 2478 ms: https://www.bbc.com/news
+[72373] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – JavaScript abgeschaltet: https://www.bbc.com/news
+[140743] ns_abruf: 404, 73926 Byte, 1716 ms: https://stackoverflow.com/uestions
+[143641] ns_abruf: 200, 7406 Byte, 1975 ms: https://stackoverflow.com/Content/Sites/stackoverflow/Img/favicon.ico?v=562fb39d93c8
+[143679] ns_abruf: 200, 5248 Byte, 1954 ms: https://stackoverflow.com/Content/Js/google-analytics.en.js?v=48615a9a9bc4
+[144813] W ns_ohne_js: JS-Speichergrenze überschritten – JavaScript abgeschaltet: https://stackoverflow.com/uestions
+[146931] ns_abruf: 200, 48817 Byte, 2111 ms: https://stackoverflow.com/Content/Js/stub.en.js?v=c4a2a2be622d
+[147074] ns_abruf: 200, 97090 Byte, 2258 ms: https://stackoverflow.com/Content/Js/third-party/npm/@stackoverflow/stacks/dist/js/stacks.min.js?v=7
+[150105] ns_abruf: 200, 360448 Byte, 3031 ms: https://stackoverflow.com/Content/Sites/stackoverflow/primary.css?v=304f5b106fe7
+[150114] ns_abruf: 200, 393216 Byte, 3126 ms: https://stackoverflow.com/Content/Shared/stacks.css?v=b2264ccf0463
+[150767] ns_takt: 174 Runden, Arbeit 2303 ms, Warten 2985 ms, 33 Bilder (6.2/s), Scroll 0 Schritte, Heap 10158 KB (Spitze 10307 KB), Cache 4285 KB (freigebbar 0 KB, Grenze 0 KB)
+[152159] ns_abruf: 200, 17319 Byte, 2044 ms: https://stackoverflow.com/Content/Shared/Channels/channels.css?v=d431b1be5a03
+[152288] ns_abruf: 200, 81278 Byte, 2182 ms: https://stackoverflow.com/Content/Sites/stackoverflow/secondary.css?v=962e0f2152bf
+[153945] ns_abruf: 200, 1708 Byte, 1785 ms: https://stackoverflow.com/Content/Js/sprinkles/cookie-consent.en.js?v=7ee6963139c5
+[154220] ns_abruf: 200, 441 Byte, 1932 ms: https://stackoverflow.com/px.js?ch=1
+[155749] ns_abruf: 200, 441 Byte, 1486 ms: https://stackoverflow.com/px.js?ch=2
+[155864] ns_takt: 220 Runden, Arbeit 1216 ms, Warten 3882 ms, 39 Bilder (7.6/s), Scroll 0 Schritte, Heap 10577 KB (Spitze 10578 KB), Cache 4372 KB (freigebbar 0 KB, Grenze 0 KB)
+[157077] ns_abruf: 200, 45056 Byte, 1312 ms: https://stackoverflow.com/Content/Js/webpack-chunks/svelte.en.js?v=6d18d9caf7aa
+[207223] ns_abruf: 200, 19632 Byte, 419 ms: https://docs.python.org/3/
+[218814] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – JavaScript abgeschaltet: https://docs.python.org/3/
+[283938] ns_abruf: 200, 121511 Byte, 976 ms: https://developer.mozilla.org/de/
+[294991] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – JavaScript abgeschaltet: https://developer.mozilla.org/de/
+[295100] ns_takt: 269 Runden, Arbeit 1446 ms, Warten 3576 ms, 43 Bilder (8.5/s), Scroll 0 Schritte, Heap 10165 KB (Spitze 10582 KB), Cache 1012 KB (freigebbar 0 KB, Grenze 0 KB)
+[610722] E pudding_p4: HÄNGT bei Bild 97028: Schleife Stufe 5, Stufe 0/5, Streifen 40705/76475, nächster 47, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; 
