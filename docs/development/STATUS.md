@@ -18,7 +18,8 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
   über mehrere Seiten auf 0 KB, danach brach die ganze Firmware ab und die
   Liste begann von vorn. Ursache in Arbeit (geschlossene Verbindungen 120 s
   in TIME_WAIT, Empfangspuffer); Gegenmassnahmen: TIME_WAIT 10 s, neue
-  Verbindungen nur mit 32 KB Reserve.
+  Verbindungen nur mit 32 KB Reserve. Ergebnis: kein Abbruch mehr (6 Seiten
+  am Stück); das Leck je Browser-Sitzung bleibt (Suche läuft, Stand PLAN BR1).
 - Zur Kenntnis: Die A2-Messung hat zwei Testnotizen in
   `ESP32-OS/Notizen` auf der SD-Karte gespeichert
   („qasdfghjkl1234567890qwer.txt“ und „… (Kopie).txt“); du kannst sie

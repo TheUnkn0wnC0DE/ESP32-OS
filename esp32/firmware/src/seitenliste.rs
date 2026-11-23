@@ -21,6 +21,73 @@ pub fn starten() {
     }
 }
 
+/// Entwicklung (BR1): Heap-Tracing der Systemallokationen über Seite 2–3;
+/// danach die noch belegten internen Blöcke mit Aufrufern ausgeben.
+#[cfg(esp32os_heap_trace)]
+mod spur {
+    unsafe extern "C" {
+        fn heap_trace_init_standalone(puffer: *mut u8, anzahl: usize) -> i32;
+        fn heap_trace_start(modus: u32) -> i32;
+        fn heap_trace_stop() -> i32;
+        fn heap_trace_get_count() -> usize;
+        fn heap_trace_get(index: usize, eintrag: *mut Eintrag) -> i32;
+    }
+    /// heap_trace_record_t (ESP-IDF 5.5, Stapeltiefe 0, Standalone).
+    #[repr(C)]
+    struct Eintrag {
+        ccount: u32,
+        adresse: *const u8,
+        groesse: usize,
+        frei: bool,
+        _naechster: *const u8,
+        _voriger: *const u8,
+    }
+    const ANZAHL: usize = 1500;
+    pub fn starten() {
+        // SAFETY: Puffer im PSRAM, gross genug für ANZAHL Einträge (≤ 96 Byte).
+        unsafe {
+            let p = esp_idf_svc::sys::heap_caps_malloc(ANZAHL * 96, esp_idf_svc::sys::MALLOC_CAP_SPIRAM) as *mut u8;
+            let a = heap_trace_init_standalone(p, ANZAHL);
+            let b = heap_trace_start(1); // HEAP_TRACE_LEAKS
+            log::warn!("HEAPSPUR: gestartet ({a}, {b})");
+        }
+    }
+    /// Noch belegte interne Blöcke nach Inhalt gruppiert (Anfang als Text).
+    pub fn ausgeben() {
+        use std::collections::HashMap;
+        let mut gruppen: HashMap<String, (usize, usize)> = HashMap::new();
+        // SAFETY: Tracing gestoppt; die Blöcke sind noch belegt (nur lesen).
+        unsafe {
+            heap_trace_stop();
+            for i in 0..heap_trace_get_count() {
+                let mut e = Eintrag { ccount: 0, adresse: core::ptr::null(), groesse: 0, frei: false, _naechster: core::ptr::null(), _voriger: core::ptr::null() };
+                if heap_trace_get(i, &mut e) != 0 || e.adresse.is_null() || e.frei {
+                    continue;
+                }
+                let a = e.adresse as usize;
+                if !(0x4FF0_0000..0x4FFC_0000).contains(&a) {
+                    continue; // nur interner RAM
+                }
+                let n = e.groesse.min(40);
+                let text: String = core::slice::from_raw_parts(e.adresse, n)
+                    .iter()
+                    .map(|&b| if (0x20..0x7F).contains(&b) { b as char } else { '.' })
+                    .collect();
+                let g = gruppen.entry(format!("{} B: {text}", e.groesse)).or_default();
+                g.0 += 1;
+                g.1 += e.groesse;
+            }
+        }
+        let mut v: Vec<_> = gruppen.into_iter().collect();
+        v.sort_by(|a, b| b.1.1.cmp(&a.1.1));
+        let summe: usize = v.iter().map(|x| x.1.1).sum();
+        log::warn!("HEAPSPUR: {} Gruppen, {summe} Byte intern noch belegt", v.len());
+        for (k, (anz, bytes)) in v.iter().take(60) {
+            log::warn!("HEAPSPUR {bytes:6} B {anz:4}x  {k}");
+        }
+    }
+}
+
 fn browser_pid() -> Option<u32> {
     kern::liste().into_iter().find(|p| p.name == "browser").map(|p| p.pid)
 }
@@ -41,6 +108,10 @@ fn ablaufen(liste: &'static str, sek: u64) {
                 break;
             }
             std::thread::sleep(Duration::from_millis(100));
+        }
+        #[cfg(esp32os_heap_trace)]
+        if i == 1 {
+            spur::starten();
         }
         log::info!("SEITE {}/{n}: {url}", i + 1);
         let r = kern::datei::starten("/sys/browser", &format!("--daten=/daten/netsurf_test {url}"));
@@ -70,6 +141,11 @@ fn ablaufen(liste: &'static str, sek: u64) {
             }
             None => log::warn!("SEITE {}/{n} Ende: Browser läuft nicht mehr (beendet oder abgestürzt)", i + 1),
         }
+    }
+    #[cfg(esp32os_heap_trace)]
+    {
+        std::thread::sleep(Duration::from_secs(15));
+        spur::ausgeben();
     }
     log::info!("SEITE: Liste fertig ({n} Seiten)");
 }

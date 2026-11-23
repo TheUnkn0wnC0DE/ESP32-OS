@@ -1398,6 +1398,15 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   „Zu wenig Speicher“), TIME_WAIT 10 s statt 120 s – 6 Seiten ohne Abbruch.
   Offen: Leck im internen RAM je Browser-Sitzung (81→67→41→31 KB, je mehr
   Abrufe desto mehr); nächster Schritt Heap-Tracing der Systemaufrufe.
+  Heap-Tracing (24.11., Build `ESP32OS_HEAP_TRACE` + vorübergehend
+  CONFIG_HEAP_TRACING_STANDALONE, Auswertung nach Inhalt): offen bleiben
+  kleine Header-Strings des HTTP-Clients (Content-Type, Content-Length,
+  ETag, image/png …, ~3 KB über 2 Seiten) – Teil des Lecks; der freie
+  interne RAM fiel aber um ~56 KB, die Spur erfasst den Rest nicht
+  (Puffer voll? 1500 Einträge). Aufrufer gehen nicht: Frame-Pointer macht
+  den Bootloader zu gross. Nächste Schritte: Spurpuffer 4000 und Zählung
+  ausgeben; prüfen, warum esp_http_client seine Header-Listen nicht frei
+  gibt (Abbruch des Browsers mitten im Abruf?).
 - [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
   Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
   mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.
