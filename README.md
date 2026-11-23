@@ -17,7 +17,7 @@ Measured on the board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, chip revision v1.x,
 
 | | Value | Evidence |
 |---|---|---|
-| OS image | 5.4 MiB (5,687,168 bytes), 91 % of its 5.9 MiB flash slot | [o8_release_paket.txt](docs/nachweise/o8/o8_release_paket.txt) |
+| OS image | 5.4 MiB (5,699,056 bytes), 91.5 % of its 5.9 MiB flash slot | [o8_release_paket.txt](docs/nachweise/o8/o8_release_paket.txt) |
 | Power-on to desktop | 3.5 s | [o4_1_apps_log.txt](docs/nachweise/o4/o4_1_apps_log.txt) |
 | Browser scrolling | 32 frames/s (Wikipedia article) | [o1_scroll_log.txt](docs/nachweise/o1/o1_scroll_log.txt) |
 | PDF page (A4 with photo, text, shapes) | 0.24 s | [z1_board_log.txt](docs/nachweise/z1/z1_board_log.txt) |
@@ -27,18 +27,22 @@ Measured on the board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, chip revision v1.x,
 
 ## Quick start
 
-No binary release yet, build from source (Windows, PowerShell; requirements under [Building](#building)):
+Install release 1.0 (chip revision v1.x):
 
-1. Fetch the browser sources:
-   ```powershell
-   python esp32\netsurf\werkzeuge\quellen_holen.py
-   ```
+1. Download the files of the [latest release](https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/latest) and check them against `SHA256SUMS`.
 2. Connect the board's USB TO UART port.
-3. Build and flash:
+3. Flash with [espflash](https://github.com/esp-rs/espflash):
    ```powershell
-   powershell -File esp32\firmware\bauen_flashen.ps1 -Port COM3
+   espflash write-bin 0x2000 bootloader.bin
+   espflash write-bin 0x8000 partition-table.bin
+   espflash write-bin 0x10000 otadata-leer.bin
+   espflash write-bin 0x20000 esp32os.bin
+   espflash write-bin 0xC00000 doomapp.bin
+   espflash write-bin 0xE00000 quakeapp.bin
    ```
 4. Optional: copy the shareware files `DOOM1.WAD` to `ESP32-OS/doom/` and `pak0.pak` to `ESP32-OS/quake/` on the microSD card.
+
+Boards with chip revision v3.x and changes to the code: build from source, see [Building](#building).
 
 ## Features
 
@@ -51,10 +55,11 @@ No binary release yet, build from source (Windows, PowerShell; requirements unde
 | Wi-Fi 6 | Via the ESP32-C6: scan and connect by touch, remembered networks, time via NTP |
 | Browser | NetSurf 3.11, HTTPS with certificate check, tabs, bookmarks, history, downloads, zoom, forms, JavaScript (QuickJS-ng: DOM, events, timers, fetch, cookies, localStorage) |
 | Games | Pudding-Panik, Würfelwelt, Doom, Quake, started from the desktop |
-| Updates | Firmware update over Wi-Fi from GitHub releases with SHA-256 check and rollback (not yet tested end to end, needs the first release) |
+| Updates | Firmware update over Wi-Fi from GitHub releases with SHA-256 check and rollback; tested on the board from 0.9 to 1.0 ([u1_update.txt](docs/nachweise/u1/u1_update.txt)) |
 
 ## Limitations
 
+- Release 1.0: Settings does not open shortly after power-on. It needs slightly more than 12 MB in one block; the largest free block is exactly 12 MB ([u1_update.txt](docs/nachweise/u1/u1_update.txt)). Fixed in the source code; the fix comes with the next release.
 - Wi-Fi passwords are stored unencrypted in flash (no flash encryption, no eFuses).
 - The browser has 10 MB of memory. Large web applications do not load; some web APIs are missing.
 - The PDF viewer shows text in the system font, opens files up to 4 MB and does not decode CCITT, JBIG2 or JPEG 2000 images.

@@ -859,6 +859,9 @@ fn main() {
             );
             (verpasst, laengstes) = (0, (0, 0, 0, 0, 0));
             let (int_kb, psram_kb) = hw::free_kb();
+            // Programme brauchen ihren Heap am Stück: grösster freier Block
+            // SAFETY: reine Abfrage des Heaps.
+            let psram_block_kb = unsafe { esp_idf_svc::sys::heap_caps_get_largest_free_block(esp_idf_svc::sys::MALLOC_CAP_SPIRAM) } / 1024;
             let bp = &pudding_core::render::BUILD_PROFILE;
             let take = |i: usize| bp[i].swap(0, core::sync::atomic::Ordering::Relaxed) as f32;
             let (tv, tt, nt) = (take(0), take(1), take(2).max(1.0));
@@ -872,7 +875,7 @@ fn main() {
                 pudding_fw::audio::RENDER_US.swap(0, Ordering::Relaxed) as f32 / n
             );
             log::info!(
-                "Frei: {int_kb} KB intern, {psram_kb} KB PSRAM; Aufbereiten je Bild: Vertices {:.1} ms, Dreiecke {:.1} ms ({:.0} Takte je Dreieck)",
+                "Frei: {int_kb} KB intern, {psram_kb} KB PSRAM (grösster Block {psram_block_kb} KB); Aufbereiten je Bild: Vertices {:.1} ms, Dreiecke {:.1} ms ({:.0} Takte je Dreieck)",
                 tv / 360_000.0 / n * 1000.0,
                 tt / 360_000.0 / n * 1000.0,
                 tt / nt

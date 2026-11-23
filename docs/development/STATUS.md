@@ -8,6 +8,27 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md). Die Vorgeschichte
 (Spiele, Firmware, Messwerte, Übergabe vom 21.11.) liegt im alten Repo des
 Vorgängerprojekts.
 
+## Release v1.0 (23.11. abends)
+
+- **Veröffentlicht:** https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/tag/v1.0
+  (Tag v1.0, 9 Dateien, SHA256SUMS). Abbilder ohne WLAN-Daten, ohne lokale
+  Pfade (Rust `--remap-path-prefix`, NetSurf-C `-ffile-prefix-map`; die
+  Release-Prüfung verwirft Abbilder mit Pfad oder Benutzername); Suche nach
+  Benutzername und echtem Namen in allen Dateien: 0 Treffer.
+- **Firmware nicht auf main** (deine Wahl): die Push-Prüfung fand den
+  Suchbegriff des Sicherheitsberichts als Cookie-Attributnamen im Abbild;
+  der Web-Flasher-Workflow holt die Dateien aus dem Release.
+- **Web-Flasher:** https://theunkn0wnc0de.github.io/ESP32-OS/ (ESP Web
+  Tools 10.4.0, Stub für Chip-Revision v1.x). Der Board-Test braucht dich:
+  der eingebaute Browser hat keine Portauswahl („No port selected“).
+- **Manuell mit espflash** aus den Release-Dateien: am Board gestartet
+  (Desktop, WLAN). esp32os.bin braucht mit Standard-Baudrate 5 min.
+- **U1 nachgewiesen:** 0.9 → v1.0 über WLAN per Touch, Platz B bitgleich
+  zum Release (`docs/nachweise/u1/`).
+- **Fehler in v1.0 gefunden:** „Einstellungen“ öffnet nach dem Hochfahren
+  nicht (12 MB am Stück, grösster PSRAM-Block 12 288 KB). Behoben (6 MB),
+  braucht ein Bugfix-Release v1.0.1 – nur mit deinem OK.
+
 ## README-Wünsche und grosse Fotos (23.11. spät)
 
 - **README:** Foto-Platzhalter entfernt, Titelbild ist ein grosser

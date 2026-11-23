@@ -1,0 +1,32 @@
+U1 – Update über WLAN am Board (23.11.2026)
+
+Ausgangslage: ESP32-OS mit VERSION "0.9 (U1-Test)" (Code wie v1.0 nach dem
+Einstellungs-Fix, nur die Versionsnummer geändert), Platz esp32os_a, WLAN aus
+wlan.local. GitHub-Release v1.0 veröffentlicht (Tag v1.0).
+
+Ablauf per Touch (Autopilot): Symbol "Einstellungen" -> Kachel "System" ->
+"Nach Updates suchen" -> "Installieren: v1.0". Fotos u1_board_*.png,
+Log u1_update_log.txt.
+
+Log (Auszug):
+  I (40292) UPDATE: Abfrage https://api.github.com/repos/TheUnkn0wnC0DE/ESP32-OS/releases/latest: HTTP 200, 19003 Byte
+  I (54564) UPDATE: v1.0 → esp32os_b (laufend esp32os_a)
+  I (112336) UPDATE: v1.0 geschrieben und geprüft, Neustart in den neuen Platz
+  rst:0xc (SW_CPU_RESET)
+  I (2076) Programm „esp32os_b“, Startziel Konsole
+  I (2757) Programm „esp32os_b“ als gültig markiert (war in Prüfung, Code 0)
+  I (12460) WLAN: verbunden in 5539 ms (gemerktes Netz)
+
+Download und Schreiben 5 699 056 Byte: 57,8 s (54,6 s bis 112,3 s).
+
+Inhalt von esp32os_b danach (espflash read-flash 0x610000, 5 699 056 Byte):
+  SHA-256 826e0d9ff1e419d551b1601a9e2caa22a06565de4b0144c02db1c24edaa74cdf
+  = esp32os.bin des Releases v1.0 (SHA256SUMS), bitgleich.
+
+Nebenbefund (behoben für die nächste Version): In v1.0 reserviert
+"Einstellungen" 12 MB Heap am Stück. Nach dem Hochfahren ist der grösste freie
+PSRAM-Block genau 12 288 KB (Log dieses Laufs, vor dem Start), der Start braucht
+12 MB + Stapel + Verwaltung -> "Start einstellungen: Fehler 30" (Lauf mit
+v1.0-Code). Mit 6 MB Heap startet "Einstellungen" (dieser Lauf, grösster Block
+danach 6016 KB); ein 12-MP-Foto als Hintergrund passt hinein
+(desktop/tests/hintergrund_gross.rs).

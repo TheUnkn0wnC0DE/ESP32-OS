@@ -367,7 +367,10 @@ const SHELL: [kern::ProgrammEintrag; 22] = [
     // 8 MB: startet neben Dateimanager und Diensten (O4; mit 12 MB blieb
     // am Board zu wenig PSRAM), grössere Bilder meldet der Bildbetrachter
     eintrag!("bildbetrachter", bildbetrachter::programm, 8192),
-    eintrag!("einstellungen", einstellungen::programm, 12288),
+    // 6 MB am Stück: Hintergrundbilder lädt bildbetrachter::laden passend
+    // zum freien Speicher (grosse Fotos verkleinert). Mit 12 MB fand der
+    // Start kurz nach dem Hochfahren keinen so grossen PSRAM-Block (U1).
+    eintrag!("einstellungen", einstellungen::programm, 6144),
     eintrag!("ersteinrichtung", ersteinrichtung::programm, 512),
     eintrag!("@screenshot", bildschirmfoto::programm, 4096),
     eintrag!("messung", messung::fenster_kreisen, 128),

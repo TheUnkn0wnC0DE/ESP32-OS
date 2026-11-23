@@ -431,7 +431,7 @@ Planreihenfolge. V3/V4 laufen nebenher (klein).
   Befunde behoben in Commit `95fe94e` (Wettlauf Wiederverbinden/Verbinden
   von Hand, Socket-Leck beim Zwangsbeenden, Details Funktion 74/75/76),
   Rest als Abweichungen „W9 Funktion 74/76 teilweise“, „W3 WPA3“.
-- [ ] **U1 Updates über WLAN** (Auftrag 12.7, nach Block D; 13.3: Nachweis
+- [x] **U1 Updates über WLAN** (Auftrag 12.7, nach Block D; 13.3: Nachweis
   mit lokalem HTTPS-Testserver am PC, Test-Zertifikat nur im Test-Build,
   normaler Build prüft weiter gegen GitHub; kein Release, kein Push – der
   echte Release erst in O8 mit OK) – Einstellungen
@@ -447,8 +447,13 @@ Planreihenfolge. V3/V4 laufen nebenher (klein).
   → System (Suchen, Installieren, Fortschritt), Versionsvergleich,
   Release-JSON nur mit HTTPS-Adressen. Offen bis O8: Update a→b am Board
   und Rückfall mit absichtlich defektem Release-Abbild.
-  → Begründet offen: Abweichung „U1 wartet auf O8“ (braucht ein
-  veröffentlichtes Release, das nur mit OK des Nutzers entsteht).
+  ✔ 23.11.: Board mit Version „0.9 (U1-Test)“ per Touch (Einstellungen →
+  System → Nach Updates suchen → Installieren): GitHub-Release v1.0 über
+  HTTPS gefunden (HTTP 200), nach esp32os_b geladen und geprüft, Neustart,
+  „esp32os_b als gültig markiert (war in Prüfung)“, WLAN wieder verbunden;
+  esp32os_b danach ausgelesen: SHA-256 gleich esp32os.bin des Releases
+  (`docs/nachweise/u1/`, `u1_update.txt`). Rückfall mit defektem
+  Release-Abbild: Abweichung „U1, Rückfall ohne defektes Release“.
 
 ## E. Browser (Auftrag 5)
 
@@ -1240,6 +1245,15 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   → Begründet offen: Abweichung „O8 wartet auf dein OK“ (alles lokal
   vorbereitet und geprüft; Veröffentlichen ist laut Nutzer-Vorgabe und
   Push-Regel 6 erst mit seinem OK erlaubt).
+  Stand 23.11. abends (OK des Nutzers): Release „ESP32-OS 1.0“ mit Tag v1.0
+  veröffentlicht (9 Dateien, Autor TheUnkn0wnC0DE), Abbilder ohne WLAN-Daten
+  und ohne lokale Pfade (`o8_release_paket.txt`). Manuelle Installation mit
+  `espflash write-bin` aus den Release-Dateien am Board geprüft
+  (`o8_manuell_board_log.txt`). Web-Flasher auf GitHub Pages
+  (https://theunkn0wnc0de.github.io/ESP32-OS/), Firmware holt der Workflow
+  aus dem Release. Offen: Flashen über den Web-Flasher am Board – der
+  eingebaute Browser hat keine Auswahl für serielle Ports, das braucht einen
+  Klick des Nutzers in Chrome/Edge.
 - **Wenn Zeit bleibt** (Auftrag 5): PDF-Betrachter, Kamera-App (OV5647),
   weitere KolibriOS-C-Programme. Reihenfolge (Nutzer 23.11.): zuerst
   PDF-Betrachter, dann Kamera-App; die Kamera-App ist nach „Später (v1.1)“
@@ -1646,6 +1660,24 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
 - **W3 WPA3 (22.11., Review):** Am Board stand nur ein WPA2-Netz zur
   Verfügung (Testnetz); WPA3/SAE ist eingestellt (PWE beide), mit einem
   WPA3-Netz aber nur in der Simulation geprüft.
+- **U1, Rückfall ohne defektes Release (23.11.):** Ein absichtlich
+  defektes Abbild wird nicht als GitHub-Release veröffentlicht (es stünde
+  öffentlich und würde von allen Boards gefunden). Belegt ist der Rückfall
+  stattdessen so: Abbilder mit falscher Prüfsumme oder ohne gültigen
+  ESP32-Kopf werden nicht installiert (`u1_board_log.txt`), und ein
+  installiertes Abbild, das sich nicht als gültig meldet, setzt der
+  Bootloader zurück (B0, `ESP32OS_OTA_TEST`).
+- **Einstellungen mit 6 statt 12 MB Heap (23.11., U1):** In v1.0 fand
+  „Einstellungen“ nach dem Hochfahren keinen 12-MB-Block im PSRAM
+  (grösster freier Block 12 288 KB, gebraucht 12 MB + Stapel) → „Start
+  einstellungen: Fehler 30“, das Programm öffnet nicht. Jetzt 6 MB;
+  Hintergrundbilder lädt `bildbetrachter::laden` passend zum freien
+  Speicher (12-MP-Foto: `desktop/tests/hintergrund_gross.rs`). Am Board
+  geöffnet (U1-Lauf). Im veröffentlichten v1.0 steckt der Fehler noch –
+  Bugfix-Release v1.0.1 nur mit deinem OK. Ausserdem: ein Programm mit
+  12 MB direkt beim Start (Entwicklungsweg `ESP32OS_START`) liess die erste
+  Bildpuffer-Anforderung des Desktops scheitern (Neustart); mit 6 MB und
+  in v1.0 ohne Autostart tritt das nicht auf.
 - **U1 wartet auf O8 (22.11.):** Update a→b und der Rückfall mit einem
   defekten Release-Abbild brauchen ein echtes GitHub-Release (Push nur mit
   deinem OK). Flash-Schreiben aus Fäden mit PSRAM-Stapel (alle Programme)
