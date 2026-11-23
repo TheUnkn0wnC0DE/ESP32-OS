@@ -10,6 +10,7 @@ pub mod ersteinrichtung;
 pub mod gesten;
 pub mod konfig;
 pub mod notizen;
+pub mod rechner;
 pub mod shell;
 pub mod taskmanager;
 pub mod tastatur;
@@ -286,7 +287,7 @@ macro_rules! eintrag {
 }
 
 /// Shell-Programme (ohne C-Programme).
-const SHELL: [kern::ProgrammEintrag; 16] = [
+const SHELL: [kern::ProgrammEintrag; 17] = [
     eintrag!("@meldung", shell::meldung, 256),
     eintrag!("@tastatur", tastatur::dienst, 512),
     eintrag!("@start", shell::start, 512),
@@ -302,6 +303,7 @@ const SHELL: [kern::ProgrammEintrag; 16] = [
     eintrag!("messung", messung::fenster_kreisen, 128),
     eintrag!("taskmanager", taskmanager::programm, 256),
     eintrag!("notizen", notizen::programm, 1024),
+    eintrag!("rechner", rechner::programm, 128),
     // Testprogramm (A6), nicht im Menü
     eintrag!("endlostest", taskmanager::endlostest, 64),
 ];
@@ -309,7 +311,7 @@ const SHELL: [kern::ProgrammEintrag; 16] = [
 /// Programme des Desktops (statisch eingelinkt): Shell + KolibriOS-C-Programme.
 #[cfg(target_pointer_width = "32")]
 pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
-    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15],
+    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15], SHELL[16],
     eintrag!("absturz_test", kolibri::absturz_test, 128),
     eintrag!("basic_gui", kolibri::basic_gui, 512),
     eintrag!("boxlib_demo", kolibri::boxlib_demo, 512),
@@ -331,7 +333,7 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &SHELL;
 /// folgen mit P/A, Spiele mit S).
 pub fn anwendungen() -> Vec<shell::Anwendung> {
     let a = |programm, titel, titel_de, symbol, auf_desktop| shell::Anwendung { programm, titel, titel_de, symbol, auf_desktop };
-    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("@konsole", "Games", "Spiele", 35, true)];
+    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("rechner", "Calculator", "Rechner", 4, true), a("@konsole", "Games", "Spiele", 35, true)];
     if cfg!(target_pointer_width = "32") {
         v.extend([
             a("browser", "Browser", "Browser", 125, true),

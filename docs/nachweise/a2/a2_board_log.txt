@@ -1,0 +1,7 @@
+I (28051) pudding_p4: [debug] Rechner: 1 → 1
+I (29252) pudding_p4: [debug] Rechner: 2 → 12
+I (30448) pudding_p4: [debug] Rechner: × → 12
+I (31651) pudding_p4: [debug] Rechner: 3 → 3
+I (32848) pudding_p4: [debug] Rechner: , → 3,
+I (34050) pudding_p4: [debug] Rechner: 5 → 3,5
+I (35252) pudding_p4: [debug] Rechner: = → 42

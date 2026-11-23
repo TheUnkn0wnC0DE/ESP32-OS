@@ -38,6 +38,8 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
 - ✔ A1 Notizen: neues Programm (Startmenü, Desktop, Dateimanager öffnet
   .txt damit), am Board getippt, gespeichert und von der SD-Karte wieder
   geöffnet (Testordner `/sd0/1/ESP32-OS/Notizen_Test`).
+- ✔ A2 Rechner: neues Programm mit grossen Tasten, am Board per
+  Autopilot „12 × 3,5 =“ getippt → 42 (Foto und Log).
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 

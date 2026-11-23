@@ -107,15 +107,12 @@ fn taskmanager_beendet_haengendes_programm() {
     kern::starte_name("endlostest").unwrap();
     bis(|| da("Endless loop"), "Endlostest offen");
 
-    // Taskmanager über das Startmenü (Eintrag 6 von 10: 2 Spalten × 5
-    // Zeilen, oben rechts)
+    // Taskmanager über das Startmenü
     let mut f = Finger { g: Gesten::default(), t: 1000 };
     f.tippen(40, 340);
     bis(|| da("ESP32-OS"), "Startmenü");
-    let (zeilen, zeile_m) = (5, 44);
-    let mh = 48 + 5 + zeilen * zeile_m + 10;
-    let my = 360 - desktop::shell::LEISTE_H - mh;
-    f.tippen(2 + 230 + 100, my + 48 + 2 + zeile_m / 2);
+    let (x, y) = desktop::shell::menue_eintrag_mitte("taskmanager").unwrap();
+    f.tippen(x, y);
     bis(|| da("Task manager"), "Taskmanager offen");
     let liste = desktop::taskmanager::liste();
     assert_eq!(liste[0].name, "endlostest", "Anwendungen zuerst: {:?}", liste.iter().map(|p| p.name).collect::<Vec<_>>());

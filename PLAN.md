@@ -846,7 +846,15 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   Eingabe, „zeile 2“ getippt, „Speichern“ → Log „gespeichert …/test
   esp32.txt (18 Byte)“, „Neu“, Notiz in der Liste antippen → Inhalt von der
   SD-Karte wieder da (`a1_board_wieder_geoeffnet.png`).
-- [ ] **A2 Rechner**. Nachweis: Autopilot „12×3,5=“ → 42, Foto.
+- [x] **A2 Rechner**. Nachweis: Autopilot „12×3,5=“ → 42, Foto.
+  Umsetzung: `desktop/src/rechner.rs` (Startmenü, Desktop-Symbol), grosse
+  Tasten C ← % ÷ / 7–9 × / 4–6 − / 1–3 + / 0 , ± =, Rechnung von links nach
+  rechts wie ein Taschenrechner, Komma als Dezimalzeichen, Division durch 0
+  → „Fehler“, Tastatur geht auch. PC: Unit-Test `grundrechenarten`
+  (12 Fälle) und Touch-Test `desktop/tests/rechner.rs` (Bild
+  `a2_rechner.png`). Nachweis (Board, Runde 49, `docs/nachweise/a2/`):
+  Autopilot tippt 1 2 × 3 , 5 = → Log „Rechner: = → 42“, Foto zeigt 42
+  (`a2_board_42.png`, `a2_board_log.txt`).
 - [ ] **A3 Uhr mit Wecker und Timer** (Ton bei Ablauf). Nachweis: Autopilot,
   Foto + Ton-Log.
 - [ ] **A4 Kalender**. Nachweis: Foto, Monatswechsel per Wischen.

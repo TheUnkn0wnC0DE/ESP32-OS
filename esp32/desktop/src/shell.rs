@@ -503,11 +503,9 @@ pub fn taskbar() {
 
 const ZEILE_M: i32 = 44;
 
-/// Startmenü: Programme mit Symbol, „Über ESP32-OS“, Spielekonsole, Neustart.
-pub fn menu() {
-    let (_, h) = bildschirm();
-    // Parameter „mehr“: nur die Programme ohne Desktop-Symbol (Beispiele)
-    let mehr = kern::argumente() == "mehr";
+/// Einträge des Startmenüs (Name, Programm, Symbol); `mehr`: nur die
+/// Programme ohne Desktop-Symbol (Beispiele).
+fn menue_eintraege(mehr: bool) -> Vec<(String, &'static str, usize)> {
     let alle = anwendungen();
     let mut eintraege: Vec<(String, &'static str, usize)> = alle.iter().filter(|a| a.auf_desktop != mehr).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect();
     if !mehr {
@@ -523,12 +521,37 @@ pub fn menu() {
         eintraege.push((kern::sprache::t("Sleep", "Ruhezustand").into(), "@ruhe", 119));
         eintraege.push((kern::sprache::t("Restart", "Neustart").into(), "@neustart", 12));
     }
-    let spalten = if eintraege.len() > 6 { 2 } else { 1 };
-    let zeilen = eintraege.len().div_ceil(spalten) as i32;
-    let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
+    eintraege
+}
+
+/// Aufbau des Startmenüs: (Spalten, Zeilen, Breite, Höhe, y des Fensters).
+fn menue_aufbau(n: usize, skin: i32) -> (usize, i32, i32, i32, i32) {
+    let (_, h) = bildschirm();
+    let spalten = if n > 6 { 2 } else { 1 };
+    let zeilen = n.div_ceil(spalten) as i32;
     let mw = 230 * spalten as i32 + 10;
     let mh = (skin + 5 + zeilen * ZEILE_M + 10).min(h - LEISTE_H);
-    let my = h - LEISTE_H - mh;
+    (spalten, zeilen, mw, mh, h - LEISTE_H - mh)
+}
+
+/// Bildschirm-Mitte des Eintrags `programm` im Startmenü (ohne „mehr“) –
+/// für Tests und den Autopiloten, damit neue Programme sie nicht verschieben.
+pub fn menue_eintrag_mitte(programm: &str) -> Option<(i32, i32)> {
+    let eintraege = menue_eintraege(false);
+    let i = eintraege.iter().position(|e| e.1 == programm)? as i32;
+    let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
+    let (_, zeilen, _, _, my) = menue_aufbau(eintraege.len(), skin);
+    let (sp, ze) = (i / zeilen, i % zeilen);
+    Some((5 + 2 + sp * 230 + 112, my + skin + 2 + ze * ZEILE_M + (ZEILE_M - 3) / 2))
+}
+
+/// Startmenü: Programme mit Symbol, „Über ESP32-OS“, Spielekonsole, Neustart.
+pub fn menu() {
+    // Parameter „mehr“: nur die Programme ohne Desktop-Symbol (Beispiele)
+    let mehr = kern::argumente() == "mehr";
+    let eintraege = menue_eintraege(mehr);
+    let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
+    let (_, zeilen, mw, mh, my) = menue_aufbau(eintraege.len(), skin);
     sys::maske(0x07);
     let zeichnen = || {
         sys::neuzeichnen(1);

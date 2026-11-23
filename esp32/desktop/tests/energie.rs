@@ -105,17 +105,9 @@ fn energie_ruhezustand_akku() {
     // Startmenü → „Sleep“: die Firmware erhält einmal „Ruhe jetzt“
     f.tippen(40, 360 - 20);
     bis(|| sys::fenster_liste().iter().any(|f| f.titel == "ESP32-OS"), "Startmenü");
-    let (mx, my) = kern::kern_abschnitt(|| {
-        kern::fenster::mit_welt(|w| {
-            let s = w.fenster_liste().into_iter().find(|f| f.titel == "ESP32-OS").unwrap().slot;
-            let f = w.slots[s].as_ref().unwrap().fenster.as_ref().unwrap();
-            (f.x, f.y)
-        })
-    });
     foto("p5_menue");
-    // zwei Spalten: Info, Files, Settings, Notes, Games | Task manager,
-    // Screenshot, Touchpad, Sleep, Restart
-    f.tippen(mx + 5 + 230 + 100, my + 48 + 2 + 3 * 44 + 20);
+    let (x, y) = desktop::shell::menue_eintrag_mitte("@ruhe").unwrap();
+    f.tippen(x, y);
     bis(|| konfig::RUHE_JETZT.load(Relaxed), "Ruhe gewünscht");
     assert!(d.ruhe_jetzt(), "einmal true");
     assert!(!d.ruhe_jetzt(), "danach false");

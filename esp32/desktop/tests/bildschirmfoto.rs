@@ -92,11 +92,8 @@ fn bildschirmfoto_per_uhr_und_menue() {
     bis(|| !sys::fenster_liste().iter().any(|w| w.titel == "Screenshot"), "Meldung zu");
     f.tippen(40, 360 - 20);
     bis(|| sys::fenster_liste().iter().any(|w| w.titel == "ESP32-OS"), "Startmenü");
-    let menue = sys::fenster_liste().into_iter().find(|w| w.titel == "ESP32-OS").unwrap();
-    let (_, my) = kern::kern_abschnitt(|| kern::fenster::mit_welt(|w| w.slots[menue.slot].as_ref().and_then(|s| s.fenster.as_ref()).map(|f| (f.x, f.y)).unwrap()));
-    // Info, Files, Settings, Notes, Games | Task manager, Screenshot,
-    // Touchpad, Sleep, Restart (2 Spalten × 5 Zeilen)
-    f.tippen(5 + 230 + 100, my + 48 + 2 + 44 + 20);
+    let (x, y) = desktop::shell::menue_eintrag_mitte("@screenshot").unwrap();
+    f.tippen(x, y);
     bis(|| dateien(&ordner).len() == 2, "Bildschirmfoto über das Menü");
     let zweites = dateien(&ordner)[1].clone();
     pruefen(&zweites);
