@@ -10,7 +10,10 @@
  * B5:
  *   „ms:S:px:x:y“ Wischen: um px scrollen (Zeiger bei x, y), wie die Fläche
  *                 am Board über c/touch.c
- *   „ms:Z:prozent“ Pinch-Zoom um den Faktor prozent/100 */
+ *   „ms:Z:prozent“ Pinch-Zoom um den Faktor prozent/100
+ * B8:
+ *   „ms:D:x0:y0:x1:y1“ Ziehen mit gedrückter Taste 1 (Text markieren), wie
+ *                 die Geste „Halten, dann Ziehen“ am Board */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -43,8 +46,8 @@ static long jetzt_ms(void);
 #define MAX_EREIGNISSE 512
 static struct {
 	long ms;
-	char art; /* 'K' Tippen, 'T' Text, 'S' Scrollen, 'Z' Zoom */
-	int x, y, wert;
+	char art; /* 'K' Tippen, 'T' Text, 'S' Scrollen, 'Z' Zoom, 'D' Ziehen */
+	int x, y, wert, x1, y1;
 	char text[96];
 } schritte[MAX_SCHRITTE];
 
@@ -70,7 +73,12 @@ static void skript_lesen(void)
 		teil[l] = '\0';
 		schritte[n_schritte].text[0] = '\0';
 		schritte[n_schritte].art = 'K';
-		if (strstr(teil, ":S:") != NULL &&
+		if (strstr(teil, ":D:") != NULL &&
+		    sscanf(teil, "%ld:D:%d:%d:%d:%d", &schritte[n_schritte].ms, &schritte[n_schritte].x,
+			   &schritte[n_schritte].y, &schritte[n_schritte].x1, &schritte[n_schritte].y1) == 5) {
+			schritte[n_schritte].art = 'D';
+			n_schritte++;
+		} else if (strstr(teil, ":S:") != NULL &&
 		    sscanf(teil, "%ld:S:%d:%d:%d", &schritte[n_schritte].ms, &schritte[n_schritte].wert,
 			   &schritte[n_schritte].x, &schritte[n_schritte].y) == 4) {
 			schritte[n_schritte].art = 'S';
@@ -90,6 +98,22 @@ static void skript_lesen(void)
 				} else if (t[0] == '\\' && t[1] == 'b') {
 					schritte[n_schritte].text[k++] = '\b';
 					t += 2;
+				} else if (t[0] == '\\' && t[1] == 'u' && strlen(t) >= 6 && k + 4 < sizeof schritte[n_schritte].text) {
+					/* „\uXXXX“: Zeichen als UTF-8 (Umgebungsvariablen
+					 * bleiben so reines ASCII) */
+					char hex[5] = { t[2], t[3], t[4], t[5], 0 };
+					unsigned u = (unsigned)strtoul(hex, NULL, 16);
+					if (u < 0x80) {
+						schritte[n_schritte].text[k++] = (char)u;
+					} else if (u < 0x800) {
+						schritte[n_schritte].text[k++] = (char)(0xC0 | (u >> 6));
+						schritte[n_schritte].text[k++] = (char)(0x80 | (u & 0x3F));
+					} else {
+						schritte[n_schritte].text[k++] = (char)(0xE0 | (u >> 12));
+						schritte[n_schritte].text[k++] = (char)(0x80 | ((u >> 6) & 0x3F));
+						schritte[n_schritte].text[k++] = (char)(0x80 | (u & 0x3F));
+					}
+					t += 6;
 				} else {
 					schritte[n_schritte].text[k++] = *t++;
 				}
@@ -138,13 +162,31 @@ static void schritte_ausloesen(void)
 			dazu(NSFB_EVENT_MOVE_ABSOLUTE, 0, x, y);
 			dazu(NSFB_EVENT_KEY_DOWN, rad, 0, 0);
 			dazu(NSFB_EVENT_KEY_UP, rad, 0, 0);
+		} else if (schritte[naechster_schritt].art == 'D') {
+			/* gedrückt halten, in 10 Schritten hinziehen, loslassen */
+			int x1 = schritte[naechster_schritt].x1, y1 = schritte[naechster_schritt].y1;
+			dazu(NSFB_EVENT_MOVE_ABSOLUTE, 0, x, y);
+			dazu(NSFB_EVENT_KEY_DOWN, NSFB_KEY_MOUSE_1, 0, 0);
+			for (int i = 1; i <= 10; i++)
+				dazu(NSFB_EVENT_MOVE_ABSOLUTE, 0, x + (x1 - x) * i / 10, y + (y1 - y) * i / 10);
+			dazu(NSFB_EVENT_KEY_UP, NSFB_KEY_MOUSE_1, 0, 0);
 		} else if (schritte[naechster_schritt].art == 'Z') {
 			ns_touch_zoom(schritte[naechster_schritt].wert / 100.0);
 			/* ein Ereignis, damit die Hauptschleife einen Durchlauf macht */
 			dazu(NSFB_EVENT_MOVE_ABSOLUTE, 0, x, y);
 		} else {
-			for (; *t; t++) {
-				int k = *t == '\n' ? NSFB_KEY_RETURN : *t == '\b' ? NSFB_KEY_BACKSPACE : (unsigned char)*t;
+			while (*t) {
+				/* druckbare Zeichen wie am Board als Unicode-Code (B8);
+				 * der Text ist UTF-8 */
+				unsigned char b = (unsigned char)*t++;
+				int u = b, k;
+				if (b >= 0xC0) {
+					int n = b >= 0xF0 ? 3 : b >= 0xE0 ? 2 : 1;
+					u = b & (0x3F >> n);
+					while (n-- > 0 && (*t & 0xC0) == 0x80)
+						u = (u << 6) | (*t++ & 0x3F);
+				}
+				k = u == '\n' ? NSFB_KEY_RETURN : u == '\b' ? NSFB_KEY_BACKSPACE : 0x10000 + u;
 				dazu(NSFB_EVENT_KEY_DOWN, k, 0, 0);
 				dazu(NSFB_EVENT_KEY_UP, k, 0, 0);
 			}

@@ -11,13 +11,28 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   `/daten/netsurf`, bleiben über Neustart – am Board per Autopilot belegt.
   Unterwegs gefunden: RAM-Fläche von libnsfb war am Board nicht angemeldet
   → **keine Bitmaps, also auch keine Bilder in Webseiten**; behoben.
-- (läuft) B5 Touch-Scrollen (Fingerweg statt fester Schritte) und
-  Pinch-Zoom: am PC und auf Board-Fotos ok, FPS-Messung fehlt noch.
-  B6 (Tastatur geht bei Textfeld von selbst auf) am PC ok.
+- ✔ B6: Formularfeld antippen → Bildschirmtastatur geht von selbst auf
+  (oben, wenn das Feld unten liegt) und danach wieder zu – am Board mit der
+  Wikipedia-Suche belegt.
+- ✔ B5 (mit Abweichung): Wischen und Pinch-Zoom gehen am Board; beim
+  Wischen 11–12 Bilder/s statt 2–4, **30 nicht erreicht** (Verschieben von
+  265 KB im PSRAM, DMA-Versuch ging nicht – Frage unten). Behoben unterwegs:
+  Bildübergabe an den Kern je Bildpunkt, Compositor setzte verdeckte
+  Fenster neu zusammen, drei Zeichenaufrufe je Bild, Suche nach scrollbarem
+  Bereich bei jedem Schritt.
+- ✔ B8: am Board belegt – Bilder in Webseiten (fehlten ganz: NetSurf war
+  ohne JPEG/PNG), Tabs, Download (1 MB nach /daten/…/Downloads), Markieren
+  → Zwischenablage des Systems. Unterwegs: Grossbuchstaben, Umlaute, „%“
+  und „{|}~“ der Bildschirmtastatur kamen im Browser falsch an (behoben).
+  Offen: markierter Bereich am Board stimmt nicht (Abweichung, in B10).
 
 ## Fragen an dich (Nacht 23.11.)
 
-- (noch keine)
+- **B5, 30 Bilder/s beim Scrollen:** erreicht sind ~12 Bilder/s (vorher
+  2–4); der Rest hängt am Verschieben von 265 KB im PSRAM je Bild (Abweichung
+  in PLAN.md, mit dem Weg zu 30). Soll ich später (z. B. bei H/Optimierung)
+  den grösseren Umbau angehen – NetSurf zeichnet direkt in den Fensterpuffer
+  des Kerns, Verschieben über die PPA-Einheit?
 
 ## Für dich: Zusammenfassung der Nacht 22.11.
 

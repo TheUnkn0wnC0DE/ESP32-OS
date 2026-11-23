@@ -78,6 +78,21 @@ static void ordner_anlegen(const char *p)
 		NSLOG(netsurf, WARNING, "Datenordner %s nicht angelegt", p);
 }
 
+/* B8 (c/download.c): Ordner für Downloads, angelegt; NULL ohne Datenordner.
+ * Am Board neben dem Datenordner (/daten/Downloads), in Tests darin. */
+const char *ns_download_ordner(void)
+{
+	static char dl[220];
+	if (ordner[0] == '\0')
+		return NULL;
+	if (strcmp(ordner, "/daten/netsurf") == 0)
+		snprintf(dl, sizeof dl, "/daten/Downloads");
+	else
+		snprintf(dl, sizeof dl, "%s/Downloads", ordner);
+	ordner_anlegen(dl);
+	return dl;
+}
+
 /* Vor netsurf_init (gui.c-Kopie): Datenordner bestimmen, Cookie-Dateien */
 void ns_daten_optionen(void)
 {

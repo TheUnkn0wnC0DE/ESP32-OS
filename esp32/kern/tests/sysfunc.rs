@@ -19,6 +19,8 @@ static WERT: AtomicU32 = AtomicU32::new(0);
 static WERT2: AtomicU32 = AtomicU32::new(0);
 static ZAHL: AtomicUsize = AtomicUsize::new(0);
 static LATCH: AtomicU32 = AtomicU32::new(0);
+/// Lage des letzten Drückens, wie „maus_spaet“ sie liest (x << 16 | y).
+static DRUCK: AtomicU32 = AtomicU32::new(0);
 static OBEN_BEREIT: AtomicBool = AtomicBool::new(false);
 
 const BLAU: u32 = 0x3060A0;
@@ -119,6 +121,9 @@ fn prog_maus_spaet() {
             6 => {
                 std::thread::sleep(Duration::from_millis(100));
                 LATCH.fetch_or(sys::maus(3) & 0xFF_FF00, Ordering::SeqCst);
+                if let Some((x, y)) = sys::druck_lage_holen() {
+                    DRUCK.store((x as u32) << 16 | (y as u32 & 0xFFFF), Ordering::SeqCst);
+                }
                 MAUS_EV.fetch_add(1, Ordering::SeqCst);
             }
             _ => {}
@@ -228,6 +233,7 @@ fn init() -> std::sync::MutexGuard<'static, ()> {
     WERT.store(0, Ordering::SeqCst);
     WERT2.store(0, Ordering::SeqCst);
     LATCH.store(0, Ordering::SeqCst);
+    DRUCK.store(0, Ordering::SeqCst);
     OBEN_BEREIT.store(false, Ordering::SeqCst);
     g
 }
@@ -340,6 +346,23 @@ fn maus_ereignisse_je_fenster() {
     sys::eingabe::maus(250, 220, 0);
     bis(|| LATCH.load(Ordering::SeqCst) & (1 << 8 | 1 << 16) == 1 << 8 | 1 << 16, "Tippen danach");
     beenden(oben);
+    beenden(pid);
+}
+
+/// B8: Drücken, Ziehen, Loslassen, bevor das Programm liest – die Lage des
+/// Drückens (relativ zum Arbeitsbereich) bleibt abholbar, die jetzige Lage
+/// ist schon woanders.
+#[test]
+fn druck_lage_beim_ziehen() {
+    let _g = init();
+    let pid = kern::starte_name("maus_spaet").unwrap();
+    bis(|| BEREIT.load(Ordering::SeqCst), "Fenster");
+    sys::eingabe::maus(150, 160, 1);
+    sys::eingabe::maus(170, 165, 1);
+    sys::eingabe::maus(190, 170, 1);
+    sys::eingabe::maus(190, 170, 0);
+    // Arbeitsbereich ab (100+5, 100+22)
+    bis(|| DRUCK.load(Ordering::SeqCst) == (45 << 16 | 38), "Lage des Drückens");
     beenden(pid);
 }
 

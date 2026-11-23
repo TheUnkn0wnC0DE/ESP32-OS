@@ -655,9 +655,44 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   PC-Test `lesezeichen_verlauf_adressleiste` (+ `lesezeichen_zweiter_start`):
   Eingabe-Skript der Prüf-Fläche tippt Merken, Link, Adressleiste (zweimal),
   Liste; zweiter Start liest die Dateien und öffnet das Lesezeichen.
-- [ ] **B5 Touch-Scrollen und Pinch-Zoom**. Nachweis: Autopilot, Fotos.
-- [ ] **B6 Texteingabe in Formularen** über Bildschirmtastatur (Hook).
+- [x] **B5 Touch-Scrollen und Pinch-Zoom**. Nachweis: Autopilot, Fotos.
+  Nutzer 23.11.: flüssig, mindestens 30 Bilder/s – **nicht erreicht,
+  ~12 Bilder/s, siehe Abweichungen**.
+  Nachweis (Board, `docs/nachweise/b5/`, Runde 43): Wischen im
+  Wikipedia-Artikel scrollt (`b5_board_gescrollt.png`), Pinch-Zoom ×2
+  (`b5_board_zoom.png`, Bild mitvergrössert), Messung je Wischbewegung
+  `b5_board_wischen_log.txt` (vorher 2,5–3,6, jetzt 11–12 Bilder/s).
+  PC 64 Bit / i686 grün.
+  Umsetzung: Wischen scrollt um den Fingerweg (`netsurf/c/touch.c`,
+  Pixel gesammelt, ein Mausrad-Ereignis), Pinch-Zoom 0,5- bis 3-fach
+  (PC-Tests `touch_scrollen`, `touch_zoomen`; Board-Foto
+  `docs/nachweise/b5/b5_board_zoom.png`). Messung je Wischbewegung am Board
+  (Zeile „Wischen“ im Log, Bilder vom ersten Schritt bis zum letzten Bild,
+  Zeiten je Teil). Gefunden und behoben: (1) Funktion 65 rechnete jeden
+  Bildpunkt über 24 Bit um und prüfte ihn einzeln → 16 bpp zeilenweise
+  (Kern-Test `bild_16bpp_zeilen_beschnitten`), 71 → 31 ms; (2) der
+  Compositor setzte bei jedem Bild Hintergrund, Hintergrundbild und alle
+  Fenster unter der Sperre neu zusammen → ab dem obersten Fenster, das das
+  Rechteck ganz bedeckt; (3) drei Zeichenaufrufe je Bild, jeder wartete
+  ~7 ms auf die Sperre → Rechtecke gesammelt, ein Aufruf je Durchlauf
+  (Warten jetzt ~0); (4) jeder Scrollschritt suchte im ganzen Box-Baum
+  nach einem scrollbaren Bereich (~40 ms) → nur am Anfang einer
+  Wischbewegung; (5) das Verschieben mit memcpy je Zeile statt memmove
+  (Vorwärts-memmove am Board langsam). Stand Runde 43: 11–12 Bilder/s
+  (vorher 2,5–3,6).
+- [x] **B6 Texteingabe in Formularen** über Bildschirmtastatur (Hook).
   Nachweis: Autopilot sucht in Wikipedia-Suchfeld, Foto Ergebnis.
+  Umsetzung: fbtk.c als geprüfte Kopie (build.rs `fbtk_kopie`) – jede
+  Schreibmarke (Formularfeld oder Adressleiste) meldet über
+  `ns_tastatur_fokus` Fokus und Lage an den Kern (`textfeld_fokus`,
+  `textfeld_lage`): die Tastatur geht von selbst auf, liegt nicht über dem
+  Feld und geht beim Verlassen wieder zu. PC-Test `formular_tastatur`
+  (Fokus an samt Lage, Formular abgeschickt, Fokus wieder ab).
+  Nachweis (Board, `docs/nachweise/b6/`, Runde 33): Wikipedia
+  Spezial:Suche, Suchfeld antippen → Tastatur oben (Feld liegt unten,
+  `b6_board_tastatur_von_selbst.png`), „esp32“ tippen
+  (`b6_board_tippen.png`), Enter → Suchergebnisse zu „Esp32“, Tastatur
+  wieder zu (`b6_board_ergebnis.png`); Ablauf `b6_board_ablauf.txt`.
 - [ ] **B7 JavaScript** (Auftrag 13.9) – moderne Engine (ES2020+), Web-
   Funktionen DOM, Ereignisse, Timer, fetch/XHR, localStorage; Speicher pro
   Seite begrenzt (Seite bricht ab, Browser und System laufen weiter).
@@ -699,9 +734,43 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   liefern noch 0 bzw. nur das style-Attribut; scrollIntoView, select(),
   normalize() tun noch nichts), DOMContentLoaded kommt erst mit load
   (NetSurf meldet das Ende des Parsens nicht), Board.
-- [ ] **B8 Bedienung** (Auftrag 13.9) – Tabs, Adressleiste mit Suche,
+- [x] **B8 Bedienung** (Auftrag 13.9) – Tabs, Adressleiste mit Suche,
   Downloads, Zoom, Text markieren und kopieren (Zwischenablage), progressive
   JPEGs (B0b). Nachweis: Autopilot + Fotos je Funktion.
+  Umsetzung 23.11.: Bilder – NetSurf war ohne JPEG/PNG gebaut (Bilder in
+  Webseiten fehlten ganz) → `netsurf/c/bild.c`: JPEG (am Board über die
+  JPEG-Einheit, progressiv in Software) und PNG über `kolibri::dekoder`,
+  dekodiert erst beim Zeichnen (image_cache), grosse Bilder verkleinert,
+  am Board vorher Prüfung des freien PSRAM (PC-Test `bilder_jpeg_png`:
+  progressives JPEG halb so gross, PNG mit Transparenz). Tabs –
+  `netsurf/c/tabs.c`: Knopf „Tabs n“ (statt NetSurfs „Fenster
+  schliessen“) mit Liste (wechseln, schliessen, „+ Neuer Tab“, höchstens 5),
+  Links mit target="_blank" öffnen einen Tab (PC-Test `tabs_wechseln`).
+  Downloads – `netsurf/c/download.c`: in `/daten/Downloads` (Tests:
+  `<Datenordner>/Downloads`), Fortschritt in der Statuszeile, vorhandene
+  Dateien bleiben („name (2).ext“), halbe Dateien werden gelöscht (PC-Test
+  `download_speichern`, 200 KB unverändert). Markieren und kopieren –
+  Halten, dann Ziehen markiert; am Ende kopiert der Browser gleich in die
+  Zwischenablage des Systems (`netsurf/c/ablage.c`, Funktion 54),
+  Statuszeile „Text kopiert“ (PC-Test `text_kopieren`). Adressleiste mit
+  Suche: seit B2 (`c/eingabe.c`). Zoom: B5. Unterwegs behoben:
+  Grossbuchstaben, Umlaute, „%“, „{|}~“ der Bildschirmtastatur kamen falsch
+  an (nsfb kennt keine Codes dafür, Adressleiste schrieb 0xFF) → Zeichen als
+  Unicode (fbtk/event.c- und fbtk/text.c-Kopien, UTF-8 im Textfeld, PC-Test
+  `tastatur_sonderzeichen`); Markieren begann am Board dort, wo der Finger
+  beim Abfragen schon war → der Kern merkt sich die Lage des Drückens
+  (`sys::druck_lage_holen`, Kern-Test `druck_lage_beim_ziehen`).
+  Nachweis (Board, `docs/nachweise/b8/`, Runden 35–44): JPEG-Foto im
+  Wikipedia-Artikel (`b8_board_jpeg_im_artikel.png`); Tabs: Liste mit einem
+  Tab, „+ Neuer Tab“, Liste mit zwei Tabs, zurück zum Wikipedia-Tab
+  (`b8_board_tabs_liste_1.png`, `b8_board_download_gespeichert_tabs_2.png`,
+  `b8_board_tab_gewechselt.png`); Download: Adresse
+  proof.ovh.net/files/1Mb.dat über die Bildschirmtastatur (Shift, „/“ aus
+  der Symbolebene) → „Download: 108 / 1024 KB“ → „Gespeichert:
+  /daten/netsurf_test/Downloads/1Mb.dat“ (`b8_board_download_laeuft.png`);
+  Markieren: Halten, dann Ziehen → Statuszeile „Text kopiert“, Log „browser:
+  kopiert (209 Zeichen)“ (`b8_board_markiert_kopiert.png`). Offen: der
+  markierte Bereich am Board (siehe Abweichungen). PC 64 Bit / i686 grün.
 - [ ] **B9 20-Seiten-Test** (Auftrag 13.9) – Liste mit 20 echten Webseiten
   (einfach bis JavaScript-lastig: Wikipedia, Suchmaschine, Nachrichten,
   GitHub, Formulare, Menüs …), alle am Board getestet; Tabelle in STATUS
@@ -810,6 +879,31 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   KolibriOS-C-Programme.
 
 ## Abweichungen
+
+- **B8, markierter Bereich am Board (23.11.):** Markieren und Kopieren geht
+  (Text landet in der Zwischenablage des Systems, „Text kopiert“). Am Board
+  reicht die Markierung aber vom Seitenanfang bis zur Stelle, an der der
+  Finger aufsetzte, statt entlang des Fingers. Die Ereignisse an NetSurf
+  stimmen (Log: Drücken bei 30,179, Bewegung bis 195,179, Loslassen); am PC
+  markiert dieselbe Folge genau die Zeile (PC-Test `text_kopieren`, auch mit
+  vorherigem Tippen auf die Titelleiste). Ursache noch nicht gefunden →
+  wird in B10 weiter untersucht.
+
+- **B5, Scrollen mit 30 Bildern/s nicht erreicht (23.11.):** Gefordert
+  (Nutzer, Nacht 23.11.) waren mindestens 30 Bilder/s beim Wischen.
+  Erreicht: ~12 Bilder/s im Wikipedia-Artikel (vorher 2–4), gemessen je
+  Wischbewegung am Board. Warum: Bei jedem Bild muss der sichtbare Teil der
+  Seite (630 × 210 Bildpunkte, 265 KB) im PSRAM verschoben werden; das
+  kostet mit der CPU 22–36 ms – auch mit memcpy statt memmove, weil die
+  Anzeige-Kette (Skalieren 640×360 → 1280×720, Ausgabe 55 Hz) den PSRAM
+  gleichzeitig stark belastet. Versuch mit dem DMA-Kopierer (GDMA,
+  esp_async_memcpy, in Bändern ganzer Zeilen): die Übertragungen in den
+  PSRAM wurden nicht fertig gemeldet, der Kopierer lehnte nach wenigen
+  Bändern alles ab → wieder entfernt. Nach ~2 Stunden nach den Regeln der
+  Nacht übersprungen. Ersatz: alle gefundenen Bremsen sind behoben (siehe
+  B5). Weg zu 30 Bildern/s: NetSurf direkt in den Fensterpuffer des Kerns
+  zeichnen lassen (spart eine volle Kopie je Bild) und das Verschieben über
+  die PPA-Einheit (2D-DMA) statt der CPU – je ein eigener Kern-Eingriff.
 
 - **B2, Rückfallebene ohne JavaScript (22.11.):** Gewünscht war „die Seite
   ohne JavaScript anzeigen“. Automatisch (Zeitgrenze 12 s, JS-Speicher-

@@ -108,6 +108,32 @@ pub fn tastatur_meldungen() -> Vec<(bool, i32, i32, i32)> {
 
 static TASTATUR: std::sync::Mutex<Vec<(bool, i32, i32, i32)>> = std::sync::Mutex::new(Vec::new());
 
+/// B8 (c/flaeche_esp32os.c): Lage des letzten Drückens einer Maustaste
+/// (Arbeitsbereich), damit Markieren dort beginnt, wo der Finger aufsetzte.
+#[cfg(target_pointer_width = "32")]
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_druck_lage_holen(x: *mut i32, y: *mut i32) -> bool {
+    match kern::sys::druck_lage_holen() {
+        Some((dx, dy)) => {
+            // SAFETY: Zeiger vom Aufrufer (lokale Variablen).
+            unsafe {
+                *x = dx;
+                *y = dy;
+            }
+            true
+        }
+        None => false,
+    }
+}
+
+/// B8 (c/flaeche_esp32os.c): Zeichen der Bildschirmtastatur in cp866 als
+/// Unicode (Umlaute u. a.).
+#[cfg(target_pointer_width = "32")]
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_cp866_zu_uni(c: u8) -> u32 {
+    kern::schrift::cp866_zu_uni(c)
+}
+
 /// B5: Zoom-Geste des Desktops (Faktor in Tausendstel seit dem letzten
 /// Abholen, Mittelpunkt) für die Fläche des Browsers (c/flaeche_esp32os.c).
 #[cfg(target_pointer_width = "32")]
@@ -119,6 +145,20 @@ pub extern "C" fn ns_zoom_holen(faktor: *mut u32, x: *mut i32, y: *mut i32) {
         *faktor = f;
         *x = mx;
         *y = my;
+    }
+}
+
+/// Board, Messung B5 (c/flaeche_esp32os.c, Zeile „Wischen“): Zeichenaufrufe
+/// des Kerns – Warten auf die Sperre und Arbeit (µs), Anzahl.
+#[cfg(target_os = "espidf")]
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_kern_zeichnen_messung(warten: *mut u32, arbeit: *mut u32, aufrufe: *mut u32) {
+    let (w, a, n) = kern::sys::zeichnen_messung_nehmen();
+    // SAFETY: Zeiger vom Aufrufer (lokale Variablen).
+    unsafe {
+        *warten = w;
+        *arbeit = a;
+        *aufrufe = n;
     }
 }
 
@@ -136,6 +176,202 @@ pub extern "C" fn ns_heap_stand_kb(belegt: *mut u32, spitze: *mut u32) {
         *belegt = b;
         *spitze = s;
     }
+}
+
+/// B8 (c/ablage.c): Zwischenablage. Am Board und im 32-Bit-Programm die des
+/// Systems (Funktion 54), am PC (64 Bit) ein Speicher für die Tests.
+#[cfg(not(target_pointer_width = "32"))]
+static ABLAGE: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
+
+/// Text in die Zwischenablage (aus NetSurfs Kopieren).
+///
+/// # Safety
+/// `text` zeigt auf `laenge` lesbare Bytes (UTF-8).
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ns_ablage_setzen(text: *const u8, laenge: usize) {
+    if text.is_null() {
+        return;
+    }
+    // SAFETY: laut Aufrufer.
+    let t = String::from_utf8_lossy(unsafe { core::slice::from_raw_parts(text, laenge) }).into_owned();
+    #[cfg(target_pointer_width = "32")]
+    {
+        kern::sys::ablage_text_setzen(&t);
+        // Nachweis im Log: Anfang des kopierten Textes (Text einer Webseite)
+        let anfang: String = t.chars().take(60).collect();
+        kern::sys::debug_text(&format!("browser: kopiert ({} Zeichen): {anfang}\n", t.chars().count()));
+    }
+    #[cfg(not(target_pointer_width = "32"))]
+    {
+        *ABLAGE.lock().unwrap_or_else(|e| e.into_inner()) = t;
+    }
+    ABLAGE_ZAEHLER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+}
+
+static ABLAGE_ZAEHLER: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+/// Wie oft der Browser schon etwas in die Zwischenablage gelegt hat (die
+/// gui.c-Kopie meldet „Text kopiert“ nur, wenn es mehr geworden sind).
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_ablage_zaehler() -> u32 {
+    ABLAGE_ZAEHLER.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Inhalt der Zwischenablage (Text) – auch für die Tests.
+pub fn ablage_inhalt() -> String {
+    #[cfg(target_pointer_width = "32")]
+    {
+        kern::sys::ablage_text().unwrap_or_default()
+    }
+    #[cfg(not(target_pointer_width = "32"))]
+    {
+        ABLAGE.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+}
+
+/// Länge des Textes in der Zwischenablage in Byte.
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_ablage_laenge() -> usize {
+    ablage_inhalt().len()
+}
+
+/// Text der Zwischenablage nach `ziel` kopieren (höchstens `max` Byte, ohne
+/// Null am Ende); Rückgabe: kopierte Bytes.
+///
+/// # Safety
+/// `ziel` zeigt auf `max` beschreibbare Bytes.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ns_ablage_kopieren(ziel: *mut u8, max: usize) -> usize {
+    if ziel.is_null() {
+        return 0;
+    }
+    let t = ablage_inhalt();
+    let n = t.len().min(max);
+    // SAFETY: laut Aufrufer.
+    unsafe { core::ptr::copy_nonoverlapping(t.as_ptr(), ziel, n) };
+    n
+}
+
+/// B8 (c/bild.c): Breite und Höhe eines JPEG/PNG aus dem Dateikopf.
+///
+/// # Safety
+/// `daten` zeigt auf `laenge` lesbare Bytes, `breite`/`hoehe` sind gültig.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ns_bild_masse(daten: *const u8, laenge: usize, breite: *mut u32, hoehe: *mut u32) -> bool {
+    if daten.is_null() || laenge == 0 {
+        return false;
+    }
+    // SAFETY: laut Aufrufer.
+    let d = unsafe { core::slice::from_raw_parts(daten, laenge) };
+    match kolibri::dekoder::masse(d) {
+        Some((w, h)) => {
+            // SAFETY: laut Aufrufer.
+            unsafe {
+                *breite = w;
+                *hoehe = h;
+            }
+            true
+        }
+        None => false,
+    }
+}
+
+/// Am Board kommt der Speicher des Dekoders aus dem System-PSRAM (nicht aus
+/// dem Heap des Browsers), und ein fehlgeschlagener Rust-Speicherwunsch
+/// bricht ab: vorher prüfen, ob das Bild sicher hineinpasst. Bedarf je
+/// Bildpunkt: Ausgabe 4 Byte, progressives JPEG bis 6 Byte Koeffizienten
+/// + 3 Byte Ebenen, PNG ~5 Byte entpackt → 16 Byte, dazu 512 KB Reserve.
+#[cfg(target_os = "espidf")]
+fn bild_passt(pixel: u64) -> bool {
+    unsafe extern "C" {
+        fn heap_caps_get_free_size(caps: u32) -> usize;
+        fn heap_caps_get_largest_free_block(caps: u32) -> usize;
+    }
+    const MALLOC_CAP_8BIT: u32 = 1 << 2;
+    const MALLOC_CAP_SPIRAM: u32 = 1 << 10;
+    // SAFETY: reine Abfragen der Heap-Verwaltung.
+    let (frei, block) = unsafe {
+        (
+            heap_caps_get_free_size(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) as u64,
+            heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) as u64,
+        )
+    };
+    frei >= pixel * 16 + 512 * 1024 && block >= pixel * 6 + 64 * 1024
+}
+
+#[cfg(not(target_os = "espidf"))]
+fn bild_passt(_pixel: u64) -> bool {
+    true
+}
+
+/// B8 (c/bild.c): Bild dekodieren und in die Bitmap schreiben (nicht
+/// vormultipliziertes RGBA, Byte-Lage `r`/`g`/`b`/`a` je Bildpunkt), um
+/// `teiler` verkleinert (Mittelwert je Block). Rückgabe 1 = deckend,
+/// 0 = mit Transparenz, < 0 = Fehler (-1 Format, -2 Masse, -3 Speicher).
+///
+/// # Safety
+/// `daten` zeigt auf `laenge` lesbare Bytes, `ziel` auf `zeile * hoehe`
+/// beschreibbare Bytes (`zeile` ≥ 4 · `breite`).
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn ns_bild_dekodieren(
+    daten: *const u8,
+    laenge: usize,
+    ziel: *mut u8,
+    breite: u32,
+    hoehe: u32,
+    zeile: usize,
+    teiler: u32,
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8,
+) -> i32 {
+    if daten.is_null() || ziel.is_null() || zeile < breite as usize * 4 {
+        return -2;
+    }
+    // SAFETY: laut Aufrufer.
+    let d = unsafe { core::slice::from_raw_parts(daten, laenge) };
+    let Some((w, h)) = kolibri::dekoder::masse(d) else { return -1 };
+    if !bild_passt(u64::from(w) * u64::from(h)) {
+        return -3;
+    }
+    let bild = match kolibri::dekoder::dekodieren(d) {
+        Ok((_, mut v)) if !v.is_empty() => v.swap_remove(0),
+        _ => return -1,
+    };
+    let t = teiler.max(1);
+    if bild.w.div_ceil(t) != breite || bild.h.div_ceil(t) != hoehe || bild.px.len() < (bild.w * bild.h) as usize {
+        return -2;
+    }
+    // SAFETY: laut Aufrufer.
+    let aus = unsafe { core::slice::from_raw_parts_mut(ziel, zeile * hoehe as usize) };
+    let mut deckend = true;
+    for y in 0..hoehe {
+        let zeile_aus = &mut aus[y as usize * zeile..][..breite as usize * 4];
+        for x in 0..breite {
+            let (mut s, mut n) = ([0u32; 4], 0u32);
+            for yy in y * t..((y + 1) * t).min(bild.h) {
+                for xx in x * t..((x + 1) * t).min(bild.w) {
+                    let p = bild.px[(yy * bild.w + xx) as usize];
+                    s[0] += (p >> 16) & 0xFF;
+                    s[1] += (p >> 8) & 0xFF;
+                    s[2] += p & 0xFF;
+                    s[3] += p >> 24;
+                    n += 1;
+                }
+            }
+            let n = n.max(1);
+            let px = &mut zeile_aus[x as usize * 4..][..4];
+            px[usize::from(r)] = (s[0] / n) as u8;
+            px[usize::from(g)] = (s[1] / n) as u8;
+            px[usize::from(b)] = (s[2] / n) as u8;
+            let alpha = (s[3] / n) as u8;
+            px[usize::from(a)] = alpha;
+            deckend &= alpha == 0xFF;
+        }
+    }
+    i32::from(deckend)
 }
 
 #[cfg(not(target_os = "espidf"))]
@@ -1246,6 +1482,26 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
         )
     }
 
+    /// PNG des Bildes, Adressfeld weiss (Prüfserver mit wechselndem Port –
+    /// das Erwartungsbild soll sich nicht bei jedem Lauf ändern).
+    fn ohne_adresse(bild: &Bild) -> Vec<u8> {
+        let mut px = bild.px.clone();
+        let b = bild.breite as usize;
+        for y in 3..27.min(bild.hoehe as usize) {
+            for x in 334..(b.saturating_sub(92)) {
+                px[y * b + x] = 0xFF_FFFF;
+            }
+        }
+        // Statuszeile (zeigt beim Zeigen auf Links die Adresse)
+        let h = bild.hoehe as usize;
+        for y in h.saturating_sub(17)..h {
+            for x in 0..b.saturating_sub(270) {
+                px[y * b + x] = 0xDD_DDDD;
+            }
+        }
+        spatz::image::encode_png(bild.breite, bild.hoehe, &px)
+    }
+
     fn b5_farbe(bild: &Bild, x: usize, y: usize) -> u32 {
         bild.px[y * bild.breite as usize + x] & 0xFF_FFFF
     }
@@ -1366,6 +1622,303 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
         let an = m.iter().find(|e| e.0).expect("Fokus an gemeldet");
         assert!(an.2 >= 30 && an.2 <= 30 + 45 && an.3 > 0, "Lage im Feld: {an:?}");
         assert!(m.iter().any(|e| !e.0), "Fokus wieder abgegeben: {m:?}");
+    }
+
+    /// B8: JPEG (progressiv, B0b) und PNG mit Transparenz in einer Seite –
+    /// über den Dekoder des Systems (c/bild.c). Das JPEG wird auf die halbe
+    /// Grösse gezeichnet, durch das PNG scheint der grüne Hintergrund.
+    #[test]
+    fn bilder_jpeg_png() {
+        c(bilder_jpeg_png_innen);
+    }
+
+    fn bilder_jpeg_png_innen() {
+        if im_eigenen_prozess("bilder_jpeg_png") {
+            return;
+        }
+        use std::io::{Read, Write};
+        ressourcen();
+        let ordner = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../desktop/tests/bilder");
+        let jpeg = std::fs::read(ordner.join("progressiv.jpg")).expect("progressiv.jpg");
+        let png = std::fs::read(ordner.join("transparent.png")).expect("transparent.png");
+        assert_eq!(jpeg.get(..2), Some(&[0xFF, 0xD8][..]));
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                let (typ, inhalt): (&str, Vec<u8>) = match pfad.as_str() {
+                    "/p.jpg" => ("image/jpeg", jpeg.clone()),
+                    "/t.png" => ("image/png", png.clone()),
+                    _ => (
+                        "text/html",
+                        b"<html><body style='margin:0;background:#00ff00'>\
+                          <img src='/p.jpg' width='320' height='240' style='display:block'>\
+                          <img src='/t.png' style='display:block'></body></html>"
+                            .to_vec(),
+                    ),
+                };
+                let _ = s.write_all(format!("HTTP/1.0 200 OK\r\nContent-Type: {typ}\r\nContent-Length: {}\r\n\r\n", inhalt.len()).as_bytes());
+                let _ = s.write_all(&inhalt);
+            }
+        });
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 3000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("b8_pc_bilder.png"), ohne_adresse(&bild)).unwrap();
+        // Bildpunkt als (r, g, b) aus 0x00RRGGBB
+        let rgb = |x: usize, y: usize| {
+            let p = bild.px[y * bild.breite as usize + x];
+            ((p >> 16) & 0xFF, (p >> 8) & 0xFF, p & 0xFF)
+        };
+        // Seite ab y = 30; JPEG halb so gross: rotes Feld (8..32), blaues
+        // (64..88), Sonne um (246, 57)
+        let (r0, g0, b0) = rgb(20, 30 + 20);
+        assert!(r0 > 180 && g0 < 80 && b0 < 80, "rotes Feld im JPEG: {:?}", (r0, g0, b0));
+        let (r1, g1, b1) = rgb(76, 30 + 20);
+        assert!(b1 > 180 && r1 < 80 && g1 < 100, "blaues Feld im JPEG: {:?}", (r1, g1, b1));
+        let (r2, g2, b2) = rgb(246, 30 + 57);
+        assert!(r2 > 200 && g2 > 160 && b2 < 120, "Sonne im JPEG: {:?}", (r2, g2, b2));
+        // PNG darunter (ab y = 270): Ecke durchsichtig → Grün, Rechteck blau
+        assert_eq!(rgb(4, 274), (0, 255, 0), "Hintergrund scheint durchs PNG");
+        let (r3, g3, b3) = rgb(50, 270 + 40);
+        assert!(b3 > 180 && r3 < 100, "blaues Rechteck im PNG: {:?}", (r3, g3, b3));
+    }
+
+    /// B8: Text markieren (Ziehen mit gedrückter Taste, am Board „Halten,
+    /// dann Ziehen“) legt ihn gleich in die Zwischenablage des Systems.
+    #[test]
+    fn text_kopieren() {
+        c(text_kopieren_innen);
+    }
+
+    fn text_kopieren_innen() {
+        if im_eigenen_prozess("text_kopieren") {
+            return;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        let seite = data_url("<html><body style='margin:0;font-size:32px'><p style='margin:0'>Erste Zeile</p><p style='margin:0'>Hallo Welt Ablage</p></body></html>");
+        // Zeile ab y = 30 (unter der Werkzeugleiste), von links über den Text
+        assert!(c_umgebung("NS_TEST_EINGABE", "600:314:-23;800:D:5:82:700:82"));
+        let (r, _bild) = lauf_mit(&seite, 800, 480, 2000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let t = ablage_inhalt();
+        println!("Zwischenablage: {t:?}");
+        assert!(t.starts_with("Hallo Welt Ablage"), "markierter Text in der Zwischenablage: {t:?}");
+    }
+
+    /// B8: Tabs – ein Link mit target="_blank" öffnet einen zweiten Tab
+    /// (blaue Seite); „Tabs 2“ öffnet die Liste, die zweite Zeile (der erste
+    /// Tab, grüne Seite) wechselt zurück.
+    #[test]
+    fn tabs_wechseln() {
+        c(tabs_wechseln_innen);
+    }
+
+    fn tabs_wechseln_innen() {
+        if im_eigenen_prozess("tabs_wechseln") {
+            return;
+        }
+        use std::io::{Read, Write};
+        unsafe extern "C" {
+            fn ns_tabs_hoechststand() -> i32;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                let html = if pfad == "/b" {
+                    "<html><head><title>Blau</title></head><body style='margin:0;background:#0000ff'></body></html>"
+                } else {
+                    "<html><head><title>Gruen</title></head><body style='margin:0;background:#00ff00'>\
+                     <a href='/b' target='_blank' style='display:block;width:400px;height:200px;background:#ff0000'>x</a></body></html>"
+                };
+                let _ = s.write_all(format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\r\n{html}", html.len()).as_bytes());
+            }
+        });
+        let farbe = |bild: &Bild, x: usize, y: usize| bild.px[y * bild.breite as usize + x] & 0xFF_FFFF;
+        // Link, dann „Tabs 2“ (rechts in der Werkzeugleiste), zweite Zeile
+        assert!(c_umgebung("NS_TEST_EINGABE", "1500:100:100;3000:770:15;3600:200:115"));
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 5000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("b8_pc_tabs.png"), ohne_adresse(&bild)).unwrap();
+        assert_eq!(farbe(&bild, 600, 300), 0x00_FF00, "zurück im ersten Tab (grün)");
+        assert_eq!(farbe(&bild, 100, 100), 0xFF_0000, "Link des ersten Tabs");
+        // SAFETY: Zähler aus c/tabs.c, NetSurf läuft nicht mehr.
+        assert_eq!(unsafe { ns_tabs_hoechststand() }, 2, "zwei Tabs");
+    }
+
+    /// B8: Download – ein Link auf eine Datei, die NetSurf nicht anzeigt
+    /// (application/octet-stream, 200 KB), landet unverändert im
+    /// Download-Ordner; ein zweiter Download gleichen Namens überschreibt
+    /// sie nicht.
+    #[test]
+    fn download_speichern() {
+        c(download_speichern_innen);
+    }
+
+    fn download_speichern_innen() {
+        if im_eigenen_prozess("download_speichern") {
+            return;
+        }
+        use std::io::{Read, Write};
+        unsafe extern "C" {
+            fn ns_downloads_fertig() -> i32;
+        }
+        ressourcen();
+        let ordner = std::env::temp_dir().join(format!("ns_dl_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&ordner);
+        std::fs::create_dir_all(&ordner).unwrap();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_DATEN_ORDNER", "");
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _zurueck = Zuruecksetzen;
+        let ohne_lw = |p: &str| p.replace('\\', "/").trim_start_matches(|c: char| c.is_ascii_alphabetic()).trim_start_matches(':').to_string();
+        assert!(c_umgebung("NS_DATEN_ORDNER", &ohne_lw(&ordner.to_string_lossy())));
+        let inhalt: Vec<u8> = (0..200 * 1024u32).map(|i| (i * 7 + i / 251) as u8).collect();
+        let fuer_server = inhalt.clone();
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                if pfad == "/datei" {
+                    let _ = s.write_all(
+                        format!(
+                            "HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n\
+                             Content-Disposition: attachment; filename=\"test.bin\"\r\nContent-Length: {}\r\n\r\n",
+                            fuer_server.len()
+                        )
+                        .as_bytes(),
+                    );
+                    let _ = s.write_all(&fuer_server);
+                } else {
+                    let html = "<html><body style='margin:0'><a href='/datei' style='display:block;width:400px;height:150px;background:#ff0000'>x</a></body></html>";
+                    let _ = s.write_all(format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\r\n{html}", html.len()).as_bytes());
+                }
+            }
+        });
+        // Link zweimal antippen: test.bin und test (2).bin
+        assert!(c_umgebung("NS_TEST_EINGABE", "1200:100:100;2500:100:100"));
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 4000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let dl = ordner.join("Downloads");
+        let namen: Vec<String> = std::fs::read_dir(&dl).map(|d| d.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect()).unwrap_or_default();
+        println!("Downloads: {namen:?}");
+        assert_eq!(std::fs::read(dl.join("test.bin")).ok().as_deref(), Some(&inhalt[..]), "test.bin unverändert");
+        assert_eq!(std::fs::read(dl.join("test (2).bin")).ok().as_deref(), Some(&inhalt[..]), "zweiter Download daneben");
+        // SAFETY: Zähler aus c/download.c, NetSurf läuft nicht mehr.
+        assert_eq!(unsafe { ns_downloads_fertig() }, 2);
+        let _ = std::fs::remove_dir_all(&ordner);
+    }
+
+    /// B8: Zeichen der Bildschirmtastatur kommen als Unicode an – auch
+    /// Grossbuchstaben, Umlaute, „%“ und „{}“ (nsfb hat dafür keine Codes).
+    /// Adressleiste: „…/MÄ“, zweimal Rücktaste (ganze UTF-8-Zeichen), „X“
+    /// → Abruf von /X; im Formular „Ä%M{x}“ → genau diese Zeichen.
+    #[test]
+    fn tastatur_sonderzeichen() {
+        c(tastatur_sonderzeichen_innen);
+    }
+
+    fn tastatur_sonderzeichen_innen() {
+        if im_eigenen_prozess("tastatur_sonderzeichen") {
+            return;
+        }
+        use std::io::{Read, Write};
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        let anfragen = std::sync::Arc::new(Mutex::new(Vec::<String>::new()));
+        let log = anfragen.clone();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                log.lock().unwrap().push(pfad);
+                let html = "<html><body style='margin:0;background:white'><form action='/suche' method='get'>\
+                            <input name='q' style='width:300px;height:40px;font-size:24px'></form></body></html>";
+                let _ = s.write_all(format!("HTTP/1.0 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\n\r\n{html}", html.len()).as_bytes());
+            }
+        });
+        let eingabe = format!("1000:450:15;1300:T:http://127.0.0.1:{port}/M\\u00C4\\b\\bX\\n;2600:100:50;2900:T:\\u00C4%M{{x}}\\n");
+        assert!(c_umgebung("NS_TEST_EINGABE", &eingabe));
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 4000, false).expect("Bild");
+        assert_eq!(r, 0);
+        let a = anfragen.lock().unwrap().clone();
+        println!("Anfragen {a:?}");
+        assert!(a.iter().any(|p| p == "/X"), "Adressleiste: /MÄ minus zwei Zeichen plus X: {a:?}");
+        let suche = a.iter().find(|p| p.starts_with("/suche?q=")).expect("Formular abgeschickt");
+        let q = &suche["/suche?q=".len()..];
+        // Prozent-Kodierung auflösen (Formular: UTF-8)
+        let mut bytes = Vec::new();
+        let qb = q.as_bytes();
+        let mut i = 0;
+        while i < qb.len() {
+            if qb[i] == b'%' && i + 2 < qb.len() {
+                bytes.push(u8::from_str_radix(&q[i + 1..i + 3], 16).unwrap());
+                i += 3;
+            } else {
+                bytes.push(if qb[i] == b'+' { b' ' } else { qb[i] });
+                i += 1;
+            }
+        }
+        assert_eq!(String::from_utf8_lossy(&bytes), "Ä%M{x}", "Formular: {suche}");
     }
 
     #[test]

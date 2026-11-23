@@ -1,0 +1,13 @@
+B6 Board, Runde 33 (22.11., Autopilot, Start: browser --daten=/daten/netsurf_test https://de.wikipedia.org/wiki/Spezial:Suche)
+
+Autopilot (logische Koordinaten 640x360, ms ab Start):
+  50000  Suchfeld der Seite antippen (55,281)    -> Bildschirmtastatur geht von selbst auf,
+                                                   oben, weil das Feld unten liegt
+                                                   (b6_board_tastatur_von_selbst.png)
+  58000  e s p 3 2 auf der Tastatur antippen     -> Text im Feld (b6_board_tippen.png, beim Tippen)
+  73000  Enter                                   -> Formular abgeschickt, Tastatur geht von selbst zu,
+                                                   Wikipedia zeigt Suchergebnisse zu "Esp32"
+                                                   (b6_board_ergebnis.png, "Fertiggestellt (24.9s)")
+Ohne Antippen des Tastatur-Knopfs in der Taskleiste.
+
+PC-Test: formular_tastatur (Fokus an/aus samt Lage an den Kern, Formular abgeschickt).

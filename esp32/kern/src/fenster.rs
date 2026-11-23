@@ -158,6 +158,10 @@ pub struct FadenZ {
     /// erst nach dem Loslassen liest, und Tippen auf die Bildschirmtastatur
     /// zählt nicht als Klick ins Fenster darunter.
     pub maus_ereignisse: u32,
+    /// Bildschirmlage des letzten Drückens (ESP32-OS, B8): wer Zustand und
+    /// Lage nur abfragt, sieht beim Ziehen sonst schon die spätere Lage –
+    /// Text markieren begänne an der falschen Stelle.
+    pub druck_lage: Option<(i32, i32)>,
     pub hg_ev: bool,
     pub ipc_ev: bool,
     pub netz_ev: bool,
@@ -384,6 +388,7 @@ impl Welt {
             knopf: None,
             maus_ev: false,
             maus_ereignisse: 0,
+            druck_lage: None,
             hg_ev: false,
             ipc_ev: false,
             netz_ev: false,
@@ -575,11 +580,26 @@ impl Welt {
         }
         let (x0, y0) = (z.clip.x0, z.clip.y0);
         let (cw, ch) = (z.clip.x1 - x0, z.clip.y1 - y0);
-        z.fuellen565(x0, y0, cw, ch, zu565(self.hintergrund));
-        if let Some(b) = &self.hintergrund_bild {
-            z.puffer(b, 0, 0);
+        // Fenster sind undurchsichtige Rechtecke: ab dem obersten, das das
+        // Rechteck ganz bedeckt, ist alles darunter unsichtbar (B5: beim
+        // Scrollen im Browser setzt der Compositor sonst Hintergrund, Bild
+        // und alle Fenster neu – und hält dabei die Sperre)
+        let bedeckt = self.stapel.iter().rposition(|&s| {
+            self.slots[s].as_ref().and_then(|f| f.fenster.as_ref()).is_some_and(|f| {
+                !f.minimiert
+                    && f.x <= x0
+                    && f.y <= y0
+                    && f.x + f.buf.w as i32 >= x0 + cw
+                    && f.y + f.buf.h as i32 >= y0 + ch
+            })
+        });
+        if bedeckt.is_none() {
+            z.fuellen565(x0, y0, cw, ch, zu565(self.hintergrund));
+            if let Some(b) = &self.hintergrund_bild {
+                z.puffer(b, 0, 0);
+            }
         }
-        for &s in &self.stapel {
+        for &s in &self.stapel[bedeckt.unwrap_or(0)..] {
             if let Some(f) = self.slots[s].as_ref().and_then(|f| f.fenster.as_ref())
                 && !f.minimiert
             {
@@ -677,6 +697,9 @@ impl Welt {
                 if !inaktiv_sperre && !aussen {
                     fz.maus_ev = true;
                     fz.maus_ereignisse |= (gedrueckt & 7) << 8 | (los & 7) << 16;
+                    if gedrueckt != 0 {
+                        fz.druck_lage = Some((x, y));
+                    }
                 }
             }
         }

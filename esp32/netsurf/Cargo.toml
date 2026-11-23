@@ -7,6 +7,8 @@ rust-version.workspace = true
 license = "GPL-2.0-only"
 
 [dependencies]
+# B8: Bilddekoder des Systems (JPEG inkl. progressiv, PNG) für c/bild.c
+kolibri = { path = "../kolibri" }
 
 # 32 Bit (i686, Board): NetSurf als ESP32-OS-Programm „browser“
 [target.'cfg(target_pointer_width = "32")'.dependencies]
@@ -14,11 +16,6 @@ kern = { path = "../kern" }
 
 [dev-dependencies]
 spatz = { path = "../../spatz", default-features = false }
-
-# 32 Bit: Tests laufen als ESP32-OS-Programm im Kern (kolibri_libc: Heap
-# des Programms)
-[target.'cfg(target_pointer_width = "32")'.dev-dependencies]
-kolibri = { path = "../kolibri" }
 
 [build-dependencies]
 cc = "1"

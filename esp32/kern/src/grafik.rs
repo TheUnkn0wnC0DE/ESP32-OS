@@ -187,6 +187,13 @@ impl Zeichner<'_> {
         };
         let pal = |i: usize| palette.get(i).copied().unwrap_or(0);
         self.merke(x, y, w, h);
+        // 16 bpp ist schon das Format des Puffers (RGB565): einmal je Bild
+        // beschneiden, dann ganze Zeilen übernehmen (B5: Browser scrollt
+        // flüssig – vorher Umweg über 24 Bit und Prüfung je Bildpunkt)
+        if bpp == 16 && zeilen_extra >= 0 {
+            self.bild565(data, w, h, x, y, schritt + zeilen_extra as usize);
+            return;
+        }
         let mut off = 0usize;
         for yy in 0..h {
             let z = match data.get(off..off + schritt) {
@@ -218,6 +225,27 @@ impl Zeichner<'_> {
                 }
             }
             off = (off as isize + schritt as isize + zeilen_extra as isize).max(0) as usize;
+        }
+    }
+
+    /// Funktion 65 mit 16 bpp: RGB565 (Little Endian) zeilenweise in den
+    /// Puffer, `abstand` Bytes von Zeile zu Zeile. Wie der allgemeine Weg:
+    /// fehlt einer Zeile ein Teil der Daten, endet das Bild dort.
+    fn bild565(&mut self, data: &[u8], w: i32, h: i32, x: i32, y: i32, abstand: usize) {
+        let r = Clip { x0: x + self.ox, y0: y + self.oy, x1: x + self.ox + w, y1: y + self.oy + h }.schnitt(self.clip);
+        if r.leer() {
+            return;
+        }
+        let zeile = 2 * w as usize;
+        let links = 2 * (r.x0 - x - self.ox) as usize;
+        let n = (r.x1 - r.x0) as usize;
+        for zy in r.y0..r.y1 {
+            let off = (zy - y - self.oy) as usize * abstand;
+            let Some(z) = data.get(off..off + zeile) else { return };
+            let a = zy as usize * self.p.w + r.x0 as usize;
+            for (d, s) in self.p.px[a..a + n].iter_mut().zip(z[links..links + 2 * n].chunks_exact(2)) {
+                *d = u16::from_le_bytes([s[0], s[1]]);
+            }
         }
     }
 
@@ -282,6 +310,47 @@ impl Zeichner<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bild_16bpp_zeilen_beschnitten() {
+        // 5×4-Bild mit 2 Byte Zeilen-Zusatz, teils ausserhalb (links, unten)
+        // und mit Versatz des Arbeitsbereichs – Ergebnis wie je Bildpunkt
+        let (w, h, extra) = (5i32, 4i32, 2usize);
+        let mut data = Vec::new();
+        for yy in 0..h {
+            for xx in 0..w {
+                data.extend_from_slice(&(0x1234u16.wrapping_mul((yy * 7 + xx + 1) as u16)).to_le_bytes());
+            }
+            data.extend_from_slice(&[0xEE; 2]);
+        }
+        let mut p = Puffer::neu(8, 6, 0);
+        let mut z = Zeichner::neu(&mut p);
+        z.ox = 1;
+        z.oy = 1;
+        z.clip = Clip { x0: 1, y0: 1, x1: 8, y1: 4 };
+        z.bild(&data, w, h, -2, 1, 16, &[], extra as i32);
+        let beruehrt = z.beruehrt;
+        for py in 0..6i32 {
+            for px in 0..8i32 {
+                let (bx, by) = (px - 1 + 2, py - 1 - 1);
+                let innen = (1..8).contains(&px) && (1..4).contains(&py) && (0..w).contains(&bx) && (0..h).contains(&by);
+                let soll = if innen {
+                    let o = by as usize * (2 * w as usize + extra) + 2 * bx as usize;
+                    u16::from_le_bytes([data[o], data[o + 1]])
+                } else {
+                    zu565(0)
+                };
+                assert_eq!(p.px[py as usize * 8 + px as usize], soll, "Bildpunkt {px},{py}");
+            }
+        }
+        assert_eq!(beruehrt, Clip { x0: 1, y0: 2, x1: 4, y1: 4 });
+        // zu wenig Daten: endet an der ersten unvollständigen Zeile
+        let mut p = Puffer::neu(4, 4, 0);
+        let mut z = Zeichner::neu(&mut p);
+        z.bild(&[0xFF; 2 * 4 + 3], 4, 2, 0, 0, 16, &[], 0);
+        assert_eq!(&p.px[..4], &[0xFFFF; 4]);
+        assert_eq!(&p.px[4..8], &[0; 4]);
+    }
 
     #[test]
     fn farben_hin_und_zurueck() {

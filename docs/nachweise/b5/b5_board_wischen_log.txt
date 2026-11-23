@@ -1,0 +1,30 @@
+# B5 Board: Wischen im Wikipedia-Artikel ESP32 (Autopilot, je Wischbewegung 190 px in 320 ms)
+## Runde 34 (vorher)
+[81815] ns_takt: Wischen: 45 Schritte, 12 Bilder in 6824 ms (1.7 Bilder/s)
+[81815] ns_takt: Wischen je Bild: Verschieben 44146 us, Seite 41633 us (12 Bereiche, 27540 px), Ausgabe 39862 us, davon Kern 71475 us
+[84814] ns_takt: Wischen: -15 Schritte, 5 Bilder in 816 ms (6.1 Bilder/s)
+[84814] ns_takt: Wischen je Bild: Verschieben 35293 us, Seite 3732 us (5 Bereiche, 22032 px), Ausgabe 54400 us, davon Kern 77519 us
+## Runde 41 (Teilzeiten je Bild)
+[66846] ns_takt: Wischen: 15 Schritte, 3 Bilder in 420 ms (7.1 Bilder/s)
+[66846] ns_takt: Wischen je Bild: Verschieben 11550 us, Seite 84416 us (3 Bereiche, 36720 px), Ausgabe 5 us, davon Kern 6401 us
+[66846] ns_takt: Wischen Kern: 3 Zeichenaufrufe, Sperre warten 20 us, Arbeit 19112 us (Summe)
+[66846] ns_takt: Wischen Hauptschleife (Summe): Planer 161 us, Scrollen 3997 us, fbtk_redraw 288888 us
+[69848] ns_takt: Wischen: 15 Schritte, 8 Bilder in 872 ms (9.1 Bilder/s)
+[69848] ns_takt: Wischen je Bild: Verschieben 31579 us, Seite 27708 us (8 Bereiche, 13770 px), Ausgabe 5 us, davon Kern 6068 us
+[69848] ns_takt: Wischen Kern: 8 Zeichenaufrufe, Sperre warten 56 us, Arbeit 48275 us (Summe)
+[69848] ns_takt: Wischen Hauptschleife (Summe): Planer 418 us, Scrollen 4034 us, fbtk_redraw 478089 us
+[72816] ns_takt: Wischen: 15 Schritte, 8 Bilder in 669 ms (11.9 Bilder/s)
+[72816] ns_takt: Wischen je Bild: Verschieben 22921 us, Seite 2221 us (8 Bereiche, 13770 px), Ausgabe 3 us, davon Kern 6251 us
+[72816] ns_takt: Wischen Kern: 8 Zeichenaufrufe, Sperre warten 54 us, Arbeit 49757 us (Summe)
+[72816] ns_takt: Wischen Hauptschleife (Summe): Planer 408 us, Scrollen 4191 us, fbtk_redraw 271913 us
+[75815] ns_takt: Wischen: -15 Schritte, 8 Bilder in 669 ms (11.9 Bilder/s)
+[75815] ns_takt: Wischen je Bild: Verschieben 26633 us, Seite 2311 us (8 Bereiche, 13770 px), Ausgabe 4 us, davon Kern 5876 us
+[75815] ns_takt: Wischen Kern: 8 Zeichenaufrufe, Sperre warten 57 us, Arbeit 46761 us (Summe)
+[75815] ns_takt: Wischen Hauptschleife (Summe): Planer 3020 us, Scrollen 43100 us, fbtk_redraw 274415 us
+## Runde 43 (Stand Commit)
+[64163] ns_takt: Wischen: 1 Schritte, 1 Bilder in 317 ms (3.1 Bilder/s)
+[66848] ns_takt: Wischen: 14 Schritte, 2 Bilder in 164 ms (12.1 Bilder/s)
+[69345] ns_takt: Wischen: 15 Schritte, 7 Bilder in 806 ms (8.6 Bilder/s)
+[72812] ns_takt: Wischen: 15 Schritte, 7 Bilder in 598 ms (11.7 Bilder/s)
+[75474] ns_takt: Wischen: -15 Schritte, 7 Bilder in 635 ms (11.0 Bilder/s)
+[79347] ns_takt: Wischen: 17 Schritte, 0 Bilder in 1 ms (0.0 Bilder/s)

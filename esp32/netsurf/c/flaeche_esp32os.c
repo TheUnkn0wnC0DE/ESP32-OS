@@ -95,13 +95,52 @@ static void fenster_zeichnen(nsfb_t *nsfb)
 	_ksys_end_draw();
 }
 
+/* B5: Bereich verschieben (Scrollen) – statt libnsfbs copy() aus
+ * plot/generic.c: verschiebt sich der Bereich senkrecht, sind Quell- und
+ * Zielzeile verschieden, also memcpy je Zeile (oben beginnend, wenn es nach
+ * oben geht, sonst unten). Am Board ist memmove in Vorwärtsrichtung viel
+ * langsamer als memcpy (gemessen 233 KB: 5–31 ms gegen 0,8 ms für 129 KB). */
+static bool kopieren(nsfb_t *nsfb, nsfb_bbox_t *q, nsfb_bbox_t *z)
+{
+	int w = z->x1 - z->x0, h = z->y1 - z->y0;
+	size_t zeile = (size_t)w * (size_t)nsfb->bpp / 8;
+	uint8_t *s, *d;
+	nsfb_bbox_t alles;
+	if (w <= 0 || h <= 0 || nsfb->ptr == NULL)
+		return true;
+	nsfb_plot_add_rect(q, z, &alles);
+	nsfb->surface_rtns->claim(nsfb, &alles);
+	s = nsfb->ptr + (size_t)q->y0 * nsfb->linelen + (size_t)q->x0 * nsfb->bpp / 8;
+	d = nsfb->ptr + (size_t)z->y0 * nsfb->linelen + (size_t)z->x0 * nsfb->bpp / 8;
+	if (q->y0 > z->y0) {
+		for (int i = 0; i < h; i++)
+			memcpy(d + (size_t)i * nsfb->linelen, s + (size_t)i * nsfb->linelen, zeile);
+	} else if (q->y0 < z->y0) {
+		for (int i = h - 1; i >= 0; i--)
+			memcpy(d + (size_t)i * nsfb->linelen, s + (size_t)i * nsfb->linelen, zeile);
+	} else {
+		for (int i = 0; i < h; i++)
+			memmove(d + (size_t)i * nsfb->linelen, s + (size_t)i * nsfb->linelen, zeile);
+	}
+	nsfb->surface_rtns->update(nsfb, z);
+	return true;
+}
+
+/* libnsfbs Zeichenfunktionen wählen, dann das Verschieben ersetzen */
+static void zeichner_waehlen(nsfb_t *nsfb)
+{
+	select_plotters(nsfb);
+	if (nsfb->plotter_fns != NULL)
+		nsfb->plotter_fns->copy = kopieren;
+}
+
 static int e_defaults(nsfb_t *nsfb)
 {
 	nsfb->width = 640;
 	nsfb->height = 360;
 	nsfb->format = NSFB_FMT_RGB565;
 	nsfb->bpp = 16;
-	select_plotters(nsfb);
+	zeichner_waehlen(nsfb);
 	return 0;
 }
 
@@ -153,7 +192,7 @@ static int e_initialise(nsfb_t *nsfb)
 	nsfb->ptr = NULL;
 	nsfb->format = NSFB_FMT_RGB565;
 	nsfb->bpp = 16;
-	select_plotters(nsfb);
+	zeichner_waehlen(nsfb);
 	zu = false;
 	knoepfe = 0;
 	s_anfang = s_ende = 0;
@@ -163,8 +202,11 @@ static int e_initialise(nsfb_t *nsfb)
 	return 0;
 }
 
+static void ausgabe_verwerfen(void);
+
 static int e_finalise(nsfb_t *nsfb)
 {
+	ausgabe_verwerfen();
 	free(nsfb->ptr);
 	nsfb->ptr = NULL;
 	return 0;
@@ -172,6 +214,7 @@ static int e_finalise(nsfb_t *nsfb)
 
 static int e_geometry(nsfb_t *nsfb, int width, int height, enum nsfb_format_e format)
 {
+	ausgabe_verwerfen(); /* Puffer wird neu angelegt */
 	/* Grösse vom Frontend (= Arbeitsbereich); Format bleibt RGB565 (das
 	 * Format der Anzeige) */
 	(void)format;
@@ -181,11 +224,14 @@ static int e_geometry(nsfb_t *nsfb, int width, int height, enum nsfb_format_e fo
 		nsfb->height = height;
 	nsfb->format = NSFB_FMT_RGB565;
 	nsfb->bpp = 16;
-	select_plotters(nsfb);
+	zeichner_waehlen(nsfb);
 	return 0;
 }
 
 /* KolibriOS-Tastencode (ASCII-Modus) → nsfb */
+/* netsurf/src/lib.rs: Zeichen der Kodierung cp866 als Unicode */
+uint32_t ns_cp866_zu_uni(uint8_t c);
+
 static int taste_nsfb(uint8_t c)
 {
 	switch (c) {
@@ -203,9 +249,14 @@ static int taste_nsfb(uint8_t c)
 	case 0xB7: return NSFB_KEY_PAGEDOWN;
 	case 0xB8: return NSFB_KEY_PAGEUP;
 	default:
-		/* druckbares ASCII; Umlaute & Co. (cp866/Unicode) kommen mit der
-		 * eigenen Texteingabe (B6), nsfb-Tastencodes kennen sie nicht */
-		return (c >= 32 && c < 127) ? c : -1;
+		/* B8: Zeichen als Unicode-Code ab 0x10000 (fbtk_event.c-Kopie
+		 * reicht sie durch) – nsfb hat keine Codes für Grossbuchstaben,
+		 * Umlaute, „%“, „{|}~“; cp866 über die Tabelle des Kerns */
+		if (c >= 32 && c < 127)
+			return 0x10000 + c;
+		if (c >= 128)
+			return 0x10000 + (int)ns_cp866_zu_uni(c);
+		return -1;
 	}
 }
 
@@ -241,6 +292,8 @@ static void taste_nachfuehren(uint32_t e, uint32_t bit, int taste)
 		einreihen(jetzt ? NSFB_EVENT_KEY_DOWN : NSFB_EVENT_KEY_UP, taste);
 }
 
+/* netsurf/src/lib.rs (B8): Lage des letzten Drückens (Arbeitsbereich) */
+bool ns_druck_lage_holen(int *x, int *y);
 /* c/touch.c (B5) */
 void ns_touch_scroll_schritte(int schritte);
 void ns_touch_zoom(double faktor);
@@ -257,12 +310,32 @@ static void maus(void)
 	uint32_t e = _ksys_get_mouse_eventstate();
 	uint32_t rad = _ksys_get_mouse_wheels();
 	int16_t dy = (int16_t)(rad & 0xFFFF);
+	/* B8: neu gedrückt? Erst an die Stelle des Drückens (der Kern merkt sie
+	 * sich), dann drücken, dann weiter zur jetzigen Lage – sonst begänne
+	 * Markieren (Halten, dann Ziehen) dort, wo der Finger beim Abfragen
+	 * schon ist */
+	if (e & (1u << 8)) {
+		int dx, dyy;
+		if (ns_druck_lage_holen(&dx, &dyy) && (dx != mx || dyy != my)) {
+			mx = dx;
+			my = dyy;
+			bewegung(mx, my);
+		}
+	}
+	if (p.x != mx || p.y != my) {
+		/* Lage nach dem Drücken erst nach der Taste */
+		if (!(e & (1u << 8))) {
+			mx = p.x;
+			my = p.y;
+			bewegung(mx, my);
+		}
+	}
+	taste_nachfuehren(e, 1, NSFB_KEY_MOUSE_1);
 	if (p.x != mx || p.y != my) {
 		mx = p.x;
 		my = p.y;
 		bewegung(mx, my);
 	}
-	taste_nachfuehren(e, 1, NSFB_KEY_MOUSE_1);
 	taste_nachfuehren(e, 2, NSFB_KEY_MOUSE_3);
 	knoepfe = e & 3;
 	/* B5: alle Scrollschritte als Pixel sammeln (c/touch.c) und nur ein
@@ -306,6 +379,38 @@ static int64_t wisch_start, wisch_letzter_schritt, wisch_letztes_bild;
 static unsigned wisch_bilder;
 static int wisch_schritte;
 
+/* gui.c-Kopie (build.rs): Zeiten je Bild beim Zeichnen */
+extern int64_t ns_mess_kopie_us, ns_mess_seite_us, ns_mess_ausgabe_us;
+extern int64_t ns_mess_planer_us, ns_mess_zeichnen_us, ns_mess_scroll_us;
+extern unsigned ns_mess_seite_n, ns_mess_seite_px;
+static int64_t mess_flaeche_us; /* e_update: an den Kern (Funktion 65) */
+/* netsurf/src/lib.rs: Zeichenaufrufe des Kerns (Warten auf die Sperre,
+ * Arbeit darin, Anzahl) seit dem letzten Abholen */
+void ns_kern_zeichnen_messung(uint32_t *warten, uint32_t *arbeit, uint32_t *aufrufe);
+
+/* einmal beim Start: wie schnell ist ein grosses memmove im PSRAM? */
+static void speicher_messen(void)
+{
+	size_t n = 630 * 210 * 2;
+	uint8_t *p = malloc(n + 4096);
+	if (p == NULL)
+		return;
+	memset(p, 0x55, n + 4096);
+	int64_t t0 = esp_timer_get_time();
+	memmove(p, p + 2 * 630 * 20, n - 2 * 630 * 20);
+	int64_t t1 = esp_timer_get_time();
+	memmove(p + 2 * 630 * 20, p, n - 2 * 630 * 20);
+	int64_t t2 = esp_timer_get_time();
+	memcpy(p, p + n / 2, n / 2);
+	int64_t t3 = esp_timer_get_time();
+	ESP_LOGI("ns_takt", "Speicher: memmove %u KB vor %lld us, zurück %lld us, memcpy %u KB %lld us",
+		 (unsigned)((n - 2 * 630 * 20) / 1024), (long long)(t1 - t0), (long long)(t2 - t1),
+		 (unsigned)(n / 2048), (long long)(t3 - t2));
+	free(p);
+}
+
+static void wischen_abschliessen(void);
+
 static void wischen_messen(int64_t jetzt, bool bild)
 {
 	/* Bild zuerst: es gehört zu einer schon laufenden Bewegung */
@@ -313,26 +418,57 @@ static void wischen_messen(int64_t jetzt, bool bild)
 		wisch_bilder++;
 		wisch_letztes_bild = takt_bild_zeit;
 	}
+	/* eine Bewegung endet 300 ms nach ihrem letzten Schritt – auch wenn der
+	 * Browser so lange schlief und erst der nächste Schritt ihn weckt */
+	if (wisch_start != 0 && jetzt - wisch_letzter_schritt >= 300000)
+		wischen_abschliessen();
 	if (wisch_neu != 0) {
 		if (wisch_start == 0) {
 			wisch_start = jetzt;
 			wisch_letztes_bild = jetzt;
 			wisch_bilder = 0;
 			wisch_schritte = 0;
+			ns_mess_kopie_us = ns_mess_seite_us = ns_mess_ausgabe_us = mess_flaeche_us = 0;
+			ns_mess_planer_us = ns_mess_zeichnen_us = ns_mess_scroll_us = 0;
+			ns_mess_seite_n = ns_mess_seite_px = 0;
+			{
+				uint32_t w, a, n;
+				ns_kern_zeichnen_messung(&w, &a, &n);
+			}
 		}
 		wisch_schritte += wisch_neu;
 		wisch_neu = 0;
 		wisch_letzter_schritt = jetzt;
 	}
-	if (wisch_start == 0)
-		return;
-	if (jetzt - wisch_letzter_schritt >= 300000) {
+	if (wisch_start != 0 && jetzt - wisch_letzter_schritt >= 300000)
+		wischen_abschliessen();
+}
+
+static void wischen_abschliessen(void)
+{
+	{
 		int64_t dauer_ms = (wisch_letztes_bild - wisch_start) / 1000;
 		if (dauer_ms < 1)
 			dauer_ms = 1;
 		ESP_LOGI("ns_takt", "Wischen: %d Schritte, %u Bilder in %lld ms (%u.%u Bilder/s)", wisch_schritte,
 			 wisch_bilder, (long long)dauer_ms, (unsigned)(wisch_bilder * 1000 / dauer_ms),
 			 (unsigned)(wisch_bilder * 10000 / dauer_ms % 10));
+		ESP_LOGI("ns_takt",
+			 "Wischen je Bild: Verschieben %lld us, Seite %lld us (%u Bereiche, %u px), Ausgabe %lld us, "
+			 "davon Kern %lld us",
+			 (long long)(ns_mess_kopie_us / (wisch_bilder ? wisch_bilder : 1)),
+			 (long long)(ns_mess_seite_us / (wisch_bilder ? wisch_bilder : 1)), ns_mess_seite_n,
+			 ns_mess_seite_px / (wisch_bilder ? wisch_bilder : 1),
+			 (long long)(ns_mess_ausgabe_us / (wisch_bilder ? wisch_bilder : 1)),
+			 (long long)(mess_flaeche_us / (wisch_bilder ? wisch_bilder : 1)));
+		{
+			uint32_t w, a, n;
+			ns_kern_zeichnen_messung(&w, &a, &n);
+			ESP_LOGI("ns_takt", "Wischen Kern: %u Zeichenaufrufe, Sperre warten %u us, Arbeit %u us (Summe)", n, w,
+				 a);
+			ESP_LOGI("ns_takt", "Wischen Hauptschleife (Summe): Planer %lld us, Scrollen %lld us, fbtk_redraw %lld us",
+				 (long long)ns_mess_planer_us, (long long)ns_mess_scroll_us, (long long)ns_mess_zeichnen_us);
+		}
 		wisch_start = 0;
 	}
 }
@@ -340,8 +476,10 @@ static void wischen_messen(int64_t jetzt, bool bild)
 static void takt(int64_t warten_us)
 {
 	int64_t jetzt = esp_timer_get_time();
-	if (takt_start == 0)
+	if (takt_start == 0) {
 		takt_start = jetzt;
+		speicher_messen();
+	}
 	takt_warten += warten_us;
 	takt_runden++;
 	wischen_messen(jetzt, takt_bild);
@@ -370,9 +508,13 @@ static void takt(int64_t warten_us)
 }
 #endif
 
+static void ausgeben(void);
+
 static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 {
 	uint32_t ev;
+	/* Gezeichnetes aus dem letzten Durchlauf an den Kern */
+	ausgeben();
 	if (holen(event))
 		return true;
 	if (zu) {
@@ -405,7 +547,8 @@ static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 		int c;
 		if (k.state == 1)
 			break;
-		c = taste_nsfb(k.code);
+		/* Zustand 3: Unicode in den oberen 16 Bit (Zeichen ohne cp866) */
+		c = k.state == 3 ? 0x10000 + (int)(k.val >> 16) : taste_nsfb(k.code);
 		if (c >= 0) {
 			einreihen(NSFB_EVENT_KEY_DOWN, c);
 			einreihen(NSFB_EVENT_KEY_UP, c);
@@ -433,6 +576,41 @@ static bool e_input(nsfb_t *nsfb, nsfb_event_t *event, int timeout)
 	return holen(event);
 }
 
+/* B5: geänderte Rechtecke eines Durchlaufs sammeln und einmal an den Kern
+ * geben (ausgeben() am Anfang von e_input) – beim Scrollen kamen sonst je
+ * Bild drei Aufrufe (verschobener Teil, neuer Streifen, Rollbalken), die
+ * jeder auf die Sperre des Compositors warten */
+static nsfb_t *offen_fb;
+static int offen_x0, offen_y0, offen_x1, offen_y1;
+static bool offen_da;
+
+/* Puffer weg oder neu: Gesammeltes nicht mehr ausgeben */
+static void ausgabe_verwerfen(void)
+{
+	offen_da = false;
+	offen_fb = NULL;
+}
+
+static void ausgeben(void)
+{
+	nsfb_t *nsfb = offen_fb;
+	int x0 = offen_x0, y0 = offen_y0, x1 = offen_x1, y1 = offen_y1;
+	if (!offen_da || nsfb == NULL || nsfb->ptr == NULL)
+		return;
+	offen_da = false;
+#ifdef ESP_PLATFORM
+	takt_bild = true;
+	int64_t mess_ab = esp_timer_get_time();
+#endif
+	/* Teilrechteck: Zeilenabstand über den Versatz (Funktion 65, ebp) */
+	ksys_draw_bitmap_palette(nsfb->ptr + (size_t)y0 * nsfb->linelen + (size_t)x0 * 2, x0, y0, x1 - x0, y1 - y0, 16, NULL,
+				 nsfb->linelen - (x1 - x0) * 2);
+#ifdef ESP_PLATFORM
+	takt_bild_zeit = esp_timer_get_time();
+	mess_flaeche_us += takt_bild_zeit - mess_ab;
+#endif
+}
+
 static int e_update(nsfb_t *nsfb, nsfb_bbox_t *box)
 {
 	int x0 = box->x0 < 0 ? 0 : box->x0, y0 = box->y0 < 0 ? 0 : box->y0;
@@ -440,13 +618,24 @@ static int e_update(nsfb_t *nsfb, nsfb_bbox_t *box)
 	int y1 = box->y1 > nsfb->height ? nsfb->height : box->y1;
 	if (x1 <= x0 || y1 <= y0 || nsfb->ptr == NULL)
 		return 0;
-#ifdef ESP_PLATFORM
-	takt_bild = true;
-	takt_bild_zeit = esp_timer_get_time();
-#endif
-	/* Teilrechteck: Zeilenabstand über den Versatz (Funktion 65, ebp) */
-	ksys_draw_bitmap_palette(nsfb->ptr + (size_t)y0 * nsfb->linelen + (size_t)x0 * 2, x0, y0, x1 - x0, y1 - y0, 16, NULL,
-				 nsfb->linelen - (x1 - x0) * 2);
+	if (!offen_da || offen_fb != nsfb) {
+		ausgeben();
+		offen_fb = nsfb;
+		offen_x0 = x0;
+		offen_y0 = y0;
+		offen_x1 = x1;
+		offen_y1 = y1;
+		offen_da = true;
+		return 0;
+	}
+	if (x0 < offen_x0)
+		offen_x0 = x0;
+	if (y0 < offen_y0)
+		offen_y0 = y0;
+	if (x1 > offen_x1)
+		offen_x1 = x1;
+	if (y1 > offen_y1)
+		offen_y1 = y1;
 	return 0;
 }
 

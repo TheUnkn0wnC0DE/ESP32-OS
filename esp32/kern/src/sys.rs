@@ -9,6 +9,7 @@ use crate::fenster::{self, Fenster, Knopf, Welt, fenster_zeichnen, knopf_zeichne
 use crate::grafik::{Clip, Puffer, Zeichner, zu565};
 use crate::prozess::{self, Ende, eigene_tid, kern_abschnitt, pruefe_ende};
 use crate::schrift::{self, Kodierung};
+use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
 
 fn hoch(v: u32) -> i32 {
     (v >> 16) as i16 as i32
@@ -20,11 +21,37 @@ fn tief(v: u32) -> i32 {
 /// Ruft `f` mit dem Fenster des laufenden Fadens und einem Zeichner auf, der
 /// die Koordinaten wie KolibriOS auslegt (relativ zum Fenster oder – Flag B
 /// – zum Arbeitsbereich).
+/// Messung der Zeichenaufrufe (B5): Summe Warten auf die Welt-Sperre,
+/// Summe Arbeit darin (µs) und Anzahl Aufrufe – abgeholt mit
+/// [`zeichnen_messung_nehmen`].
+static ZEICHNEN_WARTEN_US: AtomicU32 = AtomicU32::new(0);
+static ZEICHNEN_ARBEIT_US: AtomicU32 = AtomicU32::new(0);
+static ZEICHNEN_AUFRUFE: AtomicU32 = AtomicU32::new(0);
+
+/// Misst beim Verlassen der Sperre die Arbeitszeit (auch bei frühem `?`).
+struct ArbeitMessen(std::time::Instant);
+
+impl Drop for ArbeitMessen {
+    fn drop(&mut self) {
+        ZEICHNEN_ARBEIT_US.fetch_add(self.0.elapsed().as_micros() as u32, Relaxed);
+    }
+}
+
+/// (Warten µs, Arbeit µs, Aufrufe) seit dem letzten Abholen.
+pub fn zeichnen_messung_nehmen() -> (u32, u32, u32) {
+    (ZEICHNEN_WARTEN_US.swap(0, Relaxed), ZEICHNEN_ARBEIT_US.swap(0, Relaxed), ZEICHNEN_AUFRUFE.swap(0, Relaxed))
+}
+
 fn mit_fenster<R>(f: impl FnOnce(&mut Zeichner<'_>) -> R) -> Option<R> {
     pruefe_ende();
     let tid = eigene_tid()?;
+    let t0 = std::time::Instant::now();
     kern_abschnitt(|| {
         fenster::mit_welt(|w| {
+            let t1 = std::time::Instant::now();
+            ZEICHNEN_WARTEN_US.fetch_add((t1 - t0).as_micros() as u32, Relaxed);
+            ZEICHNEN_AUFRUFE.fetch_add(1, Relaxed);
+            let _messen = ArbeitMessen(t1);
             let skin = w.skin.clone();
             let fz = w.faden(tid)?;
             let fe = fz.fenster.as_mut()?;
@@ -524,6 +551,23 @@ pub fn zoom_holen() -> (u32, i32, i32) {
         (z, x - fx, y - fy)
     })
     .unwrap_or((1000, 0, 0))
+}
+
+/// ESP32-OS (B8): Lage des letzten Drückens einer Maustaste seit dem
+/// letzten Abholen, relativ zum Arbeitsbereich (wie 37.1) – für Programme,
+/// die Lage und Tasten nur abfragen (Browser: Markieren beginnt dort, wo der
+/// Finger aufsetzte, nicht wo er beim nächsten Abfragen schon ist).
+pub fn druck_lage_holen() -> Option<(i32, i32)> {
+    mit_faden(|w, s| {
+        let skin = w.skin.clone();
+        let (fx, fy) = w.slots[s].as_ref().and_then(|f| f.fenster.as_ref()).map_or((0, 0), |f| {
+            let (ax, ay, _, _) = f.arbeitsbereich(&skin);
+            (f.x + ax, f.y + ay)
+        });
+        let fz = w.slots[s].as_mut().unwrap_or_else(|| unreachable!());
+        fz.druck_lage.take().map(|(x, y)| (x - fx, y - fy))
+    })
+    .flatten()
 }
 
 /// Funktion 37.4: Zeiger laden (Bild schon gelesen); liefert Griff oder 0.
