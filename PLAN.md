@@ -740,8 +740,11 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   Umsetzung 23.11.: Bilder – NetSurf war ohne JPEG/PNG gebaut (Bilder in
   Webseiten fehlten ganz) → `netsurf/c/bild.c`: JPEG (am Board über die
   JPEG-Einheit, progressiv in Software) und PNG über `kolibri::dekoder`,
-  dekodiert erst beim Zeichnen (image_cache), grosse Bilder verkleinert,
-  am Board vorher Prüfung des freien PSRAM (PC-Test `bilder_jpeg_png`:
+  dekodiert erst beim Zeichnen (image_cache), Bitmaps über 1 MP (Board:
+  256 K Bildpunkte) verkleinert; vorher Prüfung des freien Heaps des
+  Browsers (B-Review: am Board passen so nur Bilder bis etwa 0,5 MP, grössere
+  bleiben ein leerer Kasten – der Dekoder braucht das ganze Bild im Speicher)
+  (PC-Test `bilder_jpeg_png`:
   progressives JPEG halb so gross, PNG mit Transparenz). Tabs –
   `netsurf/c/tabs.c`: Knopf „Tabs n“ (statt NetSurfs „Fenster
   schliessen“) mit Liste (wechseln, schliessen, „+ Neuer Tab“, höchstens 5),
@@ -802,12 +805,47 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   mehr bei den 20 Seiten (vorher MDN, tagesschau.de). PC 64 Bit 28/28,
   i686 30/30, Kern 44 grün. Offen (in der Tabelle): „Zu wenig Speicher“
   beim Verbinden direkt nach schweren Seiten.
-- [ ] **B-Review** – Review-Subagent.
+- [x] **B-Review** – Review-Subagent.
+  23.11.: Diff des Browser-Blocks (b5b3da6^..bb14b7d) gegen PLAN E und
+  Auftrag 9/13.9, 12 Befunde, alle bearbeitet: (1) Throbber eines ladenden
+  Tabs lief nach dem Schliessen weiter → Planer-Eintrag gestrichen; (2) die
+  fbtk-Wurzel zeigte nach dem Schliessen eines Tabs auf zerstörte Widgets
+  (Eingabefokus, Griff, Schreibmarke) → fbtk_destroy_widget löscht die
+  Verweise; (3) Download schrieb in die Statuszeile eines geschlossenen
+  Tabs → prüft, ob der Tab noch offen ist; (4) Rückfallebene ohne JS hielt
+  Fenster geschlossener Tabs → `ns_ohne_js_fenster_weg`; (5) abgeschnittene
+  Downloads hiessen „Gespeichert“ → kürzer als angekündigt = abgebrochen,
+  Datei gelöscht; (6) QuickJS ohne NDEBUG (assert hätte bei verlorener
+  JS-Hülle abgebrochen) → NDEBUG; (7) Bilder > ~0,5 MP am Board nie
+  dekodiert → in B8 richtig beschrieben; (8) Markieren am Board offen → in
+  der Abweichung richtiggestellt; (9) Schliessen nie getestet, Knöpfe für
+  höchstens 8 Tabs → PC-Test `tab_schliessen_beim_laden` (Tab schliessen,
+  während er lädt, danach Seite antippen und tippen; zeigte auch, dass der
+  verbleibende Tab nicht neu gezeichnet wurde → behoben), Tabelle 16; (10)
+  Verlauf konnte die neuesten Besuche verlieren (> 400 Adressen) → neuere
+  ersetzen die ältesten; (11) kein Test für halbe Downloads →
+  `download_speichern` prüft eine abbrechende Übertragung; (12) 100.
+  gleichnamiger Download überschrieb eine Datei → abgelehnt.
 
 ## F. Übrige Alltagsprogramme (Auftrag 5)
 
-- [ ] **A1 Texteditor/Notizen** (öffnen, bearbeiten, speichern). Nachweis:
+- [x] **A1 Texteditor/Notizen** (öffnen, bearbeiten, speichern). Nachweis:
   Autopilot, Datei auf SD geprüft.
+  Umsetzung: `desktop/src/notizen.rs` (Programm „notizen“, Startmenü und
+  Desktop; Dateimanager öffnet .txt/.ini/.log/.md/.cfg damit): Liste der
+  Notizen, Text mit Schreibmarke (Zeichen inkl. Umlaute, Rücktaste,
+  Eingabe, Pfeile), „Neu“, „Speichern“ (Name aus der ersten Zeile,
+  vorhandene Dateien bleiben). Antippen des Textes öffnet die
+  Bildschirmtastatur direkt unter der Zeile der Schreibmarke, die dann
+  oben steht. Ordner: `/sd0/1/ESP32-OS/Notizen` (ohne SD `/daten/Notizen`)
+  oder Argument. PC-Test `desktop/tests/notizen.rs` (Notiz öffnen, neue
+  Notiz über die Tasten der Bildschirmtastatur samt Eingabetaste,
+  speichern, Dateiinhalt geprüft).
+  Nachweis (Board, `docs/nachweise/a1/`, Runde 48, Testordner
+  `/sd0/1/ESP32-OS/Notizen_Test`): Text antippen → Tastatur, „test esp32“,
+  Eingabe, „zeile 2“ getippt, „Speichern“ → Log „gespeichert …/test
+  esp32.txt (18 Byte)“, „Neu“, Notiz in der Liste antippen → Inhalt von der
+  SD-Karte wieder da (`a1_board_wieder_geoeffnet.png`).
 - [ ] **A2 Rechner**. Nachweis: Autopilot „12×3,5=“ → 42, Foto.
 - [ ] **A3 Uhr mit Wecker und Timer** (Ton bei Ablauf). Nachweis: Autopilot,
   Foto + Ton-Log.
@@ -909,8 +947,9 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Finger aufsetzte, statt entlang des Fingers. Die Ereignisse an NetSurf
   stimmen (Log: Drücken bei 30,179, Bewegung bis 195,179, Loslassen); am PC
   markiert dieselbe Folge genau die Zeile (PC-Test `text_kopieren`, auch mit
-  vorherigem Tippen auf die Titelleiste). Ursache noch nicht gefunden →
-  wird in B10 weiter untersucht.
+  vorherigem Tippen auf die Titelleiste). Ursache noch nicht gefunden; in
+  B10 nicht behoben (dort gingen die Abstürze und leeren Seiten vor) –
+  bleibt offen.
 
 - **B5, Scrollen mit 30 Bildern/s nicht erreicht (23.11.):** Gefordert
   (Nutzer, Nacht 23.11.) waren mindestens 30 Bilder/s beim Wischen.

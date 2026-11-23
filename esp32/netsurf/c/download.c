@@ -39,9 +39,21 @@ static bool deutsch(void)
 	return l != NULL && strncmp(l, "de", 2) == 0;
 }
 
+extern struct gui_window *window_list;
+
+/* B8-Review: Ist der Tab des Downloads noch offen? (Schliessen gibt sein
+ * gui_window frei, der Download läuft weiter) */
+static bool lebt(struct gui_window *gw)
+{
+	for (struct gui_window *g = window_list; g != NULL; g = g->next)
+		if (g == gw)
+			return true;
+	return false;
+}
+
 static void status(struct gui_download_window *dw, const char *text)
 {
-	if (dw->gw != NULL && dw->gw->status != NULL)
+	if (dw->gw != NULL && lebt(dw->gw) && dw->gw->status != NULL)
 		fbtk_set_text(dw->gw->status, text);
 	NSLOG(netsurf, INFO, "%s", text);
 }
@@ -91,6 +103,12 @@ static struct gui_download_window *dl_create(struct download_context *ctx, struc
 	snprintf(basis, sizeof basis, "%.*s", punkt != NULL ? (int)(punkt - name) : (int)strlen(name), name);
 	for (int i = 2; gibt_es(dw->pfad) && i < 100; i++)
 		snprintf(dw->pfad, sizeof dw->pfad, "%s/%s (%d)%s", ordner, basis, i, punkt != NULL ? punkt : "");
+	/* B8-Review: auch „(99)“ vorhanden – nichts überschreiben */
+	if (gibt_es(dw->pfad)) {
+		status(dw, deutsch() ? "Download: kein freier Dateiname" : "Download: no free file name");
+		free(dw);
+		return NULL;
+	}
 	dw->f = fopen(dw->pfad, "wb");
 	if (dw->f == NULL) {
 		char t[340];
@@ -154,7 +172,9 @@ static void dl_error(struct gui_download_window *dw, const char *error_msg)
 static void dl_done(struct gui_download_window *dw)
 {
 	char t[360];
-	bool ok = dw->f != NULL && !dw->fehler;
+	/* B8-Review: kürzer als angekündigt (z. B. Zwischenspeicher ohne
+	 * Speicher abgebrochen) gilt als fehlgeschlagen */
+	bool ok = dw->f != NULL && !dw->fehler && (dw->gesamt == 0 || dw->geschrieben >= dw->gesamt);
 	if (dw->f != NULL && fclose(dw->f) != 0)
 		ok = false;
 	dw->f = NULL;

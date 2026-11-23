@@ -276,7 +276,22 @@ static bool besuch_sammeln(struct nsurl *url, const struct url_data *d)
 		n_besuche++;
 		return true;
 	}
-	return false;
+	/* voll (B8-Review): die urldb läuft nach Hosts, nicht nach Zeit – ein
+	 * neuerer Besuch ersetzt den ältesten gesammelten */
+	{
+		unsigned alt = 0;
+		for (unsigned i = 1; i < n_besuche; i++)
+			if (besuche[i].zuletzt < besuche[alt].zuletzt)
+				alt = i;
+		if (d->last_visit > besuche[alt].zuletzt) {
+			nsurl_unref(besuche[alt].url);
+			free(besuche[alt].titel);
+			besuche[alt].url = nsurl_ref(url);
+			besuche[alt].titel = d->title != NULL ? strdup(d->title) : NULL;
+			besuche[alt].zuletzt = d->last_visit;
+		}
+	}
+	return true;
 }
 
 static int neueste_zuerst(const void *a, const void *b)

@@ -257,15 +257,20 @@ pub fn tastenmitte(c: char, w: i32) -> Option<(&'static str, i32, i32)> {
     None
 }
 
-/// Mitte einer Sondertaste („shift“, „123“, „layout“) relativ zur Tastatur.
+/// Mitte einer Sondertaste („shift“, „123“, „layout“, „enter“, „rueck“)
+/// relativ zur Tastatur.
 pub fn sondertaste(name: &str, w: i32) -> (i32, i32) {
     let e = Ebene::Normal;
     let (zi, i) = match name {
         "shift" => (3, 0),
         "layout" => (4, 1),
+        "enter" => (1, usize::MAX),
+        "rueck" => (0, usize::MAX),
         _ => (4, 0),
     };
     let zeile = &tasten(e)[zi];
+    // usize::MAX: letzte Taste der Reihe
+    let i = i.min(zeile.len() - 1);
     let breite: i32 = zeile.iter().map(|t| t.2).sum::<i32>() * EINHEIT;
     let x = (w - breite) / 2 + zeile[..i].iter().map(|t| t.2).sum::<i32>() * EINHEIT + zeile[i].2 * EINHEIT / 2;
     (x, 2 + zi as i32 * TASTE_H + TASTE_H / 2)

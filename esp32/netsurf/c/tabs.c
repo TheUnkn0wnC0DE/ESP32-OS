@@ -20,6 +20,8 @@
 #include "utils/nsoption.h"
 #include "utils/nsurl.h"
 #include "netsurf/browser_window.h"
+#include "netsurf/window.h"
+#include "desktop/gui_internal.h"
 
 #include <libnsfb.h>
 #include <libnsfb_event.h>
@@ -28,7 +30,7 @@
 #include "framebuffer/fbtk.h"
 #include "framebuffer/schedule.h"
 
-#define MAX_TABS 8
+#define MAX_TABS 16
 /* höchstens so viele über „+ Neuer Tab“ – jede Seite braucht Heap */
 #define NEU_HOECHSTENS 5
 #define ZEILE_H 34
@@ -125,6 +127,9 @@ static void zeigen(struct gui_window *gw)
 		fbtk_set_mapping(gw->window, true);
 		fbtk_set_zorder(gw->window, -1000); /* ganz nach vorn */
 		fbtk_request_redraw(gw->window);
+		/* die Seite selbst neu zeichnen (fbtk zeichnet nur seine Widgets,
+		 * NetSurf nur vorgemerkte Bereiche) */
+		guit->window->invalidate(gw, NULL);
 	}
 }
 

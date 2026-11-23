@@ -1150,7 +1150,8 @@ document.getElementById('r').innerHTML = '<div style="width:200px;height:100px;b
         let k = js_konsole(true);
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
         std::fs::write(dir.join("b2_pc_ohne_js.png"), spatz::image::encode_png(bild.breite, bild.hoehe, &bild.px)).unwrap();
-        assert!(k.contains("out of memory"), "{k}");
+        // „Fehler: null“ = kein Speicher mehr für das Fehlerobjekt (B10)
+        assert!(k.contains("out of memory") || k.contains("Fehler: null"), "{k}");
         assert_eq!(ohne_js_rueckfaelle(), 1, "ein Rückfall");
         let blau = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_00FF).count();
         let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
@@ -1820,7 +1821,18 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
                 }
                 let k = String::from_utf8_lossy(&kopf).to_string();
                 let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
-                if pfad == "/datei" {
+                if pfad == "/kaputt" {
+                    // kündigt 200 KB an, schickt 50 KB und schliesst
+                    let _ = s.write_all(
+                        format!(
+                            "HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n\
+                             Content-Disposition: attachment; filename=\"kaputt.bin\"\r\nContent-Length: {}\r\n\r\n",
+                            fuer_server.len()
+                        )
+                        .as_bytes(),
+                    );
+                    let _ = s.write_all(&fuer_server[..50 * 1024]);
+                } else if pfad == "/datei" {
                     let _ = s.write_all(
                         format!(
                             "HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n\
@@ -1831,14 +1843,16 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
                     );
                     let _ = s.write_all(&fuer_server);
                 } else {
-                    let html = "<html><body style='margin:0'><a href='/datei' style='display:block;width:400px;height:150px;background:#ff0000'>x</a></body></html>";
+                    let html = "<html><body style='margin:0'><a href='/datei' style='display:block;width:400px;height:150px;background:#ff0000'>x</a>\
+                                <a href='/kaputt' style='display:block;width:400px;height:150px;background:#0000ff'>y</a></body></html>";
                     let _ = s.write_all(format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\r\n{html}", html.len()).as_bytes());
                 }
             }
         });
-        // Link zweimal antippen: test.bin und test (2).bin
-        assert!(c_umgebung("NS_TEST_EINGABE", "1200:100:100;2500:100:100"));
-        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 4000, false).expect("Bild");
+        // Link zweimal antippen: test.bin und test (2).bin; dann der Link auf
+        // die Datei, deren Übertragung abbricht (B-Review: halbe Datei weg)
+        assert!(c_umgebung("NS_TEST_EINGABE", "1200:100:100;2500:100:100;3800:100:250"));
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 5500, false).expect("Bild");
         assert_eq!(r, 0);
         let dl = ordner.join("Downloads");
         let namen: Vec<String> = std::fs::read_dir(&dl).map(|d| d.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect()).unwrap_or_default();
@@ -1847,6 +1861,7 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
         assert_eq!(std::fs::read(dl.join("test (2).bin")).ok().as_deref(), Some(&inhalt[..]), "zweiter Download daneben");
         // SAFETY: Zähler aus c/download.c, NetSurf läuft nicht mehr.
         assert_eq!(unsafe { ns_downloads_fertig() }, 2);
+        assert!(!dl.join("kaputt.bin").exists(), "abgebrochener Download gelöscht: {namen:?}");
         let _ = std::fs::remove_dir_all(&ordner);
     }
 
@@ -1981,6 +1996,74 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
         assert_eq!(unsafe { ns_abruf_gekuerzt() }, 1);
     }
 
+    /// B-Review: Tab schliessen, während er noch lädt („X“ in der
+    /// Tab-Liste). Danach Seite antippen und tippen (Eingabefokus der
+    /// Wurzel zeigte sonst auf das zerstörte Fenster) und weiterlaufen lassen
+    /// (der Throbber des geschlossenen Tabs lief sonst weiter) – der Browser
+    /// endet normal, der erste Tab ist zu sehen.
+    #[test]
+    fn tab_schliessen_beim_laden() {
+        c(tab_schliessen_beim_laden_innen);
+    }
+
+    fn tab_schliessen_beim_laden_innen() {
+        if im_eigenen_prozess("tab_schliessen_beim_laden") {
+            return;
+        }
+        use std::io::{Read, Write};
+        unsafe extern "C" {
+            fn ns_tabs_hoechststand() -> i32;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_TEST_EINGABE", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                std::thread::spawn(move || {
+                    let mut s = s;
+                    let mut kopf = Vec::new();
+                    let mut b = [0u8; 1];
+                    while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                        kopf.push(b[0]);
+                    }
+                    let k = String::from_utf8_lossy(&kopf).to_string();
+                    let pfad = k.split_whitespace().nth(1).unwrap_or("/").to_string();
+                    let html = if pfad == "/langsam" {
+                        // lädt noch, wenn der Tab geschlossen wird
+                        std::thread::sleep(std::time::Duration::from_millis(3000));
+                        "<html><body style='margin:0;background:#0000ff'></body></html>"
+                    } else if pfad == "/" {
+                        "<html><body style='margin:0;background:#00ff00'>\
+                         <a href='/langsam' target='_blank' style='display:block;width:400px;height:200px;background:#ff0000'>x</a>\
+                         <form action='/' method='get'><input name='q' style='width:300px;height:40px'></form></body></html>"
+                    } else {
+                        ""
+                    };
+                    let _ = s.write_all(format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\r\n{html}", html.len()).as_bytes());
+                });
+            }
+        });
+        let farbe = |bild: &Bild, x: usize, y: usize| bild.px[y * bild.breite as usize + x] & 0xFF_FFFF;
+        // Link (neuer Tab lädt 3 s), „Tabs 2“, „X“ der ersten Zeile (der neue
+        // Tab), dann Formularfeld antippen und tippen, weiterlaufen lassen
+        assert!(c_umgebung("NS_TEST_EINGABE", "1200:100:100;1800:770:15;2400:754:83;3200:100:255;3500:T:abc"));
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 800, 480, 6000, false).expect("Bild");
+        assert_eq!(r, 0, "Browser endet normal");
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("b8_pc_tab_geschlossen.png"), ohne_adresse(&bild)).unwrap();
+        // SAFETY: Zähler aus c/tabs.c, NetSurf läuft nicht mehr.
+        assert_eq!(unsafe { ns_tabs_hoechststand() }, 2, "zwei Tabs offen gewesen");
+        assert_eq!(farbe(&bild, 600, 150), 0x00_FF00, "erster Tab zu sehen");
+        assert_eq!(farbe(&bild, 100, 100), 0xFF_0000, "Link des ersten Tabs");
+    }
+
     #[test]
     fn zeichenflaeche_nsfb() {
         c(zeichenflaeche_nsfb_innen);
@@ -2058,7 +2141,9 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
 
     fn javascript_grenzen_innen() {
         let e = js("const a = []; while (true) a.push(new Array(1000).fill(1));", 2 << 20, 5000).unwrap_err();
-        assert!(e.contains("out of memory") || e.contains("memory"), "{e}");
+        // „null“: nicht einmal das Fehlerobjekt passte noch (i686 mit der
+        // Reserve des Programm-Heaps, B10) – ebenfalls die Speichergrenze
+        assert!(e.contains("out of memory") || e.contains("memory") || e == "null", "{e}");
         let t = std::time::Instant::now();
         let e = js("for (;;) {}", 8 << 20, 200).unwrap_err();
         assert!(e.contains("interrupted"), "{e}");

@@ -113,8 +113,9 @@ fn energie_ruhezustand_akku() {
         })
     });
     foto("p5_menue");
-    // zwei Spalten: Info, Files, Settings, Games | Screenshot, Touchpad, Sleep, Restart
-    f.tippen(mx + 5 + 230 + 100, my + 48 + 2 + 2 * 44 + 20);
+    // zwei Spalten: Info, Files, Settings, Notes, Games | Task manager,
+    // Screenshot, Touchpad, Sleep, Restart
+    f.tippen(mx + 5 + 230 + 100, my + 48 + 2 + 3 * 44 + 20);
     bis(|| konfig::RUHE_JETZT.load(Relaxed), "Ruhe gewünscht");
     assert!(d.ruhe_jetzt(), "einmal true");
     assert!(!d.ruhe_jetzt(), "danach false");

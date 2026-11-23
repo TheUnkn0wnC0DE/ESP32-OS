@@ -1,0 +1,3 @@
+[11520] pudding_fw::wlan: WLAN: notizen /sd0/1/ESP32-OS/Notizen_Test gestartet (6)
+[11537] pudding_p4: [debug] Notizen: Ordner /sd0/1/ESP32-OS/Notizen_Test, 0 Notizen
+[55109] pudding_p4: [debug] Notizen: gespeichert /sd0/1/ESP32-OS/Notizen_Test/test esp32.txt (18 Byte)

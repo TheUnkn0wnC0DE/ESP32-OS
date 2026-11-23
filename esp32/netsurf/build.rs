@@ -168,7 +168,10 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     // QuickJS-ng 0.18.0 als Amalgam
     let mut g = Gruppe::neu("netsurf_quickjs", Modus::Abschnitt);
     g.msvc_compat = false;
-    g.p(&qjs).f(qjs.join("quickjs-amalgam.c"));
+    // B-Review: ohne NDEBUG bräche assert(gc_obj_list leer) in
+    // JS_FreeRuntime das ganze Programm ab, wenn eine JS-Hülle verloren ging
+    // (Laufzeit je Dokument seit B10) – lieber ein kleines Leck
+    g.p(&qjs).d("NDEBUG", None).f(qjs.join("quickjs-amalgam.c"));
     g.proben.push(c("probe_js.c"));
     v.push(g);
 
@@ -488,6 +491,9 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              void ns_tab_weg(struct gui_window *gw);\n\
              int ns_tabs_klick(fbtk_widget_t *widget, fbtk_callback_info *cbi);\n\
              #define NS_TABS_BREITE 60\n\
+             /* ESP32-OS (B8-Review): beim Schliessen eines Tabs geplante Aufrufe streichen */\n\
+             static void throbber_advance(void *pw);\n\
+             void ns_ohne_js_fenster_weg(struct browser_window *bw);\n\
              /* ESP32-OS (B8): Downloads (c/download.c) */\n\
              extern struct gui_download_table ns_download_tabelle;\n",
         ),
@@ -515,7 +521,12 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
         ),
         (
             "\tfbtk_destroy_widget(gw->window);\n\n\tfree(gw);\n",
-            "\tfbtk_destroy_widget(gw->window);\n\
+            "\t/* ESP32-OS (B8-Review): geplante Aufrufe mit diesem Fenster\n\
+             \t * streichen – der Throbber läuft weiter, wenn ein ladender Tab\n\
+             \t * geschlossen wird; Rückfallebene ohne JS (c/ohne_js.c) */\n\
+             \tframebuffer_schedule(-1, throbber_advance, gw);\n\
+             \tns_ohne_js_fenster_weg(gw->bw);\n\
+             \tfbtk_destroy_widget(gw->window);\n\
              \t/* ESP32-OS (B8): anderen Tab zeigen */\n\tns_tab_weg(gw);\n\n\tfree(gw);\n",
         ),
         // B5 (Board): Messung Planer (Zeitgeber, Skripte, Layout)
@@ -843,6 +854,25 @@ fn fbtk_kopie(q: &Path, ziel: &Path) -> PathBuf {
             "\t} else {\n\t\troot->u.root.caret.owner = NULL;\n\t\troot->u.root.caret.remove_cb = NULL;\n\t}\n\
              \t/* ESP32-OS (B6): Bildschirmtastatur – Lage im Fenster */\n\
              \tns_tastatur_fokus(set, fbtk_get_absx(widget) + x, fbtk_get_absy(widget) + y, height);\n}\n",
+        ),
+        // B8-Review: Tabs zerstören Fenster im Betrieb (upstream nur beim
+        // Beenden) – die Wurzel darf danach nicht mehr auf das Widget zeigen
+        // (Eingabefokus, Zeigergriff, letztes Widget unter dem Zeiger,
+        // Schreibmarke)
+        (
+            "\t\t\tparent->last_child = widget->prev;\n\t\t}\n\n\t\tfree(widget);\n",
+            "\t\t\tparent->last_child = widget->prev;\n\t\t}\n\n\
+             \t\t/* ESP32-OS (B8): Verweise der Wurzel auf das Widget löschen */\n\
+             \t\t{\n\t\t\tfbtk_widget_t *wurzel = fbtk_get_root_widget(parent);\n\
+             \t\t\tif (wurzel != NULL) {\n\
+             \t\t\t\tif (wurzel->u.root.input == widget)\n\t\t\t\t\twurzel->u.root.input = NULL;\n\
+             \t\t\t\tif (wurzel->u.root.grabbed == widget)\n\t\t\t\t\twurzel->u.root.grabbed = NULL;\n\
+             \t\t\t\tif (wurzel->u.root.prev == widget)\n\t\t\t\t\twurzel->u.root.prev = NULL;\n\
+             \t\t\t\tif (wurzel->u.root.caret.owner == widget) {\n\
+             \t\t\t\t\twurzel->u.root.caret.owner = NULL;\n\
+             \t\t\t\t\twurzel->u.root.caret.remove_cb = NULL;\n\
+             \t\t\t\t\tns_tastatur_fokus(0, 0, 0, 0);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\
+             \t\tfree(widget);\n",
         ),
     ] {
         assert_eq!(t.matches(alt).count(), 1, "fbtk.c: Originaltext nicht (genau einmal) gefunden: {alt:?}");

@@ -32,6 +32,12 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   Programm-Heap, grosse HTML-Seiten abgeschnitten → 9 geht / 4 teilweise /
   7 geht nicht (vorher 7 / 2 / 11), kein Absturz/Hänger mehr bei den 20
   Seiten. Offen: „Zu wenig Speicher“ direkt nach schweren Seiten.
+- ✔ B-Review: 12 Befunde (u. a. vier Fehler beim Schliessen von Tabs:
+  freigegebener Speicher weiterbenutzt), alle behoben bzw. in PLAN.md
+  richtiggestellt, neuer Test „Tab schliessen während er lädt“.
+- ✔ A1 Notizen: neues Programm (Startmenü, Desktop, Dateimanager öffnet
+  .txt damit), am Board getippt, gespeichert und von der SD-Karte wieder
+  geöffnet (Testordner `/sd0/1/ESP32-OS/Notizen_Test`).
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 

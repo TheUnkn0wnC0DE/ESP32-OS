@@ -263,6 +263,28 @@ void ns_ohne_js_anfordern(struct browser_window *bw, html_content *htmlc)
 	neu_laden(bw, u);
 }
 
+/* gui.c-Kopie, gui_window_destroy (B8-Review): ein Tab wird geschlossen –
+ * geplante Prüfung und geplantes Neuladen dürfen sein Fenster nicht mehr
+ * anfassen */
+void ns_ohne_js_fenster_weg(struct browser_window *bw)
+{
+	if (bw == NULL)
+		return;
+	if (pruef_bw == bw) {
+		guit->misc->schedule(-1, pruefen, bw);
+		pruef_bw = NULL;
+	}
+	if (lade_bw == bw) {
+		guit->misc->schedule(-1, laden, NULL);
+		guit->misc->schedule(-1, anhalten, NULL);
+		lade_bw = NULL;
+		if (lade_url != NULL) {
+			nsurl_unref(lade_url);
+			lade_url = NULL;
+		}
+	}
+}
+
 /* Für die Tests: Adresse auf die Liste setzen */
 bool ns_ohne_js_test_setzen(const char *adresse)
 {
