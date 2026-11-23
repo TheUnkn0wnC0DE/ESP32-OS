@@ -122,29 +122,45 @@ pub fn netsurf_testreste_loeschen() {
     log::warn!("NetSurf-Testreste – nachher {} Dateien, Ordner vorhanden: {}", nachher.len(), std::fs::metadata(wurzel).is_ok());
 }
 
-/// Entwicklungs-Build (A5): die eigenen Testtöne (`werkzeuge/test_mp3.py`)
-/// in den Testordner `ESP32-OS/Musik_Test` der SD-Karte legen – nur in den
-/// eigenen Ordner von ESP32-OS, vorhandene gleich grosse Dateien bleiben.
-#[cfg(esp32os_musik_test)]
-pub fn musik_testdaten() {
-    const DATEIEN: [(&str, &[u8]); 2] = [
-        ("Testton 1.mp3", include_bytes!("../../desktop/tests/daten/Testton 1.mp3")),
-        ("Testton 2.mp3", include_bytes!("../../desktop/tests/daten/Testton 2.mp3")),
-    ];
+/// Entwicklungs-Builds: eigene Testdateien in einen Testordner
+/// `ESP32-OS/<ordner>` der SD-Karte legen – nur in den eigenen Ordner von
+/// ESP32-OS, vorhandene gleich grosse Dateien bleiben.
+#[cfg(any(esp32os_musik_test, esp32os_pdf_test))]
+fn testdaten_ablegen(was: &str, ordner: &str, dateien: &[(&str, &[u8])]) {
     if std::fs::metadata("/sdcard/ESP32-OS").is_err() {
-        log::warn!("Musik-Test: kein Ordner ESP32-OS auf der SD-Karte");
+        log::warn!("{was}: kein Ordner ESP32-OS auf der SD-Karte");
         return;
     }
-    let ordner = "/sdcard/ESP32-OS/Musik_Test";
-    let _ = std::fs::create_dir_all(ordner);
-    for (n, d) in DATEIEN {
+    let ordner = format!("/sdcard/ESP32-OS/{ordner}");
+    let _ = std::fs::create_dir_all(&ordner);
+    for (n, d) in dateien {
         let p = format!("{ordner}/{n}");
         if std::fs::metadata(&p).is_ok_and(|m| m.len() == d.len() as u64) {
-            log::warn!("Musik-Test: {n} schon da");
+            log::warn!("{was}: {n} schon da");
             continue;
         }
-        log::warn!("Musik-Test: {n} ({} Byte): {:?}", d.len(), std::fs::write(&p, d).map_err(|e| e.to_string()));
+        log::warn!("{was}: {n} ({} Byte): {:?}", d.len(), std::fs::write(&p, d).map_err(|e| e.to_string()));
     }
+}
+
+/// Entwicklungs-Build (A5): die eigenen Testtöne (`werkzeuge/test_mp3.py`)
+/// nach `ESP32-OS/Musik_Test`.
+#[cfg(esp32os_musik_test)]
+pub fn musik_testdaten() {
+    testdaten_ablegen("Musik-Test", "Musik_Test", &[
+        ("Testton 1.mp3", include_bytes!("../../desktop/tests/daten/Testton 1.mp3")),
+        ("Testton 2.mp3", include_bytes!("../../desktop/tests/daten/Testton 2.mp3")),
+    ]);
+}
+
+/// Entwicklungs-Build (Z1): die Test-PDFs des PDF-Betrachters
+/// (`desktop/tests/pdf`) nach `ESP32-OS/PDF_Test`.
+#[cfg(esp32os_pdf_test)]
+pub fn pdf_testdaten() {
+    testdaten_ablegen("PDF-Test", "PDF_Test", &[
+        ("bericht.pdf", include_bytes!("../../desktop/tests/pdf/bericht.pdf")),
+        ("diagramm.pdf", include_bytes!("../../desktop/tests/pdf/diagramm.pdf")),
+    ]);
 }
 
 pub fn sd_testreste_loeschen() {

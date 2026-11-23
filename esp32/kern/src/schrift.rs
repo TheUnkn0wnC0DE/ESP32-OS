@@ -117,6 +117,14 @@ pub fn zeichen(bytes: &[u8], k: Kodierung, null_ende: bool, max: usize) -> Vec<u
     v
 }
 
+/// Glyphe der Systemschrift 8×16 (Unicode) – Zeile 0 oben, Bit 0 links;
+/// unbekannte Zeichen wie beim Textzeichnen (PDF-Betrachter).
+pub fn glyphe(c: char) -> [u8; 16] {
+    let mut g = [0u8; 16];
+    g.copy_from_slice(&glyph(c as u32, Kodierung::Utf8)[..16]);
+    g
+}
+
 /// Glyph-Zeilen eines Zeichens (nach `zeichen`).
 fn glyph(c: u32, k: Kodierung) -> &'static [u8] {
     match k {

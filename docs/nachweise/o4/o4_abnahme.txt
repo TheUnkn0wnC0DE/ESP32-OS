@@ -1,0 +1,88 @@
+O4 – Abnahme-Durchlauf nach Abschnitt 9 des Auftrags (Board, 23.11.2026)
+=========================================================================
+
+Alle Läufe: Entwicklungs-Build `bauen_flashen.ps1 -Nur esp32os -Wlan`
+(Spiele: `-Nur alle`), Autopilot = Touch-Ereignisse im logischen Raster
+640×360, Fotos aus dem Framebuffer (`bildschirmfoto.py`), Logs mit
+`log_schwaerzen.py` geprüft („keine Zugangsdaten im Log“). Die SD-Karte ist
+die des Nutzers: die Läufe lesen nur, geschrieben wird ausschliesslich in
+den eigenen Ordner `Screenshots/` (Bildschirmfoto). Dateilisten der Karte
+sind in den Logs gekürzt.
+
+1. Board startet direkt in den ESP32-OS-Desktop
+   Lauf 1, `o4_1_00_desktop.png`; `o4_1_apps_log.txt`: Einschalten → „Startbild:
+   Desktop bereit nach 509 ms“ bei 3,53 s (Zeitstempel ab Einschalten).
+
+2. Alle Pflicht-Programme (Abschnitt 5) laufen und sind nur per Touch
+   bedienbar, Texteingabe über die Bildschirmtastatur
+   Lauf 1 (`o4_1_*.png`, `o4_1_apps_log.txt`), je Programm per Tipp vom
+   Desktop bzw. Startmenü:
+   - Info-Dialog                     o4_1_01_info.png
+   - Rechner (6 × 7 = 42)            o4_1_02_rechner.png
+   - Notizen, Bildschirmtastatur     o4_1_03_notizen_tastatur.png
+   - Uhr (Timer läuft)               o4_1_04_uhr_timer.png
+   - Kalender                        o4_1_05_kalender.png
+   - Musikplayer                     o4_1_06_musik.png (auf der Karte des
+     Nutzers liegt keine MP3; Wiedergabe mit Pause/Weiter/Nächster am Board
+     ist A5, `docs/nachweise/a5/`)
+   - Einstellungen (WLAN-Seite)      o4_1_07_einstellungen_wlan.png
+   - Startmenü                       o4_1_08_startmenue.png
+   - Task-Manager                    o4_1_09_taskmanager.png
+   - Bildschirmfoto (langer Druck auf die Uhr): Log „Screenshot:
+     /sd0/1/Screenshots/… (43384 Bytes, gelesen und geprüft)“
+   - Dateimanager (SD-Karte)         o4_1_10_dateimanager.png; Kopieren,
+     Verschieben, Umbenennen, Löschen, Neuer Ordner per Touch am Board: P1
+     (`p1_board_log.txt`, `p1_board_*.png`) – hier nicht wiederholt, weil
+     das auf der Karte des Nutzers schreiben würde.
+   - Bildbetrachter                  Lauf 1c: Datei im Dateimanager antippen →
+     o4_1c_bildbetrachter.png, Wischen → o4_1c_gewischt.png, Zwei-Finger-
+     Zoom → o4_1c_gezoomt.png (`o4_1c_bild_log.txt`). Lauf 1b zeigte vorher
+     „bildbetrachter fehlt“ (o4_1b_vorher_bildbetrachter_fehlt.png): in
+     Wahrheit zu wenig Speicher – behoben (8 MB, Speicherprüfung, richtige
+     Meldung; Abweichung „P2, Bildbetrachter mit 8 statt 12 MB“).
+   - Webbrowser: Punkt 4.
+
+3. WLAN: Netz per Touch suchen und verbinden, bleibt nach Neustart verbunden
+   Suchen + Verbinden mit Passwort über die Bildschirmtastatur am Board: W3
+   (`w3_board_liste.png`, `w3_board_passwort.png`, `w3_board_verbunden.png`).
+   Nach Neustart: `o4_1_apps_log.txt` ohne jede Eingabe „mit dem
+   Zugangspunkt verbunden“ 10,1 s nach dem Einschalten (gemerktes Netz);
+   Taskleiste zeigt die Signalstärke (o4_1_10_dateimanager.png).
+
+4. Browser lädt normale HTTPS-Seiten, scrollen und zoomen per Touch,
+   Texteingabe in Formularen
+   Lauf 2 (`o4_2_*.png`, `o4_2_browser_log.txt`): https://de.wikipedia.org/
+   wiki/Spezial:Suche (200, 55736 Byte, dazu Skripte/Stile der Seite),
+   Suchfeld antippen → Tastatur (o4_2_01_tastatur.png), Suchbegriff tippen
+   (o4_2_02_getippt.png), Enter → Ergebnisseite (o4_2_03/04), Zwei-Finger-
+   Zoom (o4_2_05_gezoomt.png). Touch-Scrollen am Board 32,2 Bilder/s (O1,
+   `docs/nachweise/o1/`); Wikipedia-Artikel eine Stunde lang neu geladen (O5).
+   Unterwegs behoben: Tastenkoordinaten im Autopilot (Tastatur sitzt bei
+   Feldern unten am oberen Rand; o4_2a_vorher_tasten_falsch.png).
+
+5. Pudding-Panik, Würfelwelt, Doom und Quake starten aus dem Desktop,
+   FPS nicht schlechter als 55 / 27,5 / 55 / 27,5
+   Läufe 3–6, je Spiel ein Tipp auf das Desktop-Symbol (Doom/Quake: Neustart
+   in die eigene Partition), 2-s-Zeilen der Bildrate am Panel:
+     Pudding-Panik   55,0 FPS   o4_3_pudding_log.txt, o4_3_pudding.png
+     Würfelwelt      27,6 FPS   o4_4_wuerfelwelt_log.txt, o4_4_wuerfelwelt.png
+     Doom            55,0 FPS   o4_5_doom_log.txt
+     Quake           27,5 FPS   o4_6_quake_log.txt
+   (Kurze Einbrüche direkt nach einem Foto: das Senden blockiert ~7 s, siehe
+   „Frame 69xx ms“. Fotos von Doom/Quake liegen nicht im Repo – Grafik der
+   Shareware-Daten, wie bei S3/S4.)
+   Gleich wie vor ESP32-OS (S1–S4): die Hauptschleife läuft wie dort mit
+   ~63–67 Durchgängen/s (Bilanz nach Abzug der Fotopausen; S1 63,2, S3 66,3).
+   Doom zeigte im eigenen Zähler 29 statt 35: der Zähler summierte die
+   Spielzeit `dt`, die je Durchgang mindestens eine Bilddauer zählt, obwohl
+   die Schleife schneller als das Panel läuft. Behoben: Doom misst jetzt
+   über seine eigenen Tics (`doom/src/lib.rs`, Test „~35 Bilder/s“ grün).
+   Offen als Frage an den Nutzer (STATUS): dieselbe Zählweise lässt
+   Pudding-Panik etwas schneller laufen als die Uhr – Verhalten von vor
+   ESP32-OS, bewusst nicht geändert.
+
+6. 1 h Langtest am Board ohne Absturz (inkl. Browser und WLAN)
+   O5 (`docs/nachweise/o5/`): 3700 s, ein Start, kein Reset, keine Panic.
+
+7. STATUS.md aktuell (was läuft, Messwerte, offen)
+   O6.

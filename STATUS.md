@@ -1,8 +1,12 @@
 # STATUS – ESP32-OS
 
-Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
-`konsole` @ `44b79f2`). Die Vorgeschichte (Spiele, Firmware, Messwerte,
-Übergabe vom 21.11.) liegt im alten Repo des Vorgängerprojekts.
+Stand: 23.11.2026 abends – v1.0 fertig bis auf die Veröffentlichung (O8,
+wartet auf dein OK); aus „Wenn Zeit bleibt“ PDF-Betrachter und zwei
+weitere KolibriOS-C-Programme fertig (Kamera-App → v1.1).
+Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
+gepflegt (eigener Anfangscommit, siehe CLAUDE.md). Die Vorgeschichte
+(Spiele, Firmware, Messwerte, Übergabe vom 21.11.) liegt im alten Repo des
+Vorgängerprojekts.
 
 ## Nacht 23.11. (selbständig, eine Zeile je fertigem Punkt)
 
@@ -81,7 +85,28 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   liess beim Warten auf den PPA keine Programme laufen; Bildschirm nur noch
   wo geändert zusammengesetzt und ausgegeben), Desktop-Symbole 923 → 162 ms.
   Nebenbei: Browser-Absturz bei grossem JPEG und zerstückeltem Heap behoben.
-  Weiter: O4, O6.
+- ✔ O4 Abnahme am Board: jeder Punkt aus Abschnitt 9 per Autopilot
+  (Zuordnung in `docs/nachweise/o4/o4_abnahme.txt`); Spiele 55,0 / 27,6 /
+  55,0 / 27,5 FPS. Unterwegs behoben: Bildbetrachter startete neben dem
+  Dateimanager nicht (Speicher, als „fehlt“ gemeldet), Doom-Zähler zeigte
+  29 statt 35 (Frage unten).
+- ✔ O6: diese Datei.
+- ✔ Z1 PDF-Betrachter („Wenn Zeit bleibt“): eigener PDF-Leser, öffnet aus
+  dem Dateimanager, Rollen/Blättern/Zoom per Touch; am Board A4-Seite in
+  0,24 s. Grenzen (u. a. Systemschrift statt eingebetteter Schriften, keine
+  Scans mit CCITT/JBIG2/JPEG 2000) in PLAN unter „Abweichungen“.
+- ✔ Z3 weitere KolibriOS-C-Programme: PasswordGen und TinyHashView
+  (Prüfsummen MD5/SHA-1/SHA-256, am Board gleich wie am PC gerechnet),
+  Quellen unverändert, im Startmenü unter „Mehr Programme...“; dazu
+  `@notify` für ihre Meldungen. Dabei im Kern behoben: Mausposition und
+  Funktion 9 bei Fenstern ohne Flag „relativ“, Zwischenablage (Grösse im
+  Kopf wie KolibriOS, vorher Absturz beim Lesen), C-Programme bekamen
+  keine Befehlszeile (argc/argv). Warum andere Programme nicht: PLAN,
+  Abweichung „Z3“.
+- ✔ Review PDF-Betrachter/Kern (Subagent): 7 Befunde, alle behoben – vor
+  allem kaputte/bösartige PDFs konnten den Stapel sprengen oder den
+  Speicher des Systems leeren (am Board: Abbruch der Firmware); jetzt
+  Grenzen überall und je ein Test.
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 
@@ -162,12 +187,35 @@ und der volle 10-MB-Heap (GitHub, MDN – dort hängt der Browser). → B10.
   dort nichts angelegt, umbenannt oder gelöscht (gleiche Ansicht bis zum
   Ende). Ursache ist behoben (Reserve im Programm-Heap, siehe B10); schwere
   Seiten kommen in Testläufen ans Ende.
+- **Zur Kenntnis (O4):** Im Abnahme-Durchlauf tippte der Autopilot im
+  Dateimanager einmal in den Ordner `old/` statt `Screenshots/` (nur
+  angesehen, nichts geändert). Gespeichert wurden nur Bildschirmfotos in
+  `/sd0/1/Screenshots` (ESP32-OS-eigener Ordner).
+- **B5, 30 Bilder/s:** erledigt mit O1 (32,2 Bilder/s), siehe PLAN.
+- **Spieltempo (O4, Frage):** Die Hauptschleife der Spiele läuft am Board
+  mit ~63–67 Durchgängen/s, das Panel mit 55 Hz – so schon vor ESP32-OS
+  (S1: 63,2, S3: 66,3). Die Spielzeit je Durchgang (`dt`) zählt mindestens
+  eine Bilddauer; Spiele, die damit rechnen (Pudding-Panik), laufen deshalb
+  etwas schneller als die Uhr (bis ~15 %). Doom rechnet mit der echten Uhr –
+  nur sein FPS-Zähler zeigte deshalb 29 statt 35 (behoben). Ich habe das
+  Spieltempo bewusst nicht angefasst, weil du Pudding-Panik so kennst.
+  Soll ich es auf die echte Zeit umstellen (Pudding wäre dann ~13 %
+  langsamer)?
 
-- **B5, 30 Bilder/s beim Scrollen:** erreicht sind ~12 Bilder/s (vorher
-  2–4); der Rest hängt am Verschieben von 265 KB im PSRAM je Bild (Abweichung
-  in PLAN.md, mit dem Weg zu 30). Soll ich später (z. B. bei H/Optimierung)
-  den grösseren Umbau angehen – NetSurf zeichnet direkt in den Fensterpuffer
-  des Kerns, Verschieben über die PPA-Einheit?
+## Fragen an dich (Veröffentlichung, O8)
+
+- **Lizenz der Firmware-Abbilder:** Die Firmware verbindet GPL-2.0-Code
+  (NetSurf, KolibriOS-Teile) mit Apache-2.0-Code (ESP-IDF, esp_hosted).
+  Ob ein Binär-Release so weitergegeben werden darf, ist eine
+  Rechtsfrage, die ich nicht entscheide – bitte vor dem OK zum Release
+  klären (Quellcode im Repo ist nicht betroffen).
+- **Release v1.0:** lokal fertig – `VERSION` = „1.0 (2026-11-23)“, Paket
+  mit `release_paket.ps1 -Version 1.0` gebaut (Release-Prüfung: alle sechs
+  Abbilder ohne WLAN-Zugangsdaten, keine Entwicklungs-Schalter, keine
+  Spieldaten) unter `release/v1.0/` (nicht im Repo; SHA256SUMS,
+  manifest.json), Web-Flasher `docs/flasher/`, Text `docs/release/v1.0.md`.
+  Veröffentlicht wird erst mit deinem OK: Abbilder ins GitHub-Release, für
+  den Web-Flasher nach `docs/flasher/firmware/`.
 
 ## Für dich: Zusammenfassung der Nacht 22.11.
 
@@ -561,49 +609,49 @@ noch nicht sicher, darum hier als Prüfschritt.
 
 ## Was läuft
 
-- Kernschicht K0–K4 fertig (siehe PLAN.md mit Nachweisen): Prozesse mit
-  eigenem PSRAM-Heap, KolibriOS-Systemfunktionen (Fenster, Zeichnen, Text,
-  Knöpfe, Ereignisse, Maus, Zeit, Fäden, Speicher), native ksys.h mit
-  laufendem Original-C-Programm, Original-Skin Shkvorka mit Touch-Faktor 2.
-- Am Board läuft weiterhin die Konsole (Menü 55 FPS, Pudding-Panik 55,
-  Doom 55, Würfelwelt 27,5, Quake 27,5); der Desktop kommt mit K5/D1.
-- K5: Desktop läuft am Board (Build mit `ESP32OS_DESKTOP=1`); Standard-
-  Start bleibt bis D1 die Konsole.
-- K3b: `basic_gui.c` läuft am Board (Komponente `kolibri_c`).
-- K6: Dateisystem am Board: interne Partition `/sys` = `/rd/1`, microSD
-  (SDMMC-Slot 0, 4 Bit, LDO 4) `/sd0/1`.
-- K7: Systembibliotheken nativ im Crate `kolibri` (box_lib, libimg,
-  proc_lib, libini) + libc-Aufsatz für C-Programme.
-- Block A (Kernschicht) inkl. Review fertig.
-- D1/D2: Board startet direkt in den ESP32-OS-Desktop (Startbild, Symbole,
-  Taskleiste, Startmenü, Info). Symbol „Spiele“ → alter Launcher (einmalig).
-- D3–D9: Gesten (Tippen, Halten = Kontextmenü, Wischen, Zoom, Titel ziehen,
-  Doppeltipp maximiert), Bildschirmtastatur CH (@tastatur, automatisch bei
-  Textfeld-Fokus), Kopieren/Einfügen per Kontextmenü (Funktion 54).
-- D10–D12: Touchpad-Modus mit Original-Zeiger, Tastenprüfung, Absturz-
-  meldung (auch nach Neustart bei CPU-Ausnahme). Nächster Punkt: D-Review.
+Stand v1.0 (alle Punkte mit Nachweis in PLAN.md; Abnahme O4 am Board):
 
-### Bedienmasse (D2)
-
-Logisch 640×360, PPA ×2 scharf → Panel 1280×720 quer, ≈ 294 ppi:
-1 logischer Pixel = 2 Panel-Pixel = 0,173 mm.
-
-| Element | logisch | mm |
-|---|---|---|
-| Fensterkopf (Skin ×2) | 48 px hoch | 8,3 |
-| Schliessen/Minimieren | 54×36 | 9,3×6,2 |
-| Taskleiste | 48 px hoch (Knöpfe 41 px) | 8,3 (7,1) |
-| Tastatur-Taste | 46 px Raster, sichtbar 42 px | 7,3 |
-| Kontextmenüzeile | 44 px (Knopf 42 px) | 7,3 |
-| Startknopf / Fensterknopf | 108×41 / 126×41 | 18,7×7,1 / 21,8×7,1 |
-| Desktop-Symbol (Zelle) | 84×84 (Symbol 48) | 14,5 (8,3) |
-| Menüzeile | 44 px | 7,6 |
-| Dialogknöpfe (proc_lib) | 110×40 | 19×6,9 |
-| Text 8×16 | 16 px | 2,8 |
-| Text 6×9 | 9 px | 1,6 |
+- **Start:** Board startet direkt in den ESP32-OS-Desktop (Startbild,
+  Symbole, Taskleiste mit WLAN-Anzeige und Uhr, Startmenü mit Ordnern
+  Spiele/System/Mehr), Desktop fertig 3,4 s nach dem Einschalten;
+  Ersteinrichtung beim ersten Start (Sprache, Tastatur, Uhr, WLAN).
+- **Kernschicht:** Prozesse mit eigenem PSRAM-Heap, KolibriOS-
+  Systemfunktionen nativ, Original-Skin und -Schriften, KolibriOS-C-
+  Programme nativ übersetzt, Compositor mit Dirty-Rects, Absturzschutz
+  (Meldung, auch nach CPU-Ausnahme), zwei Firmware-Plätze mit Rollback.
+- **Touch:** Tippen, Halten = Kontextmenü, Wischen, Zwei-Finger-Zoom,
+  Titelleiste ziehen, Doppeltipp maximiert; Bildschirmtastatur (DE/CH/US)
+  öffnet sich bei Textfeldern von selbst; Kopieren/Einfügen; Touchpad-Modus.
+- **Programme:** Dateimanager (SD + intern), Bildbetrachter (JPEG über die
+  JPEG-Einheit, PNG, GIF, BMP, Wischen, Zoom), Einstellungen (Anzeige, Ton,
+  Akku, Datum/Zeit mit NTP, Touch, Hintergrund, Speicher, Sprache, Energie,
+  WLAN, System mit Updates), Notizen, Rechner, Uhr mit Wecker und Timer,
+  Kalender, Musik (MP3 von der SD), Task-Manager, Bildschirmfoto, Info.
+- **WLAN (Wi-Fi 6 über den C6):** Netze suchen und verbinden per Touch,
+  gemerkte Netze, automatisch nach dem Neustart, Uhrzeit per NTP.
+- **Browser (NetSurf 3.11 + QuickJS-ng):** HTTPS mit Zertifikatsprüfung,
+  Adressleiste mit Suche, Tabs, Lesezeichen, Verlauf, Downloads, Zoom,
+  Text markieren und kopieren, Formulare mit der Bildschirmtastatur,
+  JavaScript (DOM, Ereignisse, Timer, fetch/XHR, Cookies, localStorage),
+  Rückfall ohne JavaScript; Scrollen mit 32 Bildern/s.
+- **PDF-Betrachter:** PDF von SD/intern (auch aus dem Dateimanager),
+  Rollen, Blättern, Zoom per Touch; Text in der Systemschrift.
+- **Spiele:** Pudding-Panik, Würfelwelt, Doom, Quake starten vom Desktop
+  (Doom/Quake in eigenen Partitionen), zurück per Home-Taste;
+  Spieldaten von der SD-Karte (nicht in der Firmware).
+- **Updates über WLAN:** Code fertig (HTTPS, Prüfsumme, OTA, Rollback),
+  der Abschluss braucht das erste Release (U1, O8).
+- **Stabilität:** 1 h Langtest mit Browser und WLAN ohne Absturz (O5).
 
 ## Messwerte
 
+- O4 Spiele am Board (23.11., vom Desktop gestartet, Bildrate am Panel):
+  Pudding-Panik 55,0, Würfelwelt 27,6, Doom 55,0, Quake 27,5 FPS
+  (`docs/nachweise/o4/o4_3…6_*_log.txt`).
+- Z1 PDF-Betrachter am Board (23.11.): A4-Seite 566×801 mit JPEG, PNG mit
+  Transparenz, Text und Flächen 244 ms (vorher in f64: 2474 ms), Textseite
+  124 ms, Diagramm 103 ms, gezoomt 1303×921 85 ms; Datei öffnen 52 ms
+  (`docs/nachweise/z1/`).
 - O1 Scrollen im Browser (23.11., Board, Wikipedia „ESP32“, je
   Wischbewegung): vorher 12,1 Bilder/s, nachher 32,2 Bilder/s (Verschieben
   27 → 4 ms, Zusammensetzen 21 → 6 ms, Ausgabe 27 → 17 ms je Bild;
@@ -817,10 +865,19 @@ powershell -File firmware\bauen_flashen.ps1 -NurBauen -Nur esp32os > log 2>&1
 
 ## Offen
 
-- Alles ab K5 gemäss `PLAN.md`.
+- **O8 Veröffentlichung:** wartet auf dein OK (siehe „Fragen an dich“);
+  damit auch der Abschluss von U1 (Update a→b am Board).
+- **Später (v1.1, PLAN):** P5 Standby und Akku (Messgerät, Spannungsteiler),
+  W2 C6-Firmware, W5 iTWT, Z2 Kamera-App (kein Kameramodul am Board).
+- **Wenn Zeit bleibt:** erledigt – PDF-Betrachter (Z1), PasswordGen und
+  TinyHashView (Z3); Kamera-App in v1.1.
+- Bekannte Grenzen stehen unter „Abweichungen“ in PLAN.md (u. a. Web-
+  Funktionen B7, Markieren am Board B8, Bildbetrachter knapp 0,85 MP).
 - Startparameter von Programmen (ESP32OS_START) starten vor den
   Desktop-Diensten; ein grosses Programm dort (Browser) kann die Dienste
   verdrängen (Fehler 30) – nur Entwicklungs-Builds betroffen.
-- B1: Bei einem Lauf scrollte die Willkommensseite zwischen zwei Fotos ohne
-  erkennbare Eingabe zum Suchfeld (Fokus im Feld). Im nächsten Lauf
-  (Autopilot) nicht wieder aufgetreten; weiter beobachten (V1).
+- B1-Beobachtung: Einmal scrollte die Willkommensseite zwischen zwei Fotos
+  ohne erkennbare Eingabe zum Suchfeld. Seither nicht wieder beobachtet;
+  die späteren Läufe (B2–B10, O1, O4) starteten den Browser aber meist
+  direkt mit einer Adresse, die Willkommensseite selbst wurde selten
+  geprüft – weiter beobachten.

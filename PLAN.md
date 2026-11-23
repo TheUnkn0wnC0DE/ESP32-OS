@@ -1165,8 +1165,18 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   minimp3 CC0, Apache-2.0 für ESP-IDF/esp_hosted) und `LICENSES/README.md`
   (welche Datei für welchen Teil); README-Abschnitt „License“ verweist
   darauf, `THIRD_PARTY_NOTICES.md` listet Copyright und Herkunft.
-- [ ] **O4 Abnahme-Durchlauf 9** – jeder Punkt aus 9 einmal per Autopilot am
+- [x] **O4 Abnahme-Durchlauf 9** – jeder Punkt aus 9 einmal per Autopilot am
   Board. Nachweis: Fotos/Logs.
+  Nachweis 23.11. (`docs/nachweise/o4/`, Zuordnung je Punkt in
+  `o4_abnahme.txt`): Lauf 1 Desktop nach 3,5 s und alle Pflicht-Programme
+  per Touch (Fotos `o4_1_*`), Bildbetrachter aus dem Dateimanager mit
+  Wischen und Zoom (`o4_1c_*`), WLAN nach Neustart ohne Eingabe verbunden
+  (10,1 s); Lauf 2 Browser: Wikipedia-Suche über HTTPS, Suchbegriff über die
+  Bildschirmtastatur, Ergebnisse, Zoom (`o4_2_*`); Läufe 3–6 Spiele vom
+  Desktop: Pudding-Panik 55,0, Würfelwelt 27,6, Doom 55,0, Quake 27,5 FPS.
+  Unterwegs behoben: Bildbetrachter startete neben dem Dateimanager nicht
+  (zu wenig Speicher, als „fehlt“ gemeldet), Doom-Zähler zeigte 29 statt
+  35 Bilder/s (misst jetzt über Doom-Tics). Punkte 6/7: O5, O6.
 - [x] **O5 1 h Langtest am Board** (inkl. Browser + WLAN) ohne Absturz.
   Nachweis: Log 60 min, keine Panics/Resets.
   Nachweis 23.11. (`docs/nachweise/o5/`): 3700 s über WLAN, NetSurf lädt
@@ -1175,7 +1185,12 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   keine Panic; Browser-Heap Spitze 7,4 MB von 10 MB, am Ende 4,4 MB;
   Fotos nach 600/1800/3500 s zeigen die fertige Seite
   (`o5_auswertung.txt`, `o5_board_log.txt`, `o5_board_*.png`).
-- [ ] **O6 STATUS.md aktuell** (was läuft, Messwerte, offen). Nachweis: Datei.
+- [x] **O6 STATUS.md aktuell** (was läuft, Messwerte, offen). Nachweis: Datei.
+  Nachweis 23.11.: `STATUS.md` mit „Was läuft“ (Stand v1.0 je Bereich),
+  „Messwerte“ (O1, O4-Spiele, O7, W1/W4/W7/W8, B0b, P2, K1/K5, Z1),
+  „Offen“ (O8 wartet auf OK, Später v1.1, Wenn Zeit bleibt, Grenzen) und
+  „Fragen an dich“ (Lizenz der Abbilder, Spieltempo); README auf Englisch
+  nachgezogen.
 - [x] **O7 Startzeit** (Auftrag 12.9) – Zeit bis zum Desktop messen,
   optimieren, vorher/nachher in STATUS. Nachweis: Boot-Log mit Zeitstempeln.
   Nachweis 23.11. (`docs/nachweise/o7/`, Zeitstempel ab Einschalten):
@@ -1208,9 +1223,59 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Nutzer 23.11.: lokal vorbereiten – Release-Firmware mit `-Release`
   bauen, Web-Flasher-Seite im Repo, Release-Text auf Englisch; kein
   Release veröffentlichen, bis der Nutzer OK sagt.
-- [ ] **Wenn Zeit bleibt:** PDF-Betrachter, Kamera-App (OV5647), weitere
-  KolibriOS-C-Programme. Reihenfolge (Nutzer 23.11.): zuerst
-  PDF-Betrachter, dann Kamera-App.
+- **Wenn Zeit bleibt** (Auftrag 5): PDF-Betrachter, Kamera-App (OV5647),
+  weitere KolibriOS-C-Programme. Reihenfolge (Nutzer 23.11.): zuerst
+  PDF-Betrachter, dann Kamera-App; die Kamera-App ist nach „Später (v1.1)“
+  verschoben (Nutzer 23.11.: kein Kameramodul am Board), danach weitere
+  KolibriOS-C-Programme.
+- [x] **Z1 PDF-Betrachter** – PDF-Dateien von SD/intern öffnen (auch aus dem
+  Dateimanager), blättern, rollen, zoomen per Touch. Nachweis: PC-Test mit
+  echten PDFs (MuPDF, matplotlib), Board-Autopilot, Fotos.
+  Nachweis 23.11.: eigener PDF-Leser `desktop/src/pdf.rs` (Querverweis-
+  Tabelle und -Strom mit Objektströmen, Suche bei kaputtem xref; Flate,
+  LZW, RunLength, ASCIIHex/85, Prädiktoren; Seitenbaum mit Vererbung,
+  /Rotate; Pfade, Text mit ToUnicode/Encoding/Breiten, Bilder DCT über die
+  JPEG-Einheit und roh in Grau/RGB/CMYK/ICC/Lab/Indexed/Separation/DeviceN,
+  Masken /SMask /Mask Schablone, eingebettete Bilder, Strichmuster,
+  ExtGState, Deckkraft), 12 Unit-Tests (LZW gegen Pillow-TIFF-LZW,
+  Masken-Regeln gegen MuPDF geprüft). PC `desktop/tests/pdfbetrachter.rs`:
+  Test-PDFs aus MuPDF (Objektströme, JPEG, PNG mit Transparenz, gedrehte
+  Seite) und matplotlib (`desktop/tests/pdf/`), Rollen, Blättern per
+  Wischen und Knopf, Zoom per Knopf und zwei Fingern, kaputte und zu grosse
+  Datei (Meldung); Fotos `tests/erwartet/z1_*` in gleicher Lage wie die
+  MuPDF-Vergleichsbilder. Board (`docs/nachweise/z1/`): Dateimanager im
+  Testordner → bericht.pdf antippen → rollen → Seite 2 per Wischen → Seite 3
+  per Knopf → zwei Finger 230 % → Diagramm; A4-Seite in 244 ms, Diagramm
+  103 ms. Unterwegs behoben: /Rotate 90/270 verschoben, Zwei-Finger-Zoom
+  zeichnete je Schritt die ganze Seite (jetzt Vorschau, gezeichnet nach dem
+  Loslassen), f64 rechnet der P4 in Software (heisse Schleifen jetzt f32:
+  2474 → 244 ms, `z1_board_vorher_log.txt`), Objektströme wurden je
+  Objekt neu entpackt (Zwischenspeicher). Grenzen: Abweichung „Z1
+  PDF-Betrachter, Grenzen“.
+- [x] **Z3 Weitere KolibriOS-C-Programme** – nützliche Programme aus dem
+  KolibriOS-Baum, unverändert und wie die übrigen C-Programme statisch
+  eingelinkt (`kolibri/build.rs`, `werkzeuge/praefix.py`; ELF-Lader siehe
+  O2), im Startmenü unter „Mehr Programme...“. Nachweis: je Programm Foto
+  + Bedienung per Touch.
+  Nachweis 23.11.: PasswordGen (`programs/other/PasswordGen`) und
+  TinyHashView (`programs/other/TinyHashView`, dazu libcryptal MD5/SHA-1/
+  SHA-256 unverändert), dazu `@notify` (Meldungen wie notify3, eigener
+  Code, `desktop/src/notify.rs`). PC (32 Bit wie das Board):
+  `desktop/tests/c_programme.rs` (Passwort erzeugen, kopieren → Meldung,
+  schliesst sich nach 4 s; Zeichensätze abwählen → Fehlermeldung, schliesst
+  per Antippen; nur Sonderzeichen), `desktop/tests/thashview.rs` (MD5,
+  SHA-1, SHA-256 gleich Python hashlib, Kopieren, Einfügen, Vergleichen
+  → „matches“), `desktop/tests/menue_start.rs` (beide über Startmenü →
+  Mehr Programme). Board (`docs/nachweise/z3/`): Startmenü → Mehr →
+  Passwort-Generator → Passwort, Kopieren mit Meldung, Fehlermeldung;
+  Startmenü → Prüfsummen → Dateidialog → /sys/bilder/animation.gif →
+  Tastatur „Weg“ → MD5 und SHA-256 gleich hashlib (`z3_board2_3_summen`),
+  Kopieren mit Meldung. Unterwegs behoben (Kern/Laufzeit): Mausposition
+  37.1 und Funktion 9 bei Fenstern ohne Flag „relativ“ wie KolibriOS
+  (Checkboxen trafen nicht), Zwischenablage trägt die Grösse ein wie der
+  KolibriOS-Kern (Einfügen ging nicht; Lesen stürzte bei leerer Grösse ab),
+  C-Programme bekommen argc/argv wie crt0 (TinyHashView stürzte mit Datei
+  ab). Auswahl und Grenzen: Abweichung „Z3 …“.
 
 ## Später (v1.1)
 
@@ -1236,6 +1301,10 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   Stand 22.11.: Code fertig (iTWT beim Abdunkeln, Abbau beim Aufwachen);
   die C6-Firmware 0.0.0 beantwortet die Anfrage nicht
   (`docs/nachweise/w5_board_log.txt`) → wartet auf W2 (Abweichung).
+- [ ] **Z2 Kamera-App** (OV5647 an MIPI-CSI, aus „Wenn Zeit bleibt“) –
+  Vorschau, Foto als JPEG auf die SD (Hardware-JPEG). Nutzer 23.11.: kein
+  Kameramodul am Board → in ein späteres Update verschoben; nichts
+  begonnen.
 
 ## Abweichungen
 
@@ -1282,6 +1351,16 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   B10 nicht behoben (dort gingen die Abstürze und leeren Seiten vor) –
   bleibt offen.
 
+- **P2, Bildbetrachter mit 8 statt 12 MB (23.11., O4):** Im
+  Abnahme-Durchlauf startete der Bildbetrachter aus dem Dateimanager nicht
+  mehr (12 MB Heap, frei waren neben Dateimanager und Diensten ~11,8 MB;
+  der Dateimanager meldete fälschlich „bildbetrachter fehlt“). Jetzt 8 MB
+  Heap; vor dem Dekodieren prüft er, ob Datei und Bild hineinpassen, und
+  meldet sonst „Bild zu gross für den freien Speicher“ (vorher beendete ein
+  zu grosses Bild ihn mit „Speicher voll“). Grösste Bilder damit knapp
+  0,85 MP (das Bild doppelt plus 1 MB müssen im Heap frei sein); die
+  Formatgrenze 2,1 MP bleibt.
+  Der Dateimanager nennt den wahren Grund eines Startfehlers.
 - **B7, Grenzen der Web-Funktionen (23.11.):** Was NetSurf 3.11 von sich
   aus nicht kann und für B7 nicht nachgebaut wurde:
   - `load` kommt am Ende der Umwandlung, nicht erst nach allen Bildern
@@ -1597,3 +1676,70 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   die Desktop-Dienste nicht mehr (Fehler 30). Folge: Solange der Browser
   läuft (2,1 MB frei), starten grosse Programme wie Einstellungen und
   Bildbetrachter (je 12 MB) nicht. JS-Grenze am Board 4 MB.
+- **Z1 PDF-Betrachter, Grenzen (23.11.):** Eigener PDF-Leser
+  (`desktop/src/pdf.rs`) statt MuPDF/pdf.js – beide sind für 8 MB Heap und
+  ohne Betriebssystem-Unterbau zu gross. Was fehlt, mit Ersatz:
+  - Eingebettete Schriften (Type 1, TrueType, CFF) werden nicht
+    gerastert: Text erscheint in der Systemschrift (8×16, Unicode über
+    ToUnicode/Encoding) an der richtigen Stelle und in der Breite der
+    Originalschrift – lesbar, aber ohne Fett/Serifen/Schriftbild.
+  - Keine Beschneidungspfade (W/W*), keine Verläufe (sh, Shading-Muster)
+    und Muster: Muster-Flächen grau, Verläufe nicht gezeichnet (ohne
+    Beschneidung würden sie die Seite überdecken). Transparenzgruppen und
+    weiche Masken im Grafikzustand fehlen; feste Deckkraft (ca/CA),
+    /SMask, /Mask und Schablonen von Bildern gehen.
+  - Bilder mit CCITT-Fax, JBIG2 oder JPEG 2000 (meist Scans) werden nicht
+    entpackt: hellgraue Fläche mit Kreuz an ihrer Stelle.
+  - Verschlüsselte PDFs öffnen nicht (Meldung).
+  - Dateien bis 4 MB (die Datei liegt ganz im Speicher), gezeichnete
+    Seite bis 1,2 MP und nur so gross, wie der freie Speicher zulässt
+    (dann bleibt der Zoom kleiner); zu wenig Speicher für ein Bild →
+    graue Fläche statt Absturz.
+  - Keine Textsuche/-auswahl, keine Links, Formulare, Inhaltsverzeichnis.
+  - Linienenden/-ecken angenähert (Rechteck je Strecke), Kurven mit 12
+    Stücken.
+  - Type0-Schriften nur mit Identity-H (2-Byte-Codes): vordefinierte
+    CMaps (z. B. UniGB-UCS2-H) und senkrechte Schrift fehlen; ohne
+    ToUnicode gilt Code = Unicode.
+  - Sonderfarben (Separation/DeviceN) nur mit Typ-2-Funktion exakt, sonst
+    Grau nach der Farbmenge; Lab-Farbtabellen (Indexed auf Lab) ungenau.
+  - TIFF-Prädiktor 2 nur bei 8 Bit je Komponente; /Decode bei CMYK-JPEGs
+    nicht (der Dekoder liefert schon RGB).
+  - Review 23.11. (Subagent): Stapelüberlauf bei tief verschachtelten
+    Objekten, endlose Auflösung bei Verweisen auf sich selbst, unbegrenzte
+    Speicherbelegung (Flate/LZW/RunLength, Prädiktor, /W, CMaps, q-Stapel),
+    Überläufe bei riesigen Massen, exponentieller Seitenbaum, Schriften in
+    Formularen, Type3-/FontMatrix, geerbte CropBox, TIFF-Prädiktor,
+    /Decode bei JPEG – behoben, je ein Test in `pdf.rs`.
+- **Z3 Weitere KolibriOS-C-Programme, Auswahl und Grenzen (23.11.):**
+  Übernommen werden nur Programme für die libc.obj-Schicht (`sys/ksys.h`,
+  clayer), die per Touch bedienbar sind: PasswordGen und TinyHashView
+  (Quellen unverändert). Nicht übernommen, mit Grund: flood-it und clicks
+  sind C-- (kein C), reversi/2048 brauchen menuetlibc, fridge/qr_tool
+  newlib-kos32, graph ist C++ mit eigener Laufzeit, dino und flpybird sind
+  nur per Tastatur spielbar, kmatrix braucht die Konsole (console.obj,
+  nicht nachgebaut).
+  - `@notify` (Ersatz für notify3, eigener Code): Schalter `p`
+    (Fortschrittsbalken) fehlt – das Original wird dafür über einen
+    eigenen Steuerkanal gefüttert, den kein übernommenes Programm nutzt;
+    die Meldung erscheint ohne Balken. Aus demselben Grund schliesst
+    Antippen eine Meldung mit `-dc` doch (sonst bliebe sie für immer).
+  - TinyHashView ist 665 px breit, der Bildschirm 640: rechts fehlen 25 px
+    (die Knöpfe „Copy“/„Compare“ ragen hinein, bleiben antippbar; das
+    Programm meldet selbst „Low screen resolution“). Die Quelle bleibt
+    unverändert.
+  - Beide Programme zeichnen ab der Fensterecke (ohne Flag „relativ“); die
+    Titelleiste des ESP32-OS-Skins ist höher als in KolibriOS, daher ist
+    ihre oberste Zeile teils verdeckt (PasswordGen: „Password length“,
+    TinyHashView: MD5-Zeile) – bedienbar bleibt sie (am Board getippt).
+  - TinyHashView setzt den Fokus in sein Hash-Feld: die Bildschirm-
+    tastatur geht beim Start auf und deckt das Fenster, bis man „Weg“
+    tippt (Verhalten der Tastatur aus B6, gewollt).
+- **O8 wartet auf dein OK (23.11.):** Lokal vorbereitet: `VERSION` =
+  „1.0 (2026-11-23)“, Release-Paket mit `release_paket.ps1 -Version 1.0`
+  gebaut (`-Release`: keine WLAN-Daten, keine Entwicklungs-Schalter, keine
+  Spieldaten in den Abbildern, geprüft), Ablage `release/v1.0/` (nicht im
+  Repo), Web-Flasher `docs/flasher/`, Release-Text `docs/release/v1.0.md`.
+  Veröffentlicht wird erst mit deinem OK (Push-Regeln, CLAUDE.md); offen
+  dafür die Lizenzfrage der Abbilder (STATUS „Fragen an dich“). U1
+  (Update a→b am Board) folgt dem ersten Release.

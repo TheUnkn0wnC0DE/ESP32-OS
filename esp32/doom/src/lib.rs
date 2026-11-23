@@ -33,9 +33,10 @@ pub struct Doom {
     st: Steuerung,
     modus: Modus,
     letzter_tic: i32,
-    /// Doom-Bilder je Sekunde (gemessen über ~0,5 s).
+    /// Doom-Bilder je Sekunde (gemessen über ~0,5 s Doom-Zeit).
     fps: f32,
-    fps_zeit: f32,
+    /// Tic am Anfang des Messfensters.
+    fps_tic: i32,
     fps_bilder: u32,
     name_getippt: bool,
     pal: [u16; 256],
@@ -71,13 +72,14 @@ impl Doom {
             ffi::doomgeneric_Create(3, argv.as_mut_ptr());
             ffi::DG_Einstellen();
         }
+        // SAFETY: reine Abfrage.
+        let tic = unsafe { ffi::I_GetTime() };
         Self {
             st: Steuerung::new(),
             modus: Modus::Zwischen,
-            // SAFETY: reine Abfrage.
-            letzter_tic: unsafe { ffi::I_GetTime() },
+            letzter_tic: tic,
             fps: 0.0,
-            fps_zeit: 0.0,
+            fps_tic: tic,
             fps_bilder: ffi::gemeinsam().bilder,
             name_getippt: false,
             pal: palette(),
@@ -176,11 +178,15 @@ impl Spiel for Doom {
             let g = ffi::gemeinsam();
             (g.bilder, g.beendet)
         };
-        self.fps_zeit += dt;
-        if self.fps_zeit >= 0.5 {
-            self.fps = bilder.wrapping_sub(self.fps_bilder) as f32 / self.fps_zeit;
+        // Über Doom-Tics messen (35 je Sekunde nach der Uhr), nicht über
+        // die Summe von `dt`: die Hauptschleife darf schneller laufen als das
+        // Panel, `dt` zählt dann je Durchgang mindestens eine Bilddauer und
+        // die Anzeige läge zu tief (am Board 29 statt 35).
+        let vergangen = tic.wrapping_sub(self.fps_tic);
+        if vergangen >= 18 {
+            self.fps = bilder.wrapping_sub(self.fps_bilder) as f32 * 35.0 / vergangen as f32;
             self.fps_bilder = bilder;
-            self.fps_zeit = 0.0;
+            self.fps_tic = tic;
         }
         if beendet { Wechsel::Starte(SpielId::Konsole) } else { Wechsel::Bleiben }
     }

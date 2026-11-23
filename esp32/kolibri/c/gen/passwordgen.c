@@ -1,0 +1,30 @@
+/* Erzeugt von werkzeuge/praefix.py – nicht von Hand ändern.
+ * Programm „passwordgen“: c/passwordgen.c (KolibriOS, GPL-2.0, unverändert). */
+#define DRAWTEXT_FLAG_DEFAULT passwordgen_DRAWTEXT_FLAG_DEFAULT
+#define WINDOW_TITLE passwordgen_WINDOW_TITLE
+#define char_set_09 passwordgen_char_set_09
+#define char_set_AZ passwordgen_char_set_AZ
+#define char_set_az passwordgen_char_set_az
+#define char_set_spec_char passwordgen_char_set_spec_char
+#define check_box_09 passwordgen_check_box_09
+#define check_box_AZ passwordgen_check_box_AZ
+#define check_box_az passwordgen_check_box_az
+#define check_box_spec_char passwordgen_check_box_spec_char
+#define copy_to_clipboard passwordgen_copy_to_clipboard
+#define create_check_box passwordgen_create_check_box
+#define create_components passwordgen_create_components
+#define create_edit_box passwordgen_create_edit_box
+#define edit_box_password_generated passwordgen_edit_box_password_generated
+#define edit_box_password_generated_buf passwordgen_edit_box_password_generated_buf
+#define edit_box_password_len passwordgen_edit_box_password_len
+#define edit_box_password_len_buf passwordgen_edit_box_password_len_buf
+#define generate_and_show_password passwordgen_generate_and_show_password
+#define generate_password_internal passwordgen_generate_password_internal
+#define main passwordgen_main
+#define notify_show passwordgen_notify_show
+#define password_generated passwordgen_password_generated
+#define redraw_window passwordgen_redraw_window
+#define resulting_char_set passwordgen_resulting_char_set
+#define safe_malloc passwordgen_safe_malloc
+#define sys_color_table passwordgen_sys_color_table
+#include "../passwordgen.c"

@@ -1,0 +1,504 @@
+﻿ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (28) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (28) boot: compile time Nov 22 2026 01:00:10
+I (29) boot: Multicore bootloader
+I (30) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (35) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 40MHz
+I (43) boot.esp32p4: SPI Mode       : QIO
+I (47) boot.esp32p4: SPI Flash Size : 32MB
+I (51) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (58) boot: ## Label            Usage          Type ST Offset   Length
+I (64) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (71) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (77) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (84) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (90) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (97) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (103) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (110) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (118) boot: End of partition table
+I (121) boot: No factory image, trying OTA 0
+I (124) esp_image: segment 0: paddr=00020020 vaddr=48370020 size=1ac500h (1754368) map
+I (394) esp_image: segment 1: paddr=001cc528 vaddr=30100000 size=00070h (   112) load
+I (395) esp_image: segment 2: paddr=001cc5a0 vaddr=4ff00000 size=03a78h ( 14968) load
+I (401) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=36e560h (3597664) map
+I (941) esp_image: segment 4: paddr=0053e588 vaddr=4ff03a78 size=188c4h (100548) load
+I (961) esp_image: segment 5: paddr=00556e54 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (965) esp_image: segment 6: paddr=00559bac vaddr=4ff1f100 size=04each ( 20140) load
+I (970) esp_image: segment 7: paddr=0055ea60 vaddr=50108080 size=0000ch (    12) load
+I (973) esp_image: segment 8: paddr=0055ea74 vaddr=501080e8 size=00020h (    32) load
+I (987) boot: Loaded app from partition at offset 0x20000
+I (1015) boot: Set actual ota_seq=1 in otadata[0]
+I (1016) boot: Disabling RNG early entropy source...
+I (1026) hex_psram: vendor id    : 0x0d (AP)
+I (1027) hex_psram: Latency      : 0x01 (Fixed)
+I (1027) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (1028) hex_psram: dev id       : 0x03 (generation 4)
+I (1032) hex_psram: density      : 0x07 (256 Mbit)
+I (1037) hex_psram: good-die     : 0x06 (Pass)
+I (1041) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (1046) hex_psram: BurstType    : 0x00 ( Wrap)
+I (1050) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (1055) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (1059) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (1065) hex_psram: DriveStrength: 0x00 (1/1)
+I (1069) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1372) mmu_psram: .rodata xip on psram
+I (1639) mmu_psram: .text xip on psram
+I (1640) hex_psram: psram CS IO is dedicated
+I (1640) cpu_start: Multicore app
+I (2036) esp_psram: SPI SRAM memory test OK
+I (2048) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (2048) cpu_start: Pro cpu start user code
+I (2048) cpu_start: cpu freq: 360000000 Hz
+I (2051) app_init: Application information:
+I (2054) app_init: Project name:     libespidf
+I (2059) app_init: App version:      1
+I (2062) app_init: Compile time:     Nov 22 2026 17:06:22
+I (2067) app_init: ELF file SHA256:  3b4f96522...
+I (2072) app_init: ESP-IDF:          v5.5.5
+I (2076) efuse_init: Min chip rev:     v1.0
+I (2079) efuse_init: Max chip rev:     v1.99 
+I (2083) efuse_init: Chip rev:         v1.3
+I (2087) heap_init: Initializing. RAM available for dynamic allocation:
+I (2094) heap_init: At 4FF29830 len 00011790 (69 KiB): RETENT_RAM
+I (2100) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (2105) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (2110) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (2116) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (2121) esp_psram: Adding pool of 27292K of PSRAM memory to heap allocator
+I (2127) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2138) esp_psram: Adding pool of 14K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2150) spi_flash: detected chip: gd
+I (2153) spi_flash: flash io: qio
+I (2156) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2163) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2169) main_task: Started on CPU0
+I (2172) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2180) main_task: Calling app_main()
+I (2184) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2184) pudding_p4: ESP32-OS startet …
+I (2184) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 332 KB intern, 27300 KB PSRAM
+I (2184) pudding_p4: Start: intern frei 332 KB (größter Block 184 KB), DMA-fähig 293 KB
+I (2188) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+W (2193) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2235) pudding_fw::speicher: SD-Karte eingehängt: 241724 MB als /sd0/1
+I (2311) pudding_p4: Einstellungen: Sprache de, Helligkeit 10, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1795432223
+W (2311) pudding_p4: Autopilot: Touchpad-Modus für diesen Lauf aus
+I (2312) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2312) eh_mcu_transport: transport_init: probing bus backend
+I (2312) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (2312) sdmmc_periph: sdmmc_host_init: SDMMC host already initialized, skipping init flow
+I (2312) eh_sdio: sdio_data_to_rx_buf_task started
+I (2313) eh_mcu_transport: transport_init: bus backend up
+W (2313) eh_sdio: Reset co-processor using GPIO[54]
+I (2327) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2328) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2328) GT911: TouchPad_Config_Version:70
+I (2328) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (2330) hx8394: version: 2.1.0
+W (2500) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (2840) pudding_p4: ESP32-OS-Desktop startet (@start)
+I (2840) pudding_p4: Spiel geladen: intern frei 102 KB (größter Block 31 KB), DMA-fähig 63 KB
+I (2841) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (2842) pudding_p4: Los geht's!
+I (3153) pudding_p4: [debug] @icon: gezeichnet in 120 ms (Grund 18, Symbole 37, Mischen 13, Text 3, Ausgabe 47)
+I (3153) pudding_p4: [debug] 
+I (3537) pudding_p4: [debug] Startbild: Desktop bereit nach 505 ms
+I (3563) pudding_p4: [debug] Ersteinrichtung: schon erledigt
+I (3564) pudding_p4: [debug] 
+I (3833) eh_host_port_reset: reset done pin=54 parked=1
+I (3867) eh_host_port_sdio: bus applied: clk_khz=40000
+I (3867) eh_host_port_sdio: Function 0 Blocksize: 512
+I (3867) eh_host_port_sdio: Function 1 Blocksize: 512
+I (3967) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (4013) eh_sdio: SDIO Host operating in STREAMING MODE
+I (4013) eh_sdio: Open data path at slave
+I (4013) eh_sdio: Starting SDIO process rx task
+I (4018) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (4018) eh_init_evt: capabilities: 0x0d
+I (4018) eh_init_evt: Features supported are:
+I (4018) eh_init_evt: 	 * WLAN over SDIO
+I (4018) eh_init_evt: 	   - HCI over SDIO
+I (4018) eh_init_evt: 	   - BLE only
+I (4018) eh_raw_tp: raw TP inactive
+I (4018) eh_init_evt: Default RPC to V2
+I (4018) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (4018) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (4018) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (4018) eh_init_evt: Missing SDIO_MODE TLV; Continue anyway.
+W (4018) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (4018) eh_init_evt: chip=0x0d (esp32c6) fw=0x00000000 caps=0x0d ext=0x00000000
+I (4019) eh_auto_init: auto_init: found 1 descriptor(s)
+I (4019) eh_auto_init: auto_init: initialising 'wifi' (priority 150)
+I (4019) eh_wifi_itwt: wifi iTWT ext init
+I (4379) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 294 → 93 KB
+I (4379) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (4842) pudding_p4: Desktop: 9.0 Bilder/s neu, 142.4 übersprungen/s, Fläche 163114 px/Bild, Compositor 0.44 ms/Bild
+I (6842) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (7008) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (7082) pudding_p4: Mittel: Simulation 0.5 ms, Bild vorbereiten 6.9 ms (0 Dreiecke), Mithelfen 14.3 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (7082) pudding_p4: Ruckler: 28 verpasste Bildwechsel; längstes Bild 43.4 ms (Simulation 0.0, Vorbereiten 12.2, Mithelfen 30.6, Sichern 0.0)
+I (7082) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 6.2 ms je Bild
+I (7082) pudding_p4: Frei: 87 KB intern, 13730 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (7082) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (7082) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.51 ms, Kern 1 4.13 ms; angeschubst seit Start: 0
+I (7083) pudding_p4: 37.8 FPS (640x360 scharf), Frame 0.6 ms, Streifen 2/4, Rendern 0.1/0.2 ms, Skalieren 0.3/0.5 ms, PPA 0.8/1.7 ms, Ausgabe 2.5 ms, Panel 55.01 Hz
+I (7083) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (8846) pudding_p4: Desktop: 1.0 Bilder/s neu, 199.1 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.01 ms/Bild
+W (9379) eh_host_feat_rpc: request: no response uid=6 msg_id=350 (5000 ms)
+I (9379) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (9379) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (10050) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x48303d04
+I (10050) wlan: mit dem Zugangspunkt verbunden
+I (10850) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (11073) esp_netif_handlers: sta ip: 192.168.1.142, mask: 255.255.255.0, gw: 192.168.1.1
+I (11073) wlan: IP 192.168.1.142
+I (11546) pudding_fw::wlan: WLAN: verbunden in 4537 ms, IP 192.168.1.142, Signal -45 dBm, Kanal 11, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (11546) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (11590) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.8 ms (0 Dreiecke), Mithelfen 0.8 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (11590) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 4.0 ms (Simulation 0.1, Vorbereiten 1.1, Mithelfen 1.6, Sichern 0.0)
+I (11590) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 50.9 ms je Bild
+I (11590) pudding_p4: Frei: 92 KB intern, 13730 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11590) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (11591) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.07 ms, Kern 1 0.63 ms; angeschubst seit Start: 0
+I (11591) pudding_p4: 36.9 FPS (640x360 scharf), Frame 0.6 ms, Streifen 2/4, Rendern 0.1/0.2 ms, Skalieren 0.3/0.5 ms, PPA 0.8/1.8 ms, Ausgabe 2.6 ms, Panel 54.79 Hz
+I (11591) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (12854) pudding_p4: Desktop: 1.0 Bilder/s neu, 199.1 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.01 ms/Bild
+I (14581) pudding_fw::wlan: NTP: Uhr gestellt – 23.11.2026 12:15:08 Ortszeit
+I (15256) pudding_p4: Mittel: Simulation 336.3 ms, Bild vorbereiten 0.9 ms (0 Dreiecke), Mithelfen 0.8 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (15256) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 673.4 ms (Simulation 672.6, Vorbereiten 0.7, Mithelfen 0.0, Sichern 0.0)
+I (15256) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 41.5 ms je Bild
+I (15256) pudding_p4: Frei: 92 KB intern, 13729 KB PSRAM; Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (15256) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (15256) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.07 ms, Kern 1 0.65 ms; angeschubst seit Start: 0
+I (15256) pudding_p4: 36.2 FPS (640x360 scharf), Frame 673.4 ms, Streifen 2/4, Rendern 0.1/0.2 ms, Skalieren 0.3/0.5 ms, PPA 0.8/1.8 ms, Ausgabe 2.6 ms, Panel 54.91 Hz
+I (15257) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (15258) pudding_p4: Desktop: 0.8 Bilder/s neu, 143.6 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.01 ms/Bild
+I (17260) pudding_p4: Desktop: 0.0 Bilder/s neu, 199.7 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (19260) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (21265) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (23265) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (25269) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (27269) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (29074) pudding_p4: [debug] Spiel starten: Pudding
+I (29269) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (29809) pudding_p4: Spiel Some(Pudding) (Neustart ins Spiel)
+W (29809) wlan: getrennt, Grund 8
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05ce2
+Core1 Saved PC:0x4ff1783c
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 22 2026 01:00:10
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (126) esp_image: segment 0: paddr=00020020 vaddr=48370020 size=1ac500h (1754368) map
+I (346) esp_image: segment 1: paddr=001cc528 vaddr=30100000 size=00070h (   112) load
+I (347) esp_image: segment 2: paddr=001cc5a0 vaddr=4ff00000 size=03a78h ( 14968) load
+I (353) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=36e560h (3597664) map
+I (794) esp_image: segment 4: paddr=0053e588 vaddr=4ff03a78 size=188c4h (100548) load
+I (810) esp_image: segment 5: paddr=00556e54 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (813) esp_image: segment 6: paddr=00559bac vaddr=4ff1f100 size=04each ( 20140) load
+I (817) esp_image: segment 7: paddr=0055ea60 vaddr=50108080 size=0000ch (    12) load
+I (822) esp_image: segment 8: paddr=0055ea74 vaddr=501080e8 size=00020h (    32) load
+I (836) boot: Loaded app from partition at offset 0x20000
+I (836) boot: Disabling RNG early entropy source...
+I (852) hex_psram: vendor id    : 0x0d (AP)
+I (852) hex_psram: Latency      : 0x01 (Fixed)
+I (852) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (853) hex_psram: dev id       : 0x03 (generation 4)
+I (858) hex_psram: density      : 0x07 (256 Mbit)
+I (862) hex_psram: good-die     : 0x06 (Pass)
+I (866) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (871) hex_psram: BurstType    : 0x00 ( Wrap)
+I (875) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (880) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (884) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (889) hex_psram: DriveStrength: 0x00 (1/1)
+I (893) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1197) mmu_psram: .rodata xip on psram
+I (1463) mmu_psram: .text xip on psram
+I (1464) hex_psram: psram CS IO is dedicated
+I (1464) cpu_start: Multicore app
+I (1860) esp_psram: SPI SRAM memory test OK
+I (1872) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1872) cpu_start: Pro cpu start user code
+I (1872) cpu_start: cpu freq: 360000000 Hz
+I (1874) app_init: Application information:
+I (1878) app_init: Project name:     libespidf
+I (1882) app_init: App version:      1
+I (1886) app_init: Compile time:     Nov 22 2026 17:06:22
+I (1891) app_init: ELF file SHA256:  3b4f96522...
+I (1895) app_init: ESP-IDF:          v5.5.5
+I (1899) efuse_init: Min chip rev:     v1.0
+I (1903) efuse_init: Max chip rev:     v1.99 
+I (1907) efuse_init: Chip rev:         v1.3
+I (1911) heap_init: Initializing. RAM available for dynamic allocation:
+I (1918) heap_init: At 4FF29830 len 00011790 (69 KiB): RETENT_RAM
+I (1923) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1929) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1934) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (1939) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1944) esp_psram: Adding pool of 27292K of PSRAM memory to heap allocator
+I (1951) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1962) esp_psram: Adding pool of 14K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1974) spi_flash: detected chip: gd
+I (1977) spi_flash: flash io: qio
+I (1980) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1986) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1993) main_task: Started on CPU0
+I (1996) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2004) main_task: Calling app_main()
+I (2008) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2008) pudding_p4: ESP32-OS startet …
+I (2008) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 332 KB intern, 27300 KB PSRAM
+I (2008) pudding_p4: Start: intern frei 332 KB (größter Block 184 KB), DMA-fähig 293 KB
+I (2014) pudding_p4: Programm „esp32os_a“, Startziel Pudding
+I (2014) pudding_p4: Startziel Pudding, Spielstand geladen
+I (2029) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2030) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2030) GT911: TouchPad_Config_Version:70
+I (2030) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (2032) hx8394: version: 2.1.0
+W (2202) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (2659) pudding_p4: Spiel geladen: intern frei 3 KB (größter Block 0 KB), DMA-fähig 2 KB
+I (2660) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (2660) pudding_p4: Los geht's!
+I (4664) pudding_p4: Mittel: Simulation 1.3 ms, Bild vorbereiten 7.0 ms (957 Dreiecke), Mithelfen 8.0 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.1 ms
+I (4664) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 18.7 ms (Simulation 1.7, Vorbereiten 8.3, Mithelfen 7.9, Sichern 0.0)
+I (4664) pudding_p4: Geclippt 15 je Bild (0.1 ms); 42 Objekte, 2845 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (4664) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 1.0 ms, Dreiecke 3.2 ms (410 Takte je Dreieck)
+I (4664) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 9.0 ms, HUD 1.1 ms; je Bild 9241 Zeilenstücke, 574k Pixel (11.3 Takte/Pixel)
+I (4664) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.77 ms; angeschubst seit Start: 0
+I (4664) pudding_p4: 55.0 FPS (640x360 weich), Frame 15.3 ms, Streifen 13/32, Rendern 7.6/13.5 ms, Skalieren 0.0/0.0 ms, PPA 0.2/0.8 ms, Ausgabe 14.4 ms, Panel 55.14 Hz
+I (4665) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (6675) pudding_p4: Mittel: Simulation 1.2 ms, Bild vorbereiten 4.9 ms (555 Dreiecke), Mithelfen 8.0 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.3 ms
+I (6675) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 16.2 ms (Simulation 1.1, Vorbereiten 5.1, Mithelfen 9.4, Sichern 0.0)
+I (6675) pudding_p4: Geclippt 25 je Bild (0.2 ms); 17 Objekte, 1774 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (6675) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.6 ms, Dreiecke 2.0 ms (409 Takte je Dreieck)
+I (6675) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 8.0 ms, HUD 1.1 ms; je Bild 7642 Zeilenstücke, 533k Pixel (10.8 Takte/Pixel)
+I (6675) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.68 ms; angeschubst seit Start: 0
+I (6675) pudding_p4: 54.9 FPS (640x360 weich), Frame 14.3 ms, Streifen 13/32, Rendern 7.2/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.7 ms, Ausgabe 13.7 ms, Panel 54.92 Hz
+I (6676) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (8684) pudding_p4: Mittel: Simulation 1.2 ms, Bild vorbereiten 4.2 ms (426 Dreiecke), Mithelfen 7.8 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.6 ms
+I (8684) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 15.5 ms (Simulation 1.5, Vorbereiten 4.5, Mithelfen 8.8, Sichern 0.0)
+I (8684) pudding_p4: Geclippt 22 je Bild (0.2 ms); 13 Objekte, 1428 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (8684) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.5 ms, Dreiecke 1.6 ms (397 Takte je Dreieck)
+I (8684) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.5 ms, HUD 1.1 ms; je Bild 7139 Zeilenstücke, 493k Pixel (10.9 Takte/Pixel)
+I (8684) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.60 ms; angeschubst seit Start: 0
+I (8684) pudding_p4: 55.0 FPS (640x360 weich), Frame 14.1 ms, Streifen 13/32, Rendern 7.4/12.0 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.7 ms, Ausgabe 13.3 ms, Panel 54.89 Hz
+I (8684) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (10693) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 4.1 ms (424 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.5 ms
+I (10694) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.3 ms (Simulation 1.6, Vorbereiten 4.1, Mithelfen 8.0, Sichern 0.0)
+I (10694) pudding_p4: Geclippt 25 je Bild (0.2 ms); 11 Objekte, 1232 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (10694) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.5 ms (437 Takte je Dreieck)
+I (10694) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.2 ms, HUD 1.1 ms; je Bild 7220 Zeilenstücke, 470k Pixel (11.0 Takte/Pixel)
+I (10694) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.63 ms; angeschubst seit Start: 0
+I (10694) pudding_p4: 54.9 FPS (640x360 weich), Frame 14.0 ms, Streifen 13/32, Rendern 7.1/12.5 ms, Skalieren 0.0/0.0 ms, PPA 0.4/0.6 ms, Ausgabe 13.3 ms, Panel 54.96 Hz
+I (12703) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 4.0 ms (406 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.6 ms
+I (12703) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.6 ms (Simulation 1.0, Vorbereiten 4.0, Mithelfen 9.1, Sichern 0.0)
+I (12703) pudding_p4: Geclippt 21 je Bild (0.2 ms); 11 Objekte, 1260 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (12703) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.5 ms, Dreiecke 1.4 ms (408 Takte je Dreieck)
+I (12703) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.2 ms, HUD 1.1 ms; je Bild 7343 Zeilenstücke, 466k Pixel (11.1 Takte/Pixel)
+I (12704) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.60 ms; angeschubst seit Start: 0
+I (12704) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.4 ms, Streifen 13/32, Rendern 7.2/11.8 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 12.8 ms, Panel 54.94 Hz
+I (14712) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 3.9 ms (363 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.5 ms
+I (14712) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.3 ms (Simulation 1.1, Vorbereiten 3.9, Mithelfen 8.8, Sichern 0.0)
+I (14713) pudding_p4: Geclippt 26 je Bild (0.2 ms); 12 Objekte, 1312 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (14713) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.4 ms (372 Takte je Dreieck)
+I (14713) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.1 ms, HUD 1.1 ms; je Bild 7015 Zeilenstücke, 475k Pixel (10.8 Takte/Pixel)
+I (14713) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.63 ms; angeschubst seit Start: 0
+I (14713) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.5 ms, Streifen 12/33, Rendern 6.8/11.6 ms, Skalieren 0.0/0.0 ms, PPA 0.3/1.0 ms, Ausgabe 12.7 ms, Panel 54.97 Hz
+I (16718) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 3.7 ms (321 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.4 ms
+I (16718) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.0 ms (Simulation 1.5, Vorbereiten 3.6, Mithelfen 8.5, Sichern 0.0)
+I (16718) pudding_p4: Geclippt 22 je Bild (0.2 ms); 12 Objekte, 1200 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (16718) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.2 ms (357 Takte je Dreieck)
+I (16718) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 6.9 ms, HUD 1.1 ms; je Bild 5933 Zeilenstücke, 470k Pixel (10.6 Takte/Pixel)
+I (16718) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.59 ms; angeschubst seit Start: 0
+I (16718) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.2 ms, Streifen 13/32, Rendern 7.0/11.1 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.6 ms, Ausgabe 12.4 ms, Panel 54.95 Hz
+I (18724) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 3.6 ms (321 Dreiecke), Mithelfen 7.5 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.7 ms
+I (18724) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 13.7 ms (Simulation 1.0, Vorbereiten 3.6, Mithelfen 8.7, Sichern 0.0)
+I (18724) pudding_p4: Geclippt 26 je Bild (0.2 ms); 11 Objekte, 928 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (18724) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.2 ms (455 Takte je Dreieck)
+I (18724) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 6.8 ms, HUD 1.0 ms; je Bild 5723 Zeilenstücke, 466k Pixel (10.6 Takte/Pixel)
+I (18724) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.61 ms; angeschubst seit Start: 0
+I (18724) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.1 ms, Streifen 13/32, Rendern 7.0/11.4 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 12.4 ms, Panel 54.95 Hz
+I (20734) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 3.8 ms (341 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.4 ms
+I (20734) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.3 ms (Simulation 1.1, Vorbereiten 3.9, Mithelfen 8.7, Sichern 0.0)
+I (20734) pudding_p4: Geclippt 21 je Bild (0.2 ms); 12 Objekte, 1102 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (20734) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.3 ms (412 Takte je Dreieck)
+I (20734) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.0 ms, HUD 1.1 ms; je Bild 5832 Zeilenstücke, 482k Pixel (10.5 Takte/Pixel)
+I (20734) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.54 ms; angeschubst seit Start: 0
+I (20734) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.9 ms, Streifen 13/32, Rendern 7.1/12.2 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.7 ms, Ausgabe 13.0 ms, Panel 54.97 Hz
+I (22744) pudding_p4: Mittel: Simulation 1.2 ms, Bild vorbereiten 5.5 ms (628 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.2 ms
+I (22744) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 16.7 ms (Simulation 1.5, Vorbereiten 6.9, Mithelfen 7.5, Sichern 0.0)
+I (22744) pudding_p4: Geclippt 26 je Bild (0.2 ms); 19 Objekte, 2297 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (22744) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.7 ms, Dreiecke 2.4 ms (369 Takte je Dreieck)
+I (22745) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.9 ms, HUD 1.1 ms; je Bild 7850 Zeilenstücke, 523k Pixel (10.9 Takte/Pixel)
+I (22745) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.69 ms; angeschubst seit Start: 0
+I (22745) pudding_p4: 55.0 FPS (640x360 weich), Frame 16.5 ms, Streifen 12/33, Rendern 6.8/14.1 ms, Skalieren 0.0/0.0 ms, PPA 0.3/1.9 ms, Ausgabe 16.2 ms, Panel 54.99 Hz
+I (24754) pudding_p4: Mittel: Simulation 1.3 ms, Bild vorbereiten 7.9 ms (1040 Dreiecke), Mithelfen 7.5 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (24754) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 18.6 ms (Simulation 1.2, Vorbereiten 8.2, Mithelfen 7.8, Sichern 0.0)
+I (24754) pudding_p4: Geclippt 18 je Bild (0.2 ms); 45 Objekte, 3343 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (24754) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 1.1 ms, Dreiecke 3.9 ms (419 Takte je Dreieck)
+I (24754) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 8.9 ms, HUD 1.1 ms; je Bild 9161 Zeilenstücke, 560k Pixel (11.4 Takte/Pixel)
+I (24754) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.26 ms, Kern 1 0.82 ms; angeschubst seit Start: 0
+I (24754) pudding_p4: 55.0 FPS (640x360 weich), Frame 18.5 ms, Streifen 13/32, Rendern 7.5/16.6 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 17.6 ms, Panel 54.97 Hz
+I (26771) pudding_p4: Mittel: Simulation 1.4 ms, Bild vorbereiten 8.9 ms (1306 Dreiecke), Mithelfen 7.8 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (26771) pudding_p4: Ruckler: 4 verpasste Bildwechsel; längstes Bild 19.7 ms (Simulation 1.1, Vorbereiten 9.7, Mithelfen 8.0, Sichern 0.0)
+I (26771) pudding_p4: Geclippt 18 je Bild (0.2 ms); 60 Objekte, 3754 Dreiecke geprüft; Ton 1.6 ms je Bild
+I (26771) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 1.3 ms, Dreiecke 4.6 ms (439 Takte je Dreieck)
+I (26771) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 9.8 ms, HUD 1.0 ms; je Bild 10572 Zeilenstücke, 592k Pixel (11.9 Takte/Pixel)
+I (26772) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.87 ms; angeschubst seit Start: 0
+I (26772) pudding_p4: 54.8 FPS (640x360 weich), Frame 18.1 ms, Streifen 12/33, Rendern 7.2/16.2 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 17.6 ms, Panel 54.97 Hz
+I (28775) pudding_p4: Mittel: Simulation 1.3 ms, Bild vorbereiten 8.4 ms (1218 Dreiecke), Mithelfen 8.0 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (28775) pudding_p4: Ruckler: 2 verpasste Bildwechsel; längstes Bild 19.5 ms (Simulation 1.6, Vorbereiten 8.7, Mithelfen 8.4, Sichern 0.0)
+I (28775) pudding_p4: Geclippt 22 je Bild (0.2 ms); 54 Objekte, 3616 Dreiecke geprüft; Ton 1.6 ms je Bild
+I (28775) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 1.2 ms, Dreiecke 4.2 ms (421 Takte je Dreieck)
+I (28776) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 9.6 ms, HUD 1.2 ms; je Bild 10104 Zeilenstücke, 593k Pixel (11.7 Takte/Pixel)
+I (28776) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.85 ms; angeschubst seit Start: 0
+I (28776) pudding_p4: 54.4 FPS (640x360 weich), Frame 18.9 ms, Streifen 13/32, Rendern 7.7/17.1 ms, Skalieren 0.0/0.0 ms, PPA 0.4/0.9 ms, Ausgabe 18.2 ms, Panel 54.97 Hz
+I (30776) pudding_p4: Mittel: Simulation 1.4 ms, Bild vorbereiten 9.6 ms (1388 Dreiecke), Mithelfen 7.3 ms, Rest-PPA 0.6 ms, Warten auf Bildspeicher 0.0 ms
+I (30777) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 19.8 ms (Simulation 1.1, Vorbereiten 10.4, Mithelfen 7.4, Sichern 0.0)
+I (30777) pudding_p4: Geclippt 23 je Bild (0.2 ms); 69 Objekte, 4467 Dreiecke geprüft; Ton 1.6 ms je Bild
+I (30777) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 1.5 ms, Dreiecke 5.1 ms (412 Takte je Dreieck)
+I (30777) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 9.6 ms, HUD 1.1 ms; je Bild 9583 Zeilenstücke, 589k Pixel (11.7 Takte/Pixel)
+I (30777) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.90 ms; angeschubst seit Start: 0
+I (30777) pudding_p4: 53.8 FPS (640x360 weich), Frame 18.7 ms, Streifen 11/34, Rendern 6.4/17.0 ms, Skalieren 0.0/0.0 ms, PPA 0.2/1.0 ms, Ausgabe 18.1 ms, Panel 54.97 Hz
+I (32661) pudding_fw::foto: BILD 0 720 1280 3000000 0
+BILD 0 gespeichert: <Ordner>/bild_0.png
+I (39550) pudding_fw::foto: BILD 0 gesendet
+I (39550) pudding_p4: Bilanz 37 s: 52.0 FPS, Arbeit je Bild Mittel 18.9 ms, p99 19.8 ms, max 6907.0 ms; verpasste Bildwechsel 14 (0.7 je 100)
+I (39550) pudding_p4: Mittel: Simulation 1.4 ms, Bild vorbereiten 8.9 ms (1289 Dreiecke), Mithelfen 7.6 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (39550) pudding_p4: Ruckler: 3 verpasste Bildwechsel; längstes Bild 6907.0 ms (Simulation 1.2, Vorbereiten 8.4, Mithelfen 8.3, Sichern 0.0)
+I (39550) pudding_p4: Geclippt 19 je Bild (0.2 ms); 67 Objekte, 3937 Dreiecke geprüft; Ton 6.3 ms je Bild
+I (39550) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 1.4 ms, Dreiecke 4.6 ms (417 Takte je Dreieck)
+I (39550) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 9.5 ms, HUD 1.1 ms; je Bild 9501 Zeilenstücke, 589k Pixel (11.6 Takte/Pixel)
+I (39550) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.90 ms; angeschubst seit Start: 0
+I (39550) pudding_p4: 54.5 FPS (640x360 weich), Frame 6907.0 ms, Streifen 13/32, Rendern 7.5/17.0 ms, Skalieren 0.0/0.0 ms, PPA 0.4/0.8 ms, Ausgabe 17.9 ms, Panel 54.98 Hz
+I (41561) pudding_p4: Mittel: Simulation 1.3 ms, Bild vorbereiten 6.3 ms (823 Dreiecke), Mithelfen 8.1 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.1 ms
+I (41562) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 20.1 ms (Simulation 5.8, Vorbereiten 7.9, Mithelfen 5.5, Sichern 0.0)
+I (41562) pudding_p4: Geclippt 15 je Bild (0.1 ms); 33 Objekte, 2487 Dreiecke geprüft; Ton 1.4 ms je Bild
+I (41562) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.9 ms, Dreiecke 2.8 ms (405 Takte je Dreieck)
+I (41562) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 8.9 ms, HUD 1.1 ms; je Bild 8869 Zeilenstücke, 571k Pixel (11.2 Takte/Pixel)
+I (41562) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.78 ms; angeschubst seit Start: 0
+I (41562) pudding_p4: 55.0 FPS (640x360 weich), Frame 14.8 ms, Streifen 13/32, Rendern 7.3/13.3 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.7 ms, Ausgabe 14.1 ms, Panel 54.97 Hz
+I (43562) pudding_p4: Mittel: Simulation 1.2 ms, Bild vorbereiten 4.8 ms (537 Dreiecke), Mithelfen 8.0 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.4 ms
+I (43562) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 15.9 ms (Simulation 1.6, Vorbereiten 4.8, Mithelfen 9.0, Sichern 0.0)
+I (43562) pudding_p4: Geclippt 26 je Bild (0.2 ms); 16 Objekte, 1737 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (43562) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.6 ms, Dreiecke 2.0 ms (407 Takte je Dreieck)
+I (43562) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.9 ms, HUD 1.1 ms; je Bild 7633 Zeilenstücke, 526k Pixel (10.8 Takte/Pixel)
+I (43562) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.69 ms; angeschubst seit Start: 0
+I (43562) pudding_p4: 55.0 FPS (640x360 weich), Frame 15.1 ms, Streifen 13/32, Rendern 7.4/13.8 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.7 ms, Ausgabe 14.6 ms, Panel 54.97 Hz
+I (45575) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 4.1 ms (415 Dreiecke), Mithelfen 7.8 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.5 ms
+I (45575) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.9 ms (Simulation 1.5, Vorbereiten 4.3, Mithelfen 8.6, Sichern 0.0)
+I (45575) pudding_p4: Geclippt 21 je Bild (0.2 ms); 12 Objekte, 1351 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (45575) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.5 ms, Dreiecke 1.5 ms (407 Takte je Dreieck)
+I (45575) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.4 ms, HUD 1.0 ms; je Bild 7056 Zeilenstücke, 487k Pixel (10.9 Takte/Pixel)
+I (45575) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.60 ms; angeschubst seit Start: 0
+I (45575) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.6 ms, Streifen 13/32, Rendern 7.2/11.8 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 12.9 ms, Panel 54.98 Hz
+I (47580) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 4.1 ms (420 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.6 ms
+I (47580) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.5 ms (Simulation 1.0, Vorbereiten 4.0, Mithelfen 9.0, Sichern 0.0)
+I (47580) pudding_p4: Geclippt 25 je Bild (0.2 ms); 11 Objekte, 1232 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (47580) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.5 ms (437 Takte je Dreieck)
+I (47580) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.2 ms, HUD 1.1 ms; je Bild 7202 Zeilenstücke, 467k Pixel (11.1 Takte/Pixel)
+I (47580) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.63 ms; angeschubst seit Start: 0
+I (47580) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.7 ms, Streifen 12/33, Rendern 6.8/11.1 ms, Skalieren 0.0/0.0 ms, PPA 0.3/1.7 ms, Ausgabe 12.9 ms, Panel 54.98 Hz
+I (47666) pudding_fw::foto: BILD 1 720 1280 3000000 0
+BILD 1 gespeichert: <Ordner>/bild_1.png
+I (54555) pudding_fw::foto: BILD 1 gesendet
+I (54555) pudding_p4: Mittel: Simulation 1.2 ms, Bild vorbereiten 4.1 ms (413 Dreiecke), Mithelfen 7.5 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.6 ms
+I (54555) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 6902.4 ms (Simulation 1.6, Vorbereiten 4.1, Mithelfen 7.3, Sichern 0.0)
+I (54555) pudding_p4: Geclippt 25 je Bild (0.2 ms); 11 Objekte, 1232 Dreiecke geprüft; Ton 82.2 ms je Bild
+I (54555) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.5 ms (449 Takte je Dreieck)
+I (54555) pudding_p4: Rendern je Kern: Löschen 1.0 ms, Dreiecke 7.2 ms, HUD 1.1 ms; je Bild 7147 Zeilenstücke, 464k Pixel (11.1 Takte/Pixel)
+I (54555) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.59 ms; angeschubst seit Start: 0
+I (54555) pudding_p4: 55.0 FPS (640x360 weich), Frame 6902.4 ms, Streifen 12/33, Rendern 6.6/12.1 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 13.1 ms, Panel 54.98 Hz
+I (56555) pudding_p4: Mittel: Simulation 1.2 ms, Bild vorbereiten 4.0 ms (398 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.4 ms
+I (56555) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 15.6 ms (Simulation 5.9, Vorbereiten 3.6, Mithelfen 5.3, Sichern 0.0)
+I (56556) pudding_p4: Geclippt 20 je Bild (0.2 ms); 12 Objekte, 1280 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (56556) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.4 ms (396 Takte je Dreieck)
+I (56556) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.2 ms, HUD 1.0 ms; je Bild 7387 Zeilenstücke, 468k Pixel (11.1 Takte/Pixel)
+I (56556) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.58 ms; angeschubst seit Start: 0
+I (56556) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.7 ms, Streifen 13/32, Rendern 7.4/10.7 ms, Skalieren 0.0/0.0 ms, PPA 0.3/1.6 ms, Ausgabe 12.9 ms, Panel 54.97 Hz
+I (58556) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 3.9 ms (349 Dreiecke), Mithelfen 7.9 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.5 ms
+I (58556) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 14.4 ms (Simulation 1.0, Vorbereiten 3.8, Mithelfen 9.1, Sichern 0.0)
+I (58556) pudding_p4: Geclippt 27 je Bild (0.2 ms); 12 Objekte, 1312 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (58556) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.3 ms (361 Takte je Dreieck)
+I (58556) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.1 ms, HUD 1.1 ms; je Bild 6778 Zeilenstücke, 476k Pixel (10.8 Takte/Pixel)
+I (58557) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.29 ms, Kern 1 0.60 ms; angeschubst seit Start: 0
+I (58557) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.2 ms, Streifen 13/32, Rendern 7.3/11.1 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 12.5 ms, Panel 54.97 Hz
+I (60560) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 3.6 ms (320 Dreiecke), Mithelfen 7.5 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.6 ms
+I (60560) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 13.9 ms (Simulation 1.0, Vorbereiten 3.7, Mithelfen 8.7, Sichern 0.0)
+I (60560) pudding_p4: Geclippt 21 je Bild (0.2 ms); 11 Objekte, 1108 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (60560) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.2 ms (377 Takte je Dreieck)
+I (60560) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 6.9 ms, HUD 1.1 ms; je Bild 5702 Zeilenstücke, 467k Pixel (10.6 Takte/Pixel)
+I (60560) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.56 ms; angeschubst seit Start: 0
+I (60560) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.9 ms, Streifen 13/32, Rendern 7.1/11.2 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 12.2 ms, Panel 54.98 Hz
+I (62565) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 3.6 ms (326 Dreiecke), Mithelfen 7.6 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.6 ms
+I (62565) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 13.7 ms (Simulation 1.0, Vorbereiten 3.5, Mithelfen 8.7, Sichern 0.0)
+I (62565) pudding_p4: Geclippt 26 je Bild (0.2 ms); 11 Objekte, 928 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (62565) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.4 ms, Dreiecke 1.2 ms (458 Takte je Dreieck)
+I (62565) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 6.8 ms, HUD 1.1 ms; je Bild 5752 Zeilenstücke, 468k Pixel (10.5 Takte/Pixel)
+I (62565) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.55 ms; angeschubst seit Start: 0
+I (62566) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.8 ms, Streifen 13/32, Rendern 6.9/11.2 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.6 ms, Ausgabe 12.0 ms, Panel 54.98 Hz
+I (64567) pudding_p4: Mittel: Simulation 1.1 ms, Bild vorbereiten 4.0 ms (389 Dreiecke), Mithelfen 7.7 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.5 ms
+I (64567) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 15.0 ms (Simulation 1.2, Vorbereiten 4.9, Mithelfen 8.4, Sichern 0.0)
+I (64567) pudding_p4: Geclippt 22 je Bild (0.2 ms); 13 Objekte, 1279 Dreiecke geprüft; Ton 1.1 ms je Bild
+I (64567) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.5 ms, Dreiecke 1.4 ms (405 Takte je Dreieck)
+I (64567) pudding_p4: Rendern je Kern: Löschen 1.1 ms, Dreiecke 7.2 ms, HUD 1.1 ms; je Bild 6165 Zeilenstücke, 492k Pixel (10.5 Takte/Pixel)
+I (64567) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.59 ms; angeschubst seit Start: 0
+I (64567) pudding_p4: 55.0 FPS (640x360 weich), Frame 14.8 ms, Streifen 13/32, Rendern 7.4/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.4/0.7 ms, Ausgabe 14.1 ms, Panel 54.98 Hz
+I (66572) pudding_p4: Mittel: Simulation 1.2 ms, Bild vorbereiten 6.0 ms (708 Dreiecke), Mithelfen 7.6 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.1 ms
+I (66573) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 17.4 ms (Simulation 1.1, Vorbereiten 7.9, Mithelfen 7.8, Sichern 0.0)
+I (66573) pudding_p4: Geclippt 27 je Bild (0.2 ms); 23 Objekte, 2654 Dreiecke geprüft; Ton 1.3 ms je Bild
+I (66573) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 0.8 ms, Dreiecke 2.7 ms (368 Takte je Dreieck)
+I (66573) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 8.1 ms, HUD 1.1 ms; je Bild 8148 Zeilenstücke, 531k Pixel (11.0 Takte/Pixel)
+I (66573) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.28 ms, Kern 1 0.73 ms; angeschubst seit Start: 0
+I (66573) pudding_p4: 55.0 FPS (640x360 weich), Frame 17.4 ms, Streifen 11/34, Rendern 6.4/15.9 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 16.9 ms, Panel 54.97 Hz
+I (68585) pudding_p4: Mittel: Simulation 1.3 ms, Bild vorbereiten 8.4 ms (1164 Dreiecke), Mithelfen 7.6 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (68585) pudding_p4: Ruckler: 2 verpasste Bildwechsel; längstes Bild 19.7 ms (Simulation 1.2, Vorbereiten 9.4, Mithelfen 7.9, Sichern 0.0)
+I (68585) pudding_p4: Geclippt 16 je Bild (0.1 ms); 54 Objekte, 3556 Dreiecke geprüft; Ton 1.5 ms je Bild
+I (68585) pudding_p4: Frei: 3 KB intern, 20002 KB PSRAM; Aufbereiten je Bild: Vertices 1.3 ms, Dreiecke 4.3 ms (430 Takte je Dreieck)
+I (68585) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 9.2 ms, HUD 1.1 ms; je Bild 9703 Zeilenstücke, 570k Pixel (11.7 Takte/Pixel)
+I (68585) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.27 ms, Kern 1 0.89 ms; angeschubst seit Start: 0
+I (68585) pudding_p4: 53.1 FPS (640x360 weich), Frame 19.5 ms, Streifen 13/32, Rendern 7.7/17.4 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 18.7 ms, Panel 54.98 Hz
+I (69553) pudding_p4: Bilanz 30 s: 51.6 FPS, Arbeit je Bild Mittel 19.0 ms, p99 19.5 ms, max 6902.4 ms; verpasste Bildwechsel 14 (0.8 je 100)

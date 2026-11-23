@@ -212,6 +212,7 @@ pub fn programm_fuer(name: &str) -> Option<&'static str> {
         "png" | "jpg" | "jpeg" | "gif" | "bmp" => Some("bildbetrachter"),
         "txt" | "ini" | "log" | "md" | "cfg" => Some("notizen"),
         "mp3" => Some("musik"),
+        "pdf" => Some("pdfbetrachter"),
         _ => None,
     }
 }
@@ -224,6 +225,7 @@ fn symbol_fuer(e: &Eintrag) -> usize {
         Some("bildbetrachter") => 70,
         Some("notizen") => 9,
         Some("musik") => 64,
+        Some("pdfbetrachter") => 73,
         _ => 95,
     }
 }
@@ -565,6 +567,16 @@ fn zeichnen(z: &mut Zustand) {
     sys::neuzeichnen(2);
 }
 
+/// Meldung, wenn ein Programm nicht startet (Rückgabe von `datei::starten`).
+fn startfehler(prog: &str, r: i32) -> String {
+    match r {
+        -30 => format!("{prog}: {}", t("not enough memory – close other programs", "zu wenig Speicher – andere Programme schliessen")),
+        -32 => format!("{prog}: {}", t("too many programs", "zu viele Programme")),
+        r if r == -(datei::NICHT_GEFUNDEN as i32) => format!("{prog} {}", t("missing", "fehlt")),
+        r => format!("{prog}: {} ({})", t("start failed", "Start fehlgeschlagen"), -r),
+    }
+}
+
 fn oeffnen(z: &mut Zustand, e: &Eintrag) {
     let p = verbinden(&z.pfad, &e.name);
     if e.ordner {
@@ -575,7 +587,7 @@ fn oeffnen(z: &mut Zustand, e: &Eintrag) {
         Some(prog) => {
             let r = datei::starten(&format!("/sys/{prog}"), &p);
             if r < 0 {
-                z.meldung = format!("{prog} {}", t("missing", "fehlt"));
+                z.meldung = startfehler(prog, r);
             }
         }
         None => {
@@ -745,5 +757,20 @@ pub fn programm() {
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// O4: Startet ein Programm nicht, nennt der Dateimanager den Grund
+    /// (vorher hiess jeder Fehler „fehlt“, auch „zu wenig Speicher“).
+    #[test]
+    fn startfehler_nennt_den_grund() {
+        assert!(startfehler("bildbetrachter", -30).contains("Speicher") || startfehler("bildbetrachter", -30).contains("memory"));
+        assert!(startfehler("bildbetrachter", -(datei::NICHT_GEFUNDEN as i32)).ends_with("fehlt") || startfehler("bildbetrachter", -5).ends_with("missing"));
+        assert!(!startfehler("bildbetrachter", -30).contains("fehlt"));
+        assert!(startfehler("x", -31).contains("31"));
     }
 }

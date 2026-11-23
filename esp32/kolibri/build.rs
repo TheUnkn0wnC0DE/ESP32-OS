@@ -4,7 +4,7 @@
 //! (Zeiger in Registern); am Board baut ESP-IDF die Komponente `kolibri_c`.
 
 /// Programme: Name = Präfix in `c/gen/<name>.c`.
-pub const PROGRAMME: &[&str] = &["basic_gui", "boxlib_demo", "libimg_demo", "dialog_demo", "absturz_test", "http_tcp_demo", "netz_laden"];
+pub const PROGRAMME: &[&str] = &["basic_gui", "boxlib_demo", "libimg_demo", "dialog_demo", "absturz_test", "http_tcp_demo", "netz_laden", "passwordgen", "thashview"];
 
 fn main() {
     println!("cargo:rerun-if-changed=c");
@@ -23,6 +23,10 @@ fn main() {
     };
     let mut z = neu();
     z.define("KOLIBRI_LIBC_INTERN", None).file("c/libc_zusatz.c").compile("kolibri_libc");
+    // libcryptal (programs/develop/ktcc/lib/libcryptal, Brad Conte,
+    // gemeinfrei; unverändert): MD5, SHA-1, SHA-256 für TinyHashView
+    let mut k = neu();
+    k.include("c/cryptal").files(["c/cryptal/md5.c", "c/cryptal/sha1.c", "c/cryptal/sha256.c"]).compile("kolibri_cryptal");
     let mut p = neu();
     p.flag("/FIkolibri_libc.h");
     for n in PROGRAMME {

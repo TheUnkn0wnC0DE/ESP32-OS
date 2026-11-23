@@ -27,13 +27,23 @@ fn menue_startet_programm() {
             std::thread::sleep(Duration::from_millis(20));
         }
     };
-    tippen(40, 340);
-    std::thread::sleep(Duration::from_millis(500));
-    let titel: Vec<String> = sys::fenster_liste().iter().map(|f| f.titel.clone()).collect();
-    eprintln!("nach Start: {titel:?}");
-    tippen(100, 204);
-    std::thread::sleep(Duration::from_millis(800));
-    let titel: Vec<String> = sys::fenster_liste().iter().map(|f| f.titel.clone()).collect();
-    eprintln!("nach Steuerelemente: {titel:?}");
-    assert!(titel.iter().any(|t| t == "Boxlib example"), "{titel:?}");
+    let titel = || sys::fenster_liste().iter().map(|f| f.titel.clone()).collect::<Vec<String>>();
+    // Startmenü → „Mehr Programme...“ → Programm (Lagen aus dem Menü selbst,
+    // damit neue Einträge den Test nicht verschieben)
+    let mut aus_mehr = |programm: &str, fenster: &str| {
+        tippen(40, 340);
+        std::thread::sleep(Duration::from_millis(500));
+        let (x, y) = desktop::shell::menue_eintrag_mitte("@mehr").expect("Mehr Programme");
+        tippen(x, y);
+        std::thread::sleep(Duration::from_millis(500));
+        let (x, y) = desktop::shell::menue_eintrag_mitte_in("mehr", programm).expect(programm);
+        tippen(x, y);
+        std::thread::sleep(Duration::from_millis(800));
+        assert!(titel().iter().any(|t| t.starts_with(fenster)), "{programm}: {:?}", titel());
+    };
+    // Z3: die übernommenen KolibriOS-Programme; boxlib_demo zuletzt (sein
+    // Textfeld hat den Fokus → Bildschirmtastatur deckt die Taskleiste)
+    aus_mehr("passwordgen", "PasswordGen");
+    aus_mehr("thashview", "Open file");
+    aus_mehr("boxlib_demo", "Boxlib example");
 }

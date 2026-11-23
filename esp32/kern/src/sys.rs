@@ -656,11 +656,13 @@ pub fn maus(sub: u32) -> u32 {
         match sub {
             0 => (m.x as u32) << 16 | m.y as u32 & 0xFFFF,
             1 => {
-                // Wie der KolibriOS-Kern (gui/mouse.inc, .mswin): immer relativ
-                // zum Arbeitsbereich (clientbox) des Fensters.
+                // Wie der KolibriOS-Kern (gui/mouse.inc, .mswin): relativ zur
+                // clientbox – bei Fenstern ohne Flag „relativ“ ist das das
+                // ganze Fenster (window.inc), sonst der Arbeitsbereich. Z3:
+                // PasswordGen (Stil 0x14) traf vorher seine Checkboxen nicht.
                 let skin = w.skin.clone();
                 let (fx, fy) = w.slots[s].as_ref().and_then(|f| f.fenster.as_ref()).map_or((0, 0), |f| {
-                    let (ax, ay, _, _) = f.arbeitsbereich(&skin);
+                    let (ax, ay, _, _) = f.clientbox(&skin);
                     (f.x + ax, f.y + ay)
                 });
                 (((m.x - fx) as u32) << 16).wrapping_add((m.y - fy) as u32)
@@ -828,7 +830,7 @@ pub fn faden_info(slot: i32, buf: &mut [u8; 1024]) -> i32 {
             put32(buf, 26, mem.saturating_sub(1) as u32);
             put32(buf, 30, fz.tid);
             if let Some(f) = &fz.fenster {
-                let (ax, ay, aw, ah) = f.arbeitsbereich(&w.skin);
+                let (ax, ay, aw, ah) = f.clientbox(&w.skin);
                 for (o, v) in [(34, f.x), (38, f.y), (42, f.w - 1), (46, f.h - 1), (54, ax), (58, ay), (62, aw), (66, ah)] {
                     put32(buf, o, v as u32);
                 }
@@ -1141,7 +1143,16 @@ pub fn ablage(sub: u32, ecx: u32, daten: &[u8]) -> u32 {
             if a.len() >= 32 {
                 a.remove(0);
             }
-            a.push(daten.to_vec());
+            // Wie der KolibriOS-Kern (core/clipboard.inc, „store size of
+            // slot“): das erste Doppelwort ist immer die Grösse – Programme
+            // wie PasswordGen/TinyHashView lassen es leer und prüfen es beim
+            // Einfügen.
+            let mut b = daten.to_vec();
+            if b.len() >= 4 {
+                let n = b.len() as u32;
+                b[..4].copy_from_slice(&n.to_le_bytes());
+            }
+            a.push(b);
             0
         }),
         3 => kern_abschnitt(|| if ABLAGE.lock().unwrap_or_else(|e| e.into_inner()).pop().is_some() { 0 } else { 1 }),
@@ -1168,7 +1179,10 @@ pub fn ablage_text() -> Option<String> {
     if blob.len() < 12 || u32::from_le_bytes([blob[4], blob[5], blob[6], blob[7]]) > 1 {
         return None;
     }
-    let n = (u32::from_le_bytes([blob[0], blob[1], blob[2], blob[3]]) as usize).min(blob.len());
+    // Grösse im Kopf; manche KolibriOS-Programme lassen sie 0 (z. B.
+    // PasswordGen, nur die Länge beim Aufruf 54.2 stimmt) → gespeicherte Länge
+    let n = u32::from_le_bytes([blob[0], blob[1], blob[2], blob[3]]) as usize;
+    let n = if (12..=blob.len()).contains(&n) { n } else { blob.len() };
     let k = u32::from_le_bytes([blob[8], blob[9], blob[10], blob[11]]);
     let t = &blob[12..n];
     let t = &t[..t.iter().position(|&c| c == 0).unwrap_or(t.len())];
@@ -1374,4 +1388,30 @@ pub fn foto() -> (usize, usize, Vec<u32>) {
     komponieren(&mut p, true);
     let px = p.px.iter().map(|&c| crate::grafik::von565(c)).collect();
     (p.w, p.h, px)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Z3: Kopf ohne Grösse (0) wie von PasswordGen – vorher Absturz beim
+    /// Lesen („slice index starts at 12 but ends at 0“).
+    #[test]
+    fn ablage_ohne_groesse_im_kopf() {
+        let mut b = vec![0u8; 12];
+        b[4] = 0; // Text
+        b[8] = 1; // cp866
+        b.extend_from_slice(b"Ab3!");
+        ablage(2, b.len() as u32, &b);
+        assert_eq!(ablage_text().as_deref(), Some("Ab3!"));
+        // der Kern trägt die Grösse ein (wie KolibriOS)
+        let kopf = ABLAGE.lock().unwrap().last().map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]));
+        assert_eq!(kopf, Some(16));
+        // zu grosse Angabe: gespeicherte Länge
+        b[0] = 200;
+        ablage(2, b.len() as u32, &b);
+        assert_eq!(ablage_text().as_deref(), Some("Ab3!"));
+        ablage_text_setzen("Grüezi");
+        assert_eq!(ablage_text().as_deref(), Some("Grüezi"));
+    }
 }

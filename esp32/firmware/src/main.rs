@@ -187,6 +187,9 @@ fn main() {
         // Test-Build (A5): Testtöne für den Musikplayer auf die SD-Karte
         #[cfg(esp32os_musik_test)]
         pudding_fw::speicher::musik_testdaten();
+        // Test-Build (Z1): Test-PDFs für den PDF-Betrachter auf die SD-Karte
+        #[cfg(esp32os_pdf_test)]
+        pudding_fw::speicher::pdf_testdaten();
         // Test-Build: Testreste des ersten Browser-Versuchs (B1) löschen
         if option_env!("ESP32OS_NETSURF_RESTE").is_some() {
             pudding_fw::speicher::netsurf_testreste_loeschen();

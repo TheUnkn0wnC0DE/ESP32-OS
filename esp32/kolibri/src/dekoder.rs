@@ -319,8 +319,14 @@ const DIST_EXTRA: [u8; 30] = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7,
 
 /// Rohes Deflate (RFC 1951).
 pub fn inflate(d: &[u8], groesse_hinweis: usize) -> Result<Vec<u8>, Fehler> {
+    inflate_max(d, groesse_hinweis, usize::MAX)
+}
+
+/// Wie [`inflate`], aber höchstens `max` Bytes Ergebnis (sonst Fehler) –
+/// gegen „Deflate-Bomben“ in fremden Dateien (PDF-Betrachter).
+pub fn inflate_max(d: &[u8], groesse_hinweis: usize, max: usize) -> Result<Vec<u8>, Fehler> {
     let mut b = Bits { d, pos: 0, puffer: 0, anzahl: 0 };
-    let mut out = Vec::with_capacity(groesse_hinweis);
+    let mut out = Vec::with_capacity(groesse_hinweis.min(max));
     loop {
         let letzter = b.bits(1)?;
         match b.bits(2)? {
@@ -329,6 +335,9 @@ pub fn inflate(d: &[u8], groesse_hinweis: usize) -> Result<Vec<u8>, Fehler> {
                 b.anzahl = 0;
                 let len = u16le(d, b.pos)? as usize;
                 b.pos += 4;
+                if out.len() + len > max {
+                    return Err(Fehler::Format);
+                }
                 out.extend_from_slice(d.get(b.pos..b.pos + len).ok_or(Fehler::Format)?);
                 b.pos += len;
             }
@@ -366,6 +375,9 @@ pub fn inflate(d: &[u8], groesse_hinweis: usize) -> Result<Vec<u8>, Fehler> {
                     (Huff::neu(&l[..hlit]), Huff::neu(&l[hlit..]))
                 };
                 loop {
+                    if out.len() > max {
+                        return Err(Fehler::Format);
+                    }
                     let s = lit.lesen(&mut b)?;
                     if s < 256 {
                         out.push(s as u8);

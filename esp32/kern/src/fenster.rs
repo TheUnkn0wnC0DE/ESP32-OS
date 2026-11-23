@@ -125,6 +125,14 @@ impl Fenster {
         }
     }
 
+    /// Clientbox wie im KolibriOS-Kern (`window.inc`,
+    /// `set_window_clientbox`): mit Flag „relativ“ (0x20 im Stil) der
+    /// Arbeitsbereich, sonst das ganze Fenster (0, 0, Breite − 1, Höhe − 1
+    /// wie `box`). Gilt für Funktion 9 und 37.1.
+    pub fn clientbox(&self, skin: &Skin) -> (i32, i32, i32, i32) {
+        if self.flags & 2 != 0 { self.arbeitsbereich(skin) } else { (0, 0, self.w - 1, self.h - 1) }
+    }
+
     pub fn enthaelt(&self, x: i32, y: i32) -> bool {
         !self.minimiert && x >= self.x && y >= self.y && x < self.x + self.w && y < self.y + self.h
     }

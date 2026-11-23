@@ -3,6 +3,9 @@
 //! zwei Kernen, PPA vergrössert ×2). Ohne Änderung wird kein Bild gezeichnet.
 
 pub mod bildbetrachter;
+pub mod notify;
+pub mod pdf;
+pub mod pdfbetrachter;
 pub mod bildschirmfoto;
 pub mod dateimanager;
 pub mod einstellungen;
@@ -352,7 +355,7 @@ macro_rules! eintrag {
 }
 
 /// Shell-Programme (ohne C-Programme).
-const SHELL: [kern::ProgrammEintrag; 20] = [
+const SHELL: [kern::ProgrammEintrag; 22] = [
     eintrag!("@meldung", shell::meldung, 256),
     eintrag!("@tastatur", tastatur::dienst, 512),
     eintrag!("@start", shell::start, 512),
@@ -361,7 +364,9 @@ const SHELL: [kern::ProgrammEintrag; 20] = [
     eintrag!("@menu", shell::menu, 1024),
     eintrag!("info", shell::info, 256),
     eintrag!("dateimanager", dateimanager::programm, 1024),
-    eintrag!("bildbetrachter", bildbetrachter::programm, 12288),
+    // 8 MB: startet neben Dateimanager und Diensten (O4; mit 12 MB blieb
+    // am Board zu wenig PSRAM), grössere Bilder meldet der Bildbetrachter
+    eintrag!("bildbetrachter", bildbetrachter::programm, 8192),
     eintrag!("einstellungen", einstellungen::programm, 12288),
     eintrag!("ersteinrichtung", ersteinrichtung::programm, 512),
     eintrag!("@screenshot", bildschirmfoto::programm, 4096),
@@ -377,12 +382,16 @@ const SHELL: [kern::ProgrammEintrag; 20] = [
     kern::ProgrammEintrag { name: "musik", heap_kb: 2048, stapel_kb: 256, start: musik::programm },
     // Testprogramm (A6), nicht im Menü
     eintrag!("endlostest", taskmanager::endlostest, 64),
+    // PDF-Betrachter: Datei (bis 4 MB) und gezeichnete Seite (bis 1,2 MP, je nach freiem Speicher)
+    eintrag!("pdfbetrachter", pdfbetrachter::programm, 8192),
+    // Benachrichtigung wie KolibriOS notify3 (für C-Programme, Z3)
+    eintrag!("@notify", notify::programm, 64),
 ];
 
 /// Programme des Desktops (statisch eingelinkt): Shell + KolibriOS-C-Programme.
 #[cfg(target_pointer_width = "32")]
 pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
-    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15], SHELL[16], SHELL[17], SHELL[18], SHELL[19],
+    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15], SHELL[16], SHELL[17], SHELL[18], SHELL[19], SHELL[20], SHELL[21],
     eintrag!("absturz_test", kolibri::absturz_test, 128),
     eintrag!("basic_gui", kolibri::basic_gui, 512),
     eintrag!("boxlib_demo", kolibri::boxlib_demo, 512),
@@ -390,6 +399,8 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
     eintrag!("dialog_demo", kolibri::dialog_demo, 512),
     eintrag!("http_tcp_demo", kolibri::http_tcp_demo, 256),
     eintrag!("netz_laden", kolibri::netz_laden, 256),
+    eintrag!("passwordgen", kolibri::passwordgen, 256),
+    eintrag!("thashview", kolibri::thashview, 512),
     // Browser (B1): NetSurf + QuickJS; Heap für Seiten, Bilder und die
     // JS-Laufzeit (Grenze 4 MB, netsurf/build.rs), Stapel für Layout und
     // JS (Grenze 192 KB). 10 MB: mehr lässt der PSRAM neben den Diensten
@@ -408,11 +419,14 @@ pub fn anwendungen() -> Vec<shell::Anwendung> {
     if cfg!(target_pointer_width = "32") {
         v.extend([
             a("browser", "Browser", "Browser", 125, true),
+            a("pdfbetrachter", "PDF viewer", "PDF-Betrachter", 73, false),
             a("basic_gui", "Example GUI", "Beispiel GUI", 2, false),
             a("boxlib_demo", "Controls", "Steuerelemente", 6, false),
             a("libimg_demo", "Image demo", "Bild-Demo", 70, false),
             a("http_tcp_demo", "Network test", "Netzwerk-Test", 33, false),
             a("netz_laden", "Download test", "Download-Test", 50, false),
+            a("passwordgen", "Password generator", "Passwort-Generator", 69, false),
+            a("thashview", "Checksums", "Prüfsummen", 58, false),
         ]);
     }
     // Spiele (S0, Auftrag 13.8): je ein Desktop-Symbol, im Startmenü im

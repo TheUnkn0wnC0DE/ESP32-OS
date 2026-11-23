@@ -55,7 +55,8 @@ Everything below has been verified on the board (screenshots and logs in
 - Two firmware slots with automatic rollback (OTA-ready flash layout).
 
 **Desktop and touch**
-- Boots straight into the desktop (icons, taskbar, start menu).
+- Boots straight into the desktop (icons, taskbar with Wi-Fi signal and
+  clock, start menu) – about 3.4 s after power-on.
 - Tap = click, long press = right click / context menu, swipe = scroll,
   two-finger pinch = zoom, drag the title bar to move, double tap to
   maximise. No hardware buttons needed.
@@ -66,6 +67,10 @@ Everything below has been verified on the board (screenshots and logs in
 - File manager, image viewer (BMP, GIF, PNG, JPEG – baseline JPEG in
   hardware, progressive in software), settings, first-run wizard,
   screenshot tool, task manager (including force-quitting a hung program).
+- Notes (text editor), calculator, clock with alarm and timer, calendar,
+  MP3 player (files from the microSD card).
+- PDF viewer (own PDF reader: scroll, page through, pinch-zoom; text is
+  shown in the system font, embedded fonts are not rasterised).
 - User interface in English and German.
 
 **Wi-Fi and network**
@@ -76,38 +81,40 @@ Everything below has been verified on the board (screenshots and logs in
 
 **Browser**
 - NetSurf 3.11 (HTML5 parser, CSS 2.1 + parts of CSS 3) with QuickJS-ng as
-  JavaScript engine, running as an ESP32-OS program. Local pages render on
-  the board; JavaScript (DOM, events, timers, re-layout) runs in the PC
-  tests.
+  JavaScript engine, running as an ESP32-OS program: HTTPS with certificate
+  check, address bar with search, tabs, bookmarks, history, downloads,
+  zoom, text selection and copy, forms with the on-screen keyboard.
+- JavaScript on the board: DOM, events, timers, fetch/XMLHttpRequest,
+  cookies, localStorage, layout metrics; pages whose scripts are too heavy
+  are reloaded without JavaScript automatically.
+- Touch scrolling at about 32 frames per second.
 
-**Games** (still started from the older game console, not yet from the
-desktop): *Pudding-Panik* (own 3D jump'n'run, 55 FPS), *Würfelwelt*
-(voxel world), Doom (doomgeneric) and Quake (quakegeneric). Game data for
-Doom and Quake is not included.
+**Games** – started from the desktop, back with the home button:
+*Pudding-Panik* (own 3D jump'n'run, 55 FPS), *Würfelwelt* (voxel world,
+27.5 FPS), Doom (doomgeneric, 55 FPS) and Quake (quakegeneric, 27.5 FPS).
+Game data for Doom and Quake is not included (shareware files from the
+microSD card).
+
+**Updates over Wi-Fi** – *Settings → System* checks the latest GitHub
+release, downloads it over HTTPS (certificate and SHA-256 check) into the
+second firmware slot and rolls back automatically if it does not start.
 
 | | | |
 |---|---|---|
 | ![First-run wizard](docs/nachweise/p4_board_sprache.png) | ![Image viewer](docs/nachweise/p2_board_jpeg.png) | ![On-screen keyboard](docs/nachweise/d8_board_tastatur.png) |
 | ![NetSurf](docs/nachweise/b1/b1_board_2.png) | ![Task manager](docs/nachweise/a6_board_liste.png) | ![Context menu and About](docs/nachweise/d4_board_kontextmenue.png) |
+| ![Calculator](docs/nachweise/o4/o4_1_02_rechner.png) | ![Notes with keyboard](docs/nachweise/o4/o4_1_03_notizen_tastatur.png) | ![Start menu](docs/nachweise/o4/o4_1_08_startmenue.png) |
 
 ![Pudding-Panik](esp32/docs/esp32_vorschau.gif)
 
-## What is still missing
+## Planned (v1.1)
 
-- **Browser:** HTTPS and real web pages, address bar, bookmarks, history,
-  touch scrolling and zoom, form input with the on-screen keyboard,
-  JavaScript on the board, a 20-site compatibility test.
-- **Everyday apps:** text editor, calculator, clock with alarm and timer,
-  calendar, MP3 player.
-- **Games inside the desktop** (full screen, back to the desktop with a
-  home button); the old game launcher will be removed.
-- **Power:** standby and battery level (needs a voltage divider, see below),
-  iTWT power saving, update of the Wi-Fi co-processor firmware.
-- **Updates over Wi-Fi:** the code is done (HTTPS with certificate check,
-  checksum, OTA into the second slot), the final test needs a GitHub
-  release.
-- Optimisation, boot-time measurement, a one-hour endurance test, a
-  release with a ready-made firmware image and a web flasher.
+- Standby with wake-up by the power button, battery level (needs a voltage
+  divider) and measured standby current.
+- Update of the Wi-Fi co-processor firmware and iTWT power saving.
+- Camera app for the OV5647 module (MIPI-CSI).
+- Known gaps of the browser and other details are listed under
+  "Abweichungen" in [`PLAN.md`](PLAN.md) (German).
 
 ## Known limitations
 
@@ -123,8 +130,14 @@ Doom and Quake is not included.
   (GPIO21, see `STATUS.md`).
 - The ESP32-C6 ships with an old `esp_hosted` firmware: Wi-Fi works, but
   iTWT and co-processor updates over SDIO need a one-time update by cable.
-- The browser will handle simple and medium pages; large single-page apps,
-  CSS Grid and Web Components are out of reach on 32 MB PSRAM.
+- The browser handles simple and medium pages; large single-page apps,
+  CSS Grid and Web Components are out of reach with its 10 MB of memory.
+  Custom request headers, `pushState` and a few other web features are
+  missing (list in `PLAN.md`).
+- The image viewer opens images up to about 0.85 megapixels.
+- The PDF viewer opens files up to 4 MB; scanned pages using CCITT fax,
+  JBIG2 or JPEG 2000 images, encrypted files, shadings and clipping paths
+  are not supported (details in `PLAN.md`).
 - **Binary releases are not cleared yet:** the firmware combines GPL-2.0
   code (NetSurf, KolibriOS parts) with Apache-2.0 code (ESP-IDF,
   esp_hosted). Whether a firmware image may be distributed in this form has
@@ -133,6 +146,15 @@ Doom and Quake is not included.
 - The build currently only works on **Windows** (short fixed paths such as
   `C:\eo`, `C:\ec`, `C:\ns` and a `subst` drive work around Windows path
   limits).
+
+## Installing
+
+Releases are published on the GitHub release page together with a web
+flasher (Chrome or Edge, [`docs/flasher/`](docs/flasher/index.html)) and
+the files for flashing by hand with `espflash` – see
+[`docs/release/v1.0.md`](docs/release/v1.0.md). **No binary release has
+been published yet** (see "Binary releases are not cleared yet" above);
+until then, build from source as described below.
 
 ## Building
 
@@ -163,7 +185,10 @@ downloaded on the first build (1–2 GB, takes a while).
 
    `-Nur esp32os` builds only the operating system. Add `-Release` for a
    firmware that is meant to be shared: it refuses Wi-Fi test credentials
-   and checks the finished images for them. The default profile is
+   and checks the finished images for them.
+   `esp32\firmware\release_paket.ps1 -Version 1.0` builds a complete
+   release package (images, checksums, web flasher manifest) into
+   `release\` – locally, nothing is published. The default profile is
    for chip revision v1.x; for v3.x boards change
    `esp_idf_sdkconfig_defaults` in `esp32/firmware/Cargo.toml` to
    `sdkconfig.defaults.rev3_x` and run `cargo clean` once.

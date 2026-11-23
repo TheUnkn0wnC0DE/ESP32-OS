@@ -16,8 +16,23 @@ use kolibri::dekoder::{self, Rgba};
 
 /// Breite der Knopfspalte rechts.
 pub const SPALTE: i32 = 64;
-/// Grösstes Bild (Pixel): RGBA im Programm-Heap (12 MB).
+/// Grösstes Bild (Pixel). Ob es in den Programm-Heap (8 MB) passt, prüft
+/// [`passt_in_speicher`] vor dem Dekodieren.
 pub const MAX_PIXEL: u64 = 2_100_000;
+
+/// Passt ein Bild `w`×`h` aus einer Datei mit `datei` Bytes in den freien
+/// Speicher des Programms? Bedarf: die Datei (schon gelesen), das Bild als
+/// RGBA (am Stück) und noch einmal so viel für Zwischenpuffer des Dekoders
+/// (PNG: entpackte Zeilen, JPEG: YUV, GIF: Einzelbilder) und die geglättete
+/// Ansicht. Vorher (O4, Board) reservierte der Bildbetrachter 12 MB und
+/// startete neben dem Dateimanager nicht mehr; zu grosse Bilder beendeten
+/// ihn mit „Speicher voll“.
+fn passt_in_speicher(w: u32, h: u32) -> bool {
+    let bild = u64::from(w) * u64::from(h) * 4;
+    let gesamt = kern::sys::programm_speicher_frei().is_none_or(|f| f as u64 >= 2 * bild + 1024 * 1024);
+    let am_stueck = kern::sys::programm_speicher_groesster_block().is_none_or(|g| g as u64 >= bild + 64 * 1024);
+    gesamt && am_stueck
+}
 const MAX_DATEI: u64 = 16 << 20;
 
 const K_ZURUECK: u32 = 2;
@@ -81,6 +96,9 @@ pub fn laden(pfad: &str) -> Result<Vec<Rgba>, String> {
     match dekoder::masse(&d) {
         Some((w, h)) if u64::from(w) * u64::from(h) > MAX_PIXEL => {
             return Err(format!("{w}×{h}: {}", t("image too large (max. 2.1 MP)", "Bild zu gross (max. 2,1 MP)")));
+        }
+        Some((w, h)) if !passt_in_speicher(w, h) => {
+            return Err(format!("{w}×{h}: {}", t("image too large for the free memory", "Bild zu gross für den freien Speicher")));
         }
         None => return Err(t("Unknown image format", "Unbekanntes Bildformat").to_string()),
         _ => {}
