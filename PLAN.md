@@ -435,6 +435,8 @@ Planreihenfolge. V3/V4 laufen nebenher (klein).
   → System (Suchen, Installieren, Fortschritt), Versionsvergleich,
   Release-JSON nur mit HTTPS-Adressen. Offen bis O8: Update a→b am Board
   und Rückfall mit absichtlich defektem Release-Abbild.
+  → Begründet offen: Abweichung „U1 wartet auf O8“ (braucht ein
+  veröffentlichtes Release, das nur mit OK des Nutzers entsteht).
 
 ## E. Browser (Auftrag 5)
 
@@ -1223,6 +1225,9 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Nutzer 23.11.: lokal vorbereiten – Release-Firmware mit `-Release`
   bauen, Web-Flasher-Seite im Repo, Release-Text auf Englisch; kein
   Release veröffentlichen, bis der Nutzer OK sagt.
+  → Begründet offen: Abweichung „O8 wartet auf dein OK“ (alles lokal
+  vorbereitet und geprüft; Veröffentlichen ist laut Nutzer-Vorgabe und
+  Push-Regel 6 erst mit seinem OK erlaubt).
 - **Wenn Zeit bleibt** (Auftrag 5): PDF-Betrachter, Kamera-App (OV5647),
   weitere KolibriOS-C-Programme. Reihenfolge (Nutzer 23.11.): zuerst
   PDF-Betrachter, dann Kamera-App; die Kamera-App ist nach „Später (v1.1)“
