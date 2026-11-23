@@ -11,8 +11,8 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 - Erledigt: **A1** Quake „New Game“ (PAK-Grösse falsch, progs.dat las
   Nullen) und **A2** Tastatur-Rückmeldung (Nachweise `docs/nachweise/v102/`).
-- Teil A committet (lokal), Review-Befunde behoben; A2-Boardlauf mit dem
-  Endstand und das v1.0.2-Paket folgen.
+- **Teil A fertig** (A1, A2, A3): v1.0.2 vorbereitet, wartet auf dein OK
+  (siehe „Offene Fragen“). A2 am Board mit dem Endstand: 59/59 Zeichen.
 - **Teil B begonnen (BR1):** Messlauf mit 30 Seiten (je Seite frischer
   Browser, 60 s). Erster Lauf brach ab: der Browser trieb den internen RAM
   über mehrere Seiten auf 0 KB, danach brach die ganze Firmware ab und die
@@ -27,7 +27,11 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Offene Fragen
 
-(keine)
+- **OK für das Release v1.0.2?** Fertig vorbereitet (`release/v1.0.2/`,
+  Text `docs/release/v1.0.2.md`, Prüfungen grün): Quake „New Game“,
+  Tastatur-Rückmeldung, Browser reisst die Firmware nicht mehr mit.
+  Veröffentlichen (Tag, Release, danach Web-Flasher von main) mache ich
+  erst nach deinem OK.
 
 ## Release v1.0.1 (23.11. abends)
 

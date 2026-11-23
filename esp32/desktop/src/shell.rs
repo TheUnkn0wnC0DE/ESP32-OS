@@ -16,7 +16,7 @@ pub const MODUS_SCHLUESSEL: &str = "esp32os_modus";
 pub const LEISTE_H: i32 = 48;
 /// Name des Systems (Startbild, Info, Taskleiste).
 pub const NAME: &str = "ESP32-OS";
-pub const VERSION: &str = "1.0.1";
+pub const VERSION: &str = "1.0.2";
 
 /// Eintrag im Startmenü und auf dem Desktop.
 #[derive(Clone, Copy, Debug)]

@@ -1373,8 +1373,13 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Aufsetzstelle (dort klickt es). Der PC-Test prüft jetzt auch die vom Kern
   markierten Bereiche (mit der alten Ganz-Fenster-Markierung schlägt er
   fehl). Quake: Überlauf bei kaputtem PAK-Kopf abgefangen.
-- [ ] **A3 v1.0.2 vorbereiten** – CHANGELOG, Release-Paket, Release-Check;
+- [x] **A3 v1.0.2 vorbereiten** – CHANGELOG, Release-Paket, Release-Check;
   OK des Nutzers in STATUS erbitten, nicht darauf warten.
+  ✔ 23.11.: VERSION „1.0.2“, CHANGELOG, Release-Text `docs/release/v1.0.2.md`,
+  Paket mit `release_paket.ps1 -Version 1.0.2` (keine WLAN-Daten, keine
+  lokalen Pfade, Benutzer-/echter Name 0 Treffer;
+  `docs/nachweise/v102/release_paket_v1.0.2.txt`). OK in STATUS erbeten;
+  veröffentlicht wird erst danach.
 
 ## J. Browser (Auftrag 23.11. nachts)
 

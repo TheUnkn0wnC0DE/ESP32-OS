@@ -25,3 +25,10 @@ Testnotizen am Board: ESP32-OS/Notizen/qasdfghjkl1234567890qwer.txt und
 PC-Test: desktop/tests/tastatur_druck.rs (q, Löschen, Leerzeichen, Enter,
 Shift: nur die Tastenfläche ändert sich, Rand = Grund, Mitte dunkler,
 danach wieder wie vorher), Foto tests/erwartet/a2_taste_gedrueckt.png.
+
+Endstand nach dem Review (Knopf in einem Schritt ersetzt, Fingerlage nach
+Klick/Loslassen, Rückmeldung an der Aufsetzstelle), gleicher Ablauf:
+  59 Byte gespeichert (59/59 Zeichen); Compositor 32,8 s: 27,6 Bilder/s,
+  153693 px, 8,25 ms/Bild; 34,8 s: 16,4 Bilder/s, 158035 px, 1,94 ms/Bild.
+  Fotos und Log „nachher“ sind aus diesem Lauf. Dritte Testnotiz:
+  „qasdfghjkl1234567890qwer (Kopie 2).txt“.
