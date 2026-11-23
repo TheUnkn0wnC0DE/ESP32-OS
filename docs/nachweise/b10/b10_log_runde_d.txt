@@ -1,0 +1,26 @@
+[59395] ns_abruf: 200, 577 Byte, 1039 ms: https://example.com/
+[139918] ns_abruf: 200, 52298 Byte, 1354 ms: https://html.duckduckgo.com/html/?q=esp32
+[239126] ns_abruf: 200, 34125 Byte, 3560 ms: https://news.ycombinator.com/
+[247601] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – ohne JavaScript neu laden: https://news.ycombinator.com/
+[253166] ns_abruf: 200, 34125 Byte, 3530 ms: https://news.ycombinator.com/
+[316863] ns_abruf: 200, 267227 Byte, 2687 ms: https://lite.cnn.com/
+[319036] ns_abruf: 200, 11502 Byte, 2061 ms: https://lite.cnn.com/media/sites/cnn/favicon.ico
+[412812] ns_abruf: 200, 1397 Byte, 2274 ms: https://httpbin.org/forms/post
+[416187] ns_abruf: 404, 233 Byte, 2172 ms: https://httpbin.org/favicon.ico
+[492584] ns_abruf: 200, 19632 Byte, 415 ms: https://docs.python.org/3/
+[504173] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – ohne JavaScript neu laden: https://docs.python.org/3/
+[506565] ns_abruf: 200, 19632 Byte, 361 ms: https://docs.python.org/3/
+[568377] ns_abruf: 200, 49178 Byte, 814 ms: https://www.w3.org/
+[656686] ns_abruf: 200, 92585 Byte, 927 ms: https://www.google.com/
+[660310] W ns_js: Fehler: null
+[660311] W ns_ohne_js: JS-Speichergrenze überschritten – ohne JavaScript neu laden: https://www.google.com/
+[663112] ns_abruf: 302, 329 Byte, 740 ms: https://www.google.com/
+[663875] ns_abruf: 200, 33900 Byte, 740 ms: https://consent.google.com/ml?continue=https://www.google.com/&gl=CH&m=0&pc=shp&uxe=bip&cm=2&hl=de&s
+[741338] ns_abruf: 302, 0 Byte, 358 ms: https://old.reddit.com/
+[743202] ns_abruf: 200, 340230 Byte, 1810 ms: https://old.reddit.com/login/?reason=lor2&dest=https%3A%2F%2Fold.reddit.com%2F
+[746180] W ns_js: Fehler: null
+[746180] W ns_ohne_js: JS-Speichergrenze überschritten – ohne JavaScript neu laden: https://old.reddit.com/login/?reason=lor2&dest=https%3A%2F%2Fold.reddit.c
+[749964] ns_abruf: 200, 176128 Byte, 1375 ms: https://old.reddit.com/login/?reason=lor2&dest=https%3A%2F%2Fold.reddit.com%2F
+[831200] ns_abruf: 200, 375701 Byte, 2076 ms: https://www.bbc.com/news
+[841164] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – ohne JavaScript neu laden: https://www.bbc.com/news
+[852892] ns_abruf: 200, 375701 Byte, 2080 ms: https://www.bbc.com/news

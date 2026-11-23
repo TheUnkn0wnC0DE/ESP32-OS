@@ -276,30 +276,22 @@ pub unsafe extern "C" fn ns_bild_masse(daten: *const u8, laenge: usize, breite: 
     }
 }
 
-/// Am Board kommt der Speicher des Dekoders aus dem System-PSRAM (nicht aus
-/// dem Heap des Browsers), und ein fehlgeschlagener Rust-Speicherwunsch
-/// bricht ab: vorher prüfen, ob das Bild sicher hineinpasst. Bedarf je
-/// Bildpunkt: Ausgabe 4 Byte, progressives JPEG bis 6 Byte Koeffizienten
-/// + 3 Byte Ebenen, PNG ~5 Byte entpackt → 16 Byte, dazu 512 KB Reserve.
-#[cfg(target_os = "espidf")]
+/// Der Dekoder (Rust) belegt im Faden des Browsers – also im Heap des
+/// Browsers, wie NetSurf selbst. Ist der voll, beendet der Kern das Programm
+/// („Speicher voll“, B9: tagesschau.de). Deshalb vorher prüfen, ob das Bild
+/// sicher hineinpasst – sonst bleibt es ein leerer Kasten. Bedarf je
+/// Bildpunkt: Ausgabe 4 Byte, progressives JPEG bis 6 Byte Koeffizienten +
+/// 3 Byte Ebenen, PNG ~5 Byte entpackt → 16 Byte, dazu die Reserve des Kerns
+/// und 256 KB für den Rest der Seite.
+#[cfg(target_pointer_width = "32")]
 fn bild_passt(pixel: u64) -> bool {
-    unsafe extern "C" {
-        fn heap_caps_get_free_size(caps: u32) -> usize;
-        fn heap_caps_get_largest_free_block(caps: u32) -> usize;
+    match kern::sys::programm_speicher_frei() {
+        Some(frei) => frei as u64 >= pixel * 16 + 512 * 1024,
+        None => true,
     }
-    const MALLOC_CAP_8BIT: u32 = 1 << 2;
-    const MALLOC_CAP_SPIRAM: u32 = 1 << 10;
-    // SAFETY: reine Abfragen der Heap-Verwaltung.
-    let (frei, block) = unsafe {
-        (
-            heap_caps_get_free_size(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) as u64,
-            heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) as u64,
-        )
-    };
-    frei >= pixel * 16 + 512 * 1024 && block >= pixel * 6 + 64 * 1024
 }
 
-#[cfg(not(target_os = "espidf"))]
+#[cfg(not(target_pointer_width = "32"))]
 fn bild_passt(_pixel: u64) -> bool {
     true
 }
@@ -1168,7 +1160,8 @@ document.getElementById('r').innerHTML = '<div style="width:200px;height:100px;b
     /// Rückfallebene, Zeitgrenze: erscheint eine Seite nicht rechtzeitig
     /// (hier: Skript vom Prüfserver kommt erst nach 300 ms, Grenze 1 ms per
     /// NS_RUECKFALL_MS), wird JavaScript für sie abgeschaltet – das Skript
-    /// läuft nicht mehr, die Seite wird nicht neu geholt.
+    /// läuft nicht mehr, die Seite wird ohne JavaScript neu geholt (B10) und
+    /// zeigt ihr `<noscript>`.
     #[test]
     fn ohne_js_rueckfall_zeit() {
         c(ohne_js_rueckfall_zeit_innen);
@@ -1220,14 +1213,17 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
                 let _ = s.write_all(antwort.as_bytes());
             }
         });
-        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/seite"), 480, 320, 3000, true).expect("Bild");
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/seite"), 480, 320, 5000, true).expect("Bild");
         assert_eq!(r, 0);
         let a = anfragen.lock().unwrap().clone();
         assert_eq!(ohne_js_rueckfaelle(), 1, "ein Rückfall; Anfragen {a:?}");
-        assert_eq!(a.iter().filter(|p| p.as_str() == "/seite").count(), 1, "Seite einmal geholt: {a:?}");
+        // B10: die Seite wird ohne JavaScript neu geholt, das Skript nicht
+        assert_eq!(a.iter().filter(|p| p.as_str() == "/seite").count(), 2, "Seite ohne JS neu geholt: {a:?}");
         assert_eq!(a.iter().filter(|p| p.as_str() == "/langsam.js").count(), 1, "Skript einmal geholt: {a:?}");
         let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
         assert_eq!(rot, 0, "Skript lief nicht mehr");
+        let blau = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_00FF).count();
+        assert!(blau >= 200 * 100, "<noscript> der neu geladenen Seite sichtbar ({blau} px)");
     }
 
     /// Seite auf der Liste „ohne JavaScript“ (Knopf „Ohne JS“, Neuladen):
@@ -1919,6 +1915,70 @@ document.getElementById('r').innerHTML = '<div style=\"width:200px;height:100px;
             }
         }
         assert_eq!(String::from_utf8_lossy(&bytes), "Ä%M{x}", "Formular: {suche}");
+    }
+
+    /// B10: Ein HTML-Dokument über der Grenze (am Board 512 KB, hier per
+    /// NS_HTML_MAX 20 000 Bytes) wird abgeschnitten: der Anfang erscheint,
+    /// das Ende nicht, der Browser läuft weiter.
+    #[test]
+    fn html_abgeschnitten() {
+        c(html_abgeschnitten_innen);
+    }
+
+    fn html_abgeschnitten_innen() {
+        if im_eigenen_prozess("html_abgeschnitten") {
+            return;
+        }
+        use std::io::{Read, Write};
+        unsafe extern "C" {
+            fn ns_abruf_gekuerzt() -> u32;
+        }
+        ressourcen();
+        struct Zuruecksetzen;
+        impl Drop for Zuruecksetzen {
+            fn drop(&mut self) {
+                c_umgebung("NS_HTML_MAX", "");
+            }
+        }
+        let _z = Zuruecksetzen;
+        assert!(c_umgebung("NS_HTML_MAX", "20000"));
+        let server = std::net::TcpListener::bind("127.0.0.1:0").expect("Prüfserver");
+        let port = server.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for s in server.incoming().flatten() {
+                let mut s = s;
+                let mut kopf = Vec::new();
+                let mut b = [0u8; 1];
+                while !kopf.ends_with(b"\r\n\r\n") && s.read(&mut b).map(|n| n == 1).unwrap_or(false) {
+                    kopf.push(b[0]);
+                }
+                let k = String::from_utf8_lossy(&kopf).to_string();
+                if k.split_whitespace().nth(1) != Some("/") {
+                    let _ = s.write_all(b"HTTP/1.0 404 Not Found\r\nContent-Length: 0\r\n\r\n");
+                    continue;
+                }
+                let mut html = String::from(
+                    "<html><body style='margin:0;background:white'>\
+                     <div style='width:300px;height:100px;background:#ff0000'></div>",
+                );
+                while html.len() < 60_000 {
+                    html.push_str("<!-- Fuelltext, damit die Seite gross wird ------------------------------ -->\n");
+                }
+                html.push_str("<div style='width:300px;height:100px;background:#00ff00'></div></body></html>");
+                let _ = s.write_all(
+                    format!("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\r\n{html}", html.len())
+                        .as_bytes(),
+                );
+            }
+        });
+        let (r, bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 640, 360, 2500, false).expect("Bild");
+        assert_eq!(r, 0);
+        let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
+        let gruen = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_FF00).count();
+        assert!(rot >= 300 * 100, "Anfang der Seite sichtbar ({rot} px)");
+        assert_eq!(gruen, 0, "Ende der Seite abgeschnitten");
+        // SAFETY: Zähler aus c/abruf.c, NetSurf läuft nicht mehr.
+        assert_eq!(unsafe { ns_abruf_gekuerzt() }, 1);
     }
 
     #[test]

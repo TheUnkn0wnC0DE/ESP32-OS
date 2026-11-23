@@ -19,6 +19,8 @@ static WERT: AtomicU32 = AtomicU32::new(0);
 static WERT2: AtomicU32 = AtomicU32::new(0);
 static ZAHL: AtomicUsize = AtomicUsize::new(0);
 static LATCH: AtomicU32 = AtomicU32::new(0);
+/// Ergebnis von „reserve“: (Blöcke << 8) | letztes Byte der Rust-Belegung.
+static RESERVE: AtomicU32 = AtomicU32::new(0);
 /// Lage des letzten Drückens, wie „maus_spaet“ sie liest (x << 16 | y).
 static DRUCK: AtomicU32 = AtomicU32::new(0);
 static OBEN_BEREIT: AtomicBool = AtomicBool::new(false);
@@ -150,6 +152,16 @@ fn prog_zeit() {
     let _ = (t0, n0);
 }
 
+/// B10: malloc (68.12) bis null, dann eine Rust-Belegung im selben Faden
+fn prog_reserve() {
+    let mut bloecke = 0u32;
+    while !sys::speicher_holen(8 * 1024).is_null() {
+        bloecke += 1;
+    }
+    let v = vec![7u8; 8 * 1024];
+    RESERVE.store(bloecke << 8 | u32::from(v[8191]), Ordering::SeqCst);
+}
+
 fn prog_zeit2() {
     // Redraw-Ereignis zuerst abholen (neues Programm bekommt immer eins)
     assert_eq!(sys::pruefe_ereignis(), 1);
@@ -218,6 +230,7 @@ static PROGRAMME: &[ProgrammEintrag] = &[
     ProgrammEintrag { name: "zeit2", heap_kb: 64, stapel_kb: 64, start: prog_zeit2 },
     ProgrammEintrag { name: "info", heap_kb: 256, stapel_kb: 128, start: prog_info },
     ProgrammEintrag { name: "zeiger", heap_kb: 256, stapel_kb: 128, start: prog_zeiger },
+    ProgrammEintrag { name: "reserve", heap_kb: 256, stapel_kb: 64, start: prog_reserve },
 ];
 
 // ------------------------------------------------------------ Hilfen
@@ -364,6 +377,22 @@ fn druck_lage_beim_ziehen() {
     // Arbeitsbereich ab (100+5, 100+22)
     bis(|| DRUCK.load(Ordering::SeqCst) == (45 << 16 | 38), "Lage des Drückens");
     beenden(pid);
+}
+
+/// B10: Ist der Heap eines Programms für malloc (68.12) erschöpft, bleibt
+/// eine Reserve für Rust-Code im selben Faden – das Programm endet normal
+/// statt mit „Speicher voll“.
+#[test]
+fn heap_reserve_fuer_rust() {
+    let _g = init();
+    RESERVE.store(0, Ordering::SeqCst);
+    let pid = kern::starte_name("reserve").unwrap();
+    assert_eq!(ende(pid), Ende::Normal);
+    let r = RESERVE.load(Ordering::SeqCst);
+    let bloecke = r >> 8;
+    assert_eq!(r & 0xFF, 7, "Rust-Belegung nach vollem malloc");
+    // malloc hat den Heap wirklich bis zur Reserve gefüllt
+    assert!(bloecke >= 16, "malloc lieferte nur {bloecke} Blöcke");
 }
 
 #[test]

@@ -12,12 +12,16 @@
  * - Zeitgrenze: Wird eine HTML-Seite nach NS_RUECKFALL_MS (12 s; am PC für
  *   Tests per Umgebungsvariable NS_RUECKFALL_MS) noch nicht angezeigt
  *   (Browserfenster hat noch einen ladenden Inhalt), wird JavaScript für
- *   diese Seite an Ort und Stelle abgeschaltet: JS-Thread geschlossen,
- *   ausstehende Skripte laufen nicht mehr, die Seite wird fertig aufgebaut
- *   und angezeigt. Kein Neuladen: am Board passten alte (mit JS) und neue
- *   Seite zusammen nicht in den Heap des Browsers (gemessen 22.11.).
+ *   diese Seite sofort abgeschaltet (ausstehende Skripte laufen nicht mehr)
+ *   und die Seite ohne JavaScript neu geladen.
  * - JS-Speichergrenze: js_quickjs.c meldet „out of memory“ → ebenso.
  *   In beiden Fällen kommt die Adresse auf die Liste (Neuladen, Zurück).
+ *   B10: Vorher blieb die halb aufgebaute Seite stehen – viele Seiten
+ *   verstecken ihren Inhalt, bis ihre Skripte laufen, und blieben leer
+ *   (20-Seiten-Test B9: SRF, Spiegel, YouTube, Wikipedia-Hauptseite …).
+ *   Das Neuladen passte am Board am 22.11. nicht in den Heap (alte Seite mit
+ *   4 MB JS-Laufzeit + neue); seit B10 hat jedes Dokument seine eigene
+ *   Laufzeit mit 2 MB Grenze.
  * - Knopf in der Werkzeugleiste (gui.c-Kopie, build.rs): „Ohne JS“ lädt
  *   die angezeigte Seite ohne JavaScript neu (dann auch mit <noscript>),
  *   „Mit JS“ wieder mit.
@@ -220,9 +224,10 @@ static void pruefen(void *p)
 	if (u == NULL || intern(u) || ns_ohne_js(u))
 		return;
 	rueckfaelle++;
-	MELDEN("Seite nach %d ms nicht angezeigt – JavaScript abgeschaltet: %s", pruef_ms, nsurl_access(u));
+	MELDEN("Seite nach %d ms nicht angezeigt – ohne JavaScript neu laden: %s", pruef_ms, nsurl_access(u));
 	aufnehmen(u);
 	js_aus((html_content *)hlcache_handle_get_content(h));
+	neu_laden(bw, u);
 }
 
 /* Beim Beginn jedes Ladens des obersten Fensters (gui.c, Throbber) */
@@ -249,11 +254,13 @@ void ns_ohne_js_anfordern(struct browser_window *bw, html_content *htmlc)
 	if (u == NULL || intern(u) || ns_ohne_js(u))
 		return;
 	rueckfaelle++;
-	MELDEN("JS-Speichergrenze überschritten – JavaScript abgeschaltet: %s", nsurl_access(u));
+	MELDEN("JS-Speichergrenze überschritten – ohne JavaScript neu laden: %s", nsurl_access(u));
 	aufnehmen(u);
 	/* läuft aus dem Skript heraus: js_closethread setzt nur Merker und
-	 * hält Zeitgeber/Neu-Layout an, das Skript endet ohnehin mit Fehler */
+	 * hält Zeitgeber/Neu-Layout an, das Skript endet ohnehin mit Fehler;
+	 * neu_laden plant nur (Anhalten und Laden kommen über den Planer) */
 	js_aus(htmlc);
+	neu_laden(bw, u);
 }
 
 /* Für die Tests: Adresse auf die Liste setzen */

@@ -28,6 +28,10 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
 - ✔ B9: 20 echte Seiten am Board getestet (Tabelle oben): 7 geht,
   2 teilweise, 11 geht nicht – Hauptursache JS-Grenze/JS-Umgebung und der
   volle Heap (bei MDN hängt der Browser). Das ist jetzt B10.
+- ✔ B10: JS-Laufzeit je Seite, Rückfallebene lädt ohne JS neu, Reserve im
+  Programm-Heap, grosse HTML-Seiten abgeschnitten → 9 geht / 4 teilweise /
+  7 geht nicht (vorher 7 / 2 / 11), kein Absturz/Hänger mehr bei den 20
+  Seiten. Offen: „Zu wenig Speicher“ direkt nach schweren Seiten.
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 
@@ -60,13 +64,54 @@ Stand vor B10 (Runden A–C, 23.11. nachts):
 | 19 | www.spiegel.de | geht nicht | nach JS-Grenze zeigt die Seite ihren `<head>` (Titel, JSON, CSS) als Text |
 | 20 | de.wikipedia.org (Hauptseite) | geht nicht | leer nach JS-Grenze (Artikel wie „ESP32“ gehen, siehe B2/B8) |
 
-Summe: 7 geht, 2 teilweise, 11 geht nicht. Häufigste Ursache: die JS-Grenze
+**Nach B10** (Runden D und E, 23.11. ~03:15–03:50, gleiche Seiten; Fotos
+und Logs in `docs/nachweise/b10/`):
+
+| # | Seite | vorher | nachher | Grund nachher |
+|---|---|---|---|---|
+| 1 | www.google.com | teilweise | teilweise | ohne JS neu geladen → echte Zustimmungsseite „Bevor Sie zu Google weitergehen“ |
+| 2 | DuckDuckGo HTML | geht | geht | |
+| 3 | example.com | geht | geht | |
+| 4 | news.ycombinator.com | geht | geht | nach 12 s ohne JS neu geladen, 3,6 s |
+| 5 | lite.cnn.com | geht | geht | |
+| 6 | www.tagesschau.de | teilweise | geht nicht | „Zu wenig Speicher“ beim Verbinden (direkt nach schweren Seiten); vorher stürzte der Browser hier ab |
+| 7 | www.heise.de | geht nicht | **geht** | Startseite mit Artikeln, 6,3 s |
+| 8 | github.com/espressif/esp-idf | geht nicht | geht nicht | „Zu wenig Speicher“ (Fehlerseite, Browser läuft weiter) |
+| 9 | httpbin.org/forms/post | geht | geht | |
+| 10 | old.reddit.com | geht nicht | geht nicht | Anmeldeseite, ohne JS neu geladen (Foto fehlt, Übertragung) |
+| 11 | www.bbc.com/news | geht nicht | geht nicht | ohne JS neu geladen → Fehlerseite „Unerwarteter Fehler“ |
+| 12 | stackoverflow.com/questions | geht nicht | geht nicht | Server antwortet 403 |
+| 13 | docs.python.org/3 | geht | geht | 2,5 s statt 22 s |
+| 14 | developer.mozilla.org/de | geht nicht (Browser hängt) | **teilweise** | Inhalt da, Kopfzeile überlappt |
+| 15 | www.openstreetmap.org | geht nicht | **teilweise** | Seite mit Suche, ohne Karte (braucht JS) |
+| 16 | www.youtube.com | geht nicht | geht nicht | „Zu wenig Speicher“ beim Verbinden |
+| 17 | www.srf.ch | geht nicht | **teilweise** | Navigation und Hinweis „nur mit JavaScript“ |
+| 18 | www.w3.org | geht | geht | |
+| 19 | www.spiegel.de | geht nicht | geht nicht | „Zu wenig Speicher“ beim Verbinden (vorher `<head>` als Text) |
+| 20 | de.wikipedia.org (Hauptseite) | geht nicht | geht nicht | „Zu wenig Speicher“ beim Verbinden |
+
+Nachher: 9 geht, 4 teilweise, 7 geht nicht (vorher 7 / 2 / 11) – und der
+Browser stürzt bei keiner der 20 Seiten mehr ab oder hängt (vorher bei MDN,
+tagesschau.de). Offen: „Zu wenig Speicher“ beim Verbinden direkt nach
+schweren Seiten, obwohl der Heap des Browsers dann nur ~3–8 MB belegt –
+Ursache noch nicht gefunden (Kandidat: der Inhalt der vorigen Seite samt
+JS-Laufzeit bleibt bis zum Aufräumen des Zwischenspeichers liegen).
+
+Vorher-Summe: 7 geht, 2 teilweise, 11 geht nicht. Häufigste Ursache: die JS-Grenze
 (2 MB) wird gesprengt, JavaScript wird mitten in der Seite abgeschaltet –
 die Seite bleibt leer oder kaputt; dazu am Board „Fehler: null“ beim Anlegen
 der JS-Umgebung (die Laufzeit des Fensters ist von vorigen Seiten schon voll)
 und der volle 10-MB-Heap (GitHub, MDN – dort hängt der Browser). → B10.
 
 ## Fragen an dich (Nacht 23.11.)
+
+- **Zur Kenntnis (B10, Runde 46):** Der Browser wurde mitten im Lauf vom
+  Kern beendet („Speicher voll“, tagesschau.de). Die restlichen Tipps des
+  Autopiloten landeten danach auf dem Desktop und öffneten den Dateimanager
+  auf der SD-Karte (`/sd0/1/ESP32-OS`, Ordner „quake“). Laut Fotos wurde
+  dort nichts angelegt, umbenannt oder gelöscht (gleiche Ansicht bis zum
+  Ende). Ursache ist behoben (Reserve im Programm-Heap, siehe B10); schwere
+  Seiten kommen in Testläufen ans Ende.
 
 - **B5, 30 Bilder/s beim Scrollen:** erreicht sind ~12 Bilder/s (vorher
   2–4); der Rest hängt am Verschieben von 265 KB im PSRAM je Bild (Abweichung

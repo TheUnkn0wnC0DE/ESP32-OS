@@ -1,0 +1,19 @@
+[59962] ns_abruf: 200, 361380 Byte, 2405 ms: https://www.srf.ch/
+[71458] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – ohne JavaScript neu laden: https://www.srf.ch/
+[83104] ns_abruf: 200, 361382 Byte, 2474 ms: https://www.srf.ch/
+[147993] ns_abruf: 200, 311296 Byte, 1762 ms: https://www.spiegel.de/
+[149118] ns_abruf: 200, 98304 Byte, 849 ms: https://www.spiegel.de/system-update
+[234961] ns_abruf: 301, 0 Byte, 1486 ms: https://de.wikipedia.org/
+[237749] ns_abruf: 200, 180224 Byte, 2783 ms: https://de.wikipedia.org/wiki/Wikipedia:Hauptseite
+[318703] ns_abruf: 200, 528384 Byte, 2096 ms: https://www.youtube.com/
+[407003] ns_abruf: 200, 31811 Byte, 643 ms: https://www.openstreetmap.org/
+[410180] W ns_js: Fehler: null
+[410180] W ns_ohne_js: JS-Speichergrenze überschritten – ohne JavaScript neu laden: https://www.openstreetmap.org/
+[413146] ns_abruf: 200, 31811 Byte, 687 ms: https://www.openstreetmap.org/
+[499257] ns_abruf: 403, 5561 Byte, 1405 ms: https://stackoverflow.com/questions
+[574562] ns_abruf: 200, 151552 Byte, 1217 ms: https://www.tagesschau.de/
+[672788] ns_abruf: 200, 355933 Byte, 2533 ms: https://github.com/espressif/esp-idf
+[753685] ns_abruf: 200, 116700 Byte, 921 ms: https://developer.mozilla.org/de/
+[764814] W ns_ohne_js: Seite nach 12000 ms nicht angezeigt – ohne JavaScript neu laden: https://developer.mozilla.org/de/
+[767740] ns_abruf: 200, 116700 Byte, 907 ms: https://developer.mozilla.org/de/
+[825763] ns_abruf: 200, 184320 Byte, 1334 ms: https://www.heise.de/

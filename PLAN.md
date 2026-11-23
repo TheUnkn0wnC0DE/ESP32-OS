@@ -781,8 +781,27 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   und Log-Auszüge in `docs/nachweise/b9/` (drei Autopilot-Runden, jede
   Adresse über die Bildschirmtastatur getippt). Ergebnis vor B10: 7 geht,
   2 teilweise, 11 geht nicht.
-- [ ] **B10 Verbessern** – was in B9 am meisten bringt, beheben, Tabelle
+- [x] **B10 Verbessern** – was in B9 am meisten bringt, beheben, Tabelle
   aktualisieren. Nachweis: Tabelle vorher/nachher.
+  Umsetzung 23.11.: (1) eigene QuickJS-Laufzeit je Dokument statt je
+  Fenster – am Board war die Laufzeit von vorigen Seiten voll, die
+  Grundumgebung der nächsten liess sich nicht anlegen („Fehler: null“,
+  danach „window is not defined“); (2) Rückfallebene lädt die Seite ohne
+  JavaScript neu statt sie halb aufgebaut stehen zu lassen (leere Seiten);
+  eine Ausnahme `null` (kein Speicher mehr für das Fehlerobjekt) zählt als
+  Speichergrenze (PC-Test `ohne_js_rueckfall_zeit` angepasst: Seite neu
+  geholt, `<noscript>` sichtbar); (3) Reserve im Programm-Heap: malloc
+  (68.12) liefert null, bevor Rust-Code im Faden den Heap voll findet und
+  der Kern das Programm beendet (Kern-Test `heap_reserve_fuer_rust`);
+  Bilddekoder prüft den Heap des Browsers statt des System-PSRAM; (4)
+  HTML-Dokumente am Board nach 512 KB abgeschnitten (tagesschau.de: 780 KB
+  HTML → Heap voll → Absturz; PC-Test `html_abgeschnitten`).
+  Nachweis: Tabelle vorher/nachher in STATUS.md („B9: 20 echte Webseiten“),
+  Fotos und Logs `docs/nachweise/b10/` (Runden D, E): vorher 7 geht /
+  2 teilweise / 11 geht nicht, nachher 9 / 4 / 7; kein Absturz oder Hänger
+  mehr bei den 20 Seiten (vorher MDN, tagesschau.de). PC 64 Bit 28/28,
+  i686 30/30, Kern 44 grün. Offen (in der Tabelle): „Zu wenig Speicher“
+  beim Verbinden direkt nach schweren Seiten.
 - [ ] **B-Review** – Review-Subagent.
 
 ## F. Übrige Alltagsprogramme (Auftrag 5)
@@ -917,6 +936,10 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   seite). Folge: `<noscript>`-Inhalte erscheinen dabei nicht. Der Knopf
   „Ohne JS“ lädt die Seite wirklich ohne JavaScript neu (dann mit
   `<noscript>`). JS-Speichergrenze am Board 2 MB statt 4 MB.
+  **Seit B10 (23.11.) aufgehoben:** Die automatische Rückfallebene lädt die
+  Seite jetzt ohne JavaScript neu (wie der Knopf) – im 20-Seiten-Test blieben
+  viele Seiten nach dem Abschalten an Ort und Stelle leer. Möglich, weil jedes
+  Dokument jetzt eine eigene JS-Laufzeit (2 MB) hat.
 
 - **K1 Beenden von aussen ist in K1 kooperativ:** Ein Programm endet bei
   seiner nächsten Systemfunktion. Zwangsweises Beenden hängender Programme

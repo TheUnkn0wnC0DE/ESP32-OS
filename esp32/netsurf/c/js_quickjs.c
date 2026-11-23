@@ -80,6 +80,13 @@ struct zeitgeber;
 
 struct jsthread {
 	jsheap *heap;
+	/* B10: eigene Laufzeit je Dokument (Speichergrenze je Seite; beim
+	 * Schliessen wird alles frei, auch Kreise, die erst die Speicher-
+	 * bereinigung fände) – vorher teilten sich alle Dokumente eines
+	 * Fensters eine Laufzeit, am Board war sie von vorigen Seiten voll und
+	 * die Grundumgebung (window, document) der nächsten liess sich nicht
+	 * mehr anlegen („Fehler: null“) */
+	JSRuntime *rt;
 	JSContext *cx;
 	struct browser_window *bw;
 	html_content *htmlc;
@@ -282,7 +289,9 @@ static void ausnahme_melden(JSContext *cx)
 	protokoll("Fehler", text);
 	/* Skript hat die Speichergrenze der Seite gesprengt: Rückfallebene,
 	 * die Seite ohne JavaScript neu laden (c/ohne_js.c) */
-	if (s != NULL && strstr(s, "out of memory") != NULL) {
+	/* B10: Ist selbst für das Fehlerobjekt kein Speicher mehr da, kommt die
+	 * Ausnahme als null an – ebenfalls die Speichergrenze */
+	if (JS_IsNull(e) || (s != NULL && strstr(s, "out of memory") != NULL)) {
 		jsthread *t = thread_von(cx);
 		if (t != NULL && t->htmlc != NULL)
 			ns_ohne_js_anfordern(t->bw, t->htmlc);
@@ -304,7 +313,7 @@ static void austreten(jsthread *t)
 		return;
 	for (;;) {
 		JSContext *c2;
-		int r = JS_ExecutePendingJob(t->heap->rt, &c2);
+		int r = JS_ExecutePendingJob(t->rt, &c2);
 		if (r == 0)
 			break;
 		if (r < 0)
@@ -1267,11 +1276,30 @@ static size_t js_g(const void *p)
 
 static const JSMallocFunctions js_speicher = { js_c, js_m, js_f, js_r, js_g };
 
+static const JSClassDef knoten_def = { .class_name = "Node", .finalizer = knoten_endet };
+static const JSClassDef ereignis_def = { .class_name = "Event", .finalizer = ereignis_endet };
+
+/* Laufzeit eines Dokuments: Grenzen und Zeitgrenze wie das Fenster */
+static JSRuntime *laufzeit_neu(jsheap *h)
+{
+	JSRuntime *rt = JS_NewRuntime2(&js_speicher, NULL);
+	if (rt == NULL)
+		return NULL;
+	JS_SetRuntimeOpaque(rt, h);
+	JS_SetMemoryLimit(rt, NS_JS_SPEICHER);
+	JS_SetMaxStackSize(rt, NS_JS_STAPEL);
+	JS_SetInterruptHandler(rt, unterbrechen, h);
+	if (JS_NewClass(rt, h->knoten_klasse, &knoten_def) < 0 ||
+	    JS_NewClass(rt, h->ereignis_klasse, &ereignis_def) < 0) {
+		JS_FreeRuntime(rt);
+		return NULL;
+	}
+	return rt;
+}
+
 nserror js_newheap(int timeout, jsheap **heap)
 {
 	jsheap *h = calloc(1, sizeof *h);
-	JSClassDef kd = { .class_name = "Node", .finalizer = knoten_endet };
-	JSClassDef ed = { .class_name = "Event", .finalizer = ereignis_endet };
 	if (h == NULL)
 		return NSERROR_NOMEM;
 	h->rt = JS_NewRuntime2(&js_speicher, NULL);
@@ -1284,10 +1312,10 @@ nserror js_newheap(int timeout, jsheap **heap)
 	JS_SetMaxStackSize(h->rt, NS_JS_STAPEL);
 	h->timeout_ms = (timeout > 0 ? timeout : 10) * 1000;
 	JS_SetInterruptHandler(h->rt, unterbrechen, h);
+	/* Klassennummern einmal je Fenster; angemeldet werden die Klassen in
+	 * der Laufzeit jedes Dokuments (laufzeit_neu) */
 	JS_NewClassID(h->rt, &h->knoten_klasse);
-	JS_NewClass(h->rt, h->knoten_klasse, &kd);
 	JS_NewClassID(h->rt, &h->ereignis_klasse);
-	JS_NewClass(h->rt, h->ereignis_klasse, &ed);
 	*heap = h;
 	return NSERROR_OK;
 }
@@ -1322,10 +1350,13 @@ nserror js_newthread(jsheap *heap, void *win_priv, void *doc_priv, jsthread **th
 	t->bw = win_priv;
 	t->htmlc = doc_priv;
 	t->doc = t->htmlc ? t->htmlc->document : NULL;
-	t->cx = JS_NewContext(heap->rt);
+	t->rt = laufzeit_neu(heap);
+	t->cx = t->rt != NULL ? JS_NewContext(t->rt) : NULL;
 	if (t->cx == NULL || dom_event_listener_create(hoerer_ruft, t, &t->hoerer) != DOM_NO_ERR) {
 		if (t->cx)
 			JS_FreeContext(t->cx);
+		if (t->rt)
+			JS_FreeRuntime(t->rt);
 		free(t);
 		return NSERROR_NOMEM;
 	}
@@ -1379,6 +1410,8 @@ void js_destroythread(jsthread *thread)
 	tabelle_freigeben(thread->cx, &thread->knoten);
 	JS_FreeContext(thread->cx);
 	thread->cx = NULL;
+	JS_FreeRuntime(thread->rt);
+	thread->rt = NULL;
 	dom_event_listener_unref(thread->hoerer);
 	free(thread);
 	h->threads--;

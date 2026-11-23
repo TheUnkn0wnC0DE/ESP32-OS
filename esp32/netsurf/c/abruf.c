@@ -31,6 +31,9 @@
 #include "content/urldb.h"
 
 #include "transport.h"
+#ifdef ESP_PLATFORM
+#include "esp_log.h"
+#endif
 
 struct abruf {
 	struct abruf *next;
@@ -48,7 +51,34 @@ struct abruf {
 	long status;
 	char *location;
 	struct ns_transport *t;
+	bool html;     /* Content-Type text/html (B10: Grenze) */
+	size_t menge;  /* Bytes des Körpers bisher */
 };
+
+/* B10: HTML-Dokumente werden nach so vielen Bytes abgeschnitten (am Board
+ * 512 KB): der Box-Baum einer Seite braucht ein Vielfaches ihres HTML; mit
+ * 780 KB (tagesschau.de) lief der 10-MB-Heap des Browsers voll und der
+ * Browser stürzte ab. Abgeschnitten wird der Rest der Seite, der Anfang
+ * erscheint. Am PC ohne Grenze, für Tests per Umgebung NS_HTML_MAX. */
+#ifdef ESP_PLATFORM
+#define NS_HTML_MAX_STANDARD (512u * 1024u)
+#else
+#define NS_HTML_MAX_STANDARD 0u
+#endif
+
+static unsigned gekuerzt;
+
+static size_t html_max(void)
+{
+	const char *e = getenv("NS_HTML_MAX");
+	return e != NULL && e[0] != '\0' ? (size_t)strtoul(e, NULL, 10) : NS_HTML_MAX_STANDARD;
+}
+
+/* für Tests: Anzahl abgeschnittener HTML-Dokumente */
+unsigned ns_abruf_gekuerzt(void)
+{
+	return gekuerzt;
+}
 
 static struct abruf *alle;
 
@@ -242,6 +272,12 @@ static void kopf_melden(struct abruf *a, const char *text)
 	m.data.header_or_data.buf = (const uint8_t *)text;
 	m.data.header_or_data.len = l;
 	melden(a, &m);
+	if (l > 13 && strncasecmp(text, "Content-Type:", 13) == 0) {
+		const char *w = text + 13;
+		while (*w == ' ' || *w == '\t')
+			w++;
+		a->html = strncasecmp(w, "text/html", 9) == 0;
+	}
 	if (l > 9 && strncasecmp(text, "Location:", 9) == 0) {
 		const char *w = text + 9;
 		while (*w == ' ' || *w == '\t')
@@ -306,12 +342,33 @@ static bool verarbeiten(struct abruf *a)
 			if (kopf_ende(a))
 				return true;
 			break;
-		case NS_T_DATEN:
-			m.type = FETCH_DATA;
-			m.data.header_or_data.buf = e.daten;
-			m.data.header_or_data.len = e.n;
-			melden(a, &m);
+		case NS_T_DATEN: {
+			size_t grenze = a->html ? html_max() : 0;
+			size_t n = e.n;
+			bool zu_gross = grenze != 0 && a->menge + n > grenze;
+			if (zu_gross)
+				n = grenze > a->menge ? grenze - a->menge : 0;
+			a->menge += n;
+			if (n > 0) {
+				m.type = FETCH_DATA;
+				m.data.header_or_data.buf = e.daten;
+				m.data.header_or_data.len = n;
+				melden(a, &m);
+			}
+			if (zu_gross) {
+				/* Rest verwerfen, das Dokument gilt als vollständig */
+				gekuerzt++;
+				NSLOG(netsurf, WARNING, "HTML nach %zu Bytes abgeschnitten: %s", grenze, nsurl_access(a->url));
+#ifdef ESP_PLATFORM
+				ESP_LOGW("ns_abruf", "HTML nach %u KB abgeschnitten (Speicher): %s", (unsigned)(grenze / 1024),
+					 nsurl_access(a->url));
+#endif
+				m.type = FETCH_FINISHED;
+				melden(a, &m);
+				return true;
+			}
 			break;
+		}
 		case NS_T_FERTIG:
 			m.type = FETCH_FINISHED;
 			melden(a, &m);

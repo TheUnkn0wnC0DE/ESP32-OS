@@ -1022,10 +1022,32 @@ pub fn faden(stapel_kb: usize, f: Box<dyn FnOnce() + Send>) -> i32 {
     crate::prozess::faden_starten(stapel_kb, f).map_or(-1, |t| t as i32)
 }
 
+/// Reserve im Heap eines Programms, die Funktion 68.12 nicht hergibt:
+/// 1/16 des Heaps, höchstens 256 KB. Rust-Code im Faden des Programms
+/// (Systemfunktionen, Bilddekoder) belegt ebenfalls dort – fände er den Heap
+/// voll, würde das Programm beendet („Speicher voll“). So liefert zuerst
+/// malloc des Programms null (B10: der Browser zeigt „Zu wenig Speicher“
+/// statt beendet zu werden).
+pub fn heap_reserve(groesse_heap: usize) -> usize {
+    (groesse_heap / 16).min(256 * 1024)
+}
+
+/// Freier Platz im Heap des eigenen Programms (ohne Blockköpfe und
+/// Zerstückelung zu rechnen); None ausserhalb eines Programms.
+pub fn programm_speicher_frei() -> Option<usize> {
+    prozess::eigener_heap().map(|h| h.groesse().saturating_sub(h.belegt()))
+}
+
 /// Funktion 68.12: Speicherblock im Heap des Programms.
 pub fn speicher_holen(groesse: usize) -> *mut u8 {
     pruefe_ende();
-    prozess::eigener_heap().map_or(core::ptr::null_mut(), |h| h.alloc(groesse, 16))
+    prozess::eigener_heap().map_or(core::ptr::null_mut(), |h| {
+        let frei = h.groesse().saturating_sub(h.belegt());
+        if frei < groesse.saturating_add(heap_reserve(h.groesse())) {
+            return core::ptr::null_mut();
+        }
+        h.alloc(groesse, 16)
+    })
 }
 
 /// Funktion 68.13: Speicherblock freigeben (true = ok).
