@@ -1,0 +1,10 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (975) boot: Loaded app from partition at offset 0x20000
+I (1361) mmu_psram: .rodata xip on psram
+I (1628) mmu_psram: .text xip on psram
+I (2036) cpu_start: Pro cpu start user code
+I (2172) pudding_p4: ESP32-OS startet …
+I (2299) pudding_p4: Einstellungen: Sprache de, Helligkeit 10, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstä
+I (4126) pudding_p4: [debug] @icon: gezeichnet in 784 ms
+I (4161) pudding_p4: [debug] Startbild: Desktop bereit nach 819 ms
+I (4857) pudding_p4: Desktop: 20.2 Bilder/s neu, 63.6 übersprungen/s, Fläche 195994 px/Bild, Compositor 2.17

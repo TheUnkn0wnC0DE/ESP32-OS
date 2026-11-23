@@ -274,11 +274,19 @@ pub fn start() {
     text_gross((w - 8 * 3 * NAME.len() as i32) / 2, h / 2 + 30, NAME, 0xFFFFFF, 3);
     let unter = kern::sprache::t("KolibriOS native on ESP32-P4", "KolibriOS nativ auf ESP32-P4");
     text((w - 8 * unter.chars().count() as i32) / 2, h / 2 + 90, unter, 0x9FB4D0);
-    sys::warten(120);
+    // O7 (Startzeit): Desktop sofort starten, das Startbild bleibt nur, bis
+    // die Symbole gezeichnet sind (vorher fest 1,2 s davor), höchstens 3 s
+    let t0 = sys::zeit_ns();
     starten("@icon");
-    starten("@taskbar");
     starten("@tastatur");
-    sys::warten(30);
+    // mindestens 0,5 s (das Startbild blitzt sonst nur auf; am Board dauern
+    // die Symbole ohnehin länger)
+    while (!ICON_GEZEICHNET.load(core::sync::atomic::Ordering::Relaxed) || sys::zeit_ns() - t0 < 500_000_000) && sys::zeit_ns() - t0 < 3_000_000_000 {
+        sys::warten(2);
+    }
+    // Taskleiste erst jetzt (startet sofort; läge sonst über dem Startbild)
+    starten("@taskbar");
+    sys::debug_text(&format!("Startbild: Desktop bereit nach {} ms", (sys::zeit_ns() - t0) / 1_000_000));
     // Erster Start: Ersteinrichtung (P4)
     if crate::konfig::einrichtung_noetig() {
         sys::debug_text("Ersteinrichtung: startet\n");
@@ -289,6 +297,9 @@ pub fn start() {
 }
 
 // ------------------------------------------------------------ @icon
+
+/// Die Symbole des Desktops sind einmal gezeichnet (Startbild darf weg).
+static ICON_GEZEICHNET: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
 
 /// Zelle 108 px breit: Beschriftung bis 13 Zeichen („Einstellungen“).
 const ZELLE_W: i32 = 108;
@@ -375,6 +386,7 @@ fn icon_zeichnen(w: i32, h: i32, grund: &Grund) {
         text_schatten(x + (ZELLE_W - tw) / 2, y + 8 + SYM as i32, &t);
     }
     sys::neuzeichnen(2);
+    ICON_GEZEICHNET.store(true, core::sync::atomic::Ordering::Relaxed);
     sys::debug_text(&format!("@icon: gezeichnet in {} ms\n", (sys::zeit_ns() - t0) / 1_000_000));
 }
 
@@ -469,7 +481,9 @@ fn leiste_zeichnen(w: i32, y0: i32, eigen: u32) -> Vec<kern::fenster::FensterInf
     bild_auf(&symbol(49, 28), 8, 6, |_, _| 0x3A7AC0);
     text(40, (LEISTE_H - 16) / 2, NAME, 0xFFFFFF);
     // Fenster der Programme
-    let liste: Vec<_> = sys::fenster_liste().into_iter().filter(|f| f.ebene == 0 && f.pid != eigen).collect();
+    // ohne Dienste, deren Fenster noch den Programmnamen tragen („@icon“,
+    // bevor es auf die unterste Ebene geht – sonst beim Start kurz sichtbar)
+    let liste: Vec<_> = sys::fenster_liste().into_iter().filter(|f| f.ebene == 0 && f.pid != eigen && !f.titel.starts_with('@')).collect();
     // Akkustand (nur wenn die Firmware misst, siehe board.rs) links neben
     // dem Tastaturknopf
     let akku = crate::konfig::AKKU.load(core::sync::atomic::Ordering::Relaxed);

@@ -1096,8 +1096,20 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 
 - [ ] **O1 Optimierung** (Dirty-Rects, IRAM-Hotpaths, PSRAM-Heaps) – Messwerte
   vorher/nachher in STATUS.
-- [ ] **O2 ELF-Lader von SD prüfen** (`espressif/elf_loader` auf P4) –
+- [x] **O2 ELF-Lader von SD prüfen** (`espressif/elf_loader` auf P4) –
   Ergebnis in STATUS, umsetzen falls tragfähig.
+  Ergebnis 23.11. (Komponentenseite und README/CHANGELOG von
+  `espressif/elf_loader`, aktuell 2.1.0): ESP32-P4 seit 1.0.0 unterstützt,
+  Ausführung aus dem PSRAM (`ELF_LOADER_LOAD_PSRAM`), ESP-IDF ≥ 4.4.3.
+  Geladener Code ruft nur ausdrücklich exportierte Funktionen auf
+  (`ESP_ELFSYM_EXPORT`-Tabellen, libc-Tabelle); ELF-Programme entstehen in
+  einem eigenen ESP-IDF-CMake-Projekt (`project_elf`, `-nostdlib`). Für
+  ESP32-OS hiesse das: die KolibriOS-Systemfunktionen (`ksys`/`clayer`) als
+  C-Tabelle exportieren und C-Programme mit `project_elf` bauen – technisch
+  tragfähig. Nicht umgesetzt: alle Programme aus Auftrag 5 laufen statisch
+  eingelinkt (Auftrag 7: „zuerst statisch eingelinkt“); der Bau von
+  ELF-Programmen braucht eine zweite Bau-Kette neben Cargo/esp-idf-sys und
+  das Verwalten von Speicher für geladenen Code. Siehe Abweichungen.
 - [x] **O3 Lizenz** – GPL-2.0-Vermerk für übernommenen KolibriOS-/NetSurf-Code
   und -Daten im Repo. Nachweis: Datei `LICENSES/…` + README-Abschnitt.
   Nachweis 23.11.: `LICENSE` (GPL-2.0, gilt für ESP32-OS als Ganzes),
@@ -1113,8 +1125,19 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 - [ ] **O5 1 h Langtest am Board** (inkl. Browser + WLAN) ohne Absturz.
   Nachweis: Log 60 min, keine Panics/Resets.
 - [ ] **O6 STATUS.md aktuell** (was läuft, Messwerte, offen). Nachweis: Datei.
-- [ ] **O7 Startzeit** (Auftrag 12.9) – Zeit bis zum Desktop messen,
+- [x] **O7 Startzeit** (Auftrag 12.9) – Zeit bis zum Desktop messen,
   optimieren, vorher/nachher in STATUS. Nachweis: Boot-Log mit Zeitstempeln.
+  Nachweis 23.11. (`docs/nachweise/o7/`, Zeitstempel ab Einschalten):
+  vorher Desktop fertig (Symbole gezeichnet) nach 5,57 s, nachher 4,16 s
+  (−1,4 s). Ursache: das Startbild wartete fest 1,2 s, bevor es den
+  Desktop startete, danach zeichnete `@icon` ~1 s ohne Startbild. Jetzt
+  startet `@start` Symbole und Tastaturdienst sofort und hält das
+  Startbild, bis die Symbole fertig sind (mindestens 0,5 s, höchstens 3 s,
+  Log „Startbild: Desktop bereit nach … ms“), dann die Taskleiste; dabei
+  zeigt die Taskleiste keine Dienst-Fenster mehr, die noch den
+  Programmnamen tragen (kurz „@icon“). Rest: ~2,0 s Bootloader, Laden und
+  PSRAM-Einrichtung bis „ESP32-OS startet“ (ESP-IDF), ~0,8 s Symbole
+  zeichnen. PC: `desktop/tests/shell.rs` (Startbild-Bild unverändert).
 - [ ] **O8 GitHub-Veröffentlichung** (Auftrag 12.10, letzter Punkt) –
   `LICENSE` (GPL-2.0), README auf Englisch mit Fotos und Flash-Anleitung,
   Release v1.0 mit fertiger Firmware, Web-Flasher. Releases nur mit OK des
@@ -1136,6 +1159,13 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 
 ## Abweichungen
 
+- **O2, ELF-Lader nicht umgesetzt (23.11.):** `espressif/elf_loader` kann
+  auf dem P4 Programme von der SD aus dem PSRAM ausführen (geprüft, siehe
+  O2). Umgesetzt wird er nicht: Alle geforderten Programme laufen statisch
+  eingelinkt (wie Auftrag 7 vorsieht); Nachladen von der SD bräuchte eine
+  eigene Bau-Kette für ELF-Programme (ESP-IDF `project_elf`) und eine
+  exportierte Tabelle der KolibriOS-Systemfunktionen. Ersatz: statisch
+  eingelinkte Programme; der Weg für später steht in O2.
 - **S1, Pudding-Panik ohne Home-Taste des Rahmens (23.11., S-Review):**
   Auftrag 13.8 nennt „mit der Home-Taste zurück“. Pudding-Panik hat seit der
   Konsole eine eigene Steuerung (Pause-/Menü-Knopf, der Rahmen zeichnet für

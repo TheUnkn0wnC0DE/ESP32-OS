@@ -51,7 +51,7 @@ fn desktop_startet_mit_taskleiste_menue_und_info() {
     kern::skin::anwenden(kern::skin::STANDARD, 2).unwrap();
     desktop::shell::anwendungen_setzen(&desktop::anwendungen());
     kern::starte_name("@start").unwrap();
-    std::thread::sleep(Duration::from_millis(400));
+    std::thread::sleep(Duration::from_millis(0));
     bild("d1_startbild");
     let t = Instant::now();
     while !titel_da("") && kern::liste().iter().filter(|p| p.name.starts_with('@')).count() < 2 {

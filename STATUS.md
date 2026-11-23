@@ -67,7 +67,11 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   gezeigt), Pudding ohne Home-Taste als Abweichung, Release-Prüfung lehnt
   jetzt alle Entwicklungs-Schalter ab.
 - ✔ O3 Lizenz: Ordner `LICENSES/` mit allen Lizenztexten, README verweist.
-  Weiter: Block H (O1, O2, O4–O7), Rest von B7.
+- ✔ O7 Startzeit: 5,57 s → 4,16 s bis zum Desktop (festes Warten im
+  Startbild entfernt).
+- ✔ O2 ELF-Lader geprüft: auf dem P4 tragfähig, nicht umgesetzt
+  (Abweichung: Programme statisch eingelinkt, eigene Bau-Kette nötig).
+  Weiter: O1, O4, O5, O6, Rest von B7.
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 
@@ -590,6 +594,9 @@ Logisch 640×360, PPA ×2 scharf → Panel 1280×720 quer, ≈ 294 ppi:
 
 ## Messwerte
 
+- O7 Startzeit (23.11., ab Einschalten bis Desktop mit Symbolen): vorher
+  5,57 s, nachher 4,16 s. Davon ~2,0 s Bootloader/Laden/PSRAM bis
+  „ESP32-OS startet“, 0,13 s bis zu den Einstellungen, ~0,8 s Symbole.
 - W8 WLAN-Durchsatz am Board (22.11., 2,4 GHz, −45 dBm, Kanal 6, C6-
   Firmware 0.0.0): TCP PC→Board 11,6 Mbit/s, TCP Board→PC 9,8 Mbit/s,
   UDP PC→Board 24,6 Mbit/s (bei 20 Mbit/s Senderate 7 % Verlust),
