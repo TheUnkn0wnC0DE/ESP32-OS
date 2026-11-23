@@ -1258,7 +1258,8 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Paket geprüft (`o8_release_paket_v1.0.1.txt`), Release mit Tag v1.0.1
   veröffentlicht, Web-Flasher liefert 1.0.1 aus. Am Board esp32os.bin von
   v1.0.1 mit espflash nach esp32os_a geschrieben: startet, Statistik-Zeile
-  mit grösstem PSRAM-Block (neu in 1.0.1), WLAN verbunden. Pages
+  mit grösstem PSRAM-Block (neu in 1.0.1), WLAN verbunden; Nutzer
+  bestätigt: Einstellungen öffnen per Touch. Pages
   veröffentlicht nur von main, nicht vom Release-Tag („Deployment failed“):
   nach einem Release `gh workflow run flasher.yml --ref main`.
 - **Wenn Zeit bleibt** (Auftrag 5): PDF-Betrachter, Kamera-App (OV5647),

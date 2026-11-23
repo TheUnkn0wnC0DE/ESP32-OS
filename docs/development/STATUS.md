@@ -12,7 +12,8 @@ Vorgängerprojekts.
 
 - **Veröffentlicht:** https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/tag/v1.0.1
   – Einstellungen mit 6 statt 12 MB Heap. Dein Board läuft mit 1.0.1
-  (per Kabel nach esp32os_a geschrieben, Einstellungen und WLAN bleiben).
+  (per Kabel nach esp32os_a geschrieben, Einstellungen und WLAN bleiben);
+  von dir bestätigt: die Einstellungen öffnen.
 - **Update von 1.0:** In 1.0 öffnen die Einstellungen nach dem Einschalten
   nicht, damit ist auch „Nach Updates suchen“ nicht erreichbar → 1.0.1 per
   Kabel (espflash oder Web-Flasher), steht im Release-Text.
