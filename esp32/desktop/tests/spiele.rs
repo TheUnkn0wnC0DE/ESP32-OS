@@ -2,6 +2,8 @@
 //! dem Desktop, im Startmenü der Ordner „Spiele...“ mit den vier Spielen,
 //! kein Eintrag für den alten Launcher. Antippen startet das Spiel über den
 //! Haken der Firmware (am Board: Startziel ins NVS, Neustart).
+//! S5: Fehlen die Spieldaten von Doom/Quake (Shareware, nicht in ESP32-OS),
+//! kommt statt des Starts ein Hinweis mit Lizenz und Ablageort.
 
 use core::sync::atomic::{AtomicU32, Ordering::Relaxed};
 use desktop::gesten::Gesten;
@@ -69,6 +71,9 @@ fn spiele_im_desktop() {
     kern::skin::anwenden(kern::skin::STANDARD, 2).unwrap();
     kern::datei::einhaengen("/sys", &wurzel);
     kern::datei::einhaengen("/rd/1", &wurzel);
+    let sd = wurzel.join("sd");
+    std::fs::create_dir_all(&sd).unwrap();
+    kern::datei::einhaengen("/sd0/1", &sd);
     desktop::shell::anwendungen_setzen(&desktop::anwendungen());
     desktop::shell::haken_setzen(desktop::shell::Haken { neustart: || {}, spiel: |id| GESTARTET.store(u32::from(id) + 1, Relaxed) });
     kern::starte_name("@start").unwrap();
@@ -92,6 +97,39 @@ fn spiele_im_desktop() {
     std::thread::sleep(Duration::from_millis(600));
     bis(menue_offen, "Ordner Spiele");
     foto("s0_ordner_spiele");
+    // S5: ohne DOOM1.WAD kein Start, sondern der Hinweis
+    f.tippen(desktop::shell::menue_eintrag_mitte_in("spiele", "@spiel_doom").unwrap());
+    bis(|| sys::fenster_liste().iter().any(|w| w.titel == "Game data missing"), "Hinweis Spieldaten");
+    std::thread::sleep(Duration::from_millis(500));
+    assert_eq!(GESTARTET.load(Relaxed), 0, "ohne Spieldaten kein Start");
+    let (_, text) = desktop::shell::spieldaten_fehlen(SpielId::Doom).unwrap();
+    assert!(text.contains("DOOM1.WAD") && text.contains("id Software") && text.contains("ESP32-OS/doom/"), "{text}");
+    assert!(desktop::shell::spieldaten_fehlen(SpielId::Quake).is_some());
+    assert!(desktop::shell::spieldaten_fehlen(SpielId::Pudding).is_none(), "Pudding braucht nichts");
+    foto("s5_hinweis");
+    // Hinweis schliessen (Knopf 1 des Fensters)
+    let zu = kern::kern_abschnitt(|| {
+        kern::fenster::mit_welt(|w| {
+            let s = w.fenster_liste().into_iter().find(|f| f.titel == "Game data missing").unwrap().slot;
+            let fe = w.slots[s].as_ref().unwrap().fenster.as_ref().unwrap();
+            let k = fe.knoepfe.iter().find(|k| k.id == 1).unwrap();
+            (fe.x + k.x + k.w / 2, fe.y + k.y + k.h / 2)
+        })
+    });
+    f.tippen(zu);
+    bis(|| !sys::fenster_liste().iter().any(|w| w.titel == "Game data missing"), "Hinweis zu");
+
+    // Spieldaten auf der SD-Karte → Doom startet über das Menü
+    std::fs::create_dir_all(sd.join("ESP32-OS/doom")).unwrap();
+    std::fs::create_dir_all(sd.join("ESP32-OS/quake")).unwrap();
+    std::fs::write(sd.join("ESP32-OS/doom/DOOM1.WAD"), b"IWAD").unwrap();
+    std::fs::write(sd.join("ESP32-OS/quake/pak0.pak"), b"PACK").unwrap();
+    assert!(desktop::shell::spieldaten_fehlen(SpielId::Doom).is_none() && desktop::shell::spieldaten_fehlen(SpielId::Quake).is_none());
+    f.tippen((40, 340));
+    bis(menue_offen, "Startmenü");
+    f.tippen(desktop::shell::menue_eintrag_mitte("@spiele").unwrap());
+    std::thread::sleep(Duration::from_millis(600));
+    bis(menue_offen, "Ordner Spiele");
     f.tippen(desktop::shell::menue_eintrag_mitte_in("spiele", "@spiel_doom").unwrap());
     bis(|| GESTARTET.load(Relaxed) == u32::from(SpielId::Doom.als_u8()) + 1, "Doom über das Menü");
 

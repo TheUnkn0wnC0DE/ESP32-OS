@@ -1,0 +1,6 @@
+esp32os.bin: 5351 KB, sauber
+doomapp.bin: 1685 KB, sauber
+quakeapp.bin: 1700 KB, sauber
+esp32os.elf: 63866 KB, sauber
+doomapp.elf: 29291 KB, sauber
+quakeapp.elf: 30133 KB, sauber

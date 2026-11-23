@@ -10,7 +10,8 @@
 //! Einstellungen.
 //!
 //! Ordner: Argument (Ordner oder MP3-Datei – der Dateimanager öffnet .mp3
-//! damit), sonst `/sd0/1/ESP32-OS/Musik`, ohne SD-Karte `/daten/Musik`.
+//! damit), sonst `/sd0/1/ESP32-OS/Musik`, ohne SD-Karte `/rd/1/Musik`
+//! (interne Partition).
 
 use crate::dateimanager;
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering::Relaxed};
@@ -313,7 +314,7 @@ fn zeit(s: u32) -> String {
 }
 
 fn standard_ordner() -> String {
-    if dateimanager::art("/sd0/1/ESP32-OS") == Some(true) { "/sd0/1/ESP32-OS/Musik".into() } else { "/daten/Musik".into() }
+    if dateimanager::art("/sd0/1/ESP32-OS") == Some(true) { "/sd0/1/ESP32-OS/Musik".into() } else { "/rd/1/Musik".into() }
 }
 
 fn pfad(ordner: &str, name: &str) -> String {

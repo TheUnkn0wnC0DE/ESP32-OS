@@ -9,7 +9,7 @@
 //!
 //! Ordner: Argument des Programms (Ordner oder Datei, die geöffnet wird –
 //! der Dateimanager öffnet so .txt/.ini/.log/.md/.cfg), sonst `/sd0/1/ESP32-OS/Notizen` (eigener Ordner von ESP32-OS auf
-//! der SD-Karte), ohne SD-Karte `/daten/Notizen`.
+//! der SD-Karte), ohne SD-Karte `/rd/1/Notizen` (interne Partition).
 
 use crate::dateimanager;
 use kern::{datei, sys};
@@ -101,7 +101,7 @@ fn standard_ordner() -> String {
     if dateimanager::art("/sd0/1/ESP32-OS") == Some(true) {
         "/sd0/1/ESP32-OS/Notizen".into()
     } else {
-        "/daten/Notizen".into()
+        "/rd/1/Notizen".into()
     }
 }
 

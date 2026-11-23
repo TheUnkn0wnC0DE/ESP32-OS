@@ -56,8 +56,13 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   Launcher weg; am Board alle vier aus dem Desktop gestartet und zurück
   (Pudding 55 FPS, Würfelwelt 27,5, Doom 55, Quake 27,5), Quake-Abfrage
   „Wirklich beenden?“ per OK-Knopf. Entwicklungs-Schalter dafür:
-  `ESP32OS_SPIEL_TIPPEN="s:x:y,…"` (tippt im Spiel). Weiter: S5, S-Review,
-  Block H, Rest von B7.
+  `ESP32OS_SPIEL_TIPPEN="s:x:y,…"` (tippt im Spiel).
+- ✔ S5: Spieldaten nachweislich nicht in der Firmware (Prüfwerkzeug, auch
+  in der Release-Prüfung); fehlen sie, Hinweis mit Shareware-Lizenz und
+  Ablageort. Abweichung: kein Herunterladen per WLAN (keine offizielle
+  Quelle der losen Dateien). Nebenbei: Notizen/Musik ohne SD-Karte zeigten
+  auf einen Pfad, den der Kern nicht kennt (jetzt `/rd/1/…`).
+  Weiter: S-Review, Block H, Rest von B7.
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 

@@ -1043,11 +1043,33 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Ein PC-Test der Abfrage geht nicht im Testprozess: „Quit“ beendet Quake
   über einen Haken, der am Board neu startet; am PC blockiert der
   wartende Quake-Faden die Bildschleife (Prüfung daher am Board).
-- [ ] **S5 Spieldaten nicht im Release** (Auftrag 12.8) – `DOOM1.WAD` und
+- [x] **S5 Spieldaten nicht im Release** (Auftrag 12.8) – `DOOM1.WAD` und
   `pak0.pak` weder im Release noch in der Firmware; beim ersten Start von der
   SD laden oder per WLAN herunterladen, mit Hinweis auf die
   Shareware-Lizenz. Nachweis: Release-/Firmware-Inhalt ohne die Dateien,
   Autopilot Erststart (SD und Download), Foto Hinweis.
+  Umsetzung: Vor dem Start von Doom/Quake prüft der Desktop die Spieldaten
+  (`shell::spieldaten_fehlen`: Doom `/sys/doom/DOOM1.WAD` oder
+  `/sd0/1/ESP32-OS/doom/DOOM1.WAD`, Quake `/sd0/1/ESP32-OS/quake/pak0.pak`);
+  fehlen sie, kommt statt des Neustarts ein Hinweis: Datei, Shareware von id
+  Software, nicht in ESP32-OS enthalten, Weitergabe nur unverändert und
+  kostenlos, Ablageort auf der SD-Karte. Doom übernimmt die WAD beim ersten
+  Start von der SD auf die interne Partition (`doom_board::wad_laden`, seit
+  B0), Quake liest die PAK von der SD.
+  Nachweis: `esp32/werkzeuge/spieldaten_pruefen.py` (sucht WAD-Kopf,
+  Lump- und PAK-Verzeichnis; Gegenprobe mit eingebetteten Strukturen
+  schlägt an) – alle drei Abbilder und ELF sauber
+  (`docs/nachweise/s/s5_firmware_ohne_spieldaten.txt`; Doom-Abbild 1,7 MB
+  < WAD 4 MB). Läuft jetzt auch in der Release-Prüfung von
+  `bauen_flashen.ps1 -Release` (verwirft das Abbild sonst). PC:
+  `desktop/tests/spiele.rs` (ohne Daten Hinweis statt Start, Text mit Datei,
+  „id Software“ und Ordner; mit Daten auf der SD startet Doom; Bild
+  `s5_hinweis`). Board (Runde 63, Entwicklungs-Schalter
+  `ESP32OS_SPIELDATEN_TEST` sucht in einem leeren Testordner, die
+  vorhandenen Daten bleiben unberührt): Doom-Symbol → „Spieldaten fehlen –
+  Hinweis“, Foto `s5_board_hinweis.png`; Quake von der SD: S4.
+  Abweichungen: kein Herunterladen per WLAN, Doom-Erststart am Board nicht
+  erneut ausgelöst (siehe Abweichungen).
 - [ ] **S-Review** – Review-Subagent.
 
 ## H. Optimierung und Abnahme (Auftrag 9)
@@ -1086,6 +1108,19 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 
 ## Abweichungen
 
+- **S5, Spieldaten per WLAN herunterladen (23.11.):** Der Auftrag lässt
+  „von der SD-Karte laden oder per WLAN herunterladen“ zu; umgesetzt ist die
+  SD-Karte. Für das Herunterladen fehlt eine Quelle der Rohdateien: die
+  Shareware gibt es offiziell nur als Installationsarchiv (Doom 1.9:
+  ZIP mit aufgeteilten Installer-Dateien, Quake 1.06: ZIP mit LHA-Archiv),
+  das das Gerät nicht entpacken kann; Spiegel mit losen Dateien sind nicht
+  offiziell. Ersatz: Hinweis mit Lizenz und Ablageort (S5).
+- **S5, Doom-Erststart von der SD am Board (23.11.):** Die Übernahme der WAD
+  von der SD auf die interne Partition (`doom_board::wad_laden`) wurde am
+  Board nicht erneut ausgelöst – dafür müsste die vorhandene WAD des
+  Nutzers auf der internen Partition gelöscht werden (Regel: keine
+  Nutzerdaten anfassen). Der Weg ist unverändert seit B0; Quake liest bei
+  jedem Start von der SD (S4).
 - **A5, Pause im Musikplayer (23.11., A-Review):** Nimmt die Pause die
   ungespielten Frames zurück, während der Audio-Faden gerade einen Block
   mischt, wird dieser Block (höchstens 256 Frames ≈ 12 ms) nach „Weiter“ ein

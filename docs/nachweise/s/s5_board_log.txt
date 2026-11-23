@@ -1,0 +1,5 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2313) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2841) pudding_p4: Spiel geladen: intern frei 104 KB (größter Block 31 KB), DMA-fähig 65 KB
+I (29086) pudding_p4: [debug] Spiel Doom: Spieldaten fehlen – Hinweis
+I (32843) pudding_fw::foto: BILD 0 720 1280 3000000 0

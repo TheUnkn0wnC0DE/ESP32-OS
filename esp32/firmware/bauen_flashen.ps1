@@ -80,6 +80,9 @@ if ($Release) {
 # Prüfung 3: Abbild enthält weder SSID noch Passwort aus wlan.local. Gibt nur
 # das Ergebnis aus, nie die Werte.
 function Test-ReleaseAbbild([string]$pfad) {
+    # Spieldaten (DOOM1.WAD, pak0.pak) nie im Release (S5, Auftrag 12.8)
+    python -I (Join-Path $repo 'esp32\werkzeuge\spieldaten_pruefen.py') $pfad
+    if ($LASTEXITCODE -ne 0) { throw "Release: Spieldaten im Abbild $(Split-Path -Leaf $pfad) - Abbild verworfen" }
     $datei = Join-Path $repo 'wlan.local'
     if (-not (Test-Path $datei)) {
         Write-Host "Release-Pruefung $(Split-Path -Leaf $pfad): keine wlan.local, Byte-Suche entfaellt"

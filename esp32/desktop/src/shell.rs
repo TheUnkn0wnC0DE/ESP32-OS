@@ -147,6 +147,35 @@ fn farbe(i: usize) -> u32 {
     u32::from_le_bytes([f[4 * i], f[4 * i + 1], f[4 * i + 2], f[4 * i + 3]])
 }
 
+/// Spieldaten von Doom/Quake (Shareware von id Software, nicht in ESP32-OS):
+/// Doom übernimmt `DOOM1.WAD` beim ersten Start von der SD-Karte auf die
+/// interne Partition, Quake liest `pak0.pak` von der SD-Karte.
+pub const DOOM_WAD: [&str; 2] = ["/sys/doom/DOOM1.WAD", "/sd0/1/ESP32-OS/doom/DOOM1.WAD"];
+pub const QUAKE_PAK: &str = "/sd0/1/ESP32-OS/quake/pak0.pak";
+
+/// Hinweis (Titel, Text), wenn die Spieldaten von `id` fehlen.
+pub fn spieldaten_fehlen(id: konsole::SpielId) -> Option<(&'static str, String)> {
+    // Entwicklungs-Build (S5-Nachweis): Erststart nachstellen, ohne die
+    // vorhandenen Spieldaten anzufassen – gesucht wird in einem leeren
+    // Testordner
+    let test = option_env!("ESP32OS_SPIELDATEN_TEST").is_some();
+    let da = |p: &str| crate::dateimanager::art(&if test { p.replace("/ESP32-OS/", "/ESP32-OS/Spieldaten_Test/").replace("/sys/", "/sys/Spieldaten_Test/") } else { p.to_string() }) == Some(false);
+    let (name, datei, ordner) = match id {
+        konsole::SpielId::Doom if !DOOM_WAD.iter().any(|p| da(p)) => ("Doom", "DOOM1.WAD", "doom"),
+        konsole::SpielId::Quake if !da(QUAKE_PAK) => ("Quake", "pak0.pak", "quake"),
+        _ => return None,
+    };
+    let text = match kern::sprache::aktuell() {
+        kern::sprache::Sprache::Deutsch => format!(
+            "{name} braucht {datei} (Shareware von id Software, nicht in ESP32-OS enthalten; darf nur unverändert und kostenlos weitergegeben werden). Lege die Datei auf die SD-Karte nach ESP32-OS/{ordner}/."
+        ),
+        kern::sprache::Sprache::Englisch => format!(
+            "{name} needs {datei} (shareware by id Software, not included in ESP32-OS; may only be passed on unchanged and free of charge). Put the file on the SD card in ESP32-OS/{ordner}/."
+        ),
+    };
+    Some((kern::sprache::t("Game data missing", "Spieldaten fehlen"), text))
+}
+
 /// Programm starten (wie Funktion 70.7 mit /sys/<name>).
 pub fn starten(programm: &str) {
     match programm {
@@ -161,6 +190,13 @@ pub fn starten(programm: &str) {
                     return;
                 }
             };
+            // Doom/Quake: Spieldaten sind nicht in ESP32-OS (Auftrag 12.8) –
+            // fehlen sie, Hinweis mit Lizenz und Ablageort statt Neustart
+            if let Some((titel, text)) = spieldaten_fehlen(id) {
+                sys::debug_text(&format!("Spiel {id:?}: Spieldaten fehlen – Hinweis"));
+                melden(titel, &text);
+                return;
+            }
             sys::debug_text(&format!("Spiel starten: {id:?}"));
             let _ = crate::konfig::uhr_sichern();
             if let Some(h) = haken() {
