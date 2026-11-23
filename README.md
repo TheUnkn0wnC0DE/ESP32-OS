@@ -27,7 +27,11 @@ Measured on the board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, chip revision v1.x,
 
 ## Quick start
 
-Install the latest release (1.0.1, chip revision v1.x):
+Install the latest release (1.0.1, chip revision v1.x).
+
+**Web flasher** (Chrome or Edge on a desktop computer): open the [ESP32-OS web flasher](https://theunkn0wnc0de.github.io/ESP32-OS/), connect the board's USB TO UART port, click *Connect*, choose the board's serial port and click *Install*. Without *Erase device*, settings and saved Wi-Fi networks are kept ([o8_webflasher.txt](docs/nachweise/o8/o8_webflasher.txt)).
+
+**espflash:**
 
 1. Download the files of the [latest release](https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/latest) and check them against `SHA256SUMS`.
 2. Connect the board's USB TO UART port.
@@ -40,7 +44,7 @@ Install the latest release (1.0.1, chip revision v1.x):
    espflash write-bin 0xC00000 doomapp.bin
    espflash write-bin 0xE00000 quakeapp.bin
    ```
-4. Optional: copy the shareware files `DOOM1.WAD` to `ESP32-OS/doom/` and `pak0.pak` to `ESP32-OS/quake/` on the microSD card.
+4. Optional (both ways): copy the shareware files `DOOM1.WAD` to `ESP32-OS/doom/` and `pak0.pak` to `ESP32-OS/quake/` on the microSD card.
 
 Boards with chip revision v3.x and changes to the code: build from source, see [Building](#building).
 

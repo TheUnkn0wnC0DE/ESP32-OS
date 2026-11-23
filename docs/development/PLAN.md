@@ -1223,7 +1223,7 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Programmnamen tragen (kurz „@icon“). Rest: ~2,0 s Bootloader, Laden und
   PSRAM-Einrichtung bis „ESP32-OS startet“ (ESP-IDF), ~0,8 s Symbole
   zeichnen. PC: `desktop/tests/shell.rs` (Startbild-Bild unverändert).
-- [ ] **O8 GitHub-Veröffentlichung** (Auftrag 12.10, letzter Punkt) –
+- [x] **O8 GitHub-Veröffentlichung** (Auftrag 12.10, letzter Punkt) –
   `LICENSE` (GPL-2.0), README auf Englisch mit Fotos und Flash-Anleitung,
   Release v1.0 mit fertiger Firmware, Web-Flasher. Releases nur mit OK des
   Nutzers (Push-Regeln in CLAUDE.md).
@@ -1262,6 +1262,11 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   bestätigt: Einstellungen öffnen per Touch. Pages
   veröffentlicht nur von main, nicht vom Release-Tag („Deployment failed“):
   nach einem Release `gh workflow run flasher.yml --ref main`.
+  ✔ 23.11.: Web-Flasher am Board – Nutzer flasht v1.0.1 in Chrome/Edge
+  (ohne „Erase device“), Board startet aus esp32os_a, WLAN-Daten erhalten,
+  esp32os_a bitgleich zu esp32os.bin von v1.0.1 (`o8_webflasher.txt`).
+  README nennt den Web-Flasher mit URL. Damit O8 erledigt: LICENSE,
+  README, Releases v1.0 und v1.0.1, Web-Flasher.
 - **Wenn Zeit bleibt** (Auftrag 5): PDF-Betrachter, Kamera-App (OV5647),
   weitere KolibriOS-C-Programme. Reihenfolge (Nutzer 23.11.): zuerst
   PDF-Betrachter, dann Kamera-App; die Kamera-App ist nach „Später (v1.1)“

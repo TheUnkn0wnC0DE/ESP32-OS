@@ -17,8 +17,9 @@ Vorgängerprojekts.
 - **Update von 1.0:** In 1.0 öffnen die Einstellungen nach dem Einschalten
   nicht, damit ist auch „Nach Updates suchen“ nicht erreichbar → 1.0.1 per
   Kabel (espflash oder Web-Flasher), steht im Release-Text.
-- **Web-Flasher** liefert 1.0.1; Board-Test über den Web-Flasher wartet auf
-  dich (Portauswahl in Chrome/Edge).
+- **Web-Flasher** liefert 1.0.1; von dir am Board getestet, Platz A danach
+  bitgleich zum Release (`docs/nachweise/o8/o8_webflasher.txt`). Die
+  README nennt ihn jetzt mit URL. O8 ist erledigt.
 
 ## Release v1.0 (23.11. abends)
 

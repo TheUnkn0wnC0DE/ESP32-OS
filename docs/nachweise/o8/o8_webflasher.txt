@@ -1,0 +1,19 @@
+O8 – Web-Flasher am Board (23.11.2026)
+
+Seite: https://theunkn0wnc0de.github.io/ESP32-OS/ (GitHub Pages, ESP Web Tools
+10.4.0), Firmware aus dem Release v1.0.1 (manifest.json "version": "1.0.1").
+
+Ablauf (vom Nutzer in Chrome/Edge, der eingebaute Browser der Entwicklungs-
+umgebung hat keine Auswahl für serielle Ports): Connect -> Port des Boards ->
+Install, ohne "Erase device". Nutzer meldet: Flashen hat geklappt.
+
+Danach am Board (o8_webflasher_board_log.txt):
+  rst:0x1 (POWERON)
+  I (2012) Programm „esp32os_a“, Startziel Konsole
+  I (2623) ESP32-OS-Desktop startet (@start)
+  I (2624) Programm „esp32os_a“ als gültig markiert
+  I (11330) WLAN: verbunden (gemerktes Netz – Daten blieben erhalten)
+
+esp32os_a ausgelesen (espflash read-flash 0x20000, 5 699 072 Byte):
+  SHA-256 0ac8bdfba7a8aeef7784456467cfde13c345a32328f703cdd0784e73ba35b2cb
+  = esp32os.bin des Releases v1.0.1 (SHA256SUMS), bitgleich.
