@@ -1,33 +1,40 @@
-O8: Release-Paket v1.0, lokal gebaut 23.11.2026 (esp32/firmware/release_paket.ps1 -Version 1.0)
+O8: Release-Paket v1.0, gebaut 23.11.2026 (esp32/firmware/release_paket.ps1 -Version 1.0),
+VERSION "1.0". Rust mit --remap-path-prefix (Benutzerverzeichnis -> ~), NetSurf-C mit
+-ffile-prefix-map, ESP-IDF mit CONFIG_COMPILER_HIDE_PATHS_MACROS=y.
 
 Release-Pruefung (Auszug aus dem Bau-Log):
-esp32os.elf: 67201 KB, sauber
+C:\eo\esp32os.elf: 67388 KB, sauber
 Release-Pruefung esp32os.elf: keine WLAN-Zugangsdaten
-esp32os.bin: 5553 KB, sauber
+C:\eo\esp32os.bin: 5565 KB, sauber
 Release-Pruefung esp32os.bin: keine WLAN-Zugangsdaten
-doomapp.elf: 29146 KB, sauber
+Release-Pruefung esp32os.bin: keine lokalen Pfade
+C:\eo\doomapp.elf: 29255 KB, sauber
 Release-Pruefung doomapp.elf: keine WLAN-Zugangsdaten
-doomapp.bin: 1659 KB, sauber
+C:\eo\doomapp.bin: 1658 KB, sauber
 Release-Pruefung doomapp.bin: keine WLAN-Zugangsdaten
-quakeapp.elf: 29979 KB, sauber
+Release-Pruefung doomapp.bin: keine lokalen Pfade
+C:\eo\quakeapp.elf: 30093 KB, sauber
 Release-Pruefung quakeapp.elf: keine WLAN-Zugangsdaten
-quakeapp.bin: 1674 KB, sauber
+C:\eo\quakeapp.bin: 1673 KB, sauber
 Release-Pruefung quakeapp.bin: keine WLAN-Zugangsdaten
+Release-Pruefung quakeapp.bin: keine lokalen Pfade
 
 Groessen (Bytes):
-bootloader.bin            24160
-partition-table.bin        3072
-otadata-leer.bin           8192
-esp32os.bin             5687168
-doomapp.bin             1699472
-quakeapp.bin            1714480
+bootloader.bin             24160
+partition-table.bin         3072
+otadata-leer.bin            8192
+esp32os.bin              5699056
+doomapp.bin              1698448
+quakeapp.bin             1713408
 
-App-Partition esp32os_a: 6225920 Bytes (partitions.csv) -> esp32os.bin belegt 91,3 %
+App-Partition esp32os_a: 6225920 Bytes (partitions.csv) -> esp32os.bin belegt 91,5 %
+
+Suche nach Benutzername und echtem Name (genau, alle Dateien des Pakets): 0 Treffer
 
 SHA256SUMS:
-196cf9f262eb982a67f6ba0caca56b9a203054e940adf3889d1266ffa659a0a0  bootloader.bin
-bef409cc0205efb97c98ba3d73a71fc724a699310f4a87ccb8eadea48c0a555b  doomapp.bin
-a9d414fd77a6c810a77795f8d23d42967a9247d4e3f13aef8c9f8718065bd7e1  esp32os.bin
+81001febbe6f5a37042c1c1163b553118a08520790dd357cd8a4844807cc24fe  bootloader.bin
+5c7732b6a090097520904241b3b05216957b67fc6029a90c4da296802c0f1a3f  doomapp.bin
+826e0d9ff1e419d551b1601a9e2caa22a06565de4b0144c02db1c24edaa74cdf  esp32os.bin
 7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f  otadata-leer.bin
 caac202b70ef8688d9b8536a5fe7d0c97b6ee698ba9b4f649155ca200f9b9c1e  partition-table.bin
-89cd920068c57d74a0fc14084c19dde5ff9718fb73dc842793f038329cb8e04d  quakeapp.bin
+8eaff6b0e4c64d4c9960def004084993500df02b1b01f32f6f4cf4113f7b3e2f  quakeapp.bin

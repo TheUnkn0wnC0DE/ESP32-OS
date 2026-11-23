@@ -1294,6 +1294,17 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   C-Programme bekommen argc/argv wie crt0 (TinyHashView stürzte mit Datei
   ab). Auswahl und Grenzen: Abweichung „Z3 …“.
 
+## Offen nach v1.0
+
+- [ ] **N1 Cookie-Fix in urldb.c veröffentlichen** (eingetragen 23.11.2026)
+  – die Release-Firmware v1.0 enthält den lokalen Fix, der öffentliche
+  Quellcode noch nicht. Der Patch wird veröffentlicht, sobald NetSurf
+  geantwortet hat, spätestens am 23.12.2026 (30 Tage). Bis dahin steht im
+  Release-Text das schriftliche Angebot „The complete corresponding source
+  code, including all patches, is available on request.“ (GPL). Keine
+  Details zur Lücke im Repo, in PLAN/STATUS oder Commit-Nachrichten.
+  Nachweis: Commit mit dem Patch auf `main`, Release-Text angepasst.
+
 ## Später (v1.1)
 
 Vom Nutzer am 23.11. aus v1.0 genommen – kommt mit einem späteren Update,
@@ -1322,6 +1333,12 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   Vorschau, Foto als JPEG auf die SD (Hardware-JPEG). Nutzer 23.11.: kein
   Kameramodul am Board → in ein späteres Update verschoben; nichts
   begonnen.
+- [ ] **Z4 Konsole** (Nutzer 23.11.) – console.obj nativ nachbauen (gleiche
+  Schnittstelle wie in KolibriOS), dann die KolibriOS-Shell unverändert
+  übernehmen, wenn sie in C ist, dazu Konsolen-Programme wie kmatrix.
+  Vorher prüfen, ob es in den Speicherbereich passt (Flash-Platz des
+  Abbilds, Programm-Heap). Nachweis: PC-Test der Schnittstelle, Shell und
+  kmatrix am Board per Touch/Bildschirmtastatur, Foto.
 
 ## Abweichungen
 

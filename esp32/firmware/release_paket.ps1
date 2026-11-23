@@ -12,6 +12,8 @@
 #    - esp32os.bin.sha256 (für Updates über WLAN, U1) und SHA256SUMS,
 #    - manifest.json für den Web-Flasher (docs/flasher/, Offsets wie
 #      partitions.csv).
+#    Der Web-Flasher (GitHub Pages) holt die Dateien aus dem Release
+#    (.github/workflows/flasher.yml), sie liegen nicht im Repo.
 # 3. Prüft, dass die eingebaute Version (desktop/src/shell.rs, VERSION) mit
 #    -Version beginnt – sonst meldete das Update über WLAN eine falsche
 #    Version.
@@ -71,4 +73,5 @@ $manifest = [ordered]@{
 }
 [IO.File]::WriteAllText((Join-Path $ziel 'manifest.json'), ($manifest | ConvertTo-Json -Depth 5))
 Get-ChildItem $ziel | Format-Table Name, Length -AutoSize | Out-String | Write-Host
+
 Write-Host "Release-Paket fertig: $ziel (nichts veröffentlicht)"

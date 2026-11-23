@@ -1,0 +1,44 @@
+# Web-Flasher auf GitHub Pages: die Seite aus docs/flasher/ und die Firmware
+# des neuesten Releases (Release-Dateien, nicht im Git-Baum).
+name: Web flasher
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths: ['docs/flasher/**', '.github/workflows/flasher.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Page and firmware of the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p site/firmware
+          cp docs/flasher/index.html site/
+          gh release download --repo "$GITHUB_REPOSITORY" --dir site/firmware \
+            --pattern 'manifest.json' --pattern '*.bin' --pattern 'SHA256SUMS'
+          (cd site/firmware && sha256sum -c SHA256SUMS)
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

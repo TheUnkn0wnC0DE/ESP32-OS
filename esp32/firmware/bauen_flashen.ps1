@@ -107,6 +107,26 @@ function Test-ReleaseAbbild([string]$pfad) {
     }
     Write-Host "Release-Pruefung $(Split-Path -Leaf $pfad): keine WLAN-Zugangsdaten"
 }
+# Veröffentlichte Abbilder (.bin) ohne lokale Pfade: weder das Benutzerverzeichnis
+# noch der Benutzername dürfen darin stehen (Rust-Panikmeldungen, C-Asserts).
+function Test-ReleasePfade([string]$pfad) {
+    $latin1 = [Text.Encoding]::GetEncoding(28591)
+    $inhalt = $latin1.GetString([IO.File]::ReadAllBytes($pfad))
+    $heim = $env:USERPROFILE
+    # Pfade ohne Rücksicht auf Gross/klein; der Name allein genau (klein
+    # geschrieben steckt er leicht in gewöhnlichen Wörtern, z. B. „framerate“)
+    $pruefen = @(
+        @($heim, [StringComparison]::OrdinalIgnoreCase),
+        @($heim.Replace('\', '/'), [StringComparison]::OrdinalIgnoreCase),
+        @((Split-Path -Leaf $heim), [StringComparison]::Ordinal)
+    )
+    foreach ($p in $pruefen) {
+        if ($p[0] -and $inhalt.IndexOf($p[0], $p[1]) -ge 0) {
+            throw "Release: lokaler Pfad/Benutzername im Abbild $(Split-Path -Leaf $pfad) - Abbild verworfen"
+        }
+    }
+    Write-Host "Release-Pruefung $(Split-Path -Leaf $pfad): keine lokalen Pfade"
+}
 # O: muss auf DIESEN Checkout zeigen – sonst baute das Skript den Code eines
 # anderen Ordners (z. B. eines Worktrees), auch bei -Release.
 $o_ziel = (subst | Where-Object { $_ -like 'O:\: => *' } | Select-Object -First 1)
@@ -168,11 +188,14 @@ try {
         New-Item -ItemType File -Force $stempel | Out-Null
     }
     $elf = "C:\eo\riscv32imafc-esp-espidf\release\$Bin"
+    # Pfade im Benutzerverzeichnis (.rustup, .cargo, Repo) in Panikmeldungen
+    # und Debug-Infos als ~ (C-Code: -ffile-prefix-map in den Komponenten)
+    $pfadschutz = "target.riscv32imafc-esp-espidf.rustflags=['--remap-path-prefix=$($env:USERPROFILE)=~']"
     foreach ($p in $programme) {
         if ($p.Merkmal) {
-            cargo build --release --bin $Bin --features $p.Merkmal
+            cargo build --release --bin $Bin --config $pfadschutz --features $p.Merkmal
         } else {
-            cargo build --release --bin $Bin
+            cargo build --release --bin $Bin --config $pfadschutz
         }
         if ($LASTEXITCODE -ne 0) { throw "Build $($p.Name) fehlgeschlagen" }
         Copy-Item $elf "C:\eo\$($p.Name).elf" -Force
@@ -182,6 +205,7 @@ try {
             try {
                 Test-ReleaseAbbild "C:\eo\$($p.Name).elf"
                 Test-ReleaseAbbild "C:\eo\$($p.Name).bin"
+                Test-ReleasePfade "C:\eo\$($p.Name).bin"
             } catch {
                 Remove-Item "C:\eo\$($p.Name).elf", "C:\eo\$($p.Name).bin" -Force -ErrorAction SilentlyContinue
                 throw

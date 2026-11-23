@@ -34,6 +34,12 @@ idf_component_register(SRCS ${NS_QUELLEN} "${NS_DATEN}"
 
 # -msmall-data-limit=0: keine .sdata/.sbss (lägen sonst ausserhalb der
 # umrahmten Bereiche); -fno-common: alles in .bss
+# Die Quellenliste nennt absolute Pfade des PC-Baus; __FILE__ (Asserts)
+# ohne Benutzerverzeichnis ins Abbild
+file(TO_CMAKE_PATH "$ENV{USERPROFILE}" NS_HEIM)
+if(NS_HEIM)
+    target_compile_options(${COMPONENT_LIB} PRIVATE "-ffile-prefix-map=${NS_HEIM}=~")
+endif()
 target_compile_options(${COMPONENT_LIB} PRIVATE
     -O2 -w -fno-common -msmall-data-limit=0
     -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-implicit-function-declaration)

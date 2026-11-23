@@ -35,3 +35,6 @@ AUFTRAG-KolibriOS-P4.md
 # Release-Pakete (O8, esp32/firmware/release_paket.ps1) – Abbilder kommen
 # ins GitHub-Release, nicht ins Repo
 /release/
+
+# Web-Flasher-Firmware kommt aus dem Release (GitHub Pages), nie ins Repo
+/docs/flasher/firmware/

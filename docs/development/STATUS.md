@@ -461,6 +461,7 @@ und der volle 10-MB-Heap (GitHub, MDN – dort hängt der Browser). → B10.
   Spieltempo bewusst nicht angefasst, weil du Pudding-Panik so kennst.
   Soll ich es auf die echte Zeit umstellen (Pudding wäre dann ~13 %
   langsamer)?
+  **Antwort (23.11.):** Pudding-Panik bleibt, wie es ist.
 
 ## Fragen an dich (Veröffentlichung, O8)
 
@@ -469,6 +470,9 @@ und der volle 10-MB-Heap (GitHub, MDN – dort hängt der Browser). → B10.
   Ob ein Binär-Release so weitergegeben werden darf, ist eine
   Rechtsfrage, die ich nicht entscheide – bitte vor dem OK zum Release
   klären (Quellcode im Repo ist nicht betroffen).
+  **Antwort (23.11.):** veröffentlichen; die Lizenzfrage steht ehrlich im
+  Release-Text unter „Known issues“, dazu das schriftliche Angebot für den
+  vollständigen Quellcode samt Patches (Cookie-Fix, PLAN N1).
 - **Release v1.0:** lokal fertig – `VERSION` = „1.0 (2026-11-23)“, Paket
   mit `release_paket.ps1 -Version 1.0` gebaut (Release-Prüfung: alle sechs
   Abbilder ohne WLAN-Zugangsdaten, keine Entwicklungs-Schalter, keine
@@ -476,6 +480,8 @@ und der volle 10-MB-Heap (GitHub, MDN – dort hängt der Browser). → B10.
   manifest.json), Web-Flasher `docs/flasher/`, Text `docs/release/v1.0.md`.
   Veröffentlicht wird erst mit deinem OK: Abbilder ins GitHub-Release, für
   den Web-Flasher nach `docs/flasher/firmware/`.
+  **Antwort (23.11.):** OK – VERSION „1.0“, Paket neu bauen, Tag v1.0,
+  Release „ESP32-OS 1.0“, GitHub Pages mit Board-Test, danach U1.
 
 ## Für dich: Zusammenfassung der Nacht 22.11.
 
