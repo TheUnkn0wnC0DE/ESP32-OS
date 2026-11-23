@@ -3,12 +3,5 @@
 version = 4
 
 [[package]]
-name = "pudding"
-version = "0.1.0"
-dependencies = [
- "spatz",
-]
-
-[[package]]
 name = "spatz"
 version = "0.1.0"

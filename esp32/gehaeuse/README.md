@@ -1,80 +1,59 @@
-# Gehäuse für die Pudding-Panik-Konsole
+# gehaeuse (case)
 
-3D-Druck-Gehäuse für das **Waveshare ESP32-P4-WIFI6-Touch-LCD-5**: Das
-Display sitzt passgenau, alles andere hat großzügig Luft. Hinten in der Mitte
-ein Buckel mit Akku und Lautsprecher, links und rechts dünne Griffe.
+3D-printable case for the Waveshare ESP32-P4-WIFI6-Touch-LCD-5, designed in OpenSCAD (`gehaeuse.scad`). The display glass sits flush; a bump at the back holds battery and speaker, with thin grips left and right.
 
-![Rückseite](bilder/zusammen_hinten.png)
-![Vorderseite, Innenraum](bilder/zusammen_vorne.png)
+![Back](bilder/zusammen_hinten.png)
+![Front, inside](bilder/zusammen_vorne.png)
 
-## Teile
+## Parts
 
-| Datei | Teil | Maße | Hinweis |
+| File | Part | Size | Note |
 |---|---|---|---|
-| `stl/testrahmen.stl` | Probe-Rahmen | 133,5 × 77,3 × 4,5 mm | **zuerst** drucken (~30 min): passt das Glas? |
-| `stl/schale.stl` | Rahmen + Griffe | 133,5 × 77,3 × 13,5 mm | Rückseite unten |
-| `stl/buckel.stl` | Mittelteil (Akku, Lautsprecher) | 97,2 × 77,3 × 21,5 mm | Rückseite unten |
-| `stl/taster.stl` | 3 Tastenstößel | je Ø 6,5 × 7,7 mm | Schaft unten |
+| `stl/testrahmen.stl` | test frame | 133.5 × 77.3 × 4.5 mm | print first (~30 min) to check the glass fit |
+| `stl/schale.stl` | frame and grips | 133.5 × 77.3 × 13.5 mm | back side down |
+| `stl/buckel.stl` | back bump (battery, speaker) | 97.2 × 77.3 × 21.5 mm | back side down |
+| `stl/taster.stl` | 3 button plungers | Ø 6.5 × 7.7 mm each | shaft down |
 
-Alle Teile liegen schon richtig herum und brauchen **keine Stützen**.
+All parts are oriented for printing and need no supports.
 
-![Druckplatte](bilder/druckplatte.png)
+![Print bed](bilder/druckplatte.png)
 
-**Druckeinstellungen (Cura):** PLA oder PETG, 0,2 mm Schichthöhe, 3 Wände,
-15–20 % Füllung, keine Stützen. Für die Schale hilft ein Brim (Rand) gegen
-hochgebogene Ecken. Passt auf ein 220 × 220-mm-Bett.
+Print settings: PLA or PETG, 0.2 mm layers, 3 walls, 15–20 % infill. A brim helps against warped corners on the frame. Fits a 220 × 220 mm bed.
 
-## Schrauben und Kleinteile
+## Screws and parts
 
-* **4 × M2,5 × 6** – Platine (in ihre vier Abstandshülsen). Vorher mit einer
-  Schraube prüfen, ob die Hülsen M2,5 haben; bei M3 einfach M3 × 6 nehmen –
-  die Langlöcher passen für beide.
-* **4 × M2 × 10, selbstschneidend** (Blechschraube/Kunststoffschraube) –
-  Buckel an die Schale. Normale M2-Schrauben schneiden sich auch ins 1,7-mm-Loch.
-* Doppelseitiges Klebeband oder ein Stück Schaumstoff für Akku und Lautsprecher.
+- 4 × M2.5 × 6 for the board (into its four standoffs). Check one screw first; if the standoffs are M3, use M3 × 6 (the slots fit both).
+- 4 × M2 × 10 self-tapping screws to fix the bump to the frame.
+- Double-sided tape or foam for battery and speaker.
 
-## Zusammenbau
+## Assembly
 
-1. **Probe-Rahmen** aufs Glas legen: Es sollte mit wenig Spiel hineinfallen.
-   Zu eng/zu weit → `GLAS_SPIEL` in `gehaeuse.scad` ändern (Standard 0,3 mm
-   je Seite) und neu ausgeben.
-2. Die 3 **Taster** von innen in die Löcher der oberen Wand stecken (Kragen
-   innen) und außen mit einem Streifen Klebeband halten.
-3. Das **Display** mit der Platine voran von vorne in die Schale setzen, bis
-   die vier Abstandshülsen hinten aufliegen. Von hinten die 4 Schrauben M2,5
-   durch die Langlöcher eindrehen. Klebeband von den Tastern abziehen.
-4. **Lautsprecher** in den kleinen Rahmen im Buckel kleben (Öffnung zum
-   Gitter), **Akku** in den großen (Kabel nach unten links).
-5. Akku in die Buchse **BAT**, Lautsprecher in **SPK** stecken. Das
-   Lautsprecherkabel ist kurz – den Buckel dafür dicht an die Schale halten.
-6. **Buckel** aufsetzen, 4 Schrauben M2 von hinten durch die tiefen Löcher.
+1. Put the test frame on the glass. It should drop in with little play. If it is too tight or too loose, change `GLAS_SPIEL` in `gehaeuse.scad` (default 0.3 mm per side) and export again.
+2. Insert the 3 plungers from the inside (collar inside) and hold them with tape from the outside.
+3. Insert the display from the front, board first, until the four standoffs rest at the back. Fix it with the 4 M2.5 screws through the slots. Remove the tape.
+4. Glue the speaker into the small frame in the bump (opening towards the grille) and the battery into the large one (cable down left).
+5. Connect the battery to BAT and the speaker to SPK. The speaker cable is short, so hold the bump close to the frame.
+6. Put the bump on and fix it with the 4 M2 screws from the back.
 
-Zum Akku-Tauschen nur die 4 Buckel-Schrauben lösen; das Display bleibt drin.
+To change the battery, remove only the 4 bump screws. Both USB-C ports (left), RESET/BOOT/POWER and the microSD slot (top) and the power LED (light hole back left) stay accessible.
 
-Zugänglich bleiben: beide USB-C-Buchsen (links), RESET/BOOT/POWER und die
-SD-Karte (oben), die PWR-LED (Lichtloch hinten links).
+## Dimensions
 
-## Maße anpassen
+All dimensions are parameters at the top of `gehaeuse.scad`.
 
-Alles steht oben in `gehaeuse.scad` als Parameter. Herkunft der Maße:
-
-| Maß | Wert | Quelle |
+| Dimension | Value | Source |
 |---|---|---|
-| Glas | 126,90 × 70,70 mm | Maßzeichnung Waveshare |
-| Platine, Bohrungen | 118,5 × 64,5 mm, Raster 112 × 57 mm | Maßzeichnung Waveshare |
-| Lage der Platine auf dem Glas | links 1,72 mm, mittig in der Höhe | aus der Zeichnung gemessen |
-| USB, Tasten, SD | Positionen aus der Zeichnung | Maßzeichnung Waveshare |
-| `Z_HUELSE` = 11 mm | Glasvorderseite bis Ende der Hülsen | **aus Fotos geschätzt** |
-| `AKKU` = 29 × 49 × 19 mm | Breite × Länge × Dicke | gemessen |
-| `LS` = 26 × 26 × 6 mm | Lautsprecher | **geschätzt** |
+| glass | 126.90 × 70.70 mm | Waveshare drawing |
+| board, holes | 118.5 × 64.5 mm, grid 112 × 57 mm | Waveshare drawing |
+| board position on the glass | 1.72 mm from the left, centred vertically | measured from the drawing |
+| USB, buttons, microSD | positions | Waveshare drawing |
+| `Z_HUELSE` = 11 mm | glass front to end of standoffs | estimated from photos |
+| `AKKU` = 29 × 49 × 19 mm | battery | measured |
+| `LS` = 26 × 26 × 6 mm | speaker | estimated |
 
-Lohnt sich nachzumessen: **`Z_HUELSE`** – ist der Wert zu klein, steht das
-Glas etwas vor, ist er zu groß, liegt es etwas tiefer (passen tut es beides).
+`Z_HUELSE` is worth measuring: too small and the glass stands out slightly, too large and it sits slightly deeper (both fit). Total thickness: 13.5 mm at the grips, 35 mm at the bump.
 
-Gesamtdicke: 13,5 mm an den Griffen, 35 mm am Buckel.
-
-**Neu ausgeben** (OpenSCAD, z. B. die portable Version unter
-`C:\pt\openscad\OpenSCAD-2026.11.16-x86-64\`):
+Export with OpenSCAD (manifold backend):
 
 ```text
 openscad --backend=manifold -D TEIL="schale_druck" -o stl/schale.stl gehaeuse.scad
@@ -83,7 +62,4 @@ openscad --backend=manifold -D TEIL="taster_druck" -o stl/taster.stl gehaeuse.sc
 openscad --backend=manifold -D TEIL="testrahmen" -o stl/testrahmen.stl gehaeuse.scad
 ```
 
-**Kontrolle:** `TEIL="pruefung"` schneidet alle Teile mit einer Nachbildung
-von Display, Platine (Bauteile, Stiftleiste, USB, Tasten, SD), Akku und
-Lautsprecher. Ergebnis muss leer sein („Current top level object is empty“) –
-nur Schale und Buckel berühren sich in ihrer Auflagefläche.
+Check: `TEIL="pruefung"` intersects all parts with a model of display, board (components, pin header, USB, buttons, microSD), battery and speaker. The result must be empty ("Current top level object is empty"); only frame and bump touch at their contact surface.

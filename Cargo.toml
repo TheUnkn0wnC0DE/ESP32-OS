@@ -1,9 +1,9 @@
 [workspace]
 resolver = "3"
-members = ["spatz", "pudding"]
-# Bare-Metal-Beispiel für ARM Cortex-M7 und die ESP32-Fassung werden separat
-# gebaut (eigene Workspaces bzw. Ziele).
-exclude = ["mcu_demo", "esp32"]
+# Software-3D-Engine „spatz“ (von den Spielen in esp32/ genutzt). ESP32-OS
+# selbst ist ein eigener Workspace in esp32/ (Firmware: esp32/firmware).
+members = ["spatz"]
+exclude = ["esp32"]
 
 [workspace.package]
 version = "0.1.0"
@@ -21,7 +21,7 @@ debug = false
 incremental = false
 strip = true
 
-# Debug-Builds trotzdem spielbar halten (Software-Rendering ist sonst zäh).
+# Debug-Builds mit Optimierung (Software-Rendering ist sonst zäh).
 [profile.dev]
 opt-level = 1
 

@@ -5,11 +5,10 @@ version 2** (see [`LICENSE`](LICENSE)). Because it contains and links code
 that is licensed under GPL-2.0 (KolibriOS parts, NetSurf: "version 2 only"),
 the combined work and the firmware images are GPL-2.0.
 
-The stand-alone crates of the root Cargo workspace, `spatz` and `pudding`,
-are the project's own code and are licensed under **MIT OR Apache-2.0**
-(`license` in the root `Cargo.toml`). Where they are built into the
-firmware (the ESP32 games use `spatz`), they are part of the GPL-2.0
-combined work.
+The crate of the root Cargo workspace, `spatz` (software 3D engine), is the
+project's own code and is licensed under **MIT OR Apache-2.0** (`license` in
+the root `Cargo.toml`). Built into the firmware (the games use it), it is
+part of the GPL-2.0 combined work.
 
 Note for binary releases: the firmware also links ESP-IDF and esp_hosted
 (Apache-2.0). Whether a firmware image combining them with GPL-2.0-only code

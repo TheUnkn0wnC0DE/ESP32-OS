@@ -1,12 +1,8 @@
 /target
-/mcu_demo/target
 /esp32/target
 /esp32/firmware/target
 /esp32/firmware/.embuild
 *.png.tmp
-/android_out
-*.apk
-*.keystore
 .superpowers/
 
 # Doom-Shareware-WAD (wird geladen, nicht eingecheckt)
@@ -25,7 +21,8 @@ wlan.local
 # NetSurf: Stand der erzeugten Board-Dateien (esp32/netsurf/build.rs, je Rechner)
 esp32/firmware/komponenten/netsurf/quellen_stand.txt
 
-# Lokale Werkzeuge und Python-Zwischenstände, nie ins Repo
+# Lokale Werkzeuge, Projektregeln für Claude Code (.claude/CLAUDE.md) und
+# Python-Zwischenstände, nie ins Repo
 .claude/
 __pycache__/
 AUFTRAG-KolibriOS-P4.md

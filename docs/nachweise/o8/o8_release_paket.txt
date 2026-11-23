@@ -1,0 +1,33 @@
+O8: Release-Paket v1.0, lokal gebaut 23.11.2026 (esp32/firmware/release_paket.ps1 -Version 1.0)
+
+Release-Pruefung (Auszug aus dem Bau-Log):
+esp32os.elf: 67201 KB, sauber
+Release-Pruefung esp32os.elf: keine WLAN-Zugangsdaten
+esp32os.bin: 5553 KB, sauber
+Release-Pruefung esp32os.bin: keine WLAN-Zugangsdaten
+doomapp.elf: 29146 KB, sauber
+Release-Pruefung doomapp.elf: keine WLAN-Zugangsdaten
+doomapp.bin: 1659 KB, sauber
+Release-Pruefung doomapp.bin: keine WLAN-Zugangsdaten
+quakeapp.elf: 29979 KB, sauber
+Release-Pruefung quakeapp.elf: keine WLAN-Zugangsdaten
+quakeapp.bin: 1674 KB, sauber
+Release-Pruefung quakeapp.bin: keine WLAN-Zugangsdaten
+
+Groessen (Bytes):
+bootloader.bin            24160
+partition-table.bin        3072
+otadata-leer.bin           8192
+esp32os.bin             5687168
+doomapp.bin             1699472
+quakeapp.bin            1714480
+
+App-Partition esp32os_a: 6225920 Bytes (partitions.csv) -> esp32os.bin belegt 91,3 %
+
+SHA256SUMS:
+196cf9f262eb982a67f6ba0caca56b9a203054e940adf3889d1266ffa659a0a0  bootloader.bin
+bef409cc0205efb97c98ba3d73a71fc724a699310f4a87ccb8eadea48c0a555b  doomapp.bin
+a9d414fd77a6c810a77795f8d23d42967a9247d4e3f13aef8c9f8718065bd7e1  esp32os.bin
+7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f  otadata-leer.bin
+caac202b70ef8688d9b8536a5fe7d0c97b6ee698ba9b4f649155ca200f9b9c1e  partition-table.bin
+89cd920068c57d74a0fc14084c19dde5ff9718fb73dc842793f038329cb8e04d  quakeapp.bin
