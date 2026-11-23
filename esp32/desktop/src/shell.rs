@@ -160,6 +160,9 @@ pub fn starten(programm: &str) {
         "@mehr" => {
             let _ = kern::datei::starten("/sys/@menu", "mehr");
         }
+        "@system" => {
+            let _ = kern::datei::starten("/sys/@menu", "system");
+        }
         "@neustart" => {
             let _ = crate::konfig::uhr_sichern();
             if let Some(h) = haken() {
@@ -505,25 +508,33 @@ pub fn taskbar() {
 
 const ZEILE_M: i32 = 44;
 
-/// Einträge des Startmenüs (Name, Programm, Symbol); `mehr`: nur die
-/// Programme ohne Desktop-Symbol (Beispiele).
-fn menue_eintraege(mehr: bool) -> Vec<(String, &'static str, usize)> {
+/// Einträge des Startmenüs (Name, Programm, Symbol). `ordner`: "" = das
+/// Hauptmenü, "mehr" = Programme ohne Desktop-Symbol (Beispiele), "system" =
+/// Task-Manager, Bildschirmfoto, Touchpad-Modus. Das Hauptmenü bleibt so bei
+/// höchstens 15 Einträgen (3 Spalten × 5 Zeilen über der Taskleiste).
+fn menue_eintraege(ordner: &str) -> Vec<(String, &'static str, usize)> {
     let alle = anwendungen();
-    let mut eintraege: Vec<(String, &'static str, usize)> = alle.iter().filter(|a| a.auf_desktop != mehr).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect();
-    if !mehr {
-        if !eintraege.iter().any(|e| e.1 == "info") {
-            eintraege.push((format!("{} {NAME}", kern::sprache::t("About", "Über")), "info", 113));
+    match ordner {
+        "mehr" => alle.iter().filter(|a| !a.auf_desktop).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect(),
+        "system" => vec![
+            (kern::sprache::t("Task manager", "Task-Manager").into(), "taskmanager", 57),
+            (kern::sprache::t("Screenshot", "Bildschirmfoto").into(), "@screenshot", 70),
+            (if sys::eingabe::touchpad() { kern::sprache::t("Touchpad mode off", "Touchpad-Modus aus") } else { kern::sprache::t("Touchpad mode on", "Touchpad-Modus ein") }.into(), "@touchpad", 54),
+        ],
+        _ => {
+            let mut eintraege: Vec<(String, &'static str, usize)> = alle.iter().filter(|a| a.auf_desktop).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect();
+            if !eintraege.iter().any(|e| e.1 == "info") {
+                eintraege.push((format!("{} {NAME}", kern::sprache::t("About", "Über")), "info", 113));
+            }
+            if alle.iter().any(|a| !a.auf_desktop) {
+                eintraege.push((kern::sprache::t("More programs...", "Mehr Programme...").into(), "@mehr", 2));
+            }
+            eintraege.push((kern::sprache::t("System...", "System...").into(), "@system", 6));
+            eintraege.push((kern::sprache::t("Sleep", "Ruhezustand").into(), "@ruhe", 76));
+            eintraege.push((kern::sprache::t("Restart", "Neustart").into(), "@neustart", 12));
+            eintraege
         }
-        if alle.iter().any(|a| !a.auf_desktop) {
-            eintraege.push((kern::sprache::t("More programs...", "Mehr Programme...").into(), "@mehr", 2));
-        }
-        eintraege.push((kern::sprache::t("Task manager", "Task-Manager").into(), "taskmanager", 57));
-        eintraege.push((kern::sprache::t("Screenshot", "Bildschirmfoto").into(), "@screenshot", 70));
-        eintraege.push((if sys::eingabe::touchpad() { kern::sprache::t("Touchpad mode off", "Touchpad-Modus aus") } else { kern::sprache::t("Touchpad mode on", "Touchpad-Modus ein") }.into(), "@touchpad", 54));
-        eintraege.push((kern::sprache::t("Sleep", "Ruhezustand").into(), "@ruhe", 76));
-        eintraege.push((kern::sprache::t("Restart", "Neustart").into(), "@neustart", 12));
     }
-    eintraege
 }
 
 /// Aufbau des Startmenüs: (Zeilen, Spaltenbreite, Breite, Höhe, y des
@@ -543,10 +554,16 @@ fn menue_aufbau(n: usize, skin: i32) -> (i32, i32, i32, i32, i32) {
     (zeilen, sw, mw, mh, h - LEISTE_H - mh)
 }
 
-/// Bildschirm-Mitte des Eintrags `programm` im Startmenü (ohne „mehr“) –
-/// für Tests und den Autopiloten, damit neue Programme sie nicht verschieben.
+/// Bildschirm-Mitte des Eintrags `programm` im Hauptmenü bzw. im Ordner
+/// (`menue_eintrag_mitte_in("system", …)`) – für Tests und den Autopiloten,
+/// damit neue Programme sie nicht verschieben.
 pub fn menue_eintrag_mitte(programm: &str) -> Option<(i32, i32)> {
-    let eintraege = menue_eintraege(false);
+    menue_eintrag_mitte_in("", programm)
+}
+
+/// Wie [`menue_eintrag_mitte`], im Ordner `ordner` ("", "mehr", "system").
+pub fn menue_eintrag_mitte_in(ordner: &str, programm: &str) -> Option<(i32, i32)> {
+    let eintraege = menue_eintraege(ordner);
     let i = eintraege.iter().position(|e| e.1 == programm)? as i32;
     let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
     let (zeilen, sw, _, _, my) = menue_aufbau(eintraege.len(), skin);
@@ -556,9 +573,8 @@ pub fn menue_eintrag_mitte(programm: &str) -> Option<(i32, i32)> {
 
 /// Startmenü: Programme mit Symbol, „Über ESP32-OS“, Spielekonsole, Neustart.
 pub fn menu() {
-    // Parameter „mehr“: nur die Programme ohne Desktop-Symbol (Beispiele)
-    let mehr = kern::argumente() == "mehr";
-    let eintraege = menue_eintraege(mehr);
+    // Parameter: Ordner („mehr“: Programme ohne Desktop-Symbol, „system“)
+    let eintraege = menue_eintraege(&kern::argumente());
     let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
     let (zeilen, sw, mw, mh, my) = menue_aufbau(eintraege.len(), skin);
     sys::maske(0x07);

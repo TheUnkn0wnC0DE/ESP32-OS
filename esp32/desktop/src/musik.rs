@@ -26,8 +26,9 @@ pub const FH: i32 = 306;
 pub const LISTE_X: i32 = 6;
 pub const LISTE_W: i32 = 200;
 pub const LISTE_Y: i32 = 6;
-pub const ZEILE_H: i32 = 30;
-const ZEILEN: usize = 8;
+/// Zeilen ≥ 7 mm (1 px = 0,173 mm)
+pub const ZEILE_H: i32 = 42;
+const ZEILEN: usize = 5;
 /// Rechte Seite
 const RX: i32 = 216;
 const RW: i32 = 288;

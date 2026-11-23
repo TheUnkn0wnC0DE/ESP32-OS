@@ -96,6 +96,19 @@ fn lokal_jetzt() -> Option<i64> {
 /// Wecker prüfen (Taskleiste, alle 0,5 s): Weckzeit erreicht → klingeln,
 /// die Uhr starten, wenn sie nicht läuft.
 pub fn wecker_pruefen() {
+    // Klingeln ohne laufende Uhr (Start fehlgeschlagen, zwangsweise beendet):
+    // nach 3 s zurücksetzen – sonst bliebe der Bildschirm für immer an
+    // (`wach_halten`) und die nächste Uhr klingelte ohne Anlass
+    static VERWAIST: AtomicU32 = AtomicU32::new(0);
+    if KLINGELN.load(Relaxed) != 0 && !uhr_laeuft() {
+        if VERWAIST.fetch_add(1, Relaxed) >= 6 {
+            KLINGELN.store(0, Relaxed);
+            VERWAIST.store(0, Relaxed);
+            sys::debug_text("Uhr: Klingeln ohne laufende Uhr beendet");
+        }
+    } else {
+        VERWAIST.store(0, Relaxed);
+    }
     let w = konfig::WECKER.load(Relaxed);
     if w & 1 << 16 == 0 {
         return;
@@ -110,12 +123,18 @@ pub fn wecker_pruefen() {
     }
     KLINGELN.store(1, Relaxed);
     sys::debug_text(&format!("Uhr: Wecker {:02}:{:02} klingelt", (w & 0xFFFF) / 60, (w & 0xFFFF) % 60));
-    if !kern::liste().iter().any(|p| p.name == "uhr") {
+    if !uhr_laeuft() {
         let r = kern::datei::starten("/sys/uhr", "");
         if r < 0 {
+            KLINGELN.store(0, Relaxed);
             sys::debug_text(&format!("Uhr: Start für den Wecker fehlgeschlagen ({})", -r));
         }
     }
+}
+
+/// Läuft die Uhr (und endet nicht gerade)?
+fn uhr_laeuft() -> bool {
+    kern::liste().iter().any(|p| p.name == "uhr" && !p.endet)
 }
 
 /// Text mit Vergrösserung `mal` (1..=8; 8 × 16 Pixel je Zeichen bei 1).

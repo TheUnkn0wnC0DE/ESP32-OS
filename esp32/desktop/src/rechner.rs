@@ -12,13 +12,14 @@ pub const FY: i32 = 4;
 pub const FW: i32 = 300;
 pub const FH: i32 = 306;
 /// Anzeige
-pub const ANZEIGE: (i32, i32, i32, i32) = (8, 6, 280, 40);
-/// Tastenfeld: erste Taste, Tastengrösse, Abstand
+pub const ANZEIGE: (i32, i32, i32, i32) = (8, 3, 280, 34);
+/// Tastenfeld: erste Taste, Tastengrösse, Abstand – Tasten 67×40 px
+/// (11,6 × 6,9 mm, 1 px = 0,173 mm), fünf Reihen passen über die Taskleiste
 pub const TASTEN_X: i32 = 8;
-pub const TASTEN_Y: i32 = 52;
-pub const TASTE_W: i32 = 64;
-pub const TASTE_H: i32 = 34;
-pub const ABSTAND: i32 = 6;
+pub const TASTEN_Y: i32 = 40;
+pub const TASTE_W: i32 = 67;
+pub const TASTE_H: i32 = 40;
+pub const ABSTAND: i32 = 3;
 
 /// Tasten in Reihen (Beschriftung, Zeichen)
 pub const TASTEN: [[(&str, char); 4]; 5] = [

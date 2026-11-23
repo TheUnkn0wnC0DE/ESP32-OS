@@ -92,7 +92,11 @@ fn bildschirmfoto_per_uhr_und_menue() {
     bis(|| !sys::fenster_liste().iter().any(|w| w.titel == "Screenshot"), "Meldung zu");
     f.tippen(40, 360 - 20);
     bis(|| sys::fenster_liste().iter().any(|w| w.titel == "ESP32-OS"), "Startmenü");
-    let (x, y) = desktop::shell::menue_eintrag_mitte("@screenshot").unwrap();
+    // Ordner „System“ im Startmenü, darin der Eintrag
+    let (x, y) = desktop::shell::menue_eintrag_mitte("@system").unwrap();
+    f.tippen(x, y);
+    std::thread::sleep(Duration::from_millis(600));
+    let (x, y) = desktop::shell::menue_eintrag_mitte_in("system", "@screenshot").unwrap();
     f.tippen(x, y);
     bis(|| dateien(&ordner).len() == 2, "Bildschirmfoto über das Menü");
     let zweites = dateien(&ordner)[1].clone();

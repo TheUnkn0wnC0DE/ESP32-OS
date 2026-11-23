@@ -22,16 +22,26 @@ pub const FH: i32 = 306;
 /// Liste links: x, Breite, erste Zeile, Zeilenhöhe.
 pub const LISTE_X: i32 = 6;
 pub const LISTE_W: i32 = 150;
-pub const LISTE_Y: i32 = 40;
-pub const ZEILE_H: i32 = 28;
+pub const LISTE_Y: i32 = 50;
+/// Zeilen ≥ 7 mm (1 px = 0,173 mm), wie Menü- und Kontextmenüzeilen
+pub const ZEILE_H: i32 = 42;
+/// Ende der Liste (Arbeitsbereich y)
+const LISTE_ENDE: i32 = 250;
 /// Textbereich rechts.
 pub const TEXT_X: i32 = 164;
-pub const TEXT_Y: i32 = 40;
+pub const TEXT_Y: i32 = 50;
 pub const TEXT_W: i32 = 424;
-pub const TEXT_H: i32 = 220;
-/// Knöpfe oben (x, Breite).
+pub const TEXT_H: i32 = 172;
+/// Knöpfe oben (x, Breite; y 4, Höhe 40).
 pub const NEU: (i32, i32) = (6, 70);
 pub const SPEICHERN: (i32, i32) = (82, 100);
+pub const KNOPF_Y: i32 = 4;
+pub const KNOPF_H: i32 = 40;
+/// Grösste Datei, die sich bearbeiten lässt; grössere nur lesen (sonst
+/// würde „Speichern“ sie gekürzt zurückschreiben); der Text liegt als
+/// `Vec<char>` (4 Byte je Zeichen) im Heap des Programms, Tippen endet
+/// ebenfalls bei 64 K Zeichen.
+const MAX_DATEI: usize = 64 * 1024;
 
 const K_NEU: u32 = 2;
 const K_SPEICHERN: u32 = 3;
@@ -42,7 +52,7 @@ const ZEICHEN_B: i32 = 8;
 const ZEILE_T: i32 = 18;
 const SPALTEN: usize = ((TEXT_W - 12) / ZEICHEN_B) as usize;
 const ZEILEN_T: usize = ((TEXT_H - 8) / ZEILE_T) as usize;
-const LISTE_ZEILEN: usize = ((TEXT_Y + TEXT_H - LISTE_Y) / ZEILE_H) as usize;
+const LISTE_ZEILEN: usize = ((LISTE_ENDE - LISTE_Y) / ZEILE_H) as usize;
 
 struct Zustand {
     ordner: String,
@@ -56,6 +66,12 @@ struct Zustand {
     /// Tastatur offen: die Zeile der Schreibmarke steht oben (die Tastatur
     /// liegt direkt darunter und ist höher als der Platz darunter)
     fokus: bool,
+    /// erste sichtbare Notiz der Liste (Wischen blättert)
+    oben: usize,
+    /// Datei zu gross: nur lesen
+    nur_lesen: bool,
+    /// Ungespeichertes verwerfen: erst beim zweiten Antippen desselben Knopfs
+    verwerfen: Option<u32>,
 }
 
 /// Erste sichtbare Zeile: mit Tastatur die Zeile der Schreibmarke, sonst so,
@@ -97,7 +113,7 @@ fn notizen_lesen(ordner: &str) -> Vec<String> {
 }
 
 /// Datei ganz lesen (UTF-8, Fehler ersetzt).
-fn datei_lesen(pfad: &str) -> Option<String> {
+fn datei_lesen(pfad: &str) -> Option<(String, bool)> {
     let mut v = Vec::new();
     let mut puffer = vec![0u8; 4096];
     loop {
@@ -106,11 +122,16 @@ fn datei_lesen(pfad: &str) -> Option<String> {
             return None;
         }
         v.extend_from_slice(&puffer[..n as usize]);
-        if c == datei::EOF || n == 0 || v.len() > 256 * 1024 {
+        if c == datei::EOF || n == 0 {
             break;
         }
+        // grösser als MAX_DATEI: abgeschnitten (zweiter Wert), nur lesen
+        if v.len() > MAX_DATEI {
+            v.truncate(MAX_DATEI);
+            return Some((String::from_utf8_lossy(&v).into_owned(), true));
+        }
     }
-    Some(String::from_utf8_lossy(&v).into_owned())
+    Some((String::from_utf8_lossy(&v).into_owned(), false))
 }
 
 /// Name aus der ersten Zeile: höchstens 24 Zeichen, nur unbedenkliche.
@@ -172,17 +193,18 @@ fn zeichnen(z: &Zustand) {
     sys::fenster((FX as u32) << 16 | (FW - 1) as u32, (FY as u32) << 16 | (FH - 1) as u32, 0x33 << 24 | 0xF2F0EA, 0, Some(&titel));
     // Funktion 0 setzt den Titel nur beim Anlegen (71.1 danach)
     sys::titel(&titel);
-    knopf(K_NEU, NEU.0, 6, NEU.1, 28, 0xD8D8D8);
-    text(NEU.0 + 8, 13, t("New", "Neu"), 0x202020);
-    knopf(K_SPEICHERN, SPEICHERN.0, 6, SPEICHERN.1, 28, if z.geaendert { 0x3A7BD5 } else { 0xD8D8D8 });
-    text(SPEICHERN.0 + 8, 13, t("Save", "Speichern"), if z.geaendert { 0xFFFFFF } else { 0x202020 });
-    // Liste
-    for (i, n) in z.notizen.iter().take(LISTE_ZEILEN).enumerate() {
-        let y = LISTE_Y + i as i32 * ZEILE_H;
+    knopf(K_NEU, NEU.0, KNOPF_Y, NEU.1, KNOPF_H, 0xD8D8D8);
+    text(NEU.0 + 8, KNOPF_Y + 12, t("New", "Neu"), 0x202020);
+    let speicherbar = z.geaendert && !z.nur_lesen;
+    knopf(K_SPEICHERN, SPEICHERN.0, KNOPF_Y, SPEICHERN.1, KNOPF_H, if speicherbar { 0x3A7BD5 } else { 0xD8D8D8 });
+    text(SPEICHERN.0 + 8, KNOPF_Y + 12, t("Save", "Speichern"), if speicherbar { 0xFFFFFF } else { 0x202020 });
+    // Liste (ab `oben`; Wischen blättert)
+    for (i, n) in z.notizen.iter().enumerate().skip(z.oben).take(LISTE_ZEILEN) {
+        let y = LISTE_Y + (i - z.oben) as i32 * ZEILE_H;
         let gewaehlt = z.name.as_deref() == Some(n.as_str());
-        knopf(K_EINTRAG + i as u32, LISTE_X, y, LISTE_W, ZEILE_H - 2, if gewaehlt { 0xCFE0F5 } else { 0xFFFFFF });
+        knopf(K_EINTRAG + i as u32, LISTE_X, y, LISTE_W, ZEILE_H - 3, if gewaehlt { 0xCFE0F5 } else { 0xFFFFFF });
         let kurz: String = n.trim_end_matches(".txt").chars().take(17).collect();
-        text(LISTE_X + 6, y + 6, &kurz, 0x202020);
+        text(LISTE_X + 6, y + (ZEILE_H - 3 - 16) / 2, &kurz, 0x202020);
     }
     if z.notizen.is_empty() {
         text(LISTE_X + 4, LISTE_Y + 6, t("(no notes)", "(keine Notizen)"), 0x808080);
@@ -206,19 +228,20 @@ fn zeichnen(z: &Zustand) {
     }
     if let Some((s, f)) = &z.status {
         let s: String = s.chars().take(70).collect();
-        text(TEXT_X, TEXT_Y + TEXT_H + 10, &s, *f);
+        text(TEXT_X, TEXT_Y + TEXT_H + 8, &s, *f);
     }
     sys::neuzeichnen(2);
 }
 
 fn oeffnen(z: &mut Zustand, name: &str) {
     match datei_lesen(&verbinden(&z.ordner, name)) {
-        Some(s) => {
+        Some((s, abgeschnitten)) => {
             z.text = s.chars().filter(|&c| c != '\r').collect();
             z.marke = z.text.len();
             z.name = Some(name.into());
             z.geaendert = false;
-            z.status = None;
+            z.nur_lesen = abgeschnitten;
+            z.status = abgeschnitten.then(|| (t("File too large (over 64 KB) - read only", "Datei zu gross (über 64 KB) - nur lesen").to_string(), 0xB03020));
         }
         None => z.status = Some((format!("{} {name}", t("Cannot open", "Nicht zu öffnen:")), 0xB03020)),
     }
@@ -258,6 +281,11 @@ fn speichern(z: &mut Zustand) {
 
 /// Taste (Funktion 2): Zeichen, Rücktaste, Eingabe, Pfeile.
 fn taste(z: &mut Zustand, code: u32) -> bool {
+    // zu grosse Datei: nur Pfeile (lesen), keine Änderung
+    if z.nur_lesen && !matches!((code >> 8) & 0xFF, 0xB0 | 0xB3) {
+        return false;
+    }
+    z.verwerfen = None;
     let zeichen = if code & 0xFF == 3 {
         char::from_u32(code >> 16)
     } else {
@@ -310,7 +338,9 @@ pub fn programm() {
     } else {
         (standard_ordner(), None)
     };
-    let mut z = Zustand { notizen: notizen_lesen(&ordner), ordner, name: None, text: Vec::new(), marke: 0, geaendert: false, status: None, fokus: false };
+    let mut z = Zustand { notizen: notizen_lesen(&ordner), ordner, name: None, text: Vec::new(), marke: 0, geaendert: false, status: None, fokus: false, oben: 0, nur_lesen: false, verwerfen: None };
+    // Ereignisse: Neuzeichnen, Tasten, Knöpfe, Maus (Wischen = Scrollen)
+    sys::maske(0x27);
     if let Some(n) = datei_name {
         oeffnen(&mut z, &n);
     }
@@ -339,7 +369,14 @@ pub fn programm() {
                         sys::textfeld_fokus(false);
                         return;
                     }
+                    K_NEU | K_EINTRAG.. if z.geaendert && !z.nur_lesen && z.verwerfen != Some(id) => {
+                        // Ungespeichertes nicht stillschweigend verwerfen
+                        z.verwerfen = Some(id);
+                        z.status = Some((t("Not saved - tap again to discard", "Nicht gespeichert - nochmal tippen zum Verwerfen").into(), 0xB03020));
+                    }
                     K_NEU => {
+                        z.verwerfen = None;
+                        z.nur_lesen = false;
                         z.name = None;
                         z.text.clear();
                         z.marke = 0;
@@ -348,7 +385,13 @@ pub fn programm() {
                         sys::textfeld_fokus(false);
                         z.fokus = false;
                     }
+                    K_SPEICHERN if z.nur_lesen => {
+                        z.status = Some((t("File too large (over 64 KB) - read only", "Datei zu gross (über 64 KB) - nur lesen").into(), 0xB03020));
+                        sys::textfeld_fokus(false);
+                        z.fokus = false;
+                    }
                     K_SPEICHERN => {
+                        z.verwerfen = None;
                         speichern(&mut z);
                         sys::textfeld_fokus(false);
                         z.fokus = false;
@@ -360,7 +403,8 @@ pub fn programm() {
                         zeichnen(&z);
                         feld_melden(&z);
                     }
-                    i if (K_EINTRAG..K_EINTRAG + LISTE_ZEILEN as u32).contains(&i) => {
+                    i if i >= K_EINTRAG => {
+                        z.verwerfen = None;
                         if let Some(n) = z.notizen.get((i - K_EINTRAG) as usize).cloned() {
                             oeffnen(&mut z, &n);
                         }
@@ -370,6 +414,16 @@ pub fn programm() {
                     _ => {}
                 }
                 zeichnen(&z);
+            }
+            6 => {
+                // Wischen blättert die Liste (mehr Notizen als Zeilen)
+                let s = sys::maus(7) as i16 as i32;
+                let max = z.notizen.len().saturating_sub(LISTE_ZEILEN);
+                let neu = (z.oben as i32 + s.signum()).clamp(0, max as i32) as usize;
+                if s != 0 && neu != z.oben {
+                    z.oben = neu;
+                    zeichnen(&z);
+                }
             }
             _ => {}
         }

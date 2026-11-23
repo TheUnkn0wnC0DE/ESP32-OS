@@ -51,6 +51,19 @@ impl Finger {
         self.t += 600;
         std::thread::sleep(Duration::from_millis(120));
     }
+
+    /// Wischen von a nach b in 200 ms (10 Schritte), dann loslassen.
+    fn wischen(&mut self, a: (i32, i32), b: (i32, i32)) {
+        for i in 0..=10 {
+            let p = (a.0 + (b.0 - a.0) * i / 10, a.1 + (b.1 - a.1) * i / 10);
+            self.g.schritt(self.t, [Some(p), None]);
+            self.t += 20;
+            std::thread::sleep(Duration::from_millis(15));
+        }
+        self.g.schritt(self.t, [None, None]);
+        self.t += 800;
+        std::thread::sleep(Duration::from_millis(500));
+    }
 }
 
 fn foto(name: &str) {
@@ -101,6 +114,12 @@ fn notizen_oeffnen_bearbeiten_speichern() {
     std::fs::write(wurzel.join("sys/settings/esp32os.ini"), "[system]\nsetup=1\n").unwrap();
     std::fs::create_dir_all(wurzel.join("sd/Notizen")).unwrap();
     std::fs::write(wurzel.join("sd/Notizen/Einkauf.txt"), "Milch\nBrot").unwrap();
+    // A-Review: zu grosse Datei (300 KB) und mehr Notizen als Listenzeilen
+    let gross = "x".repeat(99) + "\n";
+    std::fs::write(wurzel.join("sd/Notizen/Gross.txt"), gross.repeat(3000)).unwrap();
+    for n in ["Z1", "Z2", "Z3"] {
+        std::fs::write(wurzel.join(format!("sd/Notizen/{n}.txt")), n).unwrap();
+    }
     kern::init(&kern::PC, desktop::PROGRAMME);
     kern::fenster::bildschirm(640, 360);
     kern::skin::anwenden(kern::skin::STANDARD, 2).unwrap();
@@ -137,4 +156,39 @@ fn notizen_oeffnen_bearbeiten_speichern() {
     assert_eq!(std::fs::read_to_string(wurzel.join("sd/Notizen/Einkauf.txt")).unwrap(), "Milch\nBrot", "andere Notiz unverändert");
     assert!(!sys::tastatur_soll().0, "Tastatur nach dem Speichern zu");
     foto("a1_gespeichert");
+
+    // A-Review: Ungespeichertes erst beim zweiten Antippen von „Neu“ weg
+    f.tippen(AX + TEXT_X + 200, AY + TEXT_Y + 60);
+    bis(|| sys::tastatur_soll().0, "Tastatur bei Fokus");
+    std::thread::sleep(Duration::from_millis(300));
+    tippe_text(&mut f, "!");
+    bis(|| hat("Notes - Hallo Welt.txt *"), "geändert");
+    f.tippen(AX + NEU.0 + NEU.1 / 2, AY + 20);
+    std::thread::sleep(Duration::from_millis(300));
+    assert!(hat("Notes - Hallo Welt.txt *"), "erstes Antippen verwirft nicht: {:?}", titel());
+    f.tippen(AX + NEU.0 + NEU.1 / 2, AY + 20);
+    bis(|| hat("Notes - new"), "zweites Antippen verwirft");
+    assert_eq!(std::fs::read_to_string(wurzel.join("sd/Notizen/Hallo Welt.txt")).unwrap(), "Hallo Welt\nZeile 2", "Datei unverändert");
+
+    // A-Review: Datei über 64 KB nur lesen – Tippen ändert nichts,
+    // „Speichern“ schreibt sie nicht gekürzt zurück
+    // Liste: Einkauf, Gross, Hallo Welt, Z1 (4 Zeilen sichtbar)
+    f.tippen(AX + LISTE_X + 40, AY + LISTE_Y + ZEILE_H + ZEILE_H / 2);
+    bis(|| hat("Notes - Gross.txt"), "grosse Datei geöffnet");
+    f.tippen(AX + TEXT_X + 200, AY + TEXT_Y + 60);
+    bis(|| sys::tastatur_soll().0, "Tastatur bei Fokus");
+    std::thread::sleep(Duration::from_millis(300));
+    tippe_text(&mut f, "a");
+    std::thread::sleep(Duration::from_millis(300));
+    assert!(hat("Notes - Gross.txt"), "nur lesen, nicht geändert: {:?}", titel());
+    f.tippen(AX + SPEICHERN.0 + SPEICHERN.1 / 2, AY + 20);
+    std::thread::sleep(Duration::from_millis(500));
+    assert_eq!(std::fs::metadata(wurzel.join("sd/Notizen/Gross.txt")).unwrap().len(), 300_000, "grosse Datei unverändert");
+
+    // A-Review: Wischen blättert die Liste (6 Notizen, 4 Zeilen) – danach ist
+    // die vierte Zeile „Z3“
+    let liste = (AX + LISTE_X + 60, AY + LISTE_Y + 2 * ZEILE_H);
+    f.wischen((liste.0, liste.1 + 60), (liste.0, liste.1 - 60));
+    f.tippen(AX + LISTE_X + 40, AY + LISTE_Y + 3 * ZEILE_H + ZEILE_H / 2);
+    bis(|| hat("Notes - Z3.txt"), "nach dem Wischen: Z3 in der vierten Zeile");
 }

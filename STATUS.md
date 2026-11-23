@@ -48,6 +48,10 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
 - ✔ A5 Musikplayer: MP3 von der SD-Karte über den Lautsprecher (eigener
   Decoder-Weg, Ton-Ring im Kern), Pause/Weiter/Nächster/Zurück am Board.
   Testtöne selbst erzeugt (keine fremde Musik im Repo).
+- ✔ A-Review: 5 Befunde (u. a. Mutex im Programm-Heap, Notizen schrieben
+  grosse Dateien gekürzt zurück, zu kleine Tasten), behoben bzw. als
+  Abweichung begründet; dabei am Board ein abgeschnittenes Startmenü
+  gefunden (jetzt Ordner „System...“).
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 

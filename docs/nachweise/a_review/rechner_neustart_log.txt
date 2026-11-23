@@ -1,0 +1,11 @@
+I (11543) pudding_fw::wlan: WLAN: rechner gestartet (6)
+I (35075) pudding_p4: [debug] Rechner: 7 → 7
+I (36272) pudding_p4: [debug] Rechner: × → 7
+I (37476) pudding_p4: [debug] Rechner: 6 → 6
+I (38673) pudding_p4: [debug] Rechner: = → 42
+I (48873) pudding_p4: [debug] Rechner: 7 → 7
+I (50074) pudding_p4: [debug] Rechner: × → 7
+I (51271) pudding_p4: [debug] Rechner: 6 → 6
+I (52474) pudding_p4: [debug] Rechner: = → 42
+I (55841) pudding_fw::foto: BILD 0 720 1280 3000000 0
+I (62764) pudding_fw::foto: BILD 1 720 1280 3000000 0

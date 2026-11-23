@@ -111,7 +111,11 @@ fn taskmanager_beendet_haengendes_programm() {
     let mut f = Finger { g: Gesten::default(), t: 1000 };
     f.tippen(40, 340);
     bis(|| da("ESP32-OS"), "Startmenü");
-    let (x, y) = desktop::shell::menue_eintrag_mitte("taskmanager").unwrap();
+    // Ordner „System“ im Startmenü, darin der Eintrag
+    let (x, y) = desktop::shell::menue_eintrag_mitte("@system").unwrap();
+    f.tippen(x, y);
+    std::thread::sleep(Duration::from_millis(600));
+    let (x, y) = desktop::shell::menue_eintrag_mitte_in("system", "taskmanager").unwrap();
     f.tippen(x, y);
     bis(|| da("Task manager"), "Taskmanager offen");
     let liste = desktop::taskmanager::liste();

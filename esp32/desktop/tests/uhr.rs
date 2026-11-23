@@ -156,4 +156,21 @@ fn uhr_wecker_und_timer() {
     // klingelt in derselben Minute nicht noch einmal
     std::thread::sleep(Duration::from_millis(1500));
     assert_eq!(uhr::KLINGELN.load(Relaxed), 0);
+
+    // A-Review: Klingeln ohne laufende Uhr (z. B. zwangsweise beendet) hält
+    // den Bildschirm nicht für immer an – die Taskleiste setzt es zurück
+    let schliessen = kern::kern_abschnitt(|| {
+        kern::fenster::mit_welt(|w| {
+            let s = w.fenster_liste().into_iter().find(|f| f.titel == "Clock").unwrap().slot;
+            let fe = w.slots[s].as_ref().unwrap().fenster.as_ref().unwrap();
+            let k = fe.knoepfe.iter().find(|k| k.id == 1).unwrap();
+            (fe.x + k.x + k.w / 2, fe.y + k.y + k.h / 2)
+        })
+    });
+    f.tippen(schliessen.0, schliessen.1);
+    bis(10, || !uhr_laeuft(), "Uhr geschlossen");
+    uhr::KLINGELN.store(1, Relaxed);
+    assert!(d.wach_halten());
+    bis(10, || uhr::KLINGELN.load(Relaxed) == 0, "verwaistes Klingeln zurückgesetzt");
+    assert!(!d.wach_halten());
 }

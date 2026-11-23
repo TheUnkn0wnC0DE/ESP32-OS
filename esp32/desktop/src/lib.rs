@@ -40,6 +40,8 @@ pub fn bild_schreiben(pfad: &std::path::Path, daten: &[u8]) {
 /// Zuletzt angezeigter Text eines Programms (Tests, Board-Log) – fester
 /// Puffer statt `String`: Ein `static` mit Heap-Daten zeigte nach dem Ende
 /// des Programms in dessen freigegebenen Heap (Neustart → Heap kaputt).
+/// Gesperrt wird nur im Kern-Abschnitt: am Board legt `std::Mutex` sein
+/// pthread-Objekt beim ersten Sperren im Heap des Aufrufers an (A-Review).
 pub(crate) struct Textmerker(std::sync::Mutex<([u8; 64], usize)>);
 
 impl Textmerker {
@@ -48,18 +50,18 @@ impl Textmerker {
     }
 
     pub(crate) fn setzen(&self, s: &str) {
-        let mut g = self.0.lock().unwrap_or_else(|e| e.into_inner());
         let mut n = s.len().min(64);
         while !s.is_char_boundary(n) {
             n -= 1;
         }
-        g.0[..n].copy_from_slice(&s.as_bytes()[..n]);
-        g.1 = n;
+        let mut b = [0u8; 64];
+        b[..n].copy_from_slice(&s.as_bytes()[..n]);
+        kern::kern_abschnitt(|| *self.0.lock().unwrap_or_else(|e| e.into_inner()) = (b, n));
     }
 
     pub(crate) fn holen(&self) -> String {
-        let g = self.0.lock().unwrap_or_else(|e| e.into_inner());
-        String::from_utf8_lossy(&g.0[..g.1]).into_owned()
+        let (b, n) = kern::kern_abschnitt(|| *self.0.lock().unwrap_or_else(|e| e.into_inner()));
+        String::from_utf8_lossy(&b[..n]).into_owned()
     }
 }
 pub mod wlan;

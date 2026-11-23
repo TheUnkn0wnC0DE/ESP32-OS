@@ -948,7 +948,37 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   kann Threads nicht anhalten → „liess sich nicht anhalten“, siehe
   Abweichung). Review-Subagent vorgezogen, Befunde behoben (Abweichung
   „A6 Zwangsbeenden nur ausserhalb von Kern und Treibern“).
-- [ ] **A-Review** – Review-Subagent.
+- [x] **A-Review** – Review-Subagent.
+  Nachweis 23.11.: Review des Diffs bb14b7d..be475b9 (Block F) gegen PLAN
+  und Auftrag 5/9: Funktionen wie beschrieben, keine Platzhalter; fünf
+  Befunde, behoben:
+  1. `Textmerker` sperrte sein `std::Mutex` ausserhalb des Kern-Abschnitts –
+     am Board legt das pthread-Objekt beim ersten Sperren im Heap des
+     Programms an (nach Programmende weg). Jetzt nur im Kern-Abschnitt.
+     Board-Nachweis (Runde 56, `docs/nachweise/a_review/`): Rechner
+     schliessen und zweimal über das Startmenü neu öffnen, jedes Mal
+     „7 × 6 = 42“ (Log `rechner_neustart_log.txt`) – ohne Absturz.
+  2. Klingeln ohne laufende Uhr (Start fehlgeschlagen, zwangsweise beendet)
+     hielt den Bildschirm für immer an: Die Taskleiste setzt es nach 3 s
+     zurück; zum Wecken zählt nur eine nicht endende Uhr. PC: Fall in
+     `desktop/tests/uhr.rs`.
+  3. Notizen schrieben grosse Dateien gekürzt zurück und verwarfen
+     Ungespeichertes ohne Rückfrage: Dateien über 64 KB nur lesen (Text als
+     `Vec<char>` im Programm-Heap, Tippen endet auch bei 64 K Zeichen),
+     „Neu“/andere Notiz verwirft erst beim zweiten Antippen; Liste blättert
+     per Wischen. PC: Fälle in `desktop/tests/notizen.rs` (300-KB-Datei
+     bleibt 300 000 Byte, Wischen → „Z3“).
+  4. Bedienelemente unter 7 mm: Notizen-Knöpfe 40 px und Liste 42 px,
+     Musik-Liste 42 px, Rechner-Tasten 67×40 px (6,9 mm; 1 px = 0,173 mm).
+  5. Ton-Ring: Beim Pausieren genau während der Audio-Faden einen Block
+     mischt, kann dieser Block (256 Frames ≈ 12 ms) nach „Weiter“ noch
+     einmal kommen – siehe Abweichungen.
+  Dabei am Board gefunden (Runde 55): Mit Browser und „Mehr Programme“
+  (nur 32 Bit) hatte das Startmenü 16 Einträge = 6 Zeilen, die nicht über
+  die Taskleiste passen – die letzte Zeile fehlte, Einträge verschoben
+  (Tippen auf „Rechner“ öffnete die Uhr, `vorher_menue_abgeschnitten_…png`).
+  Jetzt Ordner „System...“ (Task-Manager, Bildschirmfoto, Touchpad-Modus):
+  Hauptmenü 14 Einträge, 3 × 5; Tests über `menue_eintrag_mitte(_in)`.
 
 ## G. Spiele (Auftrag 5, 9)
 
@@ -1013,6 +1043,13 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 
 ## Abweichungen
 
+- **A5, Pause im Musikplayer (23.11., A-Review):** Nimmt die Pause die
+  ungespielten Frames zurück, während der Audio-Faden gerade einen Block
+  mischt, wird dieser Block (höchstens 256 Frames ≈ 12 ms) nach „Weiter“ ein
+  zweites Mal gespielt. Ein sperrfreier Ring ohne diese Lücke bräuchte ein
+  Quittieren je Block durch den Audio-Faden; für 12 ms in einem seltenen
+  Fall bleibt es beim einfachen Ring (Datenstruktur sonst korrekt, siehe
+  Review).
 - **B8, markierter Bereich am Board (23.11.):** Markieren und Kopieren geht
   (Text landet in der Zwischenablage des Systems, „Text kopiert“). Am Board
   reicht die Markierung aber vom Seitenanfang bis zur Stelle, an der der
