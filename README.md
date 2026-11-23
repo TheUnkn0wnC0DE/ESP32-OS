@@ -17,7 +17,7 @@ Measured on the board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, chip revision v1.x,
 
 | | Value | Evidence |
 |---|---|---|
-| OS image | 5.4 MiB (5,699,056 bytes), 91.5 % of its 5.9 MiB flash slot | [o8_release_paket.txt](docs/nachweise/o8/o8_release_paket.txt) |
+| OS image | 5.4 MiB (5,699,072 bytes), 91.5 % of its 5.9 MiB flash slot | [o8_release_paket_v1.0.1.txt](docs/nachweise/o8/o8_release_paket_v1.0.1.txt) |
 | Power-on to desktop | 3.5 s | [o4_1_apps_log.txt](docs/nachweise/o4/o4_1_apps_log.txt) |
 | Browser scrolling | 32 frames/s (Wikipedia article) | [o1_scroll_log.txt](docs/nachweise/o1/o1_scroll_log.txt) |
 | PDF page (A4 with photo, text, shapes) | 0.24 s | [z1_board_log.txt](docs/nachweise/z1/z1_board_log.txt) |
@@ -27,7 +27,7 @@ Measured on the board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, chip revision v1.x,
 
 ## Quick start
 
-Install release 1.0 (chip revision v1.x):
+Install the latest release (1.0.1, chip revision v1.x):
 
 1. Download the files of the [latest release](https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/latest) and check them against `SHA256SUMS`.
 2. Connect the board's USB TO UART port.
@@ -59,7 +59,6 @@ Boards with chip revision v3.x and changes to the code: build from source, see [
 
 ## Limitations
 
-- Release 1.0: Settings does not open shortly after power-on. It needs slightly more than 12 MB in one block; the largest free block is exactly 12 MB ([u1_update.txt](docs/nachweise/u1/u1_update.txt)). Fixed in the source code; the fix comes with the next release.
 - Wi-Fi passwords are stored unencrypted in flash (no flash encryption, no eFuses).
 - The browser has 10 MB of memory. Large web applications do not load; some web APIs are missing.
 - The PDF viewer shows text in the system font, opens files up to 4 MB and does not decode CCITT, JBIG2 or JPEG 2000 images.

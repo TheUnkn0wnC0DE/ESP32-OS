@@ -119,10 +119,10 @@ fn wlan_in_den_einstellungen_per_touch() {
         (netz("Buero", -86, Sicherheit::Wpa3, true), "y".into()),
     ]);
     assert!(wlan::treiber_setzen(Box::new(sim)));
-    // Update-Quelle (U1) simuliert: neueste Freigabe v1.0.1
+    // Update-Quelle (U1) simuliert: neueste Freigabe v99.0 (immer neuer als VERSION)
     let upd: &'static kern::aktualisierung::Simulation = Box::leak(Box::new(kern::aktualisierung::Simulation {
         neueste: kern::aktualisierung::Freigabe {
-            version: "v1.0.1".into(),
+            version: "v99.0".into(),
             bild_url: "https://example.org/esp32os.bin".into(),
             pruef_url: "https://example.org/esp32os.bin.sha256".into(),
         },
@@ -236,7 +236,7 @@ fn wlan_in_den_einstellungen_per_touch() {
     std::thread::sleep(Duration::from_millis(500));
     foto("u1_gefunden");
     f.tippen(5 + 330 + 145, 48 + 116 + 24);
-    bis(|| UPDATE.get().is_some_and(|u| u.installiert.lock().unwrap().as_deref() == Some("v1.0.1")), "Update installiert");
+    bis(|| UPDATE.get().is_some_and(|u| u.installiert.lock().unwrap().as_deref() == Some("v99.0")), "Update installiert");
     std::thread::sleep(Duration::from_millis(300));
     foto("u1_installiert");
 

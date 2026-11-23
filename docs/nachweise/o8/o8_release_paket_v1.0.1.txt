@@ -1,0 +1,40 @@
+O8: Release-Paket v1.0.1, gebaut 23.11.2026 (esp32/firmware/release_paket.ps1 -Version 1.0.1),
+VERSION "1.0.1". Rust mit --remap-path-prefix (Benutzerverzeichnis -> ~), NetSurf-C mit
+-ffile-prefix-map, ESP-IDF mit CONFIG_COMPILER_HIDE_PATHS_MACROS=y.
+
+Release-Pruefung (Auszug aus dem Bau-Log):
+C:\eo\esp32os.elf: 67388 KB, sauber
+Release-Pruefung esp32os.elf: keine WLAN-Zugangsdaten
+C:\eo\esp32os.bin: 5565 KB, sauber
+Release-Pruefung esp32os.bin: keine WLAN-Zugangsdaten
+Release-Pruefung esp32os.bin: keine lokalen Pfade
+C:\eo\doomapp.elf: 29255 KB, sauber
+Release-Pruefung doomapp.elf: keine WLAN-Zugangsdaten
+C:\eo\doomapp.bin: 1658 KB, sauber
+Release-Pruefung doomapp.bin: keine WLAN-Zugangsdaten
+Release-Pruefung doomapp.bin: keine lokalen Pfade
+C:\eo\quakeapp.elf: 30093 KB, sauber
+Release-Pruefung quakeapp.elf: keine WLAN-Zugangsdaten
+C:\eo\quakeapp.bin: 1673 KB, sauber
+Release-Pruefung quakeapp.bin: keine WLAN-Zugangsdaten
+Release-Pruefung quakeapp.bin: keine lokalen Pfade
+
+Groessen (Bytes):
+bootloader.bin             24160
+partition-table.bin         3072
+otadata-leer.bin            8192
+esp32os.bin              5699072
+doomapp.bin              1698608
+quakeapp.bin             1713440
+
+App-Partition esp32os_a: 6225920 Bytes (partitions.csv) -> esp32os.bin belegt 91,5 %
+
+Suche nach Benutzername und echtem Name (genau, alle Dateien des Pakets): 0 Treffer
+
+SHA256SUMS:
+81001febbe6f5a37042c1c1163b553118a08520790dd357cd8a4844807cc24fe  bootloader.bin
+f2ed4babac5f960f75696a50487beee44527a10a7b7d6d741c96ca6daa6f6dd3  doomapp.bin
+0ac8bdfba7a8aeef7784456467cfde13c345a32328f703cdd0784e73ba35b2cb  esp32os.bin
+7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f  otadata-leer.bin
+caac202b70ef8688d9b8536a5fe7d0c97b6ee698ba9b4f649155ca200f9b9c1e  partition-table.bin
+644d4424be4f592556ec1832f89961de62a0b5ec45c58161468321bf04646634  quakeapp.bin
