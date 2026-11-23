@@ -2,9 +2,9 @@
 # des neuesten Releases (Release-Dateien, nicht im Git-Baum).
 name: Web flasher
 
+# Nach einem neuen Release von Hand starten (Pages veröffentlicht nur von
+# main, nicht vom Release-Tag): gh workflow run flasher.yml --ref main
 on:
-  release:
-    types: [published]
   push:
     branches: [main]
     paths: ['docs/flasher/**', '.github/workflows/flasher.yml']

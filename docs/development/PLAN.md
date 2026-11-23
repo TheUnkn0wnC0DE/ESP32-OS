@@ -1254,6 +1254,13 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   aus dem Release. Offen: Flashen über den Web-Flasher am Board – der
   eingebaute Browser hat keine Auswahl für serielle Ports, das braucht einen
   Klick des Nutzers in Chrome/Edge.
+  Bugfix-Release v1.0.1 (OK des Nutzers, 23.11.): Einstellungen mit 6 MB,
+  Paket geprüft (`o8_release_paket_v1.0.1.txt`), Release mit Tag v1.0.1
+  veröffentlicht, Web-Flasher liefert 1.0.1 aus. Am Board esp32os.bin von
+  v1.0.1 mit espflash nach esp32os_a geschrieben: startet, Statistik-Zeile
+  mit grösstem PSRAM-Block (neu in 1.0.1), WLAN verbunden. Pages
+  veröffentlicht nur von main, nicht vom Release-Tag („Deployment failed“):
+  nach einem Release `gh workflow run flasher.yml --ref main`.
 - **Wenn Zeit bleibt** (Auftrag 5): PDF-Betrachter, Kamera-App (OV5647),
   weitere KolibriOS-C-Programme. Reihenfolge (Nutzer 23.11.): zuerst
   PDF-Betrachter, dann Kamera-App; die Kamera-App ist nach „Später (v1.1)“
@@ -1674,7 +1681,10 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   Hintergrundbilder lädt `bildbetrachter::laden` passend zum freien
   Speicher (12-MP-Foto: `desktop/tests/hintergrund_gross.rs`). Am Board
   geöffnet (U1-Lauf). Im veröffentlichten v1.0 steckt der Fehler noch –
-  Bugfix-Release v1.0.1 nur mit deinem OK. Ausserdem: ein Programm mit
+  Bugfix-Release v1.0.1 nur mit deinem OK. → v1.0.1 veröffentlicht (23.11.).
+  Boards mit 1.0 kommen nicht über die Einstellungen an das Update, sie
+  brauchen das Kabel (espflash oder Web-Flasher); so steht es im
+  Release-Text von 1.0.1. Ausserdem: ein Programm mit
   12 MB direkt beim Start (Entwicklungsweg `ESP32OS_START`) liess die erste
   Bildpuffer-Anforderung des Desktops scheitern (Neustart); mit 6 MB und
   in v1.0 ohne Autostart tritt das nicht auf.

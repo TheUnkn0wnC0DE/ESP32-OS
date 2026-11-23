@@ -13,7 +13,8 @@
 #    - manifest.json für den Web-Flasher (docs/flasher/, Offsets wie
 #      partitions.csv).
 #    Der Web-Flasher (GitHub Pages) holt die Dateien aus dem Release
-#    (.github/workflows/flasher.yml), sie liegen nicht im Repo.
+#    (.github/workflows/flasher.yml), sie liegen nicht im Repo. Nach dem
+#    Veröffentlichen: gh workflow run flasher.yml --ref main
 # 3. Prüft, dass die eingebaute Version (desktop/src/shell.rs, VERSION) mit
 #    -Version beginnt – sonst meldete das Update über WLAN eine falsche
 #    Version.

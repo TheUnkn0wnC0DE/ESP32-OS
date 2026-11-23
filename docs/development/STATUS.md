@@ -8,6 +8,17 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md). Die Vorgeschichte
 (Spiele, Firmware, Messwerte, Übergabe vom 21.11.) liegt im alten Repo des
 Vorgängerprojekts.
 
+## Release v1.0.1 (23.11. abends)
+
+- **Veröffentlicht:** https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/tag/v1.0.1
+  – Einstellungen mit 6 statt 12 MB Heap. Dein Board läuft mit 1.0.1
+  (per Kabel nach esp32os_a geschrieben, Einstellungen und WLAN bleiben).
+- **Update von 1.0:** In 1.0 öffnen die Einstellungen nach dem Einschalten
+  nicht, damit ist auch „Nach Updates suchen“ nicht erreichbar → 1.0.1 per
+  Kabel (espflash oder Web-Flasher), steht im Release-Text.
+- **Web-Flasher** liefert 1.0.1; Board-Test über den Web-Flasher wartet auf
+  dich (Portauswahl in Chrome/Edge).
+
 ## Release v1.0 (23.11. abends)
 
 - **Veröffentlicht:** https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/tag/v1.0
