@@ -297,6 +297,7 @@ pub fn im_hintergrund_starten() {
         // Abdunkeln erneut 5 s warten
         let mut itwt_moeglich = true;
         let mut nach_wlan_gestartet = false;
+        let mut seitenliste_gestartet = false;
         let mut update_getestet = false;
         loop {
             let jetzt_ms = ((crate::hw::now_us() - start) / 1000) as u64;
@@ -309,6 +310,11 @@ pub fn im_hintergrund_starten() {
                             let (name, param) = prog.split_once(' ').unwrap_or((prog, ""));
                             let r = kern::datei::starten(&format!("/sys/{name}"), param);
                             log::info!("WLAN: {prog} gestartet ({r})");
+                        }
+                        // Entwicklung (BR1/BR2): Seitenliste im Browser abarbeiten
+                        if option_env!("ESP32OS_SEITENLISTE").is_some() && !seitenliste_gestartet {
+                            seitenliste_gestartet = true;
+                            crate::seitenliste::starten();
                         }
                         // Entwicklung (U1): Selbsttest HTTPS/Prüfsumme/Abbild
                         if option_env!("ESP32OS_UPDATE_TEST").is_some() && !update_getestet {

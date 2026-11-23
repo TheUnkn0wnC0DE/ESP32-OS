@@ -1,0 +1,2269 @@
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (28) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (28) boot: compile time Nov 23 2026 16:17:12
+I (29) boot: Multicore bootloader
+I (30) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (35) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 40MHz
+I (43) boot.esp32p4: SPI Mode       : QIO
+I (47) boot.esp32p4: SPI Flash Size : 32MB
+I (51) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (58) boot: ## Label            Usage          Type ST Offset   Length
+I (64) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (71) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (77) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (84) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (90) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (97) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (103) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (110) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (118) boot: End of partition table
+I (121) boot: No factory image, trying OTA 0
+I (124) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (395) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) load
+I (397) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) load
+I (401) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (972) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) load
+I (993) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (997) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) load
+I (1002) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) load
+I (1006) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) load
+I (1020) boot: Loaded app from partition at offset 0x20000
+I (1046) boot: Set actual ota_seq=1 in otadata[0]
+I (1046) boot: Disabling RNG early entropy source...
+I (1057) hex_psram: vendor id    : 0x0d (AP)
+I (1057) hex_psram: Latency      : 0x01 (Fixed)
+I (1057) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (1058) hex_psram: dev id       : 0x03 (generation 4)
+I (1063) hex_psram: density      : 0x07 (256 Mbit)
+I (1067) hex_psram: good-die     : 0x06 (Pass)
+I (1072) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (1076) hex_psram: BurstType    : 0x00 ( Wrap)
+I (1081) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (1085) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (1090) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (1095) hex_psram: DriveStrength: 0x00 (1/1)
+I (1099) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1403) mmu_psram: .rodata xip on psram
+I (1684) mmu_psram: .text xip on psram
+I (1685) hex_psram: psram CS IO is dedicated
+I (1685) cpu_start: Multicore app
+I (2079) esp_psram: SPI SRAM memory test OK
+I (2091) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (2091) cpu_start: Pro cpu start user code
+I (2091) cpu_start: cpu freq: 360000000 Hz
+I (2093) app_init: Application information:
+I (2097) app_init: Project name:     libespidf
+I (2101) app_init: App version:      1
+I (2105) app_init: Compile time:     Nov 23 2026 16:16:00
+I (2110) app_init: ELF file SHA256:  e3a0fee15...
+I (2114) app_init: ESP-IDF:          v5.5.5
+I (2118) efuse_init: Min chip rev:     v1.0
+I (2122) efuse_init: Max chip rev:     v1.99 
+I (2126) efuse_init: Chip rev:         v1.3
+I (2130) heap_init: Initializing. RAM available for dynamic allocation:
+I (2136) heap_init: At 4FF29F90 len 00011030 (68 KiB): RETENT_RAM
+I (2142) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (2147) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (2153) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (2158) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (2163) esp_psram: Adding pool of 27100K of PSRAM memory to heap allocator
+I (2170) esp_psram: Adding pool of 5K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2181) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2192) spi_flash: detected chip: gd
+I (2196) spi_flash: flash io: qio
+I (2199) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2205) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2212) main_task: Started on CPU0
+I (2215) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2223) main_task: Calling app_main()
+I (2227) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2227) pudding_p4: ESP32-OS startet …
+I (2227) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 330 KB intern, 27099 KB PSRAM
+I (2227) pudding_p4: Start: intern frei 330 KB (größter Block 184 KB), DMA-fähig 291 KB
+I (2232) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+W (2233) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2275) pudding_fw::speicher: SD-Karte eingehängt: 241724 MB als /sd0/1
+I (2316) pudding_p4: Einstellungen: Sprache de, Helligkeit 8, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1795466364
+W (2316) pudding_p4: Autopilot: Touchpad-Modus für diesen Lauf aus
+I (2316) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2316) eh_mcu_transport: transport_init: probing bus backend
+I (2316) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (2316) sdmmc_periph: sdmmc_host_init: SDMMC host already initialized, skipping init flow
+I (2317) eh_sdio: sdio_data_to_rx_buf_task started
+I (2317) eh_mcu_transport: transport_init: bus backend up
+W (2317) eh_sdio: Reset co-processor using GPIO[54]
+I (2331) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2332) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2332) GT911: TouchPad_Config_Version:70
+I (2332) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (2334) hx8394: version: 2.1.0
+W (2504) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (2843) pudding_p4: ESP32-OS-Desktop startet (@start)
+I (2844) pudding_p4: Spiel geladen: intern frei 100 KB (größter Block 31 KB), DMA-fähig 62 KB
+I (2845) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (2846) pudding_p4: Los geht's!
+I (3110) pudding_p4: [debug] @icon: gezeichnet in 119 ms (Grund 17, Symbole 36, Mischen 12, Text 3, Ausgabe 48)
+I (3110) pudding_p4: [debug] 
+I (3492) pudding_p4: [debug] Startbild: Desktop bereit nach 504 ms
+I (3510) pudding_p4: [debug] Ersteinrichtung: schon erledigt
+I (3512) pudding_p4: [debug] 
+I (3837) eh_host_port_reset: reset done pin=54 parked=1
+I (3871) eh_host_port_sdio: bus applied: clk_khz=40000
+I (3871) eh_host_port_sdio: Function 0 Blocksize: 512
+I (3871) eh_host_port_sdio: Function 1 Blocksize: 512
+I (3971) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (4017) eh_sdio: SDIO Host operating in STREAMING MODE
+I (4017) eh_sdio: Open data path at slave
+I (4017) eh_sdio: Starting SDIO process rx task
+I (4023) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (4023) eh_init_evt: capabilities: 0x0d
+I (4023) eh_init_evt: Features supported are:
+I (4023) eh_init_evt: 	 * WLAN over SDIO
+I (4023) eh_init_evt: 	   - HCI over SDIO
+I (4023) eh_init_evt: 	   - BLE only
+I (4023) eh_raw_tp: raw TP inactive
+I (4023) eh_init_evt: Default RPC to V2
+I (4023) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (4023) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (4023) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (4023) eh_init_evt: Missing SDIO_MODE TLV; Continue anyway.
+W (4023) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (4024) eh_init_evt: chip=0x0d (esp32c6) fw=0x00000000 caps=0x0d ext=0x00000000
+I (4024) eh_auto_init: auto_init: found 1 descriptor(s)
+I (4024) eh_auto_init: auto_init: initialising 'wifi' (priority 150)
+I (4024) eh_wifi_itwt: wifi iTWT ext init
+I (4382) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 292 → 91 KB
+I (4383) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (4846) pudding_p4: Desktop: 9.5 Bilder/s neu, 144.4 übersprungen/s, Fläche 144480 px/Bild, Compositor 0.40 ms/Bild
+I (6846) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (7011) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (7041) pudding_p4: Mittel: Simulation 0.4 ms, Bild vorbereiten 6.2 ms (0 Dreiecke), Mithelfen 15.1 ms, Rest-PPA 1.0 ms, Warten auf Bildspeicher 0.3 ms
+I (7041) pudding_p4: Ruckler: 26 verpasste Bildwechsel; längstes Bild 43.2 ms (Simulation 4.7, Vorbereiten 11.6, Mithelfen 25.2, Sichern 0.0)
+I (7041) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 5.9 ms je Bild
+I (7042) pudding_p4: Frei: 86 KB intern, 13528 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (7042) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (7042) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.48 ms, Kern 1 3.87 ms; angeschubst seit Start: 0
+I (7042) pudding_p4: 37.9 FPS (640x360 scharf), Frame 0.6 ms, Streifen 2/4, Rendern 0.1/0.2 ms, Skalieren 0.3/0.5 ms, PPA 0.8/1.8 ms, Ausgabe 2.6 ms, Panel 55.01 Hz
+I (7042) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (8849) pudding_p4: Desktop: 1.0 Bilder/s neu, 199.2 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.01 ms/Bild
+W (9383) eh_host_feat_rpc: request: no response uid=6 msg_id=350 (5000 ms)
+I (9383) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (9383) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (10028) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x483341ec
+I (10029) wlan: mit dem Zugangspunkt verbunden
+I (10852) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (11042) esp_netif_handlers: sta ip: 192.168.1.142, mask: 255.255.255.0, gw: 192.168.1.1
+I (11042) wlan: IP 192.168.1.142
+I (11090) pudding_p4: [debug] Spiel starten: Quake
+I (11549) pudding_fw::wlan: WLAN: verbunden in 4538 ms, IP 192.168.1.142, Signal -41 dBm, Kanal 11, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (11549) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (11552) pudding_p4: Spiel Some(Quake) (Neustart ins Spiel)
+W (11552) wlan: getrennt, Grund 8
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05ce2
+Core1 Saved PC:0x4ff12152
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (126) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (347) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) load
+I (348) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) load
+I (352) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (819) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) load
+I (836) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (839) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) load
+I (844) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) load
+I (848) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) load
+I (862) boot: Loaded app from partition at offset 0x20000
+I (863) boot: Disabling RNG early entropy source...
+I (878) hex_psram: vendor id    : 0x0d (AP)
+I (878) hex_psram: Latency      : 0x01 (Fixed)
+I (879) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (879) hex_psram: dev id       : 0x03 (generation 4)
+I (884) hex_psram: density      : 0x07 (256 Mbit)
+I (888) hex_psram: good-die     : 0x06 (Pass)
+I (892) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (897) hex_psram: BurstType    : 0x00 ( Wrap)
+I (901) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (906) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (910) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (915) hex_psram: DriveStrength: 0x00 (1/1)
+I (919) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1223) mmu_psram: .rodata xip on psram
+I (1505) mmu_psram: .text xip on psram
+I (1505) hex_psram: psram CS IO is dedicated
+I (1506) cpu_start: Multicore app
+I (1899) esp_psram: SPI SRAM memory test OK
+I (1911) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1912) cpu_start: Pro cpu start user code
+I (1912) cpu_start: cpu freq: 360000000 Hz
+I (1914) app_init: Application information:
+I (1918) app_init: Project name:     libespidf
+I (1922) app_init: App version:      1
+I (1926) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1931) app_init: ELF file SHA256:  e3a0fee15...
+I (1935) app_init: ESP-IDF:          v5.5.5
+I (1939) efuse_init: Min chip rev:     v1.0
+I (1943) efuse_init: Max chip rev:     v1.99 
+I (1947) efuse_init: Chip rev:         v1.3
+I (1951) heap_init: Initializing. RAM available for dynamic allocation:
+I (1957) heap_init: At 4FF29F90 len 00011030 (68 KiB): RETENT_RAM
+I (1963) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1968) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1974) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (1979) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1984) esp_psram: Adding pool of 27100K of PSRAM memory to heap allocator
+I (1991) esp_psram: Adding pool of 5K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2002) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2013) spi_flash: detected chip: gd
+I (2016) spi_flash: flash io: qio
+I (2020) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2026) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2033) main_task: Started on CPU0
+I (2036) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2044) main_task: Calling app_main()
+I (2048) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2048) pudding_p4: ESP32-OS startet …
+I (2048) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 330 KB intern, 27099 KB PSRAM
+I (2048) pudding_p4: Start: intern frei 330 KB (größter Block 184 KB), DMA-fähig 291 KB
+I (2054) pudding_p4: Programm „esp32os_a“, Startziel Quake
+I (2055) esp_image: segment 0: paddr=00e00020 vaddr=48140020 size=48b24h (297764) map
+I (2125) esp_image: segment 1: paddr=00e48b4c vaddr=30100000 size=00070h (   112) 
+I (2126) esp_image: segment 2: paddr=00e48bc4 vaddr=4ff00000 size=07454h ( 29780) 
+I (2133) esp_image: segment 3: paddr=00e50020 vaddr=48000020 size=1347e0h (1263584) map
+I (2430) esp_image: segment 4: paddr=00f84808 vaddr=4ff07454 size=19e30h (106032) 
+I (2455) esp_image: segment 5: paddr=00f9e640 vaddr=4ff21300 size=07648h ( 30280) 
+I (2463) esp_image: segment 6: paddr=00fa5c90 vaddr=501080dc size=00020h (    32) 
+I (2490) pudding_p4: Quake liegt in „"quakeapp"“ – Neustart dorthin
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05ce2
+Core1 Saved PC:0x4ff08722
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (156) esp_image: segment 0: paddr=00e00020 vaddr=48140020 size=48b24h (297764) map
+I (193) esp_image: segment 1: paddr=00e48b4c vaddr=30100000 size=00070h (   112) load
+I (195) esp_image: segment 2: paddr=00e48bc4 vaddr=4ff00000 size=07454h ( 29780) load
+I (202) esp_image: segment 3: paddr=00e50020 vaddr=48000020 size=1347e0h (1263584) map
+I (359) esp_image: segment 4: paddr=00f84808 vaddr=4ff07454 size=19e30h (106032) load
+I (375) esp_image: segment 5: paddr=00f9e640 vaddr=4ff21300 size=07648h ( 30280) load
+I (381) esp_image: segment 6: paddr=00fa5c90 vaddr=501080dc size=00020h (    32) load
+I (390) boot: Loaded app from partition at offset 0xe00000
+I (390) boot: Disabling RNG early entropy source...
+I (402) hex_psram: vendor id    : 0x0d (AP)
+I (403) hex_psram: Latency      : 0x01 (Fixed)
+I (403) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (403) hex_psram: dev id       : 0x03 (generation 4)
+I (408) hex_psram: density      : 0x07 (256 Mbit)
+I (413) hex_psram: good-die     : 0x06 (Pass)
+I (417) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (421) hex_psram: BurstType    : 0x00 ( Wrap)
+I (426) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (430) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (435) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (440) hex_psram: DriveStrength: 0x00 (1/1)
+I (444) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (640) mmu_psram: .rodata xip on psram
+I (737) mmu_psram: .text xip on psram
+I (738) hex_psram: psram CS IO is dedicated
+I (738) cpu_start: Multicore app
+I (1194) esp_psram: SPI SRAM memory test OK
+I (1212) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1212) cpu_start: Pro cpu start user code
+I (1212) cpu_start: cpu freq: 360000000 Hz
+I (1214) app_init: Application information:
+I (1218) app_init: Project name:     libespidf
+I (1222) app_init: App version:      1
+I (1226) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1231) app_init: ELF file SHA256:  56f246df5...
+I (1235) app_init: ESP-IDF:          v5.5.5
+I (1239) efuse_init: Min chip rev:     v1.0
+I (1243) efuse_init: Max chip rev:     v1.99 
+I (1247) efuse_init: Chip rev:         v1.3
+I (1251) heap_init: Initializing. RAM available for dynamic allocation:
+I (1257) heap_init: At 4FF28960 len 00012660 (73 KiB): RETENT_RAM
+I (1263) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1268) heap_init: At 4FF46B90 len 00039470 (229 KiB): RAM
+I (1274) heap_init: At 501080FC len 00007F04 (31 KiB): RTCRAM
+I (1279) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1284) esp_psram: Adding pool of 30398K of PSRAM memory to heap allocator
+I (1291) esp_psram: Adding pool of 46K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1302) esp_psram: Adding pool of 29K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1314) spi_flash: detected chip: gd
+I (1317) spi_flash: flash io: qio
+I (1320) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1326) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1333) main_task: Started on CPU0
+I (1336) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (1344) main_task: Calling app_main()
+I (1348) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (1348) pudding_p4: ESP32-OS startet …
+I (1348) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 308 KB intern, 30459 KB PSRAM
+I (1348) pudding_p4: Start: intern frei 308 KB (größter Block 160 KB), DMA-fähig 270 KB
+I (1354) pudding_p4: Programm „quakeapp“, Startziel Quake
+I (1386) pudding_fw::slots: Programm „quakeapp“ als gültig markiert (war in Prüfung, Code 0)
+I (1386) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (1801) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) 
+I (1801) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) 
+I (1803) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (2695) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) 
+I (2721) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) 
+I (2724) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) 
+I (2729) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) 
+I (2729) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) 
+I (2762) pudding_p4: Startziel Quake, Spielstand neu
+I (2776) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2777) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2777) GT911: TouchPad_Config_Version:70
+I (2777) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+W (2777) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2821) pudding_fw::quake_board: Quake: PAK 17847 KB auf der SD-Karte
+I (2822) hx8394: version: 2.1.0
+W (2992) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+Host_Init
+E (3349) pudding_p4: HÄNGT bei Bild 0: Schleife Stufe 0, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 86 KB intern, 16227 KB PSRAM
+Added packfile /daten/quake/id1/pak0.pak (339 files)
+FindFile: can't find gfx/pop.lmp
+Playing shareware version.
+PackFile: /daten/quake/id1/pak0.pak : gfx.wad
+Console initialized.
+Exe: 16:16:27 Nov 23 2026
+ 8.0 megabyte heap
+PackFile: /daten/quake/id1/pak0.pak : gfx/palette.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/colormap.lmp
+637k surface cache
+
+Sound Initialization
+PackFile: /daten/quake/id1/pak0.pak : gfx/conback.lmp
+Sound sampling rate: 22050
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/water1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/wind2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/hknight/hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/tink1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/r_exp3.wav
+========Quake Initialized=========
+I (3690) pudding_p4: Quake gestartet in 357 ms
+I (3690) pudding_p4: Quake geladen: intern frei 85 KB (größter Block 31 KB), DMA-fähig 47 KB
+I (3690) pudding_p4: Spiel geladen: intern frei 82 KB (größter Block 31 KB), DMA-fähig 43 KB
+I (3690) pudding_p4: Los geht's!
+PackFile: /daten/quake/id1/pak0.pak : quake.rc
+execing quake.rc
+PackFile: /daten/quake/id1/pak0.pak : default.cfg
+execing default.cfg
+FindFile: can't find config.cfg
+couldn't exec config.cfg
+FindFile: can't find autoexec.cfg
+couldn't exec autoexec.cfg
+3 demo(s) in loop
+Playing demo from demo1.dem.
+PackFile: /daten/quake/id1/pak0.pak : demo1.dem
+
+
+
+
+the Necropolis
+PackFile: /daten/quake/id1/pak0.pak : maps/e1m3.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/player.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/eyes.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_player.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib1.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib3.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/s_bubble.spr
+PackFile: /daten/quake/id1/pak0.pak : progs/s_explod.spr
+PackFile: /daten/quake/id1/pak0.pak : progs/v_axe.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_shot.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_nail.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_rock.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_shot2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_nail2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_rock2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt3.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/lavaball.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/missile.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/grenade.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/s_spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/backpack.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/zom_gib.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_light.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/flame2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/flame.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/zombie.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_zombie.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/w_g_key.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/ogre.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_ogre.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/wizard.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_wizard.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/w_spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/demon.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_demon.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/g_nail.mdl
+PackFile: /daten/quake/id1/pak0.pak : maps/b_shell1.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_bh25.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_bh10.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/g_shot.mdl
+E (5364) pudding_p4: HÄNGT bei Bild 1: Schleife Stufe 2, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 81 KB intern, 14666 KB PSRAM
+PackFile: /daten/quake/id1/pak0.pak : maps/b_shell0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_rock0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_nail1.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/armor.mdl
+PackFile: /daten/quake/id1/pak0.pak : maps/b_nail0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_rock1.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/g_rock.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/invisibl.mdl
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/rocket1i.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/sgun1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/guncock.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/spike2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/grenade.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/bounce.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/shotgn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dland2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/h2ohit1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/itembk2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/plyrjmp8.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/land.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/land2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/drown1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/drown2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gasp1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gasp2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/h2odeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/talk.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/teledth1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/lock4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/pkup.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/armor1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/lhit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gib.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/udeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/tornoff2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain6.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ax1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/axhit1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/axhit2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/h2ojump.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/slimbrn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/inh2o.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/inlava.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/outwater.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/lburn1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/lburn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/water1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/water2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/medtry.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/meduse.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/stndr1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/stndr2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/null.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/train2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/train1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/buttons/switch02.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/drclos4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/doormv1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/fire1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/basesec1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/basesec2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/latch2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/winch2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_idle.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_idle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_shot1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_gib.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_pain.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_pain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_fall.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_miss.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/idle_w2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/medplat1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/medplat2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/buttons/airbut1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/medkey.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/hum1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogdrag.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogdth.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogidle.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogidle2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogpain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogsawatk.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogwake.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wattack.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wdeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/widle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/widle2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wpain.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wsight.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/ddeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dhit2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/djump.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dpain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/idle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/sight2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/health1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/r_item1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/secret.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/drip1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/swamp2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/swamp1.wav
+E (6379) pudding_p4: HÄNGT bei Bild 1: Schleife Stufe 2, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 82 KB intern, 14666 KB PSRAM
+I (6403) pudding_p4: Mittel: Simulation 2711.3 ms, Bild vorbereiten 1.2 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (6403) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 2712.6 ms (Simulation 2711.3, Vorbereiten 1.2, Mithelfen 0.0, Sichern 0.0)
+I (6403) pudding_p4: Geclippt 1 je Bild (0.0 ms); 0 Objekte, 1 Dreiecke geprüft; Ton 3.4 ms je Bild
+I (6403) pudding_p4: Frei: 81 KB intern, 14586 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6404) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.1 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (75581.0 Takte/Pixel)
+I (6404) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 0.00 ms; angeschubst seit Start: 0
+I (6404) pudding_p4: 55.0 FPS (640x360 weich), Frame 2712.6 ms, Streifen 0/0, Rendern 0.0/0.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/0.0 ms, Ausgabe 0.0 ms, Panel 55.01 Hz
+I (6404) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 0 KB intern/0 KB PSRAM
+You got the shells
+I (8419) pudding_p4: Mittel: Simulation 19.8 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (8419) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 36.4 ms (Simulation 20.7, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (8419) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (8419) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (8419) pudding_p4: Rendern je Kern: Löschen 1.5 ms, Dreiecke 4.6 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (187183168.0 Takte/Pixel)
+I (8419) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.40 ms; angeschubst seit Start: 0
+I (8419) pudding_p4: 27.7 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.4 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.7 ms, Ausgabe 20.7 ms, Panel 55.32 Hz
+I (8419) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+You got the Grenade Launcher
+I (10419) pudding_p4: Mittel: Simulation 21.2 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (10419) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 36.4 ms (Simulation 17.4, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (10419) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (10420) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (10420) pudding_p4: Rendern je Kern: Löschen 1.4 ms, Dreiecke 4.6 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (182046176.0 Takte/Pixel)
+I (10420) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.37 ms; angeschubst seit Start: 0
+I (10420) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 26.3 ms, Panel 55.15 Hz
+I (10420) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (12442) pudding_p4: Mittel: Simulation 33.5 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (12442) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 53.9 ms (Simulation 52.6, Vorbereiten 1.0, Mithelfen 0.0, Sichern 0.0)
+I (12442) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (12442) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (12442) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (164278464.0 Takte/Pixel)
+I (12442) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.17 ms; angeschubst seit Start: 0
+I (12442) pudding_p4: 26.3 FPS (640x360 weich), Frame 30.0 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.4 ms, Ausgabe 29.9 ms, Panel 55.06 Hz
+I (12442) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (14472) pudding_p4: Mittel: Simulation 29.5 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (14472) pudding_p4: Ruckler: 3 verpasste Bildwechsel; längstes Bild 51.1 ms (Simulation 49.8, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (14472) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (14472) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (14472) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (164043424.0 Takte/Pixel)
+I (14472) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.10 ms; angeschubst seit Start: 0
+I (14472) pudding_p4: 25.7 FPS (640x360 weich), Frame 42.3 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 42.3 ms, Panel 54.96 Hz
+I (14473) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (16494) pudding_p4: Mittel: Simulation 39.2 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (16494) pudding_p4: Ruckler: 14 verpasste Bildwechsel; längstes Bild 55.8 ms (Simulation 54.5, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (16494) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.1 ms je Bild
+I (16494) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (16495) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (148533920.0 Takte/Pixel)
+I (16495) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.14 ms; angeschubst seit Start: 0
+I (16495) pudding_p4: 25.3 FPS (640x360 weich), Frame 34.5 ms, Streifen 0/45, Rendern 0.0/12.7 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 31.7 ms, Panel 55.05 Hz
+I (16495) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+You receive 25 health
+You get 2 rockets  
+I (18525) pudding_p4: Mittel: Simulation 30.6 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (18525) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 48.0 ms (Simulation 46.7, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (18526) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (18526) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (18526) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (166582800.0 Takte/Pixel)
+I (18526) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.11 ms; angeschubst seit Start: 0
+I (18526) pudding_p4: 27.4 FPS (640x360 weich), Frame 34.9 ms, Streifen 0/45, Rendern 0.0/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.2 ms, Ausgabe 34.8 ms, Panel 54.98 Hz
+I (18526) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (18713) pudding_fw::foto: BILD 0 720 1280 3000000 0
+BILD 0 gespeichert: <Ordner>/bild_0.png
+I (25602) pudding_fw::foto: BILD 0 gesendet
+I (25602) pudding_p4: Mittel: Simulation 36.1 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (25602) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 6933.9 ms (Simulation 44.3, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (25602) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (25602) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (25602) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (15623551.0 Takte/Pixel)
+I (25602) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.09 ms; angeschubst seit Start: 0
+I (25602) pudding_p4: 26.5 FPS (640x360 weich), Frame 6933.9 ms, Streifen 0/45, Rendern 0.0/9.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 45.6 ms, Panel 55.03 Hz
+I (25602) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (27625) pudding_p4: Mittel: Simulation 34.0 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (27626) pudding_p4: Ruckler: 12 verpasste Bildwechsel; längstes Bild 57.0 ms (Simulation 55.9, Vorbereiten 1.0, Mithelfen 0.0, Sichern 0.0)
+I (27626) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (27626) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (27626) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (155470960.0 Takte/Pixel)
+I (27626) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.06 ms; angeschubst seit Start: 0
+I (27626) pudding_p4: 26.0 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.6 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.3 ms, Ausgabe 25.2 ms, Panel 55.01 Hz
+I (27626) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (29644) pudding_p4: Mittel: Simulation 30.4 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (29645) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 46.6 ms (Simulation 45.3, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (29645) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (29645) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (29645) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (166279280.0 Takte/Pixel)
+I (29645) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.12 ms; angeschubst seit Start: 0
+I (29645) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/2.0 ms, Ausgabe 35.3 ms, Panel 55.01 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/qplaque.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/ttl_main.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/mainmenu.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot2.lmp
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/menu2.wav
+I (31754) pudding_p4: Mittel: Simulation 34.8 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (31754) pudding_p4: Ruckler: 7 verpasste Bildwechsel; längstes Bild 154.6 ms (Simulation 153.2, Vorbereiten 1.2, Mithelfen 0.0, Sichern 0.0)
+I (31754) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (31754) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (31754) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (162292800.0 Takte/Pixel)
+I (31754) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.13 ms; angeschubst seit Start: 0
+I (31754) pudding_p4: 25.4 FPS (640x360 weich), Frame 154.6 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.4 ms, Ausgabe 154.6 ms, Panel 54.97 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot3.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot4.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot5.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot6.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot1.lmp
+You got the rockets
+I (33701) pudding_p4: Bilanz 30 s: 18.0 FPS, Arbeit je Bild Mittel 55.5 ms, p99 57.2 ms, max 6933.9 ms; verpasste Bildwechsel 48 (2.9 je 100)
+I (33773) pudding_p4: Mittel: Simulation 30.6 ms, Bild vorbereiten 0.9 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (33773) pudding_p4: Ruckler: 4 verpasste Bildwechsel; längstes Bild 76.6 ms (Simulation 75.5, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (33773) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (33773) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (33773) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 1.1 ms; je Bild 0 Zeilenstücke, 0k Pixel (164824624.0 Takte/Pixel)
+I (33774) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.28 ms; angeschubst seit Start: 0
+I (33774) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/14.7 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.7 ms, Ausgabe 24.8 ms, Panel 55.00 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/ttl_sgl.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/sp_menu.lmp
+You got the nailgun
+I (35774) pudding_p4: Mittel: Simulation 25.2 ms, Bild vorbereiten 0.8 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (35774) pudding_p4: Ruckler: 2 verpasste Bildwechsel; längstes Bild 73.2 ms (Simulation 72.2, Vorbereiten 0.8, Mithelfen 0.0, Sichern 0.0)
+I (35774) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (35774) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (35774) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 1.1 ms; je Bild 0 Zeilenstücke, 0k Pixel (165882384.0 Takte/Pixel)
+I (35774) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.34 ms; angeschubst seit Start: 0
+I (35774) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/10.2 ms, Skalieren 0.0/0.0 ms, PPA 0.0/0.8 ms, Ausgabe 31.3 ms, Panel 55.00 Hz
+PackFile: /daten/quake/id1/pak0.pak : progs.dat
+Sys_Error: progs.dat has wrong version number (0 should be 6)
+
+abort() was called at PC 0x48089c7b on core 0
+Core  0 register dump:
+MEPC    : 0x4ff10684  RA      : 0x4ff10224  SP      : 0x4882ab70  GP      : 0x4ff21b00  
+TP      : 0x4882b2d0  T0      : 0x37363534  T1      : 0x7271706f  T2      : 0x33323130  
+S0/FP   : 0x4882abac  S1      : 0x4882abac  A0      : 0x4882abac  A1      : 0x4882ab8e  
+A2      : 0x00000000  A3      : 0x4ff46000  A4      : 0x00000001  A5      : 0x4ff46000  
+A6      : 0x00000000  A7      : 0x76757473  S2      : 0x4882ab90  S3      : 0x0000003c  
+S4      : 0x0000003c  S5      : 0x4819b000  S6      : 0x4ff22f9c  S7      : 0x4882ad10  
+S8      : 0x4882acb0  S9      : 0x00000000  S10     : 0x0000001f  S11     : 0x00000000  
+T3      : 0x6e6d6c6b  T4      : 0x6a696867  T5      : 0x66656463  T6      : 0x62613938  
+MSTATUS : 0x00011880  MTVEC   : 0x4ff00003  MCAUSE  : 0x00000002  MTVAL   : 0x00000000  
+MHARTID : 0x00000000  
+
+Stack memory:
+4882ab70: 0x00000007 0x4882abc0 0x4882abac 0x4ff18e44 0x00000000 0x00000000 0x0000000a 0x4ff40030
+4882ab90: 0x38303834 0x62376339 0x4ff52700 0x4ff2798c 0x4882ab90 0x4ff279a8 0x4882ab8c 0x726f6261
+4882abb0: 0x20292874 0x20736177 0x6c6c6163 0x61206465 0x43502074 0x34783020 0x39383038 0x20623763
+4882abd0: 0x63206e6f 0x2065726f 0x00000030 0x00000000 0x4ff526c0 0x00000032 0x4ff526c0 0x48089c7e
+4882abf0: 0x4ff21588 0x4882abf0 0x480561ae 0x00000032 0x4ff46000 0x488a13cc 0x4819f000 0x480cd970
+4882ac10: 0x00000200 0x696c636b 0x4ff46000 0x4882ac34 0x00000020 0x4819b000 0x4ff46000 0x480efe7a
+4882ac30: 0x4882acb0 0x00000000 0x00000006 0x006c9f00 0x000000d8 0x488a1394 0x00000200 0x696c636b
+4882ac50: 0x00000000 0x00000000 0x4882acb0 0x4882ad10 0x4ff22f9c 0x4819b000 0x00000020 0x4819b398
+4882ac70: 0x4819b380 0x4882f354 0x4819b000 0x480ca2d4 0x00000000 0x00000000 0x00000001 0x4882ad10
+4882ac90: 0x0000000a 0x481c4ce8 0x00000020 0x481c5000 0x481c4cf6 0x4882f354 0x00000002 0x480dca90
+4882acb0: 0x72617473 0x481c0074 0x0000000a 0x0000004f 0x00000001 0x0000001f 0x4882ad19 0x480d70ac
+4882acd0: 0x0000001f 0x00000000 0x00000001 0x4882ad10 0x0000000a 0x481c88d0 0x0000003b 0x00000022
+4882acf0: 0x4ff46000 0x481c88d0 0x0000003b 0x00000022 0x48837354 0x0000000a 0x00000009 0x480d73e8
+4882ad10: 0x2070616d 0x72617473 0x31200074 0x424e9d00 0xc39962c9 0xc2abcc36 0x41bcd1b9 0xc398765e
+4882ad30: 0xc2a03d18 0x41cda5d8 0xc398765e 0x35b39f6b 0xc0000000 0x3fa29e17 0x00000000 0x4248ec9b
+4882ad50: 0x00000000 0x00000000 0x40a00000 0x00000000 0x00000045 0x000000ba 0x000000d7 0x00000000
+4882ad70: 0x00000000 0x000000ff 0x00000032 0x00000050 0x00000082 0x00000000 0x00000020 0x00000200
+4882ad90: 0x3e10b461 0x40300000 0x00000000 0x0b3b399e 0x00000001 0x0b3b399e 0x00000020 0x00100000
+4882adb0: 0x000003df 0x00000000 0x00000000 0x3fd3c327 0x00000005 0x1a626331 0x00000000 0x40397107
+4882add0: 0x00000001 0x3fd3c327 0xf6f4b9ee 0x4882afb0 0x40497a57 0x4ff115de 0x00000000 0x4ff21b00
+4882adf0: 0x40497a57 0x4fc10cc4 0x5110b461 0xbfd65718 0xbff38c35 0xbfd65718 0x00000000 0x500e5014
+4882ae10: 0xbff38c35 0x00000000 0x20800008 0x1f000000 0x00000000 0x00000000 0x00000000 0x3fd65718
+4882ae30: 0x51000000 0x3fd65718 0x00000000 0x40497a57 0x00000000 0x40400000 0x00000000 0x3fd65718
+4882ae50: 0x31000000 0x3c5a6263 0xa0000000 0x4014043a 0x00000000 0x40080000 0x00000000 0x3de90e91
+4882ae70: 0x0d000000 0x3fd2abe2 0xa79394ca 0x3de90e91 0x0d000000 0x3fd2abe2 0x00000000 0x400747c8
+4882ae90: 0x00000000 0x40000000 0x1a626331 0x3de0b461 0x44000000 0xbfcda335 0x00000000 0x00000000
+4882aeb0: 0x4882af24 0x00000000 0x00000000 0x4810bd98 0x4882af74 0x4ff58ac4 0x00002008 0x3c000000
+4882aed0: 0xe4abbbb5 0x3fde7f26 0xe4abbbb5 0x3fde7f26 0xe4abbbb5 0x3fde7f26 0xe4abbbb5 0x31000000
+4882aef0: 0xf7847a81 0x3fbf315c 0xf7847a81 0x3fbf315c 0xf7847a81 0x3fbf315c 0xf7847a81 0x00000000
+4882af10: 0xf7847a81 0x3fbf315c 0xf7847a81 0x482489cc 0x4815e000 0x4ff46000 0x481c4188 0x4ff46000
+4882af30: 0x000000d6 0x00000001 0x481c4194 0x00000020 0x481c5188 0x4815dc24 0x481c4188 0x48115db0
+4882af50: 0xf7847a81 0x4882afd8 0x4882b06b 0x42400000 0x7ffffffc 0xffff0208 0x4882b068 0x7fffffff
+
+
+
+ELF file SHA256: 56f246df5
+
+Rebooting...
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05cce
+Core1 Saved PC:0x4ff0867c
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (156) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (371) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) load
+I (373) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) load
+I (377) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (843) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) load
+I (861) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (864) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) load
+I (868) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) load
+I (873) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) load
+I (887) boot: Loaded app from partition at offset 0x20000
+I (887) boot: Disabling RNG early entropy source...
+I (903) hex_psram: vendor id    : 0x0d (AP)
+I (903) hex_psram: Latency      : 0x01 (Fixed)
+I (903) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (904) hex_psram: dev id       : 0x03 (generation 4)
+I (908) hex_psram: density      : 0x07 (256 Mbit)
+I (913) hex_psram: good-die     : 0x06 (Pass)
+I (917) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (922) hex_psram: BurstType    : 0x00 ( Wrap)
+I (926) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (930) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (935) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (940) hex_psram: DriveStrength: 0x00 (1/1)
+I (944) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1247) mmu_psram: .rodata xip on psram
+I (1529) mmu_psram: .text xip on psram
+I (1530) hex_psram: psram CS IO is dedicated
+I (1530) cpu_start: Multicore app
+I (1921) esp_psram: SPI SRAM memory test OK
+I (1933) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1933) cpu_start: Pro cpu start user code
+I (1933) cpu_start: cpu freq: 360000000 Hz
+I (1935) app_init: Application information:
+I (1939) app_init: Project name:     libespidf
+I (1943) app_init: App version:      1
+I (1947) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1952) app_init: ELF file SHA256:  e3a0fee15...
+I (1956) app_init: ESP-IDF:          v5.5.5
+I (1960) efuse_init: Min chip rev:     v1.0
+I (1964) efuse_init: Max chip rev:     v1.99 
+I (1968) efuse_init: Chip rev:         v1.3
+I (1972) heap_init: Initializing. RAM available for dynamic allocation:
+I (1979) heap_init: At 4FF29F90 len 00011030 (68 KiB): RETENT_RAM
+I (1984) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1990) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1995) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (2000) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (2005) esp_psram: Adding pool of 27100K of PSRAM memory to heap allocator
+I (2012) esp_psram: Adding pool of 5K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2023) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2035) spi_flash: detected chip: gd
+I (2038) spi_flash: flash io: qio
+I (2041) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2047) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2054) main_task: Started on CPU0
+I (2057) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2065) main_task: Calling app_main()
+I (2069) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2069) pudding_p4: ESP32-OS startet …
+I (2069) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 330 KB intern, 27099 KB PSRAM
+I (2069) pudding_p4: Start: intern frei 330 KB (größter Block 184 KB), DMA-fähig 291 KB
+I (2074) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+W (2075) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2117) pudding_fw::speicher: SD-Karte eingehängt: 241724 MB als /sd0/1
+I (2154) pudding_p4: Einstellungen: Sprache de, Helligkeit 8, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1795466415
+W (2154) pudding_p4: Autopilot: Touchpad-Modus für diesen Lauf aus
+I (2155) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2155) eh_mcu_transport: transport_init: probing bus backend
+I (2155) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (2155) sdmmc_periph: sdmmc_host_init: SDMMC host already initialized, skipping init flow
+I (2156) eh_sdio: sdio_data_to_rx_buf_task started
+I (2156) eh_mcu_transport: transport_init: bus backend up
+W (2156) eh_sdio: Reset co-processor using GPIO[54]
+I (2170) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2171) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2171) GT911: TouchPad_Config_Version:70
+I (2171) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (2173) hx8394: version: 2.1.0
+W (2343) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (2682) pudding_p4: ESP32-OS-Desktop startet (@start)
+I (2683) pudding_p4: Spiel geladen: intern frei 100 KB (größter Block 31 KB), DMA-fähig 62 KB
+I (2715) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (war in Prüfung, Code 0)
+I (2716) pudding_p4: Los geht's!
+I (2987) pudding_p4: [debug] @icon: gezeichnet in 129 ms (Grund 18, Symbole 36, Mischen 14, Text 2, Ausgabe 57)
+I (2987) pudding_p4: [debug] 
+I (3364) pudding_p4: [debug] Startbild: Desktop bereit nach 507 ms
+I (3369) pudding_p4: [debug] Ersteinrichtung: schon erledigt
+I (3369) pudding_p4: [debug] 
+I (3676) eh_host_port_reset: reset done pin=54 parked=1
+I (3710) eh_host_port_sdio: bus applied: clk_khz=40000
+I (3710) eh_host_port_sdio: Function 0 Blocksize: 512
+I (3710) eh_host_port_sdio: Function 1 Blocksize: 512
+I (3810) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (3856) eh_sdio: SDIO Host operating in STREAMING MODE
+I (3856) eh_sdio: Open data path at slave
+I (3856) eh_sdio: Starting SDIO process rx task
+I (3863) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (3863) eh_init_evt: capabilities: 0x0d
+I (3863) eh_init_evt: Features supported are:
+I (3863) eh_init_evt: 	 * WLAN over SDIO
+I (3863) eh_init_evt: 	   - HCI over SDIO
+I (3863) eh_init_evt: 	   - BLE only
+I (3863) eh_raw_tp: raw TP inactive
+I (3863) eh_init_evt: Default RPC to V2
+I (3863) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (3863) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (3863) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (3863) eh_init_evt: Missing SDIO_MODE TLV; Continue anyway.
+W (3863) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (3864) eh_init_evt: chip=0x0d (esp32c6) fw=0x00000000 caps=0x0d ext=0x00000000
+I (3864) eh_auto_init: auto_init: found 1 descriptor(s)
+I (3864) eh_auto_init: auto_init: initialising 'wifi' (priority 150)
+I (3864) eh_wifi_itwt: wifi iTWT ext init
+I (4222) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 292 → 91 KB
+I (4222) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (4686) pudding_p4: Desktop: 9.0 Bilder/s neu, 142.3 übersprungen/s, Fläche 150800 px/Bild, Compositor 0.43 ms/Bild
+I (6690) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (6869) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (6903) pudding_p4: Mittel: Simulation 0.7 ms, Bild vorbereiten 6.8 ms (0 Dreiecke), Mithelfen 17.2 ms, Rest-PPA 0.9 ms, Warten auf Bildspeicher 0.0 ms
+I (6903) pudding_p4: Ruckler: 25 verpasste Bildwechsel; längstes Bild 43.7 ms (Simulation 3.6, Vorbereiten 11.6, Mithelfen 28.0, Sichern 0.0)
+I (6904) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 6.2 ms je Bild
+I (6904) pudding_p4: Frei: 86 KB intern, 13528 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6904) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (6904) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.51 ms, Kern 1 3.94 ms; angeschubst seit Start: 0
+I (6904) pudding_p4: 38.1 FPS (640x360 scharf), Frame 0.6 ms, Streifen 2/4, Rendern 0.1/0.2 ms, Skalieren 0.2/0.5 ms, PPA 1.6/1.7 ms, Ausgabe 2.4 ms, Panel 55.01 Hz
+I (6904) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (8692) pudding_p4: Desktop: 1.0 Bilder/s neu, 199.3 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.01 ms/Bild
+W (9222) eh_host_feat_rpc: request: no response uid=6 msg_id=350 (5000 ms)
+I (9222) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (9222) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (9887) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x483341ec
+I (9887) wlan: mit dem Zugangspunkt verbunden
+I (10695) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.2 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (10902) esp_netif_handlers: sta ip: 192.168.1.142, mask: 255.255.255.0, gw: 192.168.1.1
+I (10902) wlan: IP 192.168.1.142
+I (10928) pudding_p4: [debug] Spiel starten: Quake
+I (11392) pudding_p4: Spiel Some(Quake) (Neustart ins Spiel)
+W (11392) wlan: getrennt, Grund 8
+I (11407) pudding_fw::wlan: WLAN: verbunden in 4537 ms, IP 0.0.0.0, Signal -43 dBm, Kanal 11, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (11407) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (11412) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.8 ms (0 Dreiecke), Mithelfen 0.7 ms, Rest-PPA 0.8 ms, Warten auf Bildspeicher 0.0 ms
+I (11412) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 4.0 ms (Simulation 0.0, Vorbereiten 1.0, Mithelfen 1.4, Sichern 0.0)
+I (11412) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 50.9 ms je Bild
+I (11413) pudding_p4: Frei: 89 KB intern, 13528 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11413) pudding_p4: Rendern je Kern: Löschen 0.0 ms, DreESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05ce2
+Core1 Saved PC:0x48373646
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (126) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (347) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) load
+I (348) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) load
+I (352) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (819) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) load
+I (836) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (839) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) load
+I (844) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) load
+I (848) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) load
+I (862) boot: Loaded app from partition at offset 0x20000
+I (863) boot: Disabling RNG early entropy source...
+I (878) hex_psram: vendor id    : 0x0d (AP)
+I (878) hex_psram: Latency      : 0x01 (Fixed)
+I (879) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (879) hex_psram: dev id       : 0x03 (generation 4)
+I (884) hex_psram: density      : 0x07 (256 Mbit)
+I (888) hex_psram: good-die     : 0x06 (Pass)
+I (892) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (897) hex_psram: BurstType    : 0x00 ( Wrap)
+I (901) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (906) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (910) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (915) hex_psram: DriveStrength: 0x00 (1/1)
+I (919) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1223) mmu_psram: .rodata xip on psram
+I (1505) mmu_psram: .text xip on psram
+I (1505) hex_psram: psram CS IO is dedicated
+I (1506) cpu_start: Multicore app
+I (1898) esp_psram: SPI SRAM memory test OK
+I (1910) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1910) cpu_start: Pro cpu start user code
+I (1910) cpu_start: cpu freq: 360000000 Hz
+I (1912) app_init: Application information:
+I (1916) app_init: Project name:     libespidf
+I (1920) app_init: App version:      1
+I (1924) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1929) app_init: ELF file SHA256:  e3a0fee15...
+I (1933) app_init: ESP-IDF:          v5.5.5
+I (1937) efuse_init: Min chip rev:     v1.0
+I (1941) efuse_init: Max chip rev:     v1.99 
+I (1945) efuse_init: Chip rev:         v1.3
+I (1949) heap_init: Initializing. RAM available for dynamic allocation:
+I (1955) heap_init: At 4FF29F90 len 00011030 (68 KiB): RETENT_RAM
+I (1961) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1966) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1972) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (1977) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1982) esp_psram: Adding pool of 27100K of PSRAM memory to heap allocator
+I (1989) esp_psram: Adding pool of 5K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2000) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2012) spi_flash: detected chip: gd
+I (2015) spi_flash: flash io: qio
+I (2018) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2024) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2031) main_task: Started on CPU0
+I (2034) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2042) main_task: Calling app_main()
+I (2046) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2046) pudding_p4: ESP32-OS startet …
+I (2046) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 330 KB intern, 27099 KB PSRAM
+I (2046) pudding_p4: Start: intern frei 330 KB (größter Block 184 KB), DMA-fähig 291 KB
+I (2052) pudding_p4: Programm „esp32os_a“, Startziel Quake
+I (2053) esp_image: segment 0: paddr=00e00020 vaddr=48140020 size=48b24h (297764) map
+I (2123) esp_image: segment 1: paddr=00e48b4c vaddr=30100000 size=00070h (   112) 
+I (2124) esp_image: segment 2: paddr=00e48bc4 vaddr=4ff00000 size=07454h ( 29780) 
+I (2131) esp_image: segment 3: paddr=00e50020 vaddr=48000020 size=1347e0h (1263584) map
+I (2428) esp_image: segment 4: paddr=00f84808 vaddr=4ff07454 size=19e30h (106032) 
+I (2453) esp_image: segment 5: paddr=00f9e640 vaddr=4ff21300 size=07648h ( 30280) 
+I (2461) esp_image: segment 6: paddr=00fa5c90 vaddr=501080dc size=00020h (    32) 
+I (2493) pudding_p4: Quake liegt in „"quakeapp"“ – Neustart dorthin
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05ce2
+Core1 Saved PC:0x4ff08722
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (156) esp_image: segment 0: paddr=00e00020 vaddr=48140020 size=48b24h (297764) map
+I (194) esp_image: segment 1: paddr=00e48b4c vaddr=30100000 size=00070h (   112) load
+I (195) esp_image: segment 2: paddr=00e48bc4 vaddr=4ff00000 size=07454h ( 29780) load
+I (203) esp_image: segment 3: paddr=00e50020 vaddr=48000020 size=1347e0h (1263584) map
+I (359) esp_image: segment 4: paddr=00f84808 vaddr=4ff07454 size=19e30h (106032) load
+I (376) esp_image: segment 5: paddr=00f9e640 vaddr=4ff21300 size=07648h ( 30280) load
+I (382) esp_image: segment 6: paddr=00fa5c90 vaddr=501080dc size=00020h (    32) load
+I (390) boot: Loaded app from partition at offset 0xe00000
+I (391) boot: Disabling RNG early entropy source...
+I (403) hex_psram: vendor id    : 0x0d (AP)
+I (403) hex_psram: Latency      : 0x01 (Fixed)
+I (403) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (404) hex_psram: dev id       : 0x03 (generation 4)
+I (409) hex_psram: density      : 0x07 (256 Mbit)
+I (413) hex_psram: good-die     : 0x06 (Pass)
+I (417) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (422) hex_psram: BurstType    : 0x00 ( Wrap)
+I (426) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (431) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (435) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (440) hex_psram: DriveStrength: 0x00 (1/1)
+I (444) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (641) mmu_psram: .rodata xip on psram
+I (738) mmu_psram: .text xip on psram
+I (739) hex_psram: psram CS IO is dedicated
+I (739) cpu_start: Multicore app
+I (1192) esp_psram: SPI SRAM memory test OK
+I (1210) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1211) cpu_start: Pro cpu start user code
+I (1211) cpu_start: cpu freq: 360000000 Hz
+I (1213) app_init: Application information:
+I (1217) app_init: Project name:     libespidf
+I (1221) app_init: App version:      1
+I (1225) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1230) app_init: ELF file SHA256:  56f246df5...
+I (1234) app_init: ESP-IDF:          v5.5.5
+I (1238) efuse_init: Min chip rev:     v1.0
+I (1242) efuse_init: Max chip rev:     v1.99 
+I (1246) efuse_init: Chip rev:         v1.3
+I (1250) heap_init: Initializing. RAM available for dynamic allocation:
+I (1256) heap_init: At 4FF28960 len 00012660 (73 KiB): RETENT_RAM
+I (1262) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1267) heap_init: At 4FF46B90 len 00039470 (229 KiB): RAM
+I (1273) heap_init: At 501080FC len 00007F04 (31 KiB): RTCRAM
+I (1278) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1283) esp_psram: Adding pool of 30398K of PSRAM memory to heap allocator
+I (1290) esp_psram: Adding pool of 46K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1301) esp_psram: Adding pool of 29K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1312) spi_flash: detected chip: gd
+I (1316) spi_flash: flash io: qio
+I (1319) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1325) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1332) main_task: Started on CPU0
+I (1335) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (1343) main_task: Calling app_main()
+I (1347) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (1347) pudding_p4: ESP32-OS startet …
+I (1347) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 308 KB intern, 30459 KB PSRAM
+I (1347) pudding_p4: Start: intern frei 308 KB (größter Block 160 KB), DMA-fähig 270 KB
+I (1353) pudding_p4: Programm „quakeapp“, Startziel Quake
+I (1385) pudding_fw::slots: Programm „quakeapp“ als gültig markiert (war in Prüfung, Code 0)
+I (1385) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (1800) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) 
+I (1800) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) 
+I (1802) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (2694) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) 
+I (2720) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) 
+I (2723) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) 
+I (2728) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) 
+I (2728) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) 
+I (2761) pudding_p4: Startziel Quake, Spielstand neu
+I (2775) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2776) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2776) GT911: TouchPad_Config_Version:70
+I (2776) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+W (2776) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2820) pudding_fw::quake_board: Quake: PAK 17847 KB auf der SD-Karte
+I (2821) hx8394: version: 2.1.0
+W (2990) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+Host_Init
+E (3348) pudding_p4: HÄNGT bei Bild 0: Schleife Stufe 0, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 86 KB intern, 16227 KB PSRAM
+Added packfile /daten/quake/id1/pak0.pak (339 files)
+FindFile: can't find gfx/pop.lmp
+Playing shareware version.
+PackFile: /daten/quake/id1/pak0.pak : gfx.wad
+Console initialized.
+Exe: 16:16:27 Nov 23 2026
+ 8.0 megabyte heap
+PackFile: /daten/quake/id1/pak0.pak : gfx/palette.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/colormap.lmp
+637k surface cache
+
+Sound Initialization
+PackFile: /daten/quake/id1/pak0.pak : gfx/conback.lmp
+Sound sampling rate: 22050
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/water1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/wind2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/hknight/hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/tink1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/r_exp3.wav
+========Quake Initialized=========
+I (3689) pudding_p4: Quake gestartet in 358 ms
+I (3689) pudding_p4: Quake geladen: intern frei 85 KB (größter Block 31 KB), DMA-fähig 47 KB
+I (3689) pudding_p4: Spiel geladen: intern frei 82 KB (größter Block 31 KB), DMA-fähig 43 KB
+I (3689) pudding_p4: Los geht's!
+PackFile: /daten/quake/id1/pak0.pak : quake.rc
+execing quake.rc
+PackFile: /daten/quake/id1/pak0.pak : default.cfg
+execing default.cfg
+FindFile: can't find config.cfg
+couldn't exec config.cfg
+FindFile: can't find autoexec.cfg
+couldn't exec autoexec.cfg
+3 demo(s) in loop
+Playing demo from demo1.dem.
+PackFile: /daten/quake/id1/pak0.pak : demo1.dem
+
+
+
+
+the Necropolis
+PackFile: /daten/quake/id1/pak0.pak : maps/e1m3.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/player.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/eyes.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_player.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib1.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib3.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/s_bubble.spr
+PackFile: /daten/quake/id1/pak0.pak : progs/s_explod.spr
+PackFile: /daten/quake/id1/pak0.pak : progs/v_axe.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_shot.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_nail.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_rock.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_shot2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_nail2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_rock2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt3.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/lavaball.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/missile.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/grenade.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/s_spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/backpack.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/zom_gib.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_light.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/flame2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/flame.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/zombie.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_zombie.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/w_g_key.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/ogre.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_ogre.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/wizard.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_wizard.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/w_spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/demon.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_demon.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/g_nail.mdl
+PackFile: /daten/quake/id1/pak0.pak : maps/b_shell1.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_bh25.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_bh10.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/g_shot.mdl
+E (5363) pudding_p4: HÄNGT bei Bild 1: Schleife Stufe 2, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 81 KB intern, 14666 KB PSRAM
+PackFile: /daten/quake/id1/pak0.pak : maps/b_shell0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_rock0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_nail1.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/armor.mdl
+PackFile: /daten/quake/id1/pak0.pak : maps/b_nail0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_rock1.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/g_rock.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/invisibl.mdl
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/rocket1i.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/sgun1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/guncock.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/spike2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/grenade.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/bounce.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/shotgn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dland2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/h2ohit1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/itembk2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/plyrjmp8.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/land.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/land2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/drown1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/drown2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gasp1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gasp2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/h2odeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/talk.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/teledth1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/lock4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/pkup.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/armor1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/lhit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gib.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/udeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/tornoff2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain6.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ax1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/axhit1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/axhit2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/h2ojump.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/slimbrn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/inh2o.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/inlava.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/outwater.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/lburn1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/lburn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/water1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/water2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/medtry.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/meduse.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/stndr1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/stndr2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/null.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/train2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/train1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/buttons/switch02.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/drclos4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/doormv1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/fire1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/basesec1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/basesec2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/latch2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/winch2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_idle.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_idle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_shot1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_gib.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_pain.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_pain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_fall.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_miss.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/idle_w2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/medplat1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/medplat2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/buttons/airbut1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/medkey.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/hum1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogdrag.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogdth.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogidle.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogidle2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogpain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogsawatk.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogwake.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wattack.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wdeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/widle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/widle2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wpain.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wsight.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/ddeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dhit2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/djump.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dpain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/idle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/sight2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/health1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/r_item1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/secret.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/drip1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/swamp2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/swamp1.wav
+E (6378) pudding_p4: HÄNGT bei Bild 1: Schleife Stufe 2, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 82 KB intern, 14666 KB PSRAM
+I (6402) pudding_p4: Mittel: Simulation 2711.6 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (6402) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 2712.9 ms (Simulation 2711.6, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (6403) pudding_p4: Geclippt 1 je Bild (0.0 ms); 0 Objekte, 1 Dreiecke geprüft; Ton 3.4 ms je Bild
+I (6403) pudding_p4: Frei: 81 KB intern, 14586 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6403) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.1 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (70890.0 Takte/Pixel)
+I (6403) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 0.00 ms; angeschubst seit Start: 0
+I (6403) pudding_p4: 55.0 FPS (640x360 weich), Frame 2712.9 ms, Streifen 0/0, Rendern 0.0/0.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/0.0 ms, Ausgabe 0.0 ms, Panel 55.01 Hz
+I (6403) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 0 KB intern/0 KB PSRAM
+You got the shells
+I (8417) pudding_p4: Mittel: Simulation 19.8 ms, Bild vorbereiten 0.9 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (8417) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 36.4 ms (Simulation 21.4, Vorbereiten 0.8, Mithelfen 0.0, Sichern 0.0)
+I (8417) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (8417) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (8417) pudding_p4: Rendern je Kern: Löschen 1.4 ms, Dreiecke 4.7 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (187956032.0 Takte/Pixel)
+I (8417) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.39 ms; angeschubst seit Start: 0
+I (8417) pudding_p4: 27.7 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.5 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.4 ms, Ausgabe 20.9 ms, Panel 55.35 Hz
+I (8417) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+You got the Grenade Launcher
+I (10417) pudding_p4: Mittel: Simulation 21.2 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (10417) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 36.4 ms (Simulation 19.5, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (10417) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (10418) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (10418) pudding_p4: Rendern je Kern: Löschen 1.4 ms, Dreiecke 4.6 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (181691056.0 Takte/Pixel)
+I (10418) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.34 ms; angeschubst seit Start: 0
+I (10418) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 26.3 ms, Panel 55.17 Hz
+I (10418) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (12441) pudding_p4: Mittel: Simulation 33.5 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (12441) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 53.8 ms (Simulation 52.5, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (12441) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (12441) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (12441) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (164348320.0 Takte/Pixel)
+I (12441) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.17 ms; angeschubst seit Start: 0
+I (12441) pudding_p4: 26.3 FPS (640x360 weich), Frame 30.1 ms, Streifen 0/45, Rendern 0.0/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.4 ms, Ausgabe 30.0 ms, Panel 55.06 Hz
+I (12441) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (14473) pudding_p4: Mittel: Simulation 29.4 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (14473) pudding_p4: Ruckler: 3 verpasste Bildwechsel; längstes Bild 51.3 ms (Simulation 50.0, Vorbereiten 1.0, Mithelfen 0.0, Sichern 0.0)
+I (14473) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (14473) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (14473) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (165356704.0 Takte/Pixel)
+I (14473) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.12 ms; angeschubst seit Start: 0
+I (14473) pudding_p4: 25.7 FPS (640x360 weich), Frame 42.8 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.2 ms, Ausgabe 42.7 ms, Panel 54.95 Hz
+I (14473) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (16492) pudding_p4: Mittel: Simulation 39.2 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (16492) pudding_p4: Ruckler: 14 verpasste Bildwechsel; längstes Bild 56.1 ms (Simulation 54.8, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (16492) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.1 ms je Bild
+I (16492) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (16493) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (149084720.0 Takte/Pixel)
+I (16493) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.12 ms; angeschubst seit Start: 0
+I (16493) pudding_p4: 25.4 FPS (640x360 weich), Frame 33.2 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.3 ms, Ausgabe 31.9 ms, Panel 55.05 Hz
+I (16493) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+You receive 25 health
+You get 2 rockets  
+I (18523) pudding_p4: Mittel: Simulation 30.6 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (18524) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 48.1 ms (Simulation 46.9, Vorbereiten 1.0, Mithelfen 0.0, Sichern 0.0)
+I (18524) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (18524) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (18524) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (166441616.0 Takte/Pixel)
+I (18524) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.13 ms; angeschubst seit Start: 0
+I (18524) pudding_p4: 27.4 FPS (640x360 weich), Frame 34.8 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.2 ms, Ausgabe 34.7 ms, Panel 54.99 Hz
+I (18524) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (18712) pudding_fw::foto: BILD 0 720 1280 3000000 0
+BILD 0 gespeichert: <Ordner>/bild_0.png
+I (25600) pudding_fw::foto: BILD 0 gesendet
+I (25600) pudding_p4: Mittel: Simulation 36.2 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (25600) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 6933.6 ms (Simulation 44.3, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (25600) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (25600) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (25600) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (15404271.0 Takte/Pixel)
+I (25600) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.10 ms; angeschubst seit Start: 0
+I (25600) pudding_p4: 26.5 FPS (640x360 weich), Frame 6933.6 ms, Streifen 0/45, Rendern 0.0/9.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 45.4 ms, Panel 55.04 Hz
+I (25600) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (27623) pudding_p4: Mittel: Simulation 33.8 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (27624) pudding_p4: Ruckler: 12 verpasste Bildwechsel; längstes Bild 58.3 ms (Simulation 57.1, Vorbereiten 1.0, Mithelfen 0.0, Sichern 0.0)
+I (27624) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (27624) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (27624) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (155436608.0 Takte/Pixel)
+I (27624) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.06 ms; angeschubst seit Start: 0
+I (27624) pudding_p4: 26.0 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 34.9 ms, Panel 55.01 Hz
+I (27624) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (29642) pudding_p4: Mittel: Simulation 30.3 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (29643) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 46.6 ms (Simulation 45.3, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (29643) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (29643) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (29643) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (167186128.0 Takte/Pixel)
+I (29643) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.11 ms; angeschubst seit Start: 0
+I (29643) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/2.0 ms, Ausgabe 35.3 ms, Panel 55.01 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/qplaque.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/ttl_main.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/mainmenu.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot2.lmp
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/menu2.wav
+I (31752) pudding_p4: Mittel: Simulation 34.9 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (31752) pudding_p4: Ruckler: 7 verpasste Bildwechsel; längstes Bild 154.7 ms (Simulation 153.3, Vorbereiten 1.2, Mithelfen 0.0, Sichern 0.0)
+I (31752) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (31752) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (31752) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (162342656.0 Takte/Pixel)
+I (31752) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.14 ms; angeschubst seit Start: 0
+I (31752) pudding_p4: 25.4 FPS (640x360 weich), Frame 154.7 ms, Streifen 0/45, Rendern 0.0/13.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 154.6 ms, Panel 54.97 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot3.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot4.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot5.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot6.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot1.lmp
+You got the rockets
+I (33699) pudding_p4: Bilanz 30 s: 18.0 FPS, Arbeit je Bild Mittel 55.5 ms, p99 58.5 ms, max 6933.6 ms; verpasste Bildwechsel 48 (2.9 je 100)
+I (33771) pudding_p4: Mittel: Simulation 30.6 ms, Bild vorbereiten 0.9 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (33771) pudding_p4: Ruckler: 4 verpasste Bildwechsel; längstes Bild 76.7 ms (Simulation 75.6, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (33771) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (33771) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (33771) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 1.1 ms; je Bild 0 Zeilenstücke, 0k Pixel (163227168.0 Takte/Pixel)
+I (33772) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.29 ms; angeschubst seit Start: 0
+I (33772) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/15.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 25.0 ms, Panel 55.01 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/ttl_sgl.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/sp_menu.lmp
+You got the nailgun
+I (35772) pudding_p4: Mittel: Simulation 25.2 ms, Bild vorbereiten 0.8 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (35772) pudding_p4: Ruckler: 2 verpasste Bildwechsel; längstes Bild 72.8 ms (Simulation 71.7, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (35772) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (35772) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (35772) pudding_p4: Rendern je Kern: Löschen 1.4 ms, Dreiecke 4.3 ms, HUD 1.1 ms; je Bild 0 Zeilenstücke, 0k Pixel (165854432.0 Takte/Pixel)
+I (35772) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.34 ms; angeschubst seit Start: 0
+I (35772) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/10.2 ms, Skalieren 0.0/0.0 ms, PPA 0.0/0.8 ms, Ausgabe 31.1 ms, Panel 55.01 Hz
+PackFile: /daten/quake/id1/pak0.pak : progs.dat
+Sys_Error: progs.dat has wrong version number (0 should be 6)
+
+abort() was called at PC 0x48089c7b on core 0
+Core  0 register dump:
+MEPC    : 0x4ff10684  RA      : 0x4ff10224  SP      : 0x4882ab70  GP      : 0x4ff21b00  
+TP      : 0x4882b2d0  T0      : 0x37363534  T1      : 0x7271706f  T2      : 0x33323130  
+S0/FP   : 0x4882abac  S1      : 0x4882abac  A0      : 0x4882abac  A1      : 0x4882ab8e  
+A2      : 0x00000000  A3      : 0x4ff46000  A4      : 0x00000001  A5      : 0x4ff46000  
+A6      : 0x00000000  A7      : 0x76757473  S2      : 0x4882ab90  S3      : 0x0000003c  
+S4      : 0x0000003c  S5      : 0x4819b000  S6      : 0x4ff22f9c  S7      : 0x4882ad10  
+S8      : 0x4882acb0  S9      : 0x00000000  S10     : 0x0000001f  S11     : 0x00000000  
+T3      : 0x6e6d6c6b  T4      : 0x6a696867  T5      : 0x66656463  T6      : 0x62613938  
+MSTATUS : 0x00011880  MTVEC   : 0x4ff00003  MCAUSE  : 0x00000002  MTVAL   : 0x00000000  
+MHARTID : 0x00000000  
+
+Stack memory:
+4882ab70: 0x00000007 0x4882abc0 0x4882abac 0x4ff18e44 0x00000000 0x00000000 0x0000000a 0x4ff40030
+4882ab90: 0x38303834 0x62376339 0x4ff52700 0x4ff2798c 0x4882ab90 0x4ff279a8 0x4882ab8c 0x726f6261
+4882abb0: 0x20292874 0x20736177 0x6c6c6163 0x61206465 0x43502074 0x34783020 0x39383038 0x20623763
+4882abd0: 0x63206e6f 0x2065726f 0x00000030 0x00000000 0x4ff526c0 0x00000032 0x4ff526c0 0x48089c7e
+4882abf0: 0x4ff21588 0x4882abf0 0x480561ae 0x00000032 0x4ff46000 0x488a13cc 0x4819f000 0x480cd970
+4882ac10: 0x00000200 0x696c636b 0x4ff46000 0x4882ac34 0x00000020 0x4819b000 0x4ff46000 0x480efe7a
+4882ac30: 0x4882acb0 0x00000000 0x00000006 0x006c9f00 0x000000d8 0x488a1394 0x00000200 0x696c636b
+4882ac50: 0x4882acb0 0x00000000 0x4882acb0 0x4882ad10 0x4ff22f9c 0x4819b000 0x00000020 0x4819b398
+4882ac70: 0x4819b380 0x4882f354 0x4819b000 0x480ca2d4 0x00000000 0x00000000 0x00000001 0x4882ad10
+4882ac90: 0x0000000a 0x481c4ce8 0x00000020 0x481c5000 0x481c4cf6 0x4882f354 0x00000002 0x480dca90
+4882acb0: 0x72617473 0x481c0074 0x0000000a 0x0000004f 0x00000001 0x0000001f 0x4882ad19 0x480d70ac
+4882acd0: 0x0000001f 0x00000000 0x00000001 0x4882ad10 0x0000000a 0x481c88d0 0x0000003b 0x00000022
+4882acf0: 0x4ff46000 0x481c88d0 0x0000003b 0x00000022 0x48837354 0x0000000a 0x00000009 0x480d73e8
+4882ad10: 0x2070616d 0x72617473 0x31200074 0x424e5700 0xc3995c94 0xc2ac2ea9 0x41bc4263 0xc39870af
+4882ad30: 0xc2a09ef4 0x41cd175f 0xc39870af 0x35b40147 0x60000000 0x3fa29de7 0x00000000 0x4248a4f0
+4882ad50: 0x00000000 0x00000000 0x40a00000 0x00000000 0x00000045 0x000000ba 0x000000d7 0x00000000
+4882ad70: 0x00000000 0x000000ff 0x00000032 0x00000050 0x00000082 0x00000000 0xd4d243f6 0x00000200
+4882ad90: 0x4fc19326 0x48126186 0x4882ae10 0x4ff21b00 0x4882b2d0 0x00000000 0x00000000 0x00000200
+4882adb0: 0x4812642a 0x48126302 0x4882ae30 0x4ff21b00 0x00000005 0x00000000 0x00000000 0x00000200
+4882add0: 0x3de0b461 0x40000000 0xd110b461 0xbfe482b8 0x404979a3 0x4ff115de 0x00000000 0x4ff21b00
+4882adf0: 0x404979a3 0x4fc10cc4 0x5110b461 0xbfd65718 0xbff38c35 0xbfd65718 0x00000000 0x500e5014
+4882ae10: 0xbff38c35 0x00000000 0x20800008 0x1f000000 0x00000000 0x00000000 0x00000000 0x3fd65718
+4882ae30: 0x51000000 0x3fd65718 0xbef00000 0x404979a3 0x00000000 0x40400000 0x00000000 0x3fd65718
+4882ae50: 0x31000000 0x3c5a6263 0xc0000000 0x4014038b 0x00000000 0x40080000 0x00000000 0x3de90e91
+4882ae70: 0x0d000000 0x3fd2a0f4 0xa79394ca 0x3de90e91 0x0d000000 0x3fd2a0f4 0x00000000 0x40070d1e
+4882ae90: 0x00000000 0x40000000 0x1a626331 0x3de0b461 0xa2000000 0xbfd0a6e4 0x00000000 0x00000000
+4882aeb0: 0x4882af24 0x00000000 0x00000000 0x4810bd98 0x4882af74 0x4ff58ac4 0x00002008 0x3c000000
+4882aed0: 0x4cf7510d 0x3fde03e7 0x4cf7510d 0x3fde03e7 0x4cf7510d 0x3fde03e7 0x4cf7510d 0x31000000
+4882aef0: 0xf7847a81 0x3fbf315c 0xf7847a81 0x3fbf315c 0xf7847a81 0x3fbf315c 0xf7847a81 0x00000000
+4882af10: 0xf7847a81 0x3fbf315c 0xf7847a81 0x482489cc 0x4815e000 0x4ff46000 0x481c4188 0x4ff46000
+4882af30: 0x000000d6 0x00000001 0x481c4194 0x00000020 0x481c5188 0x4815dc24 0x481c4188 0x48115db0
+4882af50: 0xf7847a81 0x4882afd8 0x4882b06b 0x42400000 0x7ffffffc 0xffff0208 0x4882b068 0x7fffffff
+
+
+
+ELF file SHA256: 56f246df5
+
+Rebooting...
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05cce
+Core1 Saved PC:0x4ff0867c
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (156) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (371) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) load
+I (373) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) load
+I (377) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (843) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) load
+I (861) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (864) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) load
+I (868) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) load
+I (873) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) load
+I (887) boot: Loaded app from partition at offset 0x20000
+I (887) boot: Disabling RNG early entropy source...
+I (903) hex_psram: vendor id    : 0x0d (AP)
+I (903) hex_psram: Latency      : 0x01 (Fixed)
+I (903) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (904) hex_psram: dev id       : 0x03 (generation 4)
+I (908) hex_psram: density      : 0x07 (256 Mbit)
+I (913) hex_psram: good-die     : 0x06 (Pass)
+I (917) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (922) hex_psram: BurstType    : 0x00 ( Wrap)
+I (926) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (930) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (935) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (940) hex_psram: DriveStrength: 0x00 (1/1)
+I (944) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1248) mmu_psram: .rodata xip on psram
+I (1529) mmu_psram: .text xip on psram
+I (1530) hex_psram: psram CS IO is dedicated
+I (1530) cpu_start: Multicore app
+I (1923) esp_psram: SPI SRAM memory test OK
+I (1935) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1936) cpu_start: Pro cpu start user code
+I (1936) cpu_start: cpu freq: 360000000 Hz
+I (1938) app_init: Application information:
+I (1942) app_init: Project name:     libespidf
+I (1946) app_init: App version:      1
+I (1949) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1954) app_init: ELF file SHA256:  e3a0fee15...
+I (1959) app_init: ESP-IDF:          v5.5.5
+I (1963) efuse_init: Min chip rev:     v1.0
+I (1967) efuse_init: Max chip rev:     v1.99 
+I (1971) efuse_init: Chip rev:         v1.3
+I (1975) heap_init: Initializing. RAM available for dynamic allocation:
+I (1981) heap_init: At 4FF29F90 len 00011030 (68 KiB): RETENT_RAM
+I (1987) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1992) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1997) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (2003) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (2008) esp_psram: Adding pool of 27100K of PSRAM memory to heap allocator
+I (2015) esp_psram: Adding pool of 5K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2026) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2037) spi_flash: detected chip: gd
+I (2040) spi_flash: flash io: qio
+I (2043) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2050) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2057) main_task: Started on CPU0
+I (2060) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2068) main_task: Calling app_main()
+I (2072) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2072) pudding_p4: ESP32-OS startet …
+I (2072) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 330 KB intern, 27099 KB PSRAM
+I (2072) pudding_p4: Start: intern frei 330 KB (größter Block 184 KB), DMA-fähig 291 KB
+I (2077) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+W (2078) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2120) pudding_fw::speicher: SD-Karte eingehängt: 241724 MB als /sd0/1
+I (2157) pudding_p4: Einstellungen: Sprache de, Helligkeit 8, Bildschirm aus 120 s, Ruhe nach 300 s, Lautstärke 6, Touchpad false, Layout Ch, Hintergrund Verlauf(0), Uhr 1795466467
+W (2157) pudding_p4: Autopilot: Touchpad-Modus für diesen Lauf aus
+I (2158) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2158) eh_mcu_transport: transport_init: probing bus backend
+I (2158) eh_sdio: transport[host]: SDIO 4-bit 40000 kHz CLK=18 CMD=19 D0=14 D1=15 D2=16 D3=17 RESET=54
+I (2158) sdmmc_periph: sdmmc_host_init: SDMMC host already initialized, skipping init flow
+I (2158) eh_sdio: sdio_data_to_rx_buf_task started
+I (2159) eh_mcu_transport: transport_init: bus backend up
+W (2159) eh_sdio: Reset co-processor using GPIO[54]
+I (2173) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2174) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2174) GT911: TouchPad_Config_Version:70
+I (2174) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+I (2176) hx8394: version: 2.1.0
+W (2346) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+I (2686) pudding_p4: ESP32-OS-Desktop startet (@start)
+I (2686) pudding_p4: Spiel geladen: intern frei 100 KB (größter Block 31 KB), DMA-fähig 62 KB
+I (2719) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (war in Prüfung, Code 0)
+I (2719) pudding_p4: Los geht's!
+I (2985) pudding_p4: [debug] @icon: gezeichnet in 121 ms (Grund 17, Symbole 42, Mischen 10, Text 3, Ausgabe 47)
+I (2985) pudding_p4: [debug] 
+I (3367) pudding_p4: [debug] Startbild: Desktop bereit nach 504 ms
+I (3375) pudding_p4: [debug] Ersteinrichtung: schon erledigt
+I (3375) pudding_p4: [debug] 
+I (3679) eh_host_port_reset: reset done pin=54 parked=1
+I (3713) eh_host_port_sdio: bus applied: clk_khz=40000
+I (3713) eh_host_port_sdio: Function 0 Blocksize: 512
+I (3713) eh_host_port_sdio: Function 1 Blocksize: 512
+I (3813) eh_sdio: Card init success, TRANSPORT_RX_ACTIVE
+I (3859) eh_sdio: SDIO Host operating in STREAMING MODE
+I (3859) eh_sdio: Open data path at slave
+I (3859) eh_sdio: Starting SDIO process rx task
+I (3864) eh_init_evt: slave chip id: 0x0d (esp32c6)
+I (3864) eh_init_evt: capabilities: 0x0d
+I (3864) eh_init_evt: Features supported are:
+I (3864) eh_init_evt: 	 * WLAN over SDIO
+I (3864) eh_init_evt: 	   - HCI over SDIO
+I (3864) eh_init_evt: 	   - BLE only
+I (3864) eh_raw_tp: raw TP inactive
+I (3864) eh_init_evt: Default RPC to V2
+I (3864) eh_init_evt: esp-hosted fw versions: host=3.1.0 coprocessor=0.0.0
+E (3864) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (3864) eh_init_evt: CP without SDIO SW_AGGR; compatible streaming mode enabled
+I (3864) eh_init_evt: Missing SDIO_MODE TLV; Continue anyway.
+W (3864) eh_init_evt: CP without SDIO_MODE TLV: SDIO RX staging buffers stay dynamic
+I (3864) eh_init_evt: chip=0x0d (esp32c6) fw=0x00000000 caps=0x0d ext=0x00000000
+I (3865) eh_auto_init: auto_init: found 1 descriptor(s)
+I (3865) eh_auto_init: auto_init: initialising 'wifi' (priority 150)
+I (3865) eh_wifi_itwt: wifi iTWT ext init
+I (4224) pudding_fw::wlan: WLAN: Transport zum C6 bereit, WLAN gestartet in 2066 ms, interner RAM frei 292 → 91 KB
+I (4225) pudding_fw::wlan: WLAN: 1 bekannte Netze
+I (4690) pudding_p4: Desktop: 9.5 Bilder/s neu, 144.2 übersprungen/s, Fläche 135127 px/Bild, Compositor 0.38 ms/Bild
+I (6690) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.0 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (6853) pudding_fw::wlan: WLAN: automatischer Versuch mit bekanntem Netz Nr. 0
+I (6910) pudding_p4: Mittel: Simulation 0.2 ms, Bild vorbereiten 5.8 ms (0 Dreiecke), Mithelfen 14.4 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.6 ms
+I (6910) pudding_p4: Ruckler: 25 verpasste Bildwechsel; längstes Bild 42.6 ms (Simulation 0.0, Vorbereiten 11.9, Mithelfen 30.2, Sichern 0.0)
+I (6911) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 5.9 ms je Bild
+I (6911) pudding_p4: Frei: 86 KB intern, 13528 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6911) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.0 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (0.0 Takte/Pixel)
+I (6911) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.48 ms, Kern 1 3.50 ms; angeschubst seit Start: 0
+I (6911) pudding_p4: 42.2 FPS (640x360 scharf), Frame 0.6 ms, Streifen 2/4, Rendern 0.1/0.5 ms, Skalieren 0.3/0.5 ms, PPA 0.8/1.4 ms, Ausgabe 2.5 ms, Panel 55.01 Hz
+I (6911) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 61 KB intern/40 KB PSRAM
+I (8693) pudding_p4: Desktop: 1.0 Bilder/s neu, 199.2 übersprungen/s, Fläche 30720 px/Bild, Compositor 0.01 ms/Bild
+W (9225) eh_host_feat_rpc: request: no response uid=6 msg_id=350 (5000 ms)
+I (9225) wlan: esp_hosted Host 3.1.0, Koprozessor esp32c6 Firmware 0.0.0 (Abfrage -1)
+W (9225) pudding_fw::wlan: WLAN: Versionen Host 3.1.0, Koprozessor esp32c6 kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)
+I (9871) esp_wifi_remote: esp_wifi_internal_reg_rxcb: sta: 0x483341ec
+I (9871) wlan: mit dem Zugangspunkt verbunden
+I (10697) pudding_p4: Desktop: 0.0 Bilder/s neu, 200.1 übersprungen/s, Fläche 0 px/Bild, Compositor 0.01 ms/Bild
+I (10887) esp_netif_handlers: sta ip: 192.168.1.142, mask: 255.255.255.0, gw: 192.168.1.1
+I (10887) wlan: IP 192.168.1.142
+I (10930) pudding_p4: [debug] Spiel starten: Quake
+I (11391) pudding_fw::wlan: WLAN: verbunden in 4537 ms, IP 192.168.1.142, Signal -43 dBm, Kanal 11, PHY 802.11ax (HE) (laut Zugangspunkt, C6 kann 802.11ax)
+I (11391) pudding_fw::wlan: NTP: Abgleich gestartet (pool.ntp.org)
+I (11413) pudding_p4: Spiel Some(Quake) (Neustart ins Spiel)
+W (11414) wlan: getrennt, Grund 8
+I (11422) pudding_p4: Mittel: Simulation 0.0 ms, Bild vorbereiten 0.7 ms (0 Dreiecke), Mithelfen 1.0 ms, Rest-PPA 0.7 ms, Warten auf Bildspeicher 0.0 ms
+I (11422) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 4.3 ms (Simulation 0.0, Vorbereiten 0.7, Mithelfen 2.0, Sichern 0.0)
+I (11423) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 51.3 ms je Bild
+I (11423) pudding_p4: Frei: 89 KB intern, 13528 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11423) pudding_p4: Rendern je Kern: Löschen 0.0 ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05ce2
+Core1 Saved PC:0x4837050c
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (126) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (347) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) load
+I (348) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) load
+I (352) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (819) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) load
+I (836) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) load
+I (839) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) load
+I (844) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) load
+I (848) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) load
+I (862) boot: Loaded app from partition at offset 0x20000
+I (863) boot: Disabling RNG early entropy source...
+I (878) hex_psram: vendor id    : 0x0d (AP)
+I (878) hex_psram: Latency      : 0x01 (Fixed)
+I (879) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (879) hex_psram: dev id       : 0x03 (generation 4)
+I (884) hex_psram: density      : 0x07 (256 Mbit)
+I (888) hex_psram: good-die     : 0x06 (Pass)
+I (892) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (897) hex_psram: BurstType    : 0x00 ( Wrap)
+I (901) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (906) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (910) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (915) hex_psram: DriveStrength: 0x00 (1/1)
+I (919) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1223) mmu_psram: .rodata xip on psram
+I (1505) mmu_psram: .text xip on psram
+I (1505) hex_psram: psram CS IO is dedicated
+I (1506) cpu_start: Multicore app
+I (1898) esp_psram: SPI SRAM memory test OK
+I (1910) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1910) cpu_start: Pro cpu start user code
+I (1910) cpu_start: cpu freq: 360000000 Hz
+I (1912) app_init: Application information:
+I (1916) app_init: Project name:     libespidf
+I (1920) app_init: App version:      1
+I (1924) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1929) app_init: ELF file SHA256:  e3a0fee15...
+I (1934) app_init: ESP-IDF:          v5.5.5
+I (1937) efuse_init: Min chip rev:     v1.0
+I (1941) efuse_init: Max chip rev:     v1.99 
+I (1945) efuse_init: Chip rev:         v1.3
+I (1949) heap_init: Initializing. RAM available for dynamic allocation:
+I (1956) heap_init: At 4FF29F90 len 00011030 (68 KiB): RETENT_RAM
+I (1961) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1967) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1972) heap_init: At 50108108 len 00007EF8 (31 KiB): RTCRAM
+I (1977) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1983) esp_psram: Adding pool of 27100K of PSRAM memory to heap allocator
+I (1989) esp_psram: Adding pool of 5K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (2000) esp_psram: Adding pool of 6K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (2012) spi_flash: detected chip: gd
+I (2015) spi_flash: flash io: qio
+I (2018) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (2024) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (2031) main_task: Started on CPU0
+I (2034) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (2042) main_task: Calling app_main()
+I (2046) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (2046) pudding_p4: ESP32-OS startet …
+I (2046) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 330 KB intern, 27099 KB PSRAM
+I (2046) pudding_p4: Start: intern frei 330 KB (größter Block 184 KB), DMA-fähig 291 KB
+I (2052) pudding_p4: Programm „esp32os_a“, Startziel Quake
+I (2053) esp_image: segment 0: paddr=00e00020 vaddr=48140020 size=48b24h (297764) map
+I (2123) esp_image: segment 1: paddr=00e48b4c vaddr=30100000 size=00070h (   112) 
+I (2124) esp_image: segment 2: paddr=00e48bc4 vaddr=4ff00000 size=07454h ( 29780) 
+I (2131) esp_image: segment 3: paddr=00e50020 vaddr=48000020 size=1347e0h (1263584) map
+I (2428) esp_image: segment 4: paddr=00f84808 vaddr=4ff07454 size=19e30h (106032) 
+I (2453) esp_image: segment 5: paddr=00f9e640 vaddr=4ff21300 size=07648h ( 30280) 
+I (2461) esp_image: segment 6: paddr=00fa5c90 vaddr=501080dc size=00020h (    32) 
+I (2495) pudding_p4: Quake liegt in „"quakeapp"“ – Neustart dorthin
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff05ce2
+Core1 Saved PC:0x4ff08722
+SPI mode:DIO, clock div:2
+load:0x4ff33ce0,len:0x173c
+load:0x4ff29ed0,len:0x1028
+load:0x4ff2cbd0,len:0x36a8
+entry 0x4ff29eda
+I (33) boot: ESP-IDF v5.5.5 2nd stage bootloader
+I (33) boot: compile time Nov 23 2026 16:17:12
+I (34) boot: Multicore bootloader
+I (35) boot: chip revision: v1.3
+I (36) boot: efuse block revision: v0.3
+I (40) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32p4: SPI Speed      : 40MHz
+I (48) boot.esp32p4: SPI Mode       : QIO
+I (52) boot.esp32p4: SPI Flash Size : 32MB
+I (56) boot: Enabling RNG early entropy source...
+I (60) boot: Partition Table:
+I (63) boot: ## Label            Usage          Type ST Offset   Length
+I (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (82) boot:  2 otadata          OTA data         01 00 00010000 00002000
+I (89) boot:  3 esp32os_a        OTA app          00 10 00020000 005f0000
+I (95) boot:  4 esp32os_b        OTA app          00 11 00610000 005f0000
+I (102) boot:  5 doomapp          OTA app          00 12 00c00000 00200000
+I (108) boot:  6 quakeapp         OTA app          00 13 00e00000 00200000
+I (115) boot:  7 daten            Unknown data     01 81 01000000 01000000
+I (122) boot: End of partition table
+I (158) esp_image: segment 0: paddr=00e00020 vaddr=48140020 size=48b24h (297764) map
+I (195) esp_image: segment 1: paddr=00e48b4c vaddr=30100000 size=00070h (   112) load
+I (197) esp_image: segment 2: paddr=00e48bc4 vaddr=4ff00000 size=07454h ( 29780) load
+I (204) esp_image: segment 3: paddr=00e50020 vaddr=48000020 size=1347e0h (1263584) map
+I (361) esp_image: segment 4: paddr=00f84808 vaddr=4ff07454 size=19e30h (106032) load
+I (378) esp_image: segment 5: paddr=00f9e640 vaddr=4ff21300 size=07648h ( 30280) load
+I (383) esp_image: segment 6: paddr=00fa5c90 vaddr=501080dc size=00020h (    32) load
+I (392) boot: Loaded app from partition at offset 0xe00000
+I (392) boot: Disabling RNG early entropy source...
+I (404) hex_psram: vendor id    : 0x0d (AP)
+I (405) hex_psram: Latency      : 0x01 (Fixed)
+I (405) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (406) hex_psram: dev id       : 0x03 (generation 4)
+I (410) hex_psram: density      : 0x07 (256 Mbit)
+I (415) hex_psram: good-die     : 0x06 (Pass)
+I (419) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (424) hex_psram: BurstType    : 0x00 ( Wrap)
+I (428) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (432) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (437) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (442) hex_psram: DriveStrength: 0x00 (1/1)
+I (446) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (642) mmu_psram: .rodata xip on psram
+I (740) mmu_psram: .text xip on psram
+I (740) hex_psram: psram CS IO is dedicated
+I (741) cpu_start: Multicore app
+I (1206) esp_psram: SPI SRAM memory test OK
+I (1224) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1225) cpu_start: Pro cpu start user code
+I (1225) cpu_start: cpu freq: 360000000 Hz
+I (1227) app_init: Application information:
+I (1231) app_init: Project name:     libespidf
+I (1235) app_init: App version:      1
+I (1238) app_init: Compile time:     Nov 23 2026 16:16:00
+I (1243) app_init: ELF file SHA256:  56f246df5...
+I (1248) app_init: ESP-IDF:          v5.5.5
+I (1252) efuse_init: Min chip rev:     v1.0
+I (1256) efuse_init: Max chip rev:     v1.99 
+I (1260) efuse_init: Chip rev:         v1.3
+I (1264) heap_init: Initializing. RAM available for dynamic allocation:
+I (1270) heap_init: At 4FF28960 len 00012660 (73 KiB): RETENT_RAM
+I (1276) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1281) heap_init: At 4FF46B90 len 00039470 (229 KiB): RAM
+I (1286) heap_init: At 501080FC len 00007F04 (31 KiB): RTCRAM
+I (1292) heap_init: At 30100070 len 00001F90 (7 KiB): SPM
+I (1297) esp_psram: Adding pool of 30398K of PSRAM memory to heap allocator
+I (1304) esp_psram: Adding pool of 46K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1315) esp_psram: Adding pool of 29K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1326) spi_flash: detected chip: gd
+I (1329) spi_flash: flash io: qio
+I (1333) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1339) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1346) main_task: Started on CPU0
+I (1349) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations
+I (1357) main_task: Calling app_main()
+I (1361) flash_sperre: eingerichtet (SPI1-Operationen und abgebildetes Lesen schliessen sich aus)
+I (1361) pudding_p4: ESP32-OS startet …
+I (1361) pudding_fw: ESP32-P4 Revision v1.3, 2 Kerne, 360 MHz, PSRAM 32 MB; frei: 308 KB intern, 30459 KB PSRAM
+I (1361) pudding_p4: Start: intern frei 308 KB (größter Block 160 KB), DMA-fähig 270 KB
+I (1367) pudding_p4: Programm „quakeapp“, Startziel Quake
+I (1400) pudding_fw::slots: Programm „quakeapp“ als gültig markiert (war in Prüfung, Code 0)
+I (1400) esp_image: segment 0: paddr=00020020 vaddr=483a0020 size=1ae6c0h (1763008) map
+I (1815) esp_image: segment 1: paddr=001ce6e8 vaddr=30100000 size=00070h (   112) 
+I (1815) esp_image: segment 2: paddr=001ce760 vaddr=4ff00000 size=018b8h (  6328) 
+I (1817) esp_image: segment 3: paddr=001d0020 vaddr=48000020 size=39ea60h (3795552) map
+I (2709) esp_image: segment 4: paddr=0056ea88 vaddr=4ff018b8 size=1aa90h (109200) 
+I (2735) esp_image: segment 5: paddr=00589520 vaddr=4ff1c380 size=02d50h ( 11600) 
+I (2738) esp_image: segment 6: paddr=0058c278 vaddr=4ff1f100 size=053ech ( 21484) 
+I (2743) esp_image: segment 7: paddr=0059166c vaddr=50108080 size=0000ch (    12) 
+I (2743) esp_image: segment 8: paddr=00591680 vaddr=501080e8 size=00020h (    32) 
+I (2778) pudding_p4: Startziel Quake, Spielstand neu
+I (2792) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2793) GT911: TouchPad_ID:0x39,0x31,0x31
+I (2793) GT911: TouchPad_Config_Version:70
+I (2793) pudding_p4: Touch GT911 unter 0x5D, Abfrage
+W (2793) ldo: The voltage value 0 is out of the recommended range [500, 2700]
+I (2837) pudding_fw::quake_board: Quake: PAK 17847 KB auf der SD-Karte
+I (2839) hx8394: version: 2.1.0
+W (3008) hx8394: The 3Ah command has been used and will be overwritten by external initialization sequence
+Host_Init
+E (3362) pudding_p4: HÄNGT bei Bild 0: Schleife Stufe 0, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 86 KB intern, 16227 KB PSRAM
+Added packfile /daten/quake/id1/pak0.pak (339 files)
+FindFile: can't find gfx/pop.lmp
+Playing shareware version.
+PackFile: /daten/quake/id1/pak0.pak : gfx.wad
+Console initialized.
+Exe: 16:16:27 Nov 23 2026
+ 8.0 megabyte heap
+PackFile: /daten/quake/id1/pak0.pak : gfx/palette.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/colormap.lmp
+637k surface cache
+
+Sound Initialization
+PackFile: /daten/quake/id1/pak0.pak : gfx/conback.lmp
+Sound sampling rate: 22050
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/water1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/wind2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/hknight/hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/tink1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ric3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/r_exp3.wav
+========Quake Initialized=========
+I (3707) pudding_p4: Quake gestartet in 357 ms
+I (3707) pudding_p4: Quake geladen: intern frei 85 KB (größter Block 31 KB), DMA-fähig 47 KB
+I (3707) pudding_p4: Spiel geladen: intern frei 82 KB (größter Block 31 KB), DMA-fähig 44 KB
+I (3707) pudding_p4: Los geht's!
+PackFile: /daten/quake/id1/pak0.pak : quake.rc
+execing quake.rc
+PackFile: /daten/quake/id1/pak0.pak : default.cfg
+execing default.cfg
+FindFile: can't find config.cfg
+couldn't exec config.cfg
+FindFile: can't find autoexec.cfg
+couldn't exec autoexec.cfg
+3 demo(s) in loop
+Playing demo from demo1.dem.
+PackFile: /daten/quake/id1/pak0.pak : demo1.dem
+
+
+
+
+the Necropolis
+PackFile: /daten/quake/id1/pak0.pak : maps/e1m3.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/player.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/eyes.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_player.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib1.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/gib3.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/s_bubble.spr
+PackFile: /daten/quake/id1/pak0.pak : progs/s_explod.spr
+PackFile: /daten/quake/id1/pak0.pak : progs/v_axe.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_shot.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_nail.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_rock.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_shot2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_nail2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_rock2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/bolt3.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/lavaball.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/missile.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/grenade.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/s_spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/backpack.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/zom_gib.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/v_light.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/flame2.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/flame.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/zombie.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_zombie.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/w_g_key.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/ogre.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_ogre.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/wizard.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_wizard.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/w_spike.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/demon.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/h_demon.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/g_nail.mdl
+PackFile: /daten/quake/id1/pak0.pak : maps/b_shell1.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_bh25.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_bh10.bsp
+E (5378) pudding_p4: HÄNGT bei Bild 1: Schleife Stufe 2, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 82 KB intern, 14666 KB PSRAM
+PackFile: /daten/quake/id1/pak0.pak : progs/g_shot.mdl
+PackFile: /daten/quake/id1/pak0.pak : maps/b_shell0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_rock0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_nail1.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/armor.mdl
+PackFile: /daten/quake/id1/pak0.pak : maps/b_nail0.bsp
+PackFile: /daten/quake/id1/pak0.pak : maps/b_rock1.bsp
+PackFile: /daten/quake/id1/pak0.pak : progs/g_rock.mdl
+PackFile: /daten/quake/id1/pak0.pak : progs/invisibl.mdl
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/rocket1i.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/sgun1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/guncock.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/spike2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/grenade.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/bounce.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/shotgn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dland2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/h2ohit1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/itembk2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/plyrjmp8.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/land.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/land2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/drown1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/drown2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gasp1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gasp2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/h2odeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/talk.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/teledth1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/r_tele5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/lock4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/pkup.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/armor1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/lhit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/gib.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/udeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/tornoff2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/pain6.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/death5.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/weapons/ax1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/axhit1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/axhit2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/h2ojump.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/slimbrn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/inh2o.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/inlava.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/outwater.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/lburn1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/player/lburn2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/water1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/water2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/medtry.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/meduse.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/stndr1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/stndr2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/null.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/train2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/train1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/buttons/switch02.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/drclos4.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/doormv1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/fire1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/basesec1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/basesec2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/latch2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/doors/winch2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_idle.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_idle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_shot1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_gib.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_pain.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_pain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_fall.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_miss.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/z_hit.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/zombie/idle_w2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/medplat1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/plats/medplat2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/buttons/airbut1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/medkey.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/hum1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogdrag.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogdth.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogidle.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogidle2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogpain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogsawatk.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ogre/ogwake.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wattack.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wdeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/widle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/widle2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wpain.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/wizard/wsight.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/ddeath.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dhit2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/djump.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/dpain1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/idle1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/demon/sight2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/health1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/r_item1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/secret.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/items/inv3.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/drip1.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/swamp2.wav
+PackFile: /daten/quake/id1/pak0.pak : sound/ambience/swamp1.wav
+E (6393) pudding_p4: HÄNGT bei Bild 1: Schleife Stufe 2, Stufe 0/5, Streifen 0/0, nächster 0, PPA belegt [0, 0, 0, 0, 0, 0, 0, 0]; frei 81 KB intern, 14666 KB PSRAM
+I (6435) pudding_p4: Mittel: Simulation 2726.4 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (6435) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 2727.7 ms (Simulation 2726.4, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (6435) pudding_p4: Geclippt 1 je Bild (0.0 ms); 0 Objekte, 1 Dreiecke geprüft; Ton 3.4 ms je Bild
+I (6435) pudding_p4: Frei: 81 KB intern, 14586 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (6435) pudding_p4: Rendern je Kern: Löschen 0.0 ms, Dreiecke 0.1 ms, HUD 0.0 ms; je Bild 0 Zeilenstücke, 0k Pixel (78383.0 Takte/Pixel)
+I (6435) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 0.00 ms; angeschubst seit Start: 0
+I (6435) pudding_p4: 55.0 FPS (640x360 weich), Frame 2727.7 ms, Streifen 0/0, Rendern 0.0/0.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/0.0 ms, Ausgabe 0.0 ms, Panel 55.01 Hz
+I (6435) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 0 KB intern/0 KB PSRAM
+You got the shells
+I (8453) pudding_p4: Mittel: Simulation 19.8 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (8453) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 36.4 ms (Simulation 23.8, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (8453) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (8453) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (8453) pudding_p4: Rendern je Kern: Löschen 1.4 ms, Dreiecke 4.7 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (187683520.0 Takte/Pixel)
+I (8453) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.39 ms; angeschubst seit Start: 0
+I (8453) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.5 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 20.8 ms, Panel 55.25 Hz
+I (8453) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+You got the Grenade Launcher
+I (10453) pudding_p4: Mittel: Simulation 21.3 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (10454) pudding_p4: Ruckler: 0 verpasste Bildwechsel; längstes Bild 36.4 ms (Simulation 25.2, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (10454) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (10454) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (10454) pudding_p4: Rendern je Kern: Löschen 1.4 ms, Dreiecke 4.6 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (182535072.0 Takte/Pixel)
+I (10454) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.34 ms; angeschubst seit Start: 0
+I (10454) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 26.7 ms, Panel 55.11 Hz
+I (10454) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (12477) pudding_p4: Mittel: Simulation 33.4 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (12477) pudding_p4: Ruckler: 5 verpasste Bildwechsel; längstes Bild 53.9 ms (Simulation 52.6, Vorbereiten 1.2, Mithelfen 0.0, Sichern 0.0)
+I (12477) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (12477) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (12478) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.4 ms; je Bild 0 Zeilenstücke, 0k Pixel (164555296.0 Takte/Pixel)
+I (12478) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.17 ms; angeschubst seit Start: 0
+I (12478) pudding_p4: 26.3 FPS (640x360 weich), Frame 29.7 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.3 ms, Ausgabe 29.6 ms, Panel 55.03 Hz
+I (12478) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (14507) pudding_p4: Mittel: Simulation 29.5 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (14507) pudding_p4: Ruckler: 3 verpasste Bildwechsel; längstes Bild 51.3 ms (Simulation 50.0, Vorbereiten 1.0, Mithelfen 0.1, Sichern 0.0)
+I (14508) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (14508) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (14508) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (163901280.0 Takte/Pixel)
+I (14508) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.12 ms; angeschubst seit Start: 0
+I (14508) pudding_p4: 25.7 FPS (640x360 weich), Frame 42.6 ms, Streifen 0/45, Rendern 0.0/12.6 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.2 ms, Ausgabe 42.5 ms, Panel 54.94 Hz
+I (14508) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (16528) pudding_p4: Mittel: Simulation 39.2 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (16529) pudding_p4: Ruckler: 14 verpasste Bildwechsel; längstes Bild 56.6 ms (Simulation 55.1, Vorbereiten 1.2, Mithelfen 0.0, Sichern 0.0)
+I (16529) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.1 ms je Bild
+I (16529) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (16529) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (149362768.0 Takte/Pixel)
+I (16529) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.13 ms; angeschubst seit Start: 0
+I (16529) pudding_p4: 25.4 FPS (640x360 weich), Frame 35.5 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.4 ms, Ausgabe 31.1 ms, Panel 55.03 Hz
+I (16529) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+You receive 25 health
+You get 2 rockets  
+I (18543) pudding_p4: Mittel: Simulation 30.8 ms, Bild vorbereiten 1.0 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (18543) pudding_p4: Ruckler: 2 verpasste Bildwechsel; längstes Bild 48.4 ms (Simulation 47.2, Vorbereiten 1.0, Mithelfen 0.0, Sichern 0.0)
+I (18543) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (18543) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (18543) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (161990112.0 Takte/Pixel)
+I (18543) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.10 ms; angeschubst seit Start: 0
+I (18543) pudding_p4: 27.3 FPS (640x360 weich), Frame 35.1 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.2 ms, Ausgabe 35.0 ms, Panel 54.96 Hz
+I (18543) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (18730) pudding_fw::foto: BILD 0 720 1280 3000000 0
+BILD 0 gespeichert: <Ordner>/bild_0.png
+I (25618) pudding_fw::foto: BILD 0 gesendet
+I (25618) pudding_p4: Mittel: Simulation 36.0 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (25618) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 6932.7 ms (Simulation 43.8, Vorbereiten 0.9, Mithelfen 0.0, Sichern 0.0)
+I (25618) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 1.2 ms je Bild
+I (25618) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (25618) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.3 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (15517149.0 Takte/Pixel)
+I (25618) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.02 ms; angeschubst seit Start: 0
+I (25618) pudding_p4: 26.5 FPS (640x360 weich), Frame 6932.7 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/2.0 ms, Ausgabe 44.8 ms, Panel 55.02 Hz
+I (25618) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (27623) pudding_p4: Mittel: Simulation 34.1 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (27623) pudding_p4: Ruckler: 11 verpasste Bildwechsel; längstes Bild 56.2 ms (Simulation 55.0, Vorbereiten 1.0, Mithelfen 0.0, Sichern 0.0)
+I (27624) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (27624) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (27624) pudding_p4: Rendern je Kern: Löschen 1.2 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (155425584.0 Takte/Pixel)
+I (27624) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.08 ms; angeschubst seit Start: 0
+I (27624) pudding_p4: 25.9 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 34.7 ms, Panel 55.01 Hz
+I (27624) pudding_p4: Bildpuffer: Kern 0 61 KB intern/0 KB PSRAM, Kern 1 101 KB intern/0 KB PSRAM
+I (29642) pudding_p4: Mittel: Simulation 30.3 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (29642) pudding_p4: Ruckler: 1 verpasste Bildwechsel; längstes Bild 46.4 ms (Simulation 45.1, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (29642) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (29642) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (29643) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (167135664.0 Takte/Pixel)
+I (29643) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.13 ms; angeschubst seit Start: 0
+I (29643) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.5 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.3 ms, Ausgabe 27.0 ms, Panel 55.00 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/qplaque.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/ttl_main.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/mainmenu.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot2.lmp
+PackFile: /daten/quake/id1/pak0.pak : sound/misc/menu2.wav
+I (31756) pudding_p4: Mittel: Simulation 34.7 ms, Bild vorbereiten 1.1 ms (0 Dreiecke), Mithelfen 0.0 ms, Rest-PPA 0.0 ms, Warten auf Bildspeicher 0.0 ms
+I (31756) pudding_p4: Ruckler: 7 verpasste Bildwechsel; längstes Bild 155.3 ms (Simulation 154.0, Vorbereiten 1.1, Mithelfen 0.0, Sichern 0.0)
+I (31756) pudding_p4: Geclippt 0 je Bild (0.0 ms); 0 Objekte, 0 Dreiecke geprüft; Ton 0.0 ms je Bild
+I (31756) pudding_p4: Frei: 81 KB intern, 14506 KB PSRAM (grösster Block 14336 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (31756) pudding_p4: Rendern je Kern: Löschen 1.3 ms, Dreiecke 4.2 ms, HUD 0.3 ms; je Bild 0 Zeilenstücke, 0k Pixel (161311968.0 Takte/Pixel)
+I (31756) pudding_p4: PPA-Aufrufe je Bild: Kern 0 0.00 ms, Kern 1 1.14 ms; angeschubst seit Start: 0
+I (31756) pudding_p4: 25.4 FPS (640x360 weich), Frame 155.3 ms, Streifen 0/45, Rendern 0.0/12.7 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.7 ms, Ausgabe 155.2 ms, Panel 54.99 Hz
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot3.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot4.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot5.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot6.lmp
+PackFile: /daten/quake/id1/pak0.pak : gfx/menudot1.lmp
+You got the rockets

@@ -34,6 +34,11 @@
 
 #define PARALLEL 2
 #define STAPEL (12 * 1024)
+/* BR1: neue Verbindung nur mit dieser Reserve an internem RAM (WLAN,
+ * esp_hosted und lwIP brauchen ihn; bei 0 KB bricht die Firmware ab).
+ * Sonst bis WARTE_INTERN_US warten, dann Fehler „zu wenig Speicher“. */
+#define RESERVE_INTERN (32 * 1024)
+#define WARTE_INTERN_US (15 * 1000 * 1000)
 #define BLOCK 4096
 /* Puffer von esp_http_client: eine Kopfzeile der Antwort muss in PUFFER_RX
  * passen (Wikipedia schickt lange Content-Security-Policy-Zeilen; 2 KB gab
@@ -222,6 +227,17 @@ static void ablauf(struct ns_transport *t)
 	size_t geschrieben = 0, gesamt = 0;
 	int64_t beginn = esp_timer_get_time();
 	int status;
+	while (heap_caps_get_free_size(MALLOC_CAP_INTERNAL) < RESERVE_INTERN) {
+		if (t->abgebrochen)
+			return;
+		if (esp_timer_get_time() - beginn > WARTE_INTERN_US) {
+			ESP_LOGW(TAG, "zu wenig interner RAM (%u KB) - nicht verbunden: %s",
+				 (unsigned)(heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024), t->url);
+			melden(t, NS_T_FEHLER, 0, "Zu wenig Speicher für eine weitere Verbindung", NULL, 0);
+			return;
+		}
+		vTaskDelay(pdMS_TO_TICKS(100));
+	}
 	memset(&c, 0, sizeof c);
 	c.url = t->url;
 	c.crt_bundle_attach = esp_crt_bundle_attach;

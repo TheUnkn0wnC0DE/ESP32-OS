@@ -68,6 +68,11 @@ CONFIG_ESP_HOSTED_AUTO_CALL_INIT_BEFORE_APP_MAIN=n
 CONFIG_EH_HOST_PORT_DMA_PREFER_SPIRAM=y
 CONFIG_ESP_HOSTED_DFLT_TASK_FROM_SPIRAM=y
 CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+# ESP32-OS (BR1): geschlossene TCP-Verbindungen nur 10 s in TIME_WAIT
+# (2 × MSL; Standard 2 × 60 s). Der Browser öffnet je Bild/Skript eine
+# Verbindung; ihre Verwaltungsdaten liegen im knappen internen RAM und
+# häuften sich über mehrere Seiten bis 0 KB (danach Abbruch der Firmware).
+CONFIG_LWIP_TCP_MSL=5000
 # ESP32-OS (U1): TLS-Speicher (mbedTLS) im PSRAM – der interne RAM reicht
 # neben Anzeige und WLAN nicht für einen TLS-Handshake. Zertifikatsbündel an
 # (Prüfung der Server-Zertifikate, nie abschalten).

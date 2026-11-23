@@ -23,7 +23,11 @@ static DATEI: Mutex<Option<std::fs::File>> = Mutex::new(None);
 fn lesen(pos: usize, ziel: &mut [u8]) -> bool {
     let mut g = DATEI.lock().unwrap_or_else(|e| e.into_inner());
     let Some(f) = g.as_mut() else { return false };
-    f.seek(SeekFrom::Start(pos as u64)).is_ok() && f.read_exact(ziel).is_ok()
+    let r = f.seek(SeekFrom::Start(pos as u64)).and_then(|_| f.read_exact(ziel));
+    if let Err(e) = &r {
+        log::error!("Quake: pak0.pak lesen ab {pos}, {} Byte: {e} ({:?})", ziel.len(), e.kind());
+    }
+    r.is_ok()
 }
 
 /// Spieldaten öffnen (Größe aus dem PAK-Kopf: Verzeichnis am Ende).
@@ -42,11 +46,14 @@ pub fn pak() -> Option<quake::Pak> {
     }
     let ofs = u32::from_le_bytes([kopf[4], kopf[5], kopf[6], kopf[7]]) as usize;
     let len = u32::from_le_bytes([kopf[8], kopf[9], kopf[10], kopf[11]]) as usize;
-    let groesse = ofs + len;
-    if groesse > laenge {
-        log::error!("Quake: PAK-Kopf passt nicht zur Datei ({groesse} > {laenge})");
+    // Das Verzeichnis liegt nicht zwingend am Ende: in der Shareware-PAK
+    // folgt ihm progs.dat (A1: „New Game“ las dort nur Nullen). Lesbar ist
+    // die ganze Datei; das Verzeichnis muss nur hineinpassen.
+    if ofs.checked_add(len).is_none_or(|ende| ende > laenge) {
+        log::error!("Quake: PAK-Verzeichnis ({ofs} + {len}) passt nicht in die Datei ({laenge})");
         return None;
     }
+    let groesse = laenge;
     log::info!("Quake: PAK {} KB auf der SD-Karte", groesse / 1024);
     Some(quake::Pak::Lesen { groesse, lesen })
 }

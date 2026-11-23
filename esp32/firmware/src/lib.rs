@@ -10,6 +10,7 @@ pub mod codec;
 pub mod daten;
 pub mod display;
 pub mod durchsatz;
+pub mod seitenliste;
 pub mod flash_sperre;
 pub mod doom_board;
 pub mod foto;

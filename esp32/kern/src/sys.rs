@@ -353,11 +353,22 @@ pub fn knopf(ebx: u32, ecx: u32, edx: u32, esi: u32) {
         if bw <= 0 || bh <= 0 || bw >= 0x8000 || bh >= 0x8000 {
             return;
         }
-        f.knoepfe.push(Knopf { id, x, y, w: bw, h: bh, kein_rahmen, system: false });
+        // Gleicher Knopf (Kennung und Rechteck) noch einmal: ersetzen statt
+        // doppelt anlegen – so zeichnet ein Programm einen Knopf neu, ohne ihn
+        // vorher zu löschen (sonst träfe ein Klick dazwischen ins Leere).
+        // Gleiche Kennung an anderer Stelle bleibt ein weiterer Knopf (KolibriOS).
+        match f.knoepfe.iter_mut().find(|k| !k.system && k.id == id && (k.x, k.y, k.w, k.h) == (x, y, bw, bh)) {
+            Some(k) => k.kein_rahmen = kein_rahmen,
+            None => f.knoepfe.push(Knopf { id, x, y, w: bw, h: bh, kein_rahmen, system: false }),
+        }
         if zeichnen {
             knopf_zeichnen(&mut Zeichner::neu(&mut f.buf), x, y, bw, bh, esi & 0xFF_FFFF);
+            // nur der Knopf hat sich geändert (Tastatur: eine Taste neu)
+            let (fx, fy, sichtbar) = (f.x, f.y, !f.minimiert);
+            if sichtbar {
+                w.markiere(Clip { x0: fx + x, y0: fy + y, x1: fx + x + bw, y1: fy + y + bh });
+            }
         }
-        w.markiere_fenster(s);
     });
 }
 
@@ -1232,6 +1243,24 @@ pub mod eingabe {
                 }
             })
         });
+    }
+
+    /// Finger auf dem Bildschirm (Bit 31) mit Lage x << 16 | y. Die Gesten
+    /// melden ein Tippen erst beim Loslassen als Klick; wer schon beim
+    /// Aufsetzen reagieren will (Bildschirmtastatur: gedrückte Taste), liest
+    /// hier mit. 32 Bit: RISC-V-32 hat keine 64-Bit-Atomics.
+    static BERUEHRUNG: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+
+    /// Lage des Fingers (logische Bildschirmkoordinaten) oder `None`.
+    pub fn beruehrung_setzen(p: Option<(i32, i32)>) {
+        let v = p.map_or(0, |(x, y)| 1 << 31 | (x.clamp(0, 0x7FFF) as u32) << 16 | y.clamp(0, 0xFFFF) as u32);
+        BERUEHRUNG.store(v, core::sync::atomic::Ordering::Relaxed);
+    }
+
+    /// Liegt gerade ein Finger auf? Lage in Bildschirmkoordinaten.
+    pub fn beruehrung() -> Option<(i32, i32)> {
+        let v = BERUEHRUNG.load(core::sync::atomic::Ordering::Relaxed);
+        (v & 1 << 31 != 0).then_some(((v >> 16 & 0x7FFF) as i32, (v & 0xFFFF) as i32))
     }
 
     /// Ist der Touchpad-Modus an?

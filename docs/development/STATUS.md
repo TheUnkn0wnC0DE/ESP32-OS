@@ -1,12 +1,33 @@
 # STATUS – ESP32-OS
 
-Stand: 23.11.2026 abends – v1.0 fertig bis auf die Veröffentlichung (O8,
-wartet auf dein OK); aus „Wenn Zeit bleibt“ PDF-Betrachter und zwei
-weitere KolibriOS-C-Programme fertig (Kamera-App → v1.1).
+Stand: 23.11.2026 nachts – v1.0.1 veröffentlicht. Neuer Auftrag: Teil A
+(v1.0.2: Quake-Absturz, Tastatur-Rückmeldung), Teil B (Browser messen und
+verbessern), Teil C (v1.1: Konsole, WLAN 6, Standby). Plan: PLAN.md,
+Abschnitte I, J, K.
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
-gepflegt (eigener Anfangscommit, siehe CLAUDE.md). Die Vorgeschichte
-(Spiele, Firmware, Messwerte, Übergabe vom 21.11.) liegt im alten Repo des
-Vorgängerprojekts.
+gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
+
+## Jetzt
+
+- Erledigt: **A1** Quake „New Game“ (PAK-Grösse falsch, progs.dat las
+  Nullen) und **A2** Tastatur-Rückmeldung (Nachweise `docs/nachweise/v102/`).
+- Teil A committet (lokal), Review-Befunde behoben; A2-Boardlauf mit dem
+  Endstand und das v1.0.2-Paket folgen.
+- **Teil B begonnen (BR1):** Messlauf mit 30 Seiten (je Seite frischer
+  Browser, 60 s). Erster Lauf brach ab: der Browser trieb den internen RAM
+  über mehrere Seiten auf 0 KB, danach brach die ganze Firmware ab und die
+  Liste begann von vorn. Ursache in Arbeit (geschlossene Verbindungen 120 s
+  in TIME_WAIT, Empfangspuffer); Gegenmassnahmen: TIME_WAIT 10 s, neue
+  Verbindungen nur mit 32 KB Reserve.
+- Zur Kenntnis: Die A2-Messung hat zwei Testnotizen in
+  `ESP32-OS/Notizen` auf der SD-Karte gespeichert
+  („qasdfghjkl1234567890qwer.txt“ und „… (Kopie).txt“); du kannst sie
+  löschen.
+- Wochenlimit beim Start: 67 % (Grenze 90 %).
+
+## Offene Fragen
+
+(keine)
 
 ## Release v1.0.1 (23.11. abends)
 

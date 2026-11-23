@@ -1,0 +1,27 @@
+A2 – Rückmeldung der Bildschirmtastatur, Messung am Board (23.11.2026)
+
+Ablauf (Autopilot, gleich vorher/nachher): Notizen -> Neu -> Textfeld,
+Taste „q“ 4 s halten (Foto tastatur_gedrueckt_board.png), dann 29 Zeichen
+mit 110 ms je Zeichen und 29 Zeichen mit 70 ms je Zeichen (≈ 14 Zeichen/s),
+Speichern. Vorher = Code ohne A2 (v1.0.1), nachher = mit A2.
+
+Gespeicherte Notiz (Log „Notizen: gespeichert … (N Byte)“):
+  vorher  59 Byte    nachher  59 Byte   (erwartet 1 + 29 + 29 = 59)
+  -> kein Zeichen verloren, auch bei 70 ms je Zeichen.
+
+Compositor beim schnellen Tippen (Statistik je 2 s, Log „Desktop:“):
+                       vorher                      nachher
+  32,8 s (110 ms)      27,8 Bilder/s, 180342 px,   27,3 Bilder/s, 151986 px,
+                       10,34 ms/Bild               7,91 ms/Bild
+  34,8 s (70 ms)       16,2 Bilder/s, 183600 px,   17,2 Bilder/s, 151155 px,
+                       2,20 ms/Bild                2,00 ms/Bild
+  36,8 s               20,0 Bilder/s, 183600 px,   20,0 Bilder/s, 181287 px,
+                       3,86 ms/Bild                3,80 ms/Bild
+Nachher nicht langsamer: Funktion 8 (Knopf) markiert jetzt nur den Knopf statt
+des ganzen Fensters; die gedrückte Taste zeichnet nur ihre Fläche neu.
+
+Testnotizen am Board: ESP32-OS/Notizen/qasdfghjkl1234567890qwer.txt und
+„… (Kopie).txt“ (eigener Ordner von ESP32-OS, nichts überschrieben).
+PC-Test: desktop/tests/tastatur_druck.rs (q, Löschen, Leerzeichen, Enter,
+Shift: nur die Tastenfläche ändert sich, Rand = Grund, Mitte dunkler,
+danach wieder wie vorher), Foto tests/erwartet/a2_taste_gedrueckt.png.

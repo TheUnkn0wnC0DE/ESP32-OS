@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 (not yet released)
+
+- Quake: "New Game" no longer aborts with "progs.dat has wrong version number". The firmware treated the end of the PAK directory as the end of the file; in the shareware `pak0.pak` the game code lies behind the directory and was read as zeros.
+- On-screen keyboard: a key is drawn smaller and darker while a finger rests on it, for every key including Shift, Backspace, Space and Enter. Only that key is redrawn.
+- Defining a button (function 8) marks only the button as changed instead of the whole window.
+
 ## 1.0.1 (2026-11-23)
 
 - Settings opens again after power-on: it reserves 6 MB instead of 12 MB in one block (in 1.0 the largest free block after power-on was exactly 12 MB, too small for the program). Wallpapers from large photos are scaled down while loading.

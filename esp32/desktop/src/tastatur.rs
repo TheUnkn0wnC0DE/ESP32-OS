@@ -124,31 +124,110 @@ pub fn senden(c: char) {
     sys::eingabe::taste(code);
 }
 
-fn zeichnen(e: Ebene, w: i32) -> Vec<(i32, i32, i32, i32, Aktion)> {
+/// Hintergrund der Tastatur.
+const GRUND: u32 = 0x2C3444;
+/// Gedrückte Taste: Grösse in Prozent.
+const GEDRUECKT_PROZENT: i32 = 87;
+
+/// Eine gezeichnete Taste (Fensterkoordinaten).
+struct Taste {
+    x: i32,
+    y: i32,
+    /// Breite der Zelle (Knopf 2 px schmaler)
+    b: i32,
+    id: u32,
+    a: Aktion,
+    text: String,
+    farbe: u32,
+}
+
+impl Taste {
+    /// Knopffläche (Funktion 8 zeichnet Breite/Höhe + 1).
+    fn flaeche(&self) -> (i32, i32) {
+        (self.b - 2, TASTE_H - 3)
+    }
+
+    fn enthaelt(&self, x: i32, y: i32) -> bool {
+        let (w, h) = self.flaeche();
+        (self.x..self.x + w).contains(&x) && (self.y..self.y + h).contains(&y)
+    }
+}
+
+/// Farbe ~20 % dunkler.
+fn dunkler(c: u32) -> u32 {
+    let k = |s: u32| ((c >> s & 0xFF) * 4 / 5) << s;
+    k(16) | k(8) | k(0)
+}
+
+/// Eine Taste zeichnen: normal als Knopf, gedrückt kleiner (87 %) und
+/// dunkler auf dem Grund. Markiert nur die Fläche dieser Taste.
+fn taste_zeichnen(t: &Taste, gedrueckt: bool) {
+    let (w, h) = t.flaeche();
+    if gedrueckt {
+        sys::rechteck((t.x as u32) << 16 | w as u32, (t.y as u32) << 16 | h as u32, GRUND);
+        let (sw, sh) = (w * GEDRUECKT_PROZENT / 100, h * GEDRUECKT_PROZENT / 100);
+        let (sx, sy) = (t.x + (w - sw) / 2, t.y + (h - sh) / 2);
+        sys::rechteck((sx as u32) << 16 | sw as u32, (sy as u32) << 16 | sh as u32, dunkler(t.farbe));
+    } else {
+        // gleicher Knopf neu (der Kern ersetzt ihn in einem Schritt)
+        sys::knopf((t.x as u32) << 16 | (t.b - 3) as u32, (t.y as u32) << 16 | (TASTE_H - 4) as u32, t.id, t.farbe);
+    }
+    let n = t.text.chars().count() as i32 * 8;
+    sys::text(
+        ((t.x + (t.b - 2 - n) / 2) as u32) << 16 | (t.y + (TASTE_H - 4 - 16) / 2) as u32,
+        0x30FF_FFFF,
+        t.text.as_bytes(),
+        t.text.chars().count() as u32,
+        0,
+    );
+}
+
+fn zeichnen(e: Ebene, w: i32) -> Vec<Taste> {
     let mut lage = Vec::new();
     sys::neuzeichnen(1);
-    sys::rechteck(w as u32, HOEHE as u32, 0x2C3444);
+    sys::rechteck(w as u32, HOEHE as u32, GRUND);
     for (zi, zeile) in tasten(e).iter().enumerate() {
         let breite: i32 = zeile.iter().map(|t| t.2).sum::<i32>() * EINHEIT;
         let mut x = (w - breite) / 2;
         let y = 2 + zi as i32 * TASTE_H;
-        for (i, (a, t, b)) in zeile.iter().enumerate() {
+        for (i, (a, text, b)) in zeile.iter().enumerate() {
             let bw = b * EINHEIT;
-            let id = 10 + (zi * 20 + i) as u32;
             let farbe = match a {
                 Aktion::Zeichen(_) | Aktion::Leer => 0x5A6478,
                 Aktion::Umschalt if e == Ebene::Gross => 0x3A7AC0,
                 _ => 0x434C5E,
             };
-            sys::knopf((x as u32) << 16 | (bw - 3) as u32, (y as u32) << 16 | (TASTE_H - 4) as u32, id, farbe);
-            let n = t.chars().count() as i32 * 8;
-            sys::text(((x + (bw - 2 - n) / 2) as u32) << 16 | (y + (TASTE_H - 4 - 16) / 2) as u32, 0x30FF_FFFF, t.as_bytes(), t.chars().count() as u32, 0);
-            lage.push((x, y, bw, id as i32, *a));
+            let t = Taste { x, y, b: bw, id: 10 + (zi * 20 + i) as u32, a: *a, text: text.clone(), farbe };
+            sys::knopf((x as u32) << 16 | (bw - 3) as u32, (y as u32) << 16 | (TASTE_H - 4) as u32, t.id, farbe);
+            let n = text.chars().count() as i32 * 8;
+            sys::text(
+                ((x + (bw - 2 - n) / 2) as u32) << 16 | (y + (TASTE_H - 4 - 16) / 2) as u32,
+                0x30FF_FFFF,
+                text.as_bytes(),
+                text.chars().count() as u32,
+                0,
+            );
+            lage.push(t);
             x += bw;
         }
     }
     sys::neuzeichnen(2);
     lage
+}
+
+/// Taste unter dem Finger, solange er aufliegt (direkter Touch: Lage aus
+/// den Gesten, Fenster bei (0, `fenster_y`)), sonst unter der gedrückten
+/// Maustaste (Touchpad-Modus, Maus).
+fn taste_unter_finger(lage: &[Taste], fenster_y: i32) -> Option<usize> {
+    let (x, y) = match sys::eingabe::beruehrung().filter(|_| !sys::eingabe::touchpad()) {
+        Some((x, y)) => (x, y - fenster_y),
+        None if sys::maus(2) & 1 != 0 => {
+            let m = sys::maus(1);
+            ((m >> 16) as i16 as i32, (m & 0xFFFF) as i16 as i32)
+        }
+        None => return None,
+    };
+    lage.iter().position(|t| t.enthaelt(x, y))
 }
 
 /// Der Dienst: läuft ständig, Fenster nur bei Bedarf sichtbar.
@@ -162,7 +241,9 @@ pub fn dienst() {
     let mut erstellt = false;
     let mut oben = false;
     let mut lage_y = y_unten;
-    let mut lage = Vec::new();
+    let mut lage: Vec<Taste> = Vec::new();
+    // Gedrückt gezeichnete Taste (Index in `lage`)
+    let mut gedrueckt: Option<usize> = None;
     // Redraw erst nach dem ersten Fenster (sonst bleibt Ereignis 1 stehen und
     // die Schleife dreht leer)
     sys::maske(0x04);
@@ -181,6 +262,7 @@ pub fn dienst() {
             sys::fenster((w - 1) as u32, (y as u32) << 16 | (HOEHE - 1) as u32, 0x01_000000, 0, None);
             sys::fensterebene(2, u32::MAX, 1);
             lage = zeichnen(ebene, w);
+            gedrueckt = None;
             erstellt = true;
             sys::maske(0x05);
             sichtbar = true;
@@ -195,20 +277,34 @@ pub fn dienst() {
             oben = neu_oben;
             lage_y = y;
         }
+        // Rückmeldung: Taste unter dem Finger kleiner und dunkler, beim
+        // Loslassen (oder Wegrutschen) wieder normal – nur diese Taste
+        let jetzt = if erstellt && sichtbar { taste_unter_finger(&lage, lage_y) } else { None };
+        if jetzt != gedrueckt {
+            if let Some(t) = gedrueckt.and_then(|i| lage.get(i)) {
+                taste_zeichnen(t, false);
+            }
+            if let Some(t) = jetzt.and_then(|i| lage.get(i)) {
+                taste_zeichnen(t, true);
+            }
+            gedrueckt = jetzt;
+        }
         match e {
             1 if erstellt => {
                 sys::fenster((w - 1) as u32, (y as u32) << 16 | (HOEHE - 1) as u32, 0x01_000000, 0, None);
                 lage = zeichnen(ebene, w);
+                gedrueckt = None;
             }
             3 => {
                 let id = (sys::knopf_id() >> 8) as i32;
-                let Some(&(_, _, _, _, a)) = lage.iter().find(|l| l.3 == id) else { continue };
+                let Some(a) = lage.iter().find(|l| l.id as i32 == id).map(|l| l.a) else { continue };
                 match a {
                     Aktion::Zeichen(c) => {
                         senden(c);
                         if ebene == Ebene::Gross {
                             ebene = Ebene::Normal;
                             lage = zeichnen(ebene, w);
+                            gedrueckt = None;
                         }
                     }
                     Aktion::Leer => senden(' '),
@@ -219,10 +315,12 @@ pub fn dienst() {
                     Aktion::Umschalt => {
                         ebene = if ebene == Ebene::Gross { Ebene::Normal } else { Ebene::Gross };
                         lage = zeichnen(ebene, w);
+                        gedrueckt = None;
                     }
                     Aktion::Sonder => {
                         ebene = if ebene == Ebene::Sonder { Ebene::Normal } else { Ebene::Sonder };
                         lage = zeichnen(ebene, w);
+                        gedrueckt = None;
                     }
                     Aktion::Weg => sys::tastatur_umschalten(),
                     Aktion::Layout => {
@@ -231,6 +329,7 @@ pub fn dienst() {
                             sys::debug_text("Tastatur: Layout nicht gespeichert\n");
                         }
                         lage = zeichnen(ebene, w);
+                        gedrueckt = None;
                     }
                 }
             }

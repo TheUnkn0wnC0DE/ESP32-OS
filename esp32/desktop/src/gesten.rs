@@ -78,6 +78,18 @@ fn abstand(a: (i32, i32), b: (i32, i32)) -> i32 {
 impl Gesten {
     /// Ein Abtastschritt: `t` in ms, bis zu zwei Finger.
     pub fn schritt(&mut self, t: u64, p: [Option<(i32, i32)>; 2]) {
+        self.schritt_innen(t, p);
+        // Fingerlage für Rückmeldungen beim Aufsetzen (Bildschirmtastatur) –
+        // erst nach Klick und Loslassen dieses Schritts, beim Tippen die
+        // Aufsetzstelle (dort klickt es beim Loslassen)
+        let lage = match self.zustand {
+            Zustand::Unklar { start, .. } if p[0].or(p[1]).is_some() => Some(start),
+            _ => p[0].or(p[1]),
+        };
+        eingabe::beruehrung_setzen(lage);
+    }
+
+    fn schritt_innen(&mut self, t: u64, p: [Option<(i32, i32)>; 2]) {
         use Zustand::*;
         // Klick loslassen, sobald er lange genug gedrückt war oder ein Finger neu
         // aufsetzt (nicht, solange derselbe Finger noch liegt: Halten im Touchpad-Modus)

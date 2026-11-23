@@ -1332,12 +1332,96 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Details zur Lücke im Repo, in PLAN/STATUS oder Commit-Nachrichten.
   Nachweis: Commit mit dem Patch auf `main`, Release-Text angepasst.
 
-## Später (v1.1)
+## I. v1.0.2 (Auftrag 23.11. nachts, Vorrang)
+
+- [x] **A1 Quake stürzt bei „New Game“ ab** – per Autopilot nachstellen
+  (Quake öffnen, „New Game“ tippen), Absturz seriell mitschneiden (Panic,
+  Backtrace, freier Speicher), Ursache finden und beheben; Doom und die
+  anderen Spiele auf denselben Fehler prüfen. Nachweis: per Touch „New
+  Game“, Level lädt und läuft ≥ 60 s ohne Absturz, Foto und fps.
+  ✔ 23.11.: per Autopilot nachgestellt (Desktop → Quake, Menü → OK → OK):
+  „Sys_Error: progs.dat has wrong version number (0 should be 6)“, Abbruch
+  (`docs/nachweise/v102/quake_log_vorher.txt`). Ursache: die Firmware nahm
+  als PAK-Grösse Verzeichnis-Offset + -Länge; in der Shareware-PAK liegt
+  progs.dat aber hinter dem Verzeichnis (Offset 18 276 119, 413 116 Byte),
+  Lesen dort lieferte 0 Byte. Jetzt gilt die Dateilänge
+  (`firmware/src/quake_board.rs`). Danach: „New Game“ per Touch, Level
+  „start“ läuft 108 s (36 s bis 144 s) mit 27,5 FPS ohne Absturz
+  (`quake_log.txt`, Fotos `quake_level_50s.png`, `quake_level_110s.png`).
+  Doom lädt die WAD ganz in den Speicher, Pudding-Panik und Würfelwelt
+  haben keine Spieldaten-Datei – derselbe Fehler kann dort nicht auftreten.
+- [x] **A2 Rückmeldung auf der Bildschirmtastatur** – gedrückte Taste
+  sichtbar kleiner (85–90 %, leicht dunkler), solange der Finger drauf ist,
+  beim Loslassen normal; alle Tasten (auch Shift, Löschen, Leerzeichen,
+  Enter); nur die Taste neu zeichnen (Dirty Rect), schnelles Tippen nicht
+  langsamer. Nachweis: Foto mit gedrückter Taste per Autopilot, Messung der
+  Tippgeschwindigkeit vorher/nachher.
+  ✔ 23.11.: Die Gesten melden die Fingerlage beim Aufsetzen
+  (`kern::sys::eingabe::beruehrung`, der Klick kommt erst beim Loslassen);
+  die Tastatur zeichnet die Taste unter dem Finger 87 % gross und 20 %
+  dunkler, beim Loslassen wieder als Knopf. Funktion 8 markiert nur noch den
+  Knopf statt des ganzen Fensters. PC: `desktop/tests/tastatur_druck.rs`
+  (q, Löschen, Leerzeichen, Enter, Shift). Board: Foto mit gehaltener Taste
+  (`docs/nachweise/v102/tastatur_gedrueckt_board.png`); Tippen mit 110 und
+  70 ms je Zeichen: vorher und nachher 59 von 59 Zeichen, Compositor
+  nachher 7,9 statt 10,3 ms/Bild (`tastatur_messung.txt`).
+  Review (Subagent, Teil A): 1 echter Befund behoben – ein Tastendruck konnte
+  verloren gehen, weil die Taste zum Normalzeichnen kurz gelöscht wurde
+  (Klick dazwischen ging ins Leere). Jetzt ersetzt Funktion 8 einen Knopf
+  mit gleicher Kennung und gleichem Rechteck in einem Schritt; die Gesten
+  melden die Fingerlage erst nach Klick/Loslassen und beim Tippen die
+  Aufsetzstelle (dort klickt es). Der PC-Test prüft jetzt auch die vom Kern
+  markierten Bereiche (mit der alten Ganz-Fenster-Markierung schlägt er
+  fehl). Quake: Überlauf bei kaputtem PAK-Kopf abgefangen.
+- [ ] **A3 v1.0.2 vorbereiten** – CHANGELOG, Release-Paket, Release-Check;
+  OK des Nutzers in STATUS erbitten, nicht darauf warten.
+
+## J. Browser (Auftrag 23.11. nachts)
+
+- [ ] **BR1 Messen** – ~30 bekannte Seiten am Board (Wikipedia, Google,
+  DuckDuckGo, GitHub, SRF, 20 Minuten, Blick, Digitec, Galaxus, SBB,
+  MeteoSchweiz, Reddit, Hacker News, BBC, Stack Overflow, Amazon, Spiegel,
+  Heise …): lädt / kaputt / gar nicht, Grund (TLS/Zertifikat, Weiterleitung,
+  Cookies/Zustimmung, CSS Flexbox/Grid, fehlende JS-Funktionen, Speicher,
+  Zeitüberschreitung). Nachweis: Tabelle unter `docs/`.
+  Stand 23.11. nachts: Messwerkzeug fertig – Entwicklungs-Build
+  `ESP32OS_SEITENLISTE` (firmware/src/seitenliste.rs, Skript
+  br_lauf.ps1 im Scratch): je Seite frischer Browser, 60 s, Foto, Log
+  „SEITE i/n“. Erster Lauf (30 Seiten) brach ab: interner RAM fiel über
+  die Seiten auf 0 KB, dann Abbruch der ganzen Firmware (abort) und Neustart.
+  Behoben: Abrufe verbinden nur mit 32 KB internem RAM Reserve (sonst Fehler
+  „Zu wenig Speicher“), TIME_WAIT 10 s statt 120 s – 6 Seiten ohne Abbruch.
+  Offen: Leck im internen RAM je Browser-Sitzung (81→67→41→31 KB, je mehr
+  Abrufe desto mehr); nächster Schritt Heap-Tracing der Systemaufrufe.
+- [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
+  Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
+  mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.
+  Kein Fernmodus, der Browser bleibt eigenständig.
+
+## K. v1.1 (Auftrag 23.11. nachts; vorher „Später (v1.1)“)
+
+- [ ] **C1 Konsole** (vorher Z4) – console.obj nativ nachbauen (gleiche
+  Schnittstelle wie KolibriOS), KolibriOS-Shell unverändert (wenn C), dazu
+  kmatrix; bedienbar per Touch und Bildschirmtastatur. Vorher prüfen, ob es
+  in Flash-Platz und Programm-Heap passt. Nachweis: PC-Test der
+  Schnittstelle, Shell und kmatrix am Board per Touch, Foto.
+- [ ] **C2 WLAN 6** (vorher W2 und W5) – eigene C6-Firmware (Host/Slave
+  versionsgleich, Update vom P4 aus), iTWT. Vorher/Nachher: Durchsatz,
+  Verbindungsaufbau, Stromverbrauch soweit messbar. Nachweis: Log mit
+  gleichen Versionen, iTWT-Setup ok, Messwerte.
+- [ ] **C3 Standby** (vorher P5 ohne Akku) – Bildschirm aus, Aufwachen per
+  Touch, danach WLAN-Verbindung wieder da und offene Programme laufen
+  weiter. Nachweis: Log und Fotos vor/nach dem Standby per Autopilot.
+- [ ] **C4 v1.1 vorbereiten** – README, CHANGELOG, Release-Paket,
+  Release-Check, Web-Flasher; OK des Nutzers in STATUS erbitten, Liste
+  aller Punkte mit Nachweis.
+
+Stand der früheren Punkte (bis 23.11.):
 
 Vom Nutzer am 23.11. aus v1.0 genommen – kommt mit einem späteren Update,
 blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
 
-- [ ] **P5 Standby und Akku** (Auftrag 12.2; 13.1: Strommessung und
+- **P5 Standby und Akku** (Auftrag 12.2; 13.1: Strommessung und
   Akkuteiler macht der Auftraggeber beim Einlöten des Akkus, Anleitung in
   STATUS – bis dahin offen) – Bildschirm nach einstellbarer
   Zeit aus, Ruhezustand, Aufwachen per Power-Knopf oder Touch, Akkustand in
@@ -1349,18 +1433,18 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   per PC-Test (`desktop/tests/energie.rs`). Offen (wartet auf Nutzer):
   PWR-Knopf (Knopfsuche gebaut, braucht Drücken am Board), Strommessung
   (kein Messgerät), Akkuanzeige am Board (Spannungsteiler).
-- [ ] **W2 C6-Firmware versionsgleich** + Update vom P4 aus. Nachweis: Log mit
+- **W2 C6-Firmware versionsgleich** + Update vom P4 aus. Nachweis: Log mit
   gleichen Host/Slave-Versionen nach OTA vom P4. Auftrag 13.2: jetzt nicht
   (WLAN läuft); Anleitung mit Rückweg in STATUS (V4). W5 wartet darauf.
-- [ ] **W5 iTWT** zum Stromsparen. Nachweis: Log iTWT-Setup ok.
+- **W5 iTWT** zum Stromsparen. Nachweis: Log iTWT-Setup ok.
   Stand 22.11.: Code fertig (iTWT beim Abdunkeln, Abbau beim Aufwachen);
   die C6-Firmware 0.0.0 beantwortet die Anfrage nicht
   (`docs/nachweise/w5_board_log.txt`) → wartet auf W2 (Abweichung).
-- [ ] **Z2 Kamera-App** (OV5647 an MIPI-CSI, aus „Wenn Zeit bleibt“) –
+- **Z2 Kamera-App** (OV5647 an MIPI-CSI, aus „Wenn Zeit bleibt“) –
   Vorschau, Foto als JPEG auf die SD (Hardware-JPEG). Nutzer 23.11.: kein
   Kameramodul am Board → in ein späteres Update verschoben; nichts
   begonnen.
-- [ ] **Z4 Konsole** (Nutzer 23.11.) – console.obj nativ nachbauen (gleiche
+- **Z4 Konsole** (Nutzer 23.11.) – console.obj nativ nachbauen (gleiche
   Schnittstelle wie in KolibriOS), dann die KolibriOS-Shell unverändert
   übernehmen, wenn sie in C ist, dazu Konsolen-Programme wie kmatrix.
   Vorher prüfen, ob es in den Speicherbereich passt (Flash-Platz des
@@ -1368,6 +1452,12 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   kmatrix am Board per Touch/Bildschirmtastatur, Foto.
 
 ## Abweichungen
+
+- **Batterieanzeige gestrichen (Nutzer 23.11. nachts):** Akkuanzeige in
+  der Taskleiste und Strommessung des Akkus (Teil von P5) entfallen; Standby
+  bleibt als C3.
+- **Z2 Kamera-App gestrichen (Nutzer 23.11. nachts):** kein Kameramodul am
+  Board; nichts begonnen.
 
 - **O2, ELF-Lader nicht umgesetzt (23.11.):** `espressif/elf_loader` kann
   auf dem P4 Programme von der SD aus dem PSRAM ausführen (geprüft, siehe
