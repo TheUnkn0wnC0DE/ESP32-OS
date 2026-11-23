@@ -8,6 +8,30 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md). Die Vorgeschichte
 (Spiele, Firmware, Messwerte, Übergabe vom 21.11.) liegt im alten Repo des
 Vorgängerprojekts.
 
+## README-Wünsche und grosse Fotos (23.11. spät)
+
+- **README:** Foto-Platzhalter entfernt, Titelbild ist ein grosser
+  Desktop-Screenshot (`docs/images/desktop.png`), darunter die vier kleinen.
+  Quick Start beginnt mit „No binary release yet, build from source“; der
+  Web-Flasher wird erst erwähnt, wenn er über GitHub Pages erreichbar ist.
+  TikTok als Link.
+- **Bildbetrachter, grosse Fotos (P2-Nachtrag):** JPEG/PNG stückweise
+  gelesen und beim Dekodieren verkleinert. Am Board mit echtem 12-MP-Foto
+  (Wikimedia Commons, CC0, iPhone 14) per Touch nachgewiesen:
+  12 MP 5,9 s (1/4), progressiv 7,3 s (1/8), 48 MP 11,4 s (1/8);
+  Nachweise `docs/nachweise/p2_gross/`. Erst 8,5 s → schneller gemacht
+  (Lesepuffer 256 KB, 32-Bit-Bitleser, Runden ohne Bibliotheksaufruf,
+  Farbumrechnung vorberechnet; Ergebnis bitgleich).
+- **Bremse SD-Karte:** die 236-GB-Karte liefert am Board nur 2,3 MB/s
+  (4 Bit, 40 MHz eingestellt; Pufferausrichtung egal). Am SD-Treiber
+  nichts geändert (Karte mit deinen Daten). Funktion 70 öffnet je Aufruf
+  die Datei neu und sucht die Stelle (9–18 ms je Aufruf).
+- **Entwicklungswerkzeug:** `ESP32OS_DATEI_EMPFANG=1` +
+  `esp32/firmware/werkzeuge/datei_senden.py` legen Testdateien per WLAN
+  nur in `ESP32-OS/Bild_Test` (Name geprüft, `../` abgelehnt).
+- Die README-Kopie im Abschnitt „Aufräumen“ unten zeigt den Stand vor
+  diesen Änderungen.
+
 ## Aufräumen vor dem Release (23.11. abends)
 
 Auftrag: oberste Ebene nur mit dem, was ein Besucher braucht; Entwicklungs-

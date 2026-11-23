@@ -265,8 +265,9 @@ pub fn im_hintergrund_starten() {
         kern::wlan::treiber_setzen(Box::new(C6));
         // Updates von GitHub (U1)
         kern::aktualisierung::quelle_setzen(Box::new(crate::update::GitHub));
-        // Entwicklung (W8): Durchsatz-Messung mit werkzeuge/durchsatz.py
-        if option_env!("ESP32OS_DURCHSATZ").is_some() {
+        // Entwicklung (W8): Durchsatz-Messung mit werkzeuge/durchsatz.py,
+        // Testdateien mit werkzeuge/datei_senden.py
+        if option_env!("ESP32OS_DURCHSATZ").is_some() || option_env!("ESP32OS_DATEI_EMPFANG").is_some() {
             crate::durchsatz::starten();
         }
         // Entwicklung (Autopilot-Läufe wiederholbar): gemerkte Netze löschen

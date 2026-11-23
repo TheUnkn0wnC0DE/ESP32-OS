@@ -313,6 +313,18 @@ Planreihenfolge. V3/V4 laufen nebenher (klein).
   `p2_board_log.txt`: JPEG 640×480 Hardware 55,8 ms (inkl. Farbumrechnung)
   gegen Software 810 ms, Abweichung HW/SW im Mittel 0,36; progressives
   JPEG: Hardware lehnt ab (nur Baseline, Code 0x105) → B0b nötig.
+  ✔ 23.11. Nachtrag (Auftrag: grosse Handyfotos nicht ablehnen): JPEG und
+  PNG werden stückweise gelesen und beim Dekodieren verkleinert (JPEG 1/2,
+  1/4, 1/8 in der IDCT, PNG zeilenweise gemittelt), JPEG nach EXIF gedreht;
+  Faktor nach freiem Speicher. PC `kolibri/tests/verkleinert.rs` (gegen
+  volles Bild und libjpeg), `desktop/tests/bildbetrachter_gross.rs`. Board
+  mit echtem 12-MP-Foto (iPhone 14, CC0) per Touch: 4032×3024 → 1008×756
+  in 5,9 s, progressiv 7,3 s, 48 MP 11,4 s, davon 39–45 % Lesen der SD-Karte
+  (`docs/nachweise/p2_gross/`, Messwerte `p2g_messung.txt`).
+  Review (Subagent, nur Diff): 5 Befunde, behoben – IHDR-Länge geprüft,
+  DC-Klasse > 16 = Formatfehler (Tests in `verkleinert.rs`), kleiner Weg
+  nur wenn Datei + Bild passen, Speicherrahmen auch nach grösstem freiem
+  Block, Drehung im Titel aus EXIF statt geraten; danach Board-Lauf 5.
 - [x] **P3 Einstellungen** – Helligkeit, Lautstärke, Akku, Datum/Uhrzeit
   (manuell + NTP), Touch (inkl. Touchpad-Modus), Hintergrundbild,
   Speicherplatz; WLAN-Seite folgt in W. Nachweis: Autopilot je Seite, Foto,
@@ -1364,7 +1376,10 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   meldet sonst „Bild zu gross für den freien Speicher“ (vorher beendete ein
   zu grosses Bild ihn mit „Speicher voll“). Grösste Bilder damit knapp
   0,85 MP (das Bild doppelt plus 1 MB müssen im Heap frei sein); die
-  Formatgrenze 2,1 MP bleibt.
+  Formatgrenze 2,1 MP bleibt. Seit 23.11. (Nachtrag P2) gilt das nur noch
+  für GIF und BMP: grössere JPEG/PNG werden beim Dekodieren verkleinert
+  (bis 48 MP am Board nachgewiesen); progressive JPEG brauchen mehr
+  Speicher (12 MP gehen, 48 MP werden mit „Bild zu gross“ abgelehnt).
   Der Dateimanager nennt den wahren Grund eines Startfehlers.
 - **B7, Grenzen der Web-Funktionen (23.11.):** Was NetSurf 3.11 von sich
   aus nicht kann und für B7 nicht nachgebaut wurde:

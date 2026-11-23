@@ -1,0 +1,43 @@
+P2g – Bildbetrachter mit grossen Fotos (Board, 23.11.)
+
+Testfoto: Wikimedia Commons, "IPhone 16 packaging (2025-12-01).jpg", CC0,
+aufgenommen mit iPhone 14. 4032x3024 (12,2 MP), Baseline-JPEG 4:2:0,
+3 739 134 Byte, SHA-256
+781a6c89ad89b60b4503e29e400668881b8ab9cbc104bcee54525febf29c30a3
+Daraus mit Pillow (quality 90, 4:2:0): progressive Fassung (3 017 885 Byte)
+und 8000x6000 (48 MP, 8 235 005 Byte). Die Dateien liegen nicht im Repo.
+
+Übertragung auf die SD-Karte: Entwicklungs-Build ESP32OS_DATEI_EMPFANG=1,
+esp32/firmware/werkzeuge/datei_senden.py (nur in ESP32-OS/Bild_Test).
+Board lehnt Namen "../boese.jpg", ".versteckt", "a/b.jpg" ab (Antwort 0).
+
+Ablauf (Autopilot, Touch): Dateimanager in /sd0/1/ESP32-OS/Bild_Test,
+Tippen auf iphone16_12mp.jpg, zweimal nach links wischen, Zwei-Finger-Zoom.
+Fotos p2g_board_*.png, Log p2g_board_log.txt (Lauf 5, Zeilen "BV:").
+
+Ladezeit am Board (Datei bis fertiges Bild, davon Lesen von der SD-Karte):
+
+  Datei                  Ergebnis           vorher (Lauf 3)     nachher (Lauf 5)
+  12 MP baseline         1008x756 (1/4)     8468 ms (3840)      5855 ms (2306)
+  12 MP progressiv        504x378 (1/8)     9162 ms (3344)      7255 ms (1933)
+  48 MP baseline         1000x750 (1/8)    15099 ms (7227)     11418 ms (5176)
+
+Zwischen Lauf 3 und 5 (Lauf 4: Zwischenstand, gleiche Werte): Lesepuffer 64 -> 256 KB (jedes Lesen über
+Funktion 70 öffnet die Datei neu und sucht die Stelle), Bitleser mit
+32-Bit-Speicher statt 64 Bit, Runden ohne f32::round (auf RISC-V ein
+Bibliotheksaufruf), Farbumrechnung mit vorberechneten Stützstellen.
+Ergebnis am PC bitgleich zu vorher (12-MP-Foto), PC 116 -> 77 ms.
+
+Lesegeschwindigkeit der SD-Karte (236-GB-Karte, 4 Bit, 40 MHz; Messung
+mit einer vorübergehenden Firmware-Funktion, Stücke zu 64 KB):
+  48-MP-Datei: je Stück neu öffnen + seek 1,41 MB/s, einmal öffnen 2,32 MB/s
+  12-MP-Datei: je Stück neu öffnen + seek 1,75 MB/s, einmal öffnen 2,32 MB/s
+  Ausrichtung des Zielpuffers (128 Byte oder verschoben): kein Unterschied.
+
+Abweichung zu libjpeg (12-MP-Foto, 1/4, Pillow draft): mittlere
+Abweichung je Kanal 1,6 / 1,2 / 1,7, Anteil der Werte > 8: 0,17 %.
+
+Grenze progressiver JPEGs (PC, kolibri::dekoder::verkleinert mit dem
+Speicherrahmen des Bildbetrachters): 24 MP (5600x4200) bei 6 MB frei
+abgelehnt (Fehler ZuGross), bei 8 MB 1/8; 48 MP auch bei 8 MB (ganzer Heap
+des Bildbetrachters) abgelehnt. Am Board: 12 MP progressiv geöffnet (oben).

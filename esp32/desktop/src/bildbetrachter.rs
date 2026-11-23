@@ -1,6 +1,9 @@
 //! Bildbetrachter (P2) – nativ im KolibriOS-Stil (Vorbild kiv; KolibriOS hat
 //! keinen Bildbetrachter in C). JPEG über die Hardware-JPEG-Einheit (Board,
 //! Haken in `kolibri::dekoder`), PNG, GIF (animiert), BMP über libimg.
+//! Grosse Fotos (Handy, 12–48 MP) werden stückweise gelesen und schon beim
+//! Dekodieren verkleinert (JPEG 1/2, 1/4, 1/8, PNG zeilenweise) und nach
+//! EXIF gedreht.
 //!
 //! Touch: Wischen nach links/rechts = nächstes/voriges Bild im selben
 //! Ordner; zwei Finger = Zoom um ihren Mittelpunkt; vergrössert verschiebt
@@ -21,19 +24,31 @@ pub const SPALTE: i32 = 64;
 pub const MAX_PIXEL: u64 = 2_100_000;
 
 /// Passt ein Bild `w`×`h` aus einer Datei mit `datei` Bytes in den freien
-/// Speicher des Programms? Bedarf: die Datei (schon gelesen), das Bild als
+/// Speicher des Programms? Bedarf: die Datei (am Stück), das Bild als
 /// RGBA (am Stück) und noch einmal so viel für Zwischenpuffer des Dekoders
 /// (PNG: entpackte Zeilen, JPEG: YUV, GIF: Einzelbilder) und die geglättete
 /// Ansicht. Vorher (O4, Board) reservierte der Bildbetrachter 12 MB und
 /// startete neben dem Dateimanager nicht mehr; zu grosse Bilder beendeten
 /// ihn mit „Speicher voll“.
-fn passt_in_speicher(w: u32, h: u32) -> bool {
+fn passt_in_speicher(w: u32, h: u32, datei: u64) -> bool {
     let bild = u64::from(w) * u64::from(h) * 4;
-    let gesamt = kern::sys::programm_speicher_frei().is_none_or(|f| f as u64 >= 2 * bild + 1024 * 1024);
-    let am_stueck = kern::sys::programm_speicher_groesster_block().is_none_or(|g| g as u64 >= bild + 64 * 1024);
+    let gesamt = kern::sys::programm_speicher_frei().is_none_or(|f| f as u64 >= datei + 2 * bild + 1024 * 1024);
+    let am_stueck = kern::sys::programm_speicher_groesster_block().is_none_or(|g| g as u64 >= bild.max(datei) + 64 * 1024);
     gesamt && am_stueck
 }
 const MAX_DATEI: u64 = 16 << 20;
+/// Kopf einer Datei (Format, Masse, EXIF) – so viel wird vorab gelesen.
+const KOPF: u64 = 256 * 1024;
+
+/// Masse der Datei bei verkleinert geladenen Bildern (in Anzeigelage).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Original {
+    pub w: u32,
+    pub h: u32,
+    pub teiler: u32,
+    /// davon Lesen der Datei (ms)
+    pub lesen_ms: u64,
+}
 
 const K_ZURUECK: u32 = 2;
 const K_WEITER: u32 = 3;
@@ -51,6 +66,8 @@ struct Ansicht {
     vy: f32,
     /// Auf „Fit“ geglättet verkleinertes Bild (Qualität), sonst nächster Nachbar.
     fit_bild: Option<Rgba>,
+    /// Beim Laden verkleinert: Masse der Datei
+    original: Option<Original>,
 }
 
 struct Zustand {
@@ -78,36 +95,78 @@ fn fit(w: u32, h: u32) -> f32 {
     (aw as f32 / w as f32).min(ah as f32 / h as f32)
 }
 
-/// Datei lesen und dekodieren; Fehlertext bei Problemen.
+/// Datei lesen und dekodieren; Fehlertext bei Problemen (Hintergrundbild
+/// der Einstellungen).
 pub fn laden(pfad: &str) -> Result<Vec<Rgba>, String> {
+    laden_mit_original(pfad).map(|(v, _)| v)
+}
+
+fn fehlertext(e: dekoder::Fehler) -> String {
+    match e {
+        dekoder::Fehler::Format => t("Damaged image", "Bild beschädigt").to_string(),
+        dekoder::Fehler::NichtUnterstuetzt => t("Format variant not supported", "Formatvariante nicht unterstützt").to_string(),
+        dekoder::Fehler::ZuGross => t("Image too large for the free memory", "Bild zu gross für den freien Speicher").to_string(),
+    }
+}
+
+/// Wie [`laden`]; bei grossen Bildern mit den Massen der Datei. Kleine
+/// Bilder: ganze Datei, JPEG über die Hardware. Grosse JPEG/PNG (über
+/// MAX_PIXEL oder zu wenig Speicher) und gedrehte JPEG (EXIF): stückweise
+/// gelesen und beim Dekodieren so weit verkleinert, wie der freie Speicher
+/// verlangt.
+pub fn laden_mit_original(pfad: &str) -> Result<(Vec<Rgba>, Option<Original>), String> {
     let mut info = [0u8; 40];
     if datei::info(pfad, &mut info) != datei::OK {
         return Err(t("File not found", "Datei nicht gefunden").to_string());
     }
     let groesse = u64::from_le_bytes(info[32..40].try_into().unwrap_or([0; 8]));
-    if groesse > MAX_DATEI {
-        return Err(t("File too large", "Datei zu gross").to_string());
-    }
-    let mut d = vec![0u8; groesse as usize];
-    let (c, n) = datei::lesen(pfad, 0, &mut d);
-    if (c != datei::OK && c != datei::EOF) || u64::from(n) != groesse {
+    let lesen_ns = std::cell::Cell::new(0u64);
+    let lesen = |ab: u64, puf: &mut [u8]| -> usize {
+        let t = sys::zeit_ns();
+        let (c, n) = datei::lesen(pfad, ab, puf);
+        lesen_ns.set(lesen_ns.get() + (sys::zeit_ns() - t));
+        if c == datei::OK || c == datei::EOF { n as usize } else { 0 }
+    };
+    let mut kopf = vec![0u8; groesse.min(KOPF) as usize];
+    if lesen(0, &mut kopf) != kopf.len() {
         return Err(t("Read error", "Lesefehler").to_string());
     }
-    match dekoder::masse(&d) {
-        Some((w, h)) if u64::from(w) * u64::from(h) > MAX_PIXEL => {
-            return Err(format!("{w}×{h}: {}", t("image too large (max. 2.1 MP)", "Bild zu gross (max. 2,1 MP)")));
+    let format = dekoder::format(&kopf).ok_or_else(|| t("Unknown image format", "Unbekanntes Bildformat").to_string())?;
+    let gedreht = format == dekoder::Format::Jpeg && dekoder::jpeg_ausrichtung(&kopf) != 1;
+    // Kleiner Weg nur, wenn Datei und Bild vorher sicher in den Speicher
+    // passen (sonst beendete schon das Anlegen den Bildbetrachter)
+    let klein = dekoder::masse(&kopf)
+        .is_some_and(|(w, h)| u64::from(w) * u64::from(h) <= MAX_PIXEL && passt_in_speicher(w, h, groesse))
+        && groesse <= MAX_DATEI;
+    if klein && !gedreht {
+        let mut d = vec![0u8; groesse as usize];
+        if lesen(0, &mut d) as u64 != groesse {
+            return Err(t("Read error", "Lesefehler").to_string());
         }
-        Some((w, h)) if !passt_in_speicher(w, h) => {
-            return Err(format!("{w}×{h}: {}", t("image too large for the free memory", "Bild zu gross für den freien Speicher")));
-        }
-        None => return Err(t("Unknown image format", "Unbekanntes Bildformat").to_string()),
-        _ => {}
+        return match dekoder::dekodieren(&d) {
+            Ok((_, v)) if !v.is_empty() => Ok((v, None)),
+            Ok(_) => Err(fehlertext(dekoder::Fehler::Format)),
+            Err(e) => Err(fehlertext(e)),
+        };
     }
-    match dekoder::dekodieren(&d) {
-        Ok((_, v)) if !v.is_empty() => Ok(v),
-        Ok(_) | Err(dekoder::Fehler::Format) => Err(t("Damaged image", "Bild beschädigt").to_string()),
-        Err(dekoder::Fehler::NichtUnterstuetzt) => Err(t("Format variant not supported (e.g. progressive JPEG)", "Formatvariante nicht unterstützt (z. B. progressives JPEG)").to_string()),
+    if !matches!(format, dekoder::Format::Jpeg | dekoder::Format::Png) {
+        let (w, h) = dekoder::masse(&kopf).unwrap_or((0, 0));
+        return Err(format!("{w}×{h}: {}", fehlertext(dekoder::Fehler::ZuGross)));
     }
+    // Verkleinert: Dekodieren darf den freien Speicher bis auf 1,5 MB
+    // nutzen (danach braucht die Ansicht ihre geglättete Kopie). Ergebnis
+    // und Ebenen liegen je am Stück: der Bedarf muss auch in den grössten
+    // freien Block passen (zerstückelter Heap).
+    let frei = sys::programm_speicher_frei().map_or(64 << 20, |f| f as u64).saturating_sub(1536 * 1024);
+    let frei = frei.min(sys::programm_speicher_groesster_block().map_or(u64::MAX, |g| (g as u64).saturating_sub(64 * 1024)));
+    let max_px = MAX_PIXEL.min(frei / 4);
+    let v = dekoder::verkleinert(lesen, max_px, frei).map_err(fehlertext)?;
+    // Masse der Datei in Anzeigelage (EXIF-Drehung tauscht Breite/Höhe)
+    let (ow, oh) = v.original;
+    let quer = format == dekoder::Format::Jpeg && (5..=8).contains(&dekoder::jpeg_ausrichtung(&kopf));
+    let (w, h) = if quer { (oh, ow) } else { (ow, oh) };
+    let original = Original { w, h, teiler: v.teiler, lesen_ms: lesen_ns.get() / 1_000_000 };
+    Ok((vec![v.bild], Some(original)))
 }
 
 impl Zustand {
@@ -120,11 +179,15 @@ impl Zustand {
         };
         let pfad = format!("{}/{}", self.ordner.trim_end_matches('/'), name);
         let t0 = sys::zeit_ns();
-        match laden(&pfad) {
-            Ok(bilder) => {
+        match laden_mit_original(&pfad) {
+            Ok((bilder, original)) => {
                 let (w, h) = (bilder[0].w, bilder[0].h);
-                sys::debug_text(&format!("BV: {pfad} {w}x{h} in {} ms\n", (sys::zeit_ns() - t0) / 1_000_000));
-                let mut a = Ansicht { bilder, bild: 0, s: 1.0, vx: 0.0, vy: 0.0, fit_bild: None };
+                let ms = (sys::zeit_ns() - t0) / 1_000_000;
+                match original {
+                    Some(o) => sys::debug_text(&format!("BV: {pfad} {}x{} -> {w}x{h} (1/{}) in {ms} ms (Lesen {} ms)\n", o.w, o.h, o.teiler, o.lesen_ms)),
+                    None => sys::debug_text(&format!("BV: {pfad} {w}x{h} in {ms} ms\n")),
+                }
+                let mut a = Ansicht { bilder, bild: 0, s: 1.0, vx: 0.0, vy: 0.0, fit_bild: None, original };
                 a.fit_setzen();
                 self.ansicht = Some(a);
             }
@@ -239,8 +302,12 @@ fn titel(z: &Zustand) -> String {
     let name = z.dateien.get(z.i).map_or("", String::as_str);
     let mut t = format!("{} - {name}", t("Image Viewer", "Bildbetrachter"));
     if let Some(a) = &z.ansicht {
-        let (w, h) = a.wh();
-        t += &format!(" ({}/{}, {w}x{h}, {}%)", z.i + 1, z.dateien.len(), (a.s * 100.0).round());
+        // verkleinert geladen: Masse der Datei, Massstab bezogen darauf
+        let ((w, h), s) = match a.original {
+            Some(o) => ((o.w, o.h), a.s * a.wh().0 as f32 / o.w as f32),
+            None => (a.wh(), a.s),
+        };
+        t += &format!(" ({}/{}, {w}x{h}, {}%)", z.i + 1, z.dateien.len(), (s * 100.0).round());
     }
     t
 }

@@ -1,7 +1,9 @@
 //! Bilddekoder für libimg (ohne externe Abhängigkeiten): BMP, PNG (inkl.
 //! Interlace, alle Farbtypen/Tiefen, tRNS), GIF (inkl. Animation,
-//! Transparenz, Interlace), JPEG Baseline (Huffman, 1/3 Komponenten,
-//! Unterabtastung, Restart-Marker). Ausgabe: Bilder in 0xAARRGGBB.
+//! Transparenz, Interlace), JPEG Baseline und progressiv (Huffman, 1/3
+//! Komponenten, Unterabtastung, Restart-Marker). Ausgabe: Bilder in
+//! 0xAARRGGBB. Grosse JPEG/PNG liest [`verkleinert`] stückweise und
+//! verkleinert schon beim Dekodieren.
 
 /// Ein dekodiertes Einzelbild.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -27,8 +29,10 @@ pub enum Format {
 pub enum Fehler {
     /// Unbekanntes oder kaputtes Format.
     Format,
-    /// Bekanntes Format, aber nicht unterstützte Variante (z. B. progressives JPEG).
+    /// Bekanntes Format, aber nicht unterstützte Variante (z. B. 12-Bit-JPEG).
     NichtUnterstuetzt,
+    /// Auch verkleinert zu gross für Bildpunkt- bzw. Speichergrenze.
+    ZuGross,
 }
 
 pub fn format(d: &[u8]) -> Option<Format> {
@@ -77,6 +81,194 @@ pub fn jpeg_software(d: &[u8]) -> Result<Rgba, Fehler> {
     jpeg(d)
 }
 
+// =================================================================== Stückweise Eingabe
+
+/// Bytequelle der Dekoder: ein Speicherbereich oder eine Datei, die
+/// stückweise gelesen wird (`lesen(ab, puffer) -> gelesen`, 0 = Ende) –
+/// so liegt ein grosses Foto nie ganz im Speicher.
+pub struct Strom<'a> {
+    quelle: Option<Box<dyn FnMut(u64, &mut [u8]) -> usize + 'a>>,
+    puffer: Vec<u8>,
+    speicher: &'a [u8],
+    pos: usize,
+    len: usize,
+    /// Dateiposition hinter `puffer[..len]`
+    datei: u64,
+}
+
+/// Lesepuffer bei Dateien.
+/// 256 KB: jedes Lesen öffnet die Datei neu und sucht die Stelle (Funktion
+/// 70), am Board je Aufruf 9–18 ms.
+const STROM_PUFFER: usize = 256 * 1024;
+
+impl<'a> Strom<'a> {
+    pub fn speicher(d: &'a [u8]) -> Strom<'a> {
+        Strom { quelle: None, puffer: Vec::new(), speicher: d, pos: 0, len: d.len(), datei: 0 }
+    }
+
+    pub fn datei(lesen: impl FnMut(u64, &mut [u8]) -> usize + 'a) -> Strom<'a> {
+        Strom { quelle: Some(Box::new(lesen)), puffer: vec![0; STROM_PUFFER], speicher: &[], pos: 0, len: 0, datei: 0 }
+    }
+
+    /// Mindestens `n` (≤ Puffergrösse) Bytes ab `pos` bereitstellen.
+    fn bereit(&mut self, n: usize) -> bool {
+        if self.len - self.pos >= n {
+            return true;
+        }
+        let Strom { quelle, puffer, pos, len, datei, .. } = self;
+        let Some(q) = quelle.as_mut() else { return false };
+        puffer.copy_within(*pos..*len, 0);
+        *len -= *pos;
+        *pos = 0;
+        while *len < n {
+            let m = q(*datei, &mut puffer[*len..]);
+            if m == 0 {
+                return false;
+            }
+            *len += m;
+            *datei += m as u64;
+        }
+        true
+    }
+
+    /// Die gerade bereitstehenden Bytes (`[pos..len]` gültig).
+    #[inline]
+    fn daten(&self) -> &[u8] {
+        if self.quelle.is_some() { &self.puffer } else { self.speicher }
+    }
+
+    /// Byte `i` ab der Leseposition, ohne weiterzugehen.
+    #[inline]
+    fn schauen(&mut self, i: usize) -> Option<u8> {
+        if !self.bereit(i + 1) {
+            return None;
+        }
+        Some(if self.quelle.is_some() { self.puffer[self.pos + i] } else { self.speicher[self.pos + i] })
+    }
+
+    /// Weitergehen (nur über schon angesehene Bytes).
+    #[inline]
+    fn vor(&mut self, n: usize) {
+        self.pos += n;
+    }
+
+    fn byte(&mut self) -> Option<u8> {
+        let b = self.schauen(0)?;
+        self.pos += 1;
+        Some(b)
+    }
+
+    fn lesen_in(&mut self, ziel: &mut [u8]) -> Result<(), Fehler> {
+        for z in ziel {
+            *z = self.byte().ok_or(Fehler::Format)?;
+        }
+        Ok(())
+    }
+
+    fn be32(&mut self) -> Result<u32, Fehler> {
+        let mut b = [0u8; 4];
+        self.lesen_in(&mut b)?;
+        Ok(u32::from_be_bytes(b))
+    }
+
+    /// `n` Bytes (Segmente, Kopfdaten – höchstens 16 MB).
+    fn nehmen(&mut self, n: usize) -> Result<Vec<u8>, Fehler> {
+        if n > 1 << 24 {
+            return Err(Fehler::Format);
+        }
+        let mut v = vec![0u8; n];
+        self.lesen_in(&mut v)?;
+        Ok(v)
+    }
+
+    fn ueberspringen(&mut self, n: u64) -> Result<(), Fehler> {
+        let da = (self.len - self.pos) as u64;
+        if da >= n {
+            self.pos += n as usize;
+            return Ok(());
+        }
+        if self.quelle.is_none() {
+            return Err(Fehler::Format);
+        }
+        // Datei: ohne zu lesen weiterspringen
+        self.datei += n - da;
+        self.pos = 0;
+        self.len = 0;
+        Ok(())
+    }
+}
+
+/// Ein verkleinert dekodiertes Bild.
+#[derive(Debug)]
+pub struct Verkleinert {
+    pub bild: Rgba,
+    pub format: Format,
+    /// Masse der Datei (vor Verkleinern und Drehen)
+    pub original: (u32, u32),
+    /// Verkleinerungsfaktor (1 = volle Grösse)
+    pub teiler: u32,
+}
+
+/// Grosses JPEG oder PNG stückweise lesen und beim Dekodieren verkleinern
+/// (Bildbetrachter, Handyfotos mit 12–48 MP): JPEG um 1/2, 1/4 oder 1/8
+/// gleich in der IDCT, PNG Zeile für Zeile um einen ganzzahligen Faktor.
+/// Gewählt wird der kleinste Faktor, bei dem das Ergebnis höchstens
+/// `max_px` Bildpunkte hat und das Dekodieren höchstens `max_bytes`
+/// Speicher braucht. JPEG wird nach EXIF gedreht. Die Datei
+/// (`lesen(ab, puffer) -> gelesen`) liegt nie ganz im Speicher.
+pub fn verkleinert(lesen: impl FnMut(u64, &mut [u8]) -> usize, max_px: u64, max_bytes: u64) -> Result<Verkleinert, Fehler> {
+    let mut s = Strom::datei(lesen);
+    match (s.schauen(0), s.schauen(1)) {
+        (Some(0xFF), Some(0xD8)) => {
+            let wahl = |w: u32, h: u32, progressiv: bool, bloecke: u64| -> Option<u32> {
+                [1u32, 2, 4, 8].into_iter().find(|&f| {
+                    let n = u64::from(8 / f);
+                    let px = u64::from(w.div_ceil(f)) * u64::from(h.div_ceil(f));
+                    // Ebenen (n×n je Block), Ergebnis, progressiv Masken + Werte
+                    let bedarf = bloecke * n * n + px * 4 + if progressiv { bloecke * (8 + 2 * n * n) } else { 0 } + 2 * STROM_PUFFER as u64;
+                    px <= max_px && bedarf <= max_bytes
+                })
+            };
+            let (bild, original, teiler) = jpeg_strom(&mut s, &wahl, true)?;
+            Ok(Verkleinert { bild, format: Format::Jpeg, original, teiler })
+        }
+        (Some(0x89), Some(b'P')) => {
+            let wahl = |w: u32, h: u32| -> Option<u32> {
+                (1u32..=64).find(|&f| {
+                    let (ow, oh) = (u64::from(w.div_ceil(f)), u64::from(h.div_ceil(f)));
+                    // Ergebnis, Zeilen (bis 8 Byte je Punkt), Summen, Fenster
+                    let bedarf = ow * oh * 4 + u64::from(w) * 16 + ow * 20 + 4 * FENSTER as u64 + STROM_PUFFER as u64;
+                    ow * oh <= max_px && bedarf <= max_bytes
+                })
+            };
+            let (bild, original) = png_strom(&mut s, &wahl)?;
+            let teiler = original.0.div_ceil(bild.w.max(1));
+            Ok(Verkleinert { bild, format: Format::Png, original, teiler })
+        }
+        _ => Err(Fehler::NichtUnterstuetzt),
+    }
+}
+
+/// EXIF-Ausrichtung eines JPEG im Speicher (1 = normal; siehe
+/// [`verkleinert`]): Bildbetrachter wählt danach den Weg.
+pub fn jpeg_ausrichtung(d: &[u8]) -> u16 {
+    let mut o = 2;
+    while o + 4 <= d.len() && d[o] == 0xFF {
+        let m = d[o + 1];
+        let len = usize::from(u16::from_be_bytes([d[o + 2], d[o + 3]]));
+        if m == 0xDA || len < 2 {
+            break;
+        }
+        if m == 0xE1
+            && let Some(v) = d.get(o + 4..o + 2 + len).and_then(exif_ausrichtung)
+        {
+            return v;
+        }
+        o += 2 + len;
+    }
+    1
+}
+
 /// Breite und Höhe aus dem Dateikopf (ohne zu dekodieren) – um zu grosse
 /// Bilder abzulehnen, bevor Speicher belegt wird.
 pub fn masse(d: &[u8]) -> Option<(u32, u32)> {
@@ -117,9 +309,6 @@ fn u16le(d: &[u8], o: usize) -> Result<u32, Fehler> {
 }
 fn u32le(d: &[u8], o: usize) -> Result<u32, Fehler> {
     d.get(o..o + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]])).ok_or(Fehler::Format)
-}
-fn u32be(d: &[u8], o: usize) -> Result<u32, Fehler> {
-    d.get(o..o + 4).map(|b| u32::from_be_bytes([b[0], b[1], b[2], b[3]])).ok_or(Fehler::Format)
 }
 
 fn argb(a: u32, r: u32, g: u32, b: u32) -> u32 {
@@ -247,18 +436,37 @@ fn bmp(d: &[u8]) -> Result<Rgba, Fehler> {
 
 // =================================================================== Inflate
 
-struct Bits<'a> {
+/// Eingabe des Inflaters: Bytes nacheinander (Speicher oder Datei).
+trait Eingabe {
+    fn byte(&mut self) -> Option<u8>;
+}
+
+/// Bytes eines Speicherbereichs.
+struct SpeicherEingabe<'a> {
     d: &'a [u8],
     pos: usize,
+}
+
+impl Eingabe for SpeicherEingabe<'_> {
+    #[inline]
+    fn byte(&mut self) -> Option<u8> {
+        let b = self.d.get(self.pos).copied();
+        self.pos += 1;
+        b
+    }
+}
+
+struct Bits<E: Eingabe> {
+    e: E,
     puffer: u32,
     anzahl: u32,
 }
 
-impl Bits<'_> {
+impl<E: Eingabe> Bits<E> {
+    #[inline]
     fn bits(&mut self, n: u32) -> Result<u32, Fehler> {
         while self.anzahl < n {
-            let b = *self.d.get(self.pos).ok_or(Fehler::Format)?;
-            self.pos += 1;
+            let b = self.e.byte().ok_or(Fehler::Format)?;
             self.puffer |= u32::from(b) << self.anzahl;
             self.anzahl += 8;
         }
@@ -266,6 +474,85 @@ impl Bits<'_> {
         self.puffer >>= n;
         self.anzahl -= n;
         Ok(v)
+    }
+}
+
+/// Ausgabe des Inflaters: ganzer Speicher ([`VecAusgabe`]) oder stückweise
+/// mit 32-KB-Fenster ([`StromAusgabe`]).
+trait Ausgabe {
+    fn byte(&mut self, b: u8) -> Result<(), Fehler>;
+    /// `len` Bytes ab `dist` zurück wiederholen (LZ77).
+    fn kopieren(&mut self, dist: usize, len: usize) -> Result<(), Fehler>;
+}
+
+struct VecAusgabe {
+    out: Vec<u8>,
+    max: usize,
+}
+
+impl Ausgabe for VecAusgabe {
+    #[inline]
+    fn byte(&mut self, b: u8) -> Result<(), Fehler> {
+        if self.out.len() >= self.max {
+            return Err(Fehler::Format);
+        }
+        self.out.push(b);
+        Ok(())
+    }
+    fn kopieren(&mut self, dist: usize, len: usize) -> Result<(), Fehler> {
+        if dist > self.out.len() || self.out.len() + len > self.max {
+            return Err(Fehler::Format);
+        }
+        let start = self.out.len() - dist;
+        for j in 0..len {
+            let b = self.out[start + j];
+            self.out.push(b);
+        }
+        Ok(())
+    }
+}
+
+/// Fenster des Deflate-Formats.
+const FENSTER: usize = 32 * 1024;
+
+/// Ausgabe stückweise an `senke`; behält die letzten 32 KB für Rückverweise.
+struct StromAusgabe<'s> {
+    puf: Vec<u8>,
+    gesamt: usize,
+    senke: &'s mut dyn FnMut(&[u8]) -> Result<(), Fehler>,
+}
+
+impl StromAusgabe<'_> {
+    fn abgeben(&mut self, alles: bool) -> Result<(), Fehler> {
+        let behalten = if alles { 0 } else { FENSTER };
+        if self.puf.len() > behalten {
+            let n = self.puf.len() - behalten;
+            (self.senke)(&self.puf[..n])?;
+            self.puf.drain(..n);
+        }
+        Ok(())
+    }
+}
+
+impl Ausgabe for StromAusgabe<'_> {
+    #[inline]
+    fn byte(&mut self, b: u8) -> Result<(), Fehler> {
+        self.puf.push(b);
+        self.gesamt += 1;
+        if self.puf.len() >= 3 * FENSTER {
+            self.abgeben(false)?;
+        }
+        Ok(())
+    }
+    fn kopieren(&mut self, dist: usize, len: usize) -> Result<(), Fehler> {
+        if dist > self.puf.len() {
+            return Err(Fehler::Format);
+        }
+        for _ in 0..len {
+            let b = self.puf[self.puf.len() - dist];
+            self.byte(b)?;
+        }
+        Ok(())
     }
 }
 
@@ -294,7 +581,7 @@ impl Huff {
         }
         Huff { count, sym }
     }
-    fn lesen(&self, b: &mut Bits) -> Result<u16, Fehler> {
+    fn lesen<E: Eingabe>(&self, b: &mut Bits<E>) -> Result<u16, Fehler> {
         let (mut code, mut first, mut index) = (0i32, 0i32, 0i32);
         for len in 1..16 {
             code |= b.bits(1)? as i32;
@@ -325,21 +612,29 @@ pub fn inflate(d: &[u8], groesse_hinweis: usize) -> Result<Vec<u8>, Fehler> {
 /// Wie [`inflate`], aber höchstens `max` Bytes Ergebnis (sonst Fehler) –
 /// gegen „Deflate-Bomben“ in fremden Dateien (PDF-Betrachter).
 pub fn inflate_max(d: &[u8], groesse_hinweis: usize, max: usize) -> Result<Vec<u8>, Fehler> {
-    let mut b = Bits { d, pos: 0, puffer: 0, anzahl: 0 };
-    let mut out = Vec::with_capacity(groesse_hinweis.min(max));
+    let mut b = Bits { e: SpeicherEingabe { d, pos: 0 }, puffer: 0, anzahl: 0 };
+    let mut a = VecAusgabe { out: Vec::with_capacity(groesse_hinweis.min(max)), max };
+    inflate_kern(&mut b, &mut a)?;
+    Ok(a.out)
+}
+
+/// Deflate-Blöcke bis zum letzten lesen.
+fn inflate_kern<E: Eingabe, A: Ausgabe>(b: &mut Bits<E>, out: &mut A) -> Result<(), Fehler> {
     loop {
         let letzter = b.bits(1)?;
         match b.bits(2)? {
             0 => {
+                // unkomprimiert: auf Byte ausrichten, LEN/NLEN, Daten
                 b.puffer = 0;
                 b.anzahl = 0;
-                let len = u16le(d, b.pos)? as usize;
-                b.pos += 4;
-                if out.len() + len > max {
-                    return Err(Fehler::Format);
+                let mut kopf = [0u8; 4];
+                for k in &mut kopf {
+                    *k = b.e.byte().ok_or(Fehler::Format)?;
                 }
-                out.extend_from_slice(d.get(b.pos..b.pos + len).ok_or(Fehler::Format)?);
-                b.pos += len;
+                let len = usize::from(u16::from_le_bytes([kopf[0], kopf[1]]));
+                for _ in 0..len {
+                    out.byte(b.e.byte().ok_or(Fehler::Format)?)?;
+                }
             }
             t @ (1 | 2) => {
                 let (lit, dist) = if t == 1 {
@@ -360,7 +655,7 @@ pub fn inflate_max(d: &[u8], groesse_hinweis: usize, max: usize) -> Result<Vec<u
                     let mut l = vec![0u8; hlit + hdist];
                     let mut i = 0;
                     while i < l.len() {
-                        let s = ch.lesen(&mut b)?;
+                        let s = ch.lesen(b)?;
                         let (wert, n) = match s {
                             0..=15 => (s as u8, 1),
                             16 => (*l.get(i.wrapping_sub(1)).ok_or(Fehler::Format)?, 3 + b.bits(2)? as usize),
@@ -375,164 +670,322 @@ pub fn inflate_max(d: &[u8], groesse_hinweis: usize, max: usize) -> Result<Vec<u
                     (Huff::neu(&l[..hlit]), Huff::neu(&l[hlit..]))
                 };
                 loop {
-                    if out.len() > max {
-                        return Err(Fehler::Format);
-                    }
-                    let s = lit.lesen(&mut b)?;
+                    let s = lit.lesen(b)?;
                     if s < 256 {
-                        out.push(s as u8);
+                        out.byte(s as u8)?;
                     } else if s == 256 {
                         break;
                     } else {
                         let k = (s - 257) as usize;
                         let len = *LEN_BASIS.get(k).ok_or(Fehler::Format)? as usize + b.bits(u32::from(LEN_EXTRA[k]))? as usize;
-                        let ds = dist.lesen(&mut b)? as usize;
+                        let ds = dist.lesen(b)? as usize;
                         let dd = *DIST_BASIS.get(ds).ok_or(Fehler::Format)? as usize + b.bits(u32::from(DIST_EXTRA[ds]))? as usize;
-                        if dd > out.len() {
-                            return Err(Fehler::Format);
-                        }
-                        let start = out.len() - dd;
-                        for j in 0..len {
-                            out.push(out[start + j]);
-                        }
+                        out.kopieren(dd, len)?;
                     }
                 }
             }
             _ => return Err(Fehler::Format),
         }
         if letzter == 1 {
-            return Ok(out);
+            return Ok(());
         }
     }
 }
 
 // =================================================================== PNG
 
-fn png(d: &[u8]) -> Result<Rgba, Fehler> {
-    let mut o = 8;
-    let (mut w, mut h, mut tiefe, mut typ, mut interlace) = (0u32, 0u32, 0u8, 0u8, 0u8);
-    let mut pal: Vec<[u8; 3]> = Vec::new();
-    let mut trns: Vec<u8> = Vec::new();
-    let mut idat = Vec::new();
-    while o + 8 <= d.len() {
-        let len = u32be(d, o)? as usize;
-        let art = &d[o + 4..o + 8];
-        let inhalt = d.get(o + 8..o + 8 + len).ok_or(Fehler::Format)?;
-        match art {
-            b"IHDR" => {
-                w = u32be(inhalt, 0)?;
-                h = u32be(inhalt, 4)?;
-                tiefe = inhalt[8];
-                typ = inhalt[9];
-                interlace = inhalt[12];
-            }
-            b"PLTE" => pal = inhalt.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect(),
-            b"tRNS" => trns = inhalt.to_vec(),
-            b"IDAT" => idat.extend_from_slice(inhalt),
-            b"IEND" => break,
-            _ => {}
+/// Kopfdaten eines PNG.
+struct PngKopf {
+    w: u32,
+    h: u32,
+    tiefe: u8,
+    typ: u8,
+    interlace: u8,
+    pal: Vec<[u8; 3]>,
+    trns: Vec<u8>,
+}
+
+impl PngKopf {
+    fn kanaele(&self) -> Result<u32, Fehler> {
+        match self.typ {
+            0 | 3 => Ok(1),
+            2 => Ok(3),
+            4 => Ok(2),
+            6 => Ok(4),
+            _ => Err(Fehler::Format),
         }
-        o += 12 + len;
     }
-    if w == 0 || h == 0 || w > 16384 || h > 16384 || idat.len() < 2 {
+
+    /// Bildpunkt `px_i` einer entfilterten Zeile als 0xAARRGGBB.
+    fn pixel(&self, z: &[u8], px_i: usize, kanaele: usize) -> u32 {
+        let tiefe = u32::from(self.tiefe);
+        let max_wert = (1u32 << tiefe) - 1;
+        let grau = |v: u32| if tiefe == 16 { v >> 8 } else { v * 255 / max_wert };
+        let probe = |k: usize| -> u32 {
+            match tiefe {
+                16 => u32::from(u16::from_be_bytes([z[2 * k], z[2 * k + 1]])),
+                8 => u32::from(z[k]),
+                t => {
+                    let bit = k * t as usize;
+                    u32::from(z[bit / 8] >> (8 - t as usize - bit % 8)) & max_wert
+                }
+            }
+        };
+        let trns = &self.trns;
+        let k = px_i * kanaele;
+        match self.typ {
+            0 => {
+                let v = probe(k);
+                let tr = trns.len() >= 2 && v == u32::from(u16::from_be_bytes([trns[0], trns[1]]));
+                let g = grau(v);
+                argb(if tr { 0 } else { 255 }, g, g, g)
+            }
+            2 => {
+                let (r, g, b) = (probe(k), probe(k + 1), probe(k + 2));
+                let tr = trns.len() >= 6
+                    && r == u32::from(u16::from_be_bytes([trns[0], trns[1]]))
+                    && g == u32::from(u16::from_be_bytes([trns[2], trns[3]]))
+                    && b == u32::from(u16::from_be_bytes([trns[4], trns[5]]));
+                argb(if tr { 0 } else { 255 }, grau(r), grau(g), grau(b))
+            }
+            3 => {
+                let i = probe(k) as usize;
+                let p = self.pal.get(i).copied().unwrap_or([0, 0, 0]);
+                let a = trns.get(i).copied().unwrap_or(255);
+                argb(u32::from(a), u32::from(p[0]), u32::from(p[1]), u32::from(p[2]))
+            }
+            4 => {
+                let g = grau(probe(k));
+                argb(grau(probe(k + 1)), g, g, g)
+            }
+            _ => argb(grau(probe(k + 3)), grau(probe(k)), grau(probe(k + 1)), grau(probe(k + 2))),
+        }
+    }
+}
+
+/// PNG-Filter einer Zeile rückgängig machen.
+fn png_entfiltern(filter: u8, z: &mut [u8], vorher: &[u8], bpp: usize) -> Result<(), Fehler> {
+    for i in 0..z.len() {
+        let a = if i >= bpp { i32::from(z[i - bpp]) } else { 0 };
+        let b = i32::from(vorher[i]);
+        let c = if i >= bpp { i32::from(vorher[i - bpp]) } else { 0 };
+        let add = match filter {
+            0 => 0,
+            1 => a,
+            2 => b,
+            3 => (a + b) / 2,
+            4 => {
+                let p = a + b - c;
+                let (pa, pb, pc) = ((p - a).abs(), (p - b).abs(), (p - c).abs());
+                if pa <= pb && pa <= pc { a } else if pb <= pc { b } else { c }
+            }
+            _ => return Err(Fehler::Format),
+        };
+        z[i] = (i32::from(z[i]) + add) as u8;
+    }
+    Ok(())
+}
+
+fn png(d: &[u8]) -> Result<Rgba, Fehler> {
+    let mut s = Strom::speicher(d);
+    png_strom(&mut s, &|w, h| (w <= 16384 && h <= 16384).then_some(1)).map(|(b, _)| b)
+}
+
+/// PNG zeilenweise aus `s`: Daten werden beim Entpacken Zeile für Zeile
+/// entfiltert und um den ganzzahligen Faktor `teiler(w, h)` verkleinert
+/// (Mittelwert der Bildpunkte; bei Interlace der nächste Bildpunkt). So
+/// passt auch ein Bild, dessen Rohdaten den Speicher weit übersteigen.
+/// Liefert das Bild und die Originalmasse.
+fn png_strom(s: &mut Strom, teiler: &dyn Fn(u32, u32) -> Option<u32>) -> Result<(Rgba, (u32, u32)), Fehler> {
+    let mut sig = [0u8; 8];
+    s.lesen_in(&mut sig)?;
+    if &sig != b"\x89PNG\r\n\x1a\n" {
         return Err(Fehler::Format);
     }
-    let kanaele = match typ {
-        0 | 3 => 1,
-        2 => 3,
-        4 => 2,
-        6 => 4,
-        _ => return Err(Fehler::Format),
-    };
-    let bpp_bits = kanaele * u32::from(tiefe);
-    let bpp = (bpp_bits as usize).div_ceil(8).max(1);
-    let roh = inflate(&idat[2..], (h as usize) * (1 + (w as usize * bpp_bits as usize).div_ceil(8)))?;
-    let mut px = vec![0u32; (w * h) as usize];
-    let durchgaenge: &[(u32, u32, u32, u32)] = if interlace == 1 {
+    let mut k = PngKopf { w: 0, h: 0, tiefe: 0, typ: 0, interlace: 0, pal: Vec::new(), trns: Vec::new() };
+    // Stücke bis zum ersten IDAT
+    let rest_idat;
+    loop {
+        let len = s.be32()? as usize;
+        let mut art = [0u8; 4];
+        s.lesen_in(&mut art)?;
+        match &art {
+            b"IHDR" => {
+                // immer 13 Byte; die Länge nicht ungeprüft anlegen
+                if len != 13 {
+                    return Err(Fehler::Format);
+                }
+                let inhalt = s.nehmen(len)?;
+                k.w = u32::from_be_bytes([inhalt[0], inhalt[1], inhalt[2], inhalt[3]]);
+                k.h = u32::from_be_bytes([inhalt[4], inhalt[5], inhalt[6], inhalt[7]]);
+                k.tiefe = inhalt[8];
+                k.typ = inhalt[9];
+                k.interlace = inhalt[12];
+            }
+            b"PLTE" if len <= 768 => k.pal = s.nehmen(len)?.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect(),
+            b"tRNS" if len <= 256 => k.trns = s.nehmen(len)?,
+            b"IDAT" => {
+                rest_idat = len;
+                break;
+            }
+            b"IEND" => return Err(Fehler::Format),
+            _ => s.ueberspringen(len as u64)?,
+        }
+        s.ueberspringen(4)?; // CRC
+    }
+    let (w, h) = (k.w, k.h);
+    if w == 0 || h == 0 || w > 65535 || h > 65535 || !matches!(k.tiefe, 1 | 2 | 4 | 8 | 16) {
+        return Err(Fehler::Format);
+    }
+    let kanaele = k.kanaele()? as usize;
+    let f = teiler(w, h).ok_or(Fehler::ZuGross)?.max(1);
+    let (ow, oh) = (w.div_ceil(f), h.div_ceil(f));
+    let bpp_bits = kanaele * usize::from(k.tiefe);
+    let bpp = bpp_bits.div_ceil(8).max(1);
+    let mut px = vec![0u32; ow as usize * oh as usize];
+    let durchgaenge: &[(u32, u32, u32, u32)] = if k.interlace == 1 {
         &[(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2)]
     } else {
         &[(0, 0, 1, 1)]
     };
-    let mut pos = 0usize;
-    let max_wert = (1u32 << tiefe) - 1;
-    let grau = |v: u32| if tiefe == 16 { v >> 8 } else { v * 255 / max_wert };
-    for &(x0, y0, dx, dy) in durchgaenge {
-        if x0 >= w || y0 >= h {
-            continue;
-        }
-        let pw = (w - x0).div_ceil(dx);
-        let ph = (h - y0).div_ceil(dy);
-        let zeile = (pw as usize * bpp_bits as usize).div_ceil(8);
-        let mut vorher = vec![0u8; zeile];
-        for py in 0..ph {
-            let filter = *roh.get(pos).ok_or(Fehler::Format)?;
-            let mut z = roh.get(pos + 1..pos + 1 + zeile).ok_or(Fehler::Format)?.to_vec();
-            pos += 1 + zeile;
-            for i in 0..zeile {
-                let a = if i >= bpp { i32::from(z[i - bpp]) } else { 0 };
-                let b = i32::from(vorher[i]);
-                let c = if i >= bpp { i32::from(vorher[i - bpp]) } else { 0 };
-                let add = match filter {
-                    0 => 0,
-                    1 => a,
-                    2 => b,
-                    3 => (a + b) / 2,
-                    4 => {
-                        let p = a + b - c;
-                        let (pa, pb, pc) = ((p - a).abs(), (p - b).abs(), (p - c).abs());
-                        if pa <= pb && pa <= pc { a } else if pb <= pc { b } else { c }
-                    }
-                    _ => return Err(Fehler::Format),
-                };
-                z[i] = (i32::from(z[i]) + add) as u8;
+    // Zustand der Zeilenverarbeitung
+    let mut gang = 0usize;
+    let mut py = 0u32;
+    let mut zeile: Vec<u8> = Vec::new();
+    let mut vorher: Vec<u8> = Vec::new();
+    let mut voll = 0usize;
+    // Summen einer Ausgabezeile (a, r, g, b, Anzahl) beim Mittelwert
+    let mut summe = vec![[0u32; 5]; if k.interlace == 1 { 0 } else { ow as usize }];
+    let mut fertig = false;
+    // Masse des aktuellen Durchgangs (leere Durchgänge übersprungen)
+    let gang_masse = |g: usize| -> Option<(u32, usize)> {
+        let (x0, y0, dx, dy) = durchgaenge[g];
+        (x0 < w && y0 < h).then(|| {
+            let pw = (w - x0).div_ceil(dx);
+            ((h - y0).div_ceil(dy), (pw as usize * bpp_bits).div_ceil(8))
+        })
+    };
+    let naechster_gang = |g: &mut usize, zeile: &mut Vec<u8>, vorher: &mut Vec<u8>| -> bool {
+        while *g < durchgaenge.len() {
+            if let Some((_, zb)) = gang_masse(*g) {
+                *zeile = vec![0; 1 + zb];
+                *vorher = vec![0; zb];
+                return true;
             }
-            let probe = |k: usize| -> u32 {
-                // k-ter Wert der Zeile (tiefe Bit)
-                match tiefe {
-                    16 => u32::from(u16::from_be_bytes([z[2 * k], z[2 * k + 1]])),
-                    8 => u32::from(z[k]),
-                    t => {
-                        let bit = k * t as usize;
-                        u32::from(z[bit / 8] >> (8 - t as usize - bit % 8)) & max_wert
+            *g += 1;
+        }
+        false
+    };
+    if !naechster_gang(&mut gang, &mut zeile, &mut vorher) {
+        return Err(Fehler::Format);
+    }
+    {
+        let mut senke = |daten: &[u8]| -> Result<(), Fehler> {
+            let mut i = 0;
+            while i < daten.len() {
+                if fertig {
+                    return Ok(());
+                }
+                let n = (zeile.len() - voll).min(daten.len() - i);
+                zeile[voll..voll + n].copy_from_slice(&daten[i..i + n]);
+                voll += n;
+                i += n;
+                if voll < zeile.len() {
+                    break;
+                }
+                // ganze Zeile: entfiltern, Bildpunkte ausgeben
+                voll = 0;
+                let (filter, z) = zeile.split_first_mut().ok_or(Fehler::Format)?;
+                png_entfiltern(*filter, z, &vorher, bpp)?;
+                let (x0, y0, dx, dy) = durchgaenge[gang];
+                let (ph, _) = gang_masse(gang).ok_or(Fehler::Format)?;
+                let pw = (w - x0).div_ceil(dx) as usize;
+                let y = y0 + py * dy;
+                if k.interlace == 1 {
+                    // nächster Bildpunkt: nur Punkte auf dem Raster des Faktors
+                    if y % f == 0 {
+                        for px_i in 0..pw {
+                            let x = x0 + px_i as u32 * dx;
+                            if x % f == 0 {
+                                px[((y / f) * ow + x / f) as usize] = k.pixel(z, px_i, kanaele);
+                            }
+                        }
+                    }
+                } else {
+                    for px_i in 0..pw {
+                        let c = k.pixel(z, px_i, kanaele);
+                        let s = &mut summe[px_i / f as usize];
+                        s[0] += c >> 24;
+                        s[1] += c >> 16 & 255;
+                        s[2] += c >> 8 & 255;
+                        s[3] += c & 255;
+                        s[4] += 1;
+                    }
+                    if (y + 1) % f == 0 || y + 1 == h {
+                        let oy = (y / f) as usize;
+                        for (ox, s) in summe.iter_mut().enumerate() {
+                            let n = s[4].max(1);
+                            px[oy * ow as usize + ox] = argb(s[0] / n, s[1] / n, s[2] / n, s[3] / n);
+                            *s = [0; 5];
+                        }
                     }
                 }
-            };
-            for px_i in 0..pw as usize {
-                let k = px_i * kanaele as usize;
-                let c = match typ {
-                    0 => {
-                        let v = probe(k);
-                        let tr = trns.len() >= 2 && v == u32::from(u16::from_be_bytes([trns[0], trns[1]]));
-                        let g = grau(v);
-                        argb(if tr { 0 } else { 255 }, g, g, g)
+                vorher.copy_from_slice(z);
+                py += 1;
+                if py == ph {
+                    py = 0;
+                    gang += 1;
+                    if !naechster_gang(&mut gang, &mut zeile, &mut vorher) {
+                        fertig = true;
                     }
-                    2 => {
-                        let (r, g, b) = (probe(k), probe(k + 1), probe(k + 2));
-                        let tr = trns.len() >= 6
-                            && r == u32::from(u16::from_be_bytes([trns[0], trns[1]]))
-                            && g == u32::from(u16::from_be_bytes([trns[2], trns[3]]))
-                            && b == u32::from(u16::from_be_bytes([trns[4], trns[5]]));
-                        argb(if tr { 0 } else { 255 }, grau(r), grau(g), grau(b))
-                    }
-                    3 => {
-                        let i = probe(k) as usize;
-                        let p = pal.get(i).copied().unwrap_or([0, 0, 0]);
-                        let a = trns.get(i).copied().unwrap_or(255);
-                        argb(u32::from(a), u32::from(p[0]), u32::from(p[1]), u32::from(p[2]))
-                    }
-                    4 => {
-                        let g = grau(probe(k));
-                        argb(grau(probe(k + 1)), g, g, g)
-                    }
-                    _ => argb(grau(probe(k + 3)), grau(probe(k)), grau(probe(k + 1)), grau(probe(k + 2))),
-                };
-                let (x, y) = (x0 + px_i as u32 * dx, y0 + py * dy);
-                px[(y * w + x) as usize] = c;
+                }
             }
-            vorher = z;
+            Ok(())
+        };
+        // IDAT-Stücke hintereinander als eine zlib-Folge
+        let mut idat = IdatEingabe { s, rest: rest_idat, ende: false };
+        let mut kopf = [0u8; 2];
+        for b in &mut kopf {
+            *b = idat.byte().ok_or(Fehler::Format)?;
         }
+        let mut bits = Bits { e: idat, puffer: 0, anzahl: 0 };
+        let mut aus = StromAusgabe { puf: Vec::with_capacity(4 * FENSTER), gesamt: 0, senke: &mut senke };
+        inflate_kern(&mut bits, &mut aus)?;
+        aus.abgeben(true)?;
     }
-    Ok(Rgba { w, h, px, delay: 0 })
+    if !fertig {
+        return Err(Fehler::Format);
+    }
+    Ok((Rgba { w: ow, h: oh, px, delay: 0 }, (w, h)))
+}
+
+/// Bytes aller aufeinanderfolgenden IDAT-Stücke.
+struct IdatEingabe<'s, 'a> {
+    s: &'s mut Strom<'a>,
+    rest: usize,
+    ende: bool,
+}
+
+impl Eingabe for IdatEingabe<'_, '_> {
+    fn byte(&mut self) -> Option<u8> {
+        while self.rest == 0 {
+            if self.ende {
+                return None;
+            }
+            // CRC, dann nächstes Stück
+            self.s.ueberspringen(4).ok()?;
+            let len = self.s.be32().ok()? as usize;
+            let mut art = [0u8; 4];
+            self.s.lesen_in(&mut art).ok()?;
+            if &art != b"IDAT" {
+                self.ende = true;
+                return None;
+            }
+            self.rest = len;
+        }
+        self.rest -= 1;
+        self.s.byte()
+    }
 }
 
 // =================================================================== GIF
@@ -724,14 +1177,24 @@ fn lzw(d: &[u8], min: u32, max: usize) -> Result<Vec<u8>, Fehler> {
 
 // =================================================================== JPEG
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 struct JHuff {
     /// (Länge, Code) → Wert: je Länge erster Code und Index
     min: [i32; 17],
     max: [i32; 18],
     val_ptr: [i32; 17],
     werte: Vec<u8>,
+    /// Schnelltabelle für Codes bis 9 Bit: Länge << 8 | Wert (0 = länger)
+    lut: Vec<u16>,
 }
+
+impl Default for JHuff {
+    fn default() -> JHuff {
+        JHuff { min: [0; 17], max: [-1; 18], val_ptr: [0; 17], werte: Vec::new(), lut: vec![0; 1 << LUT_BITS] }
+    }
+}
+
+const LUT_BITS: u32 = 9;
 
 impl JHuff {
     fn neu(anz: &[u8; 16], werte: Vec<u8>) -> JHuff {
@@ -741,6 +1204,16 @@ impl JHuff {
             let n = i32::from(anz[l - 1]);
             h.val_ptr[l] = k;
             h.min[l] = code;
+            if l as u32 <= LUT_BITS {
+                for c in code..code + n {
+                    let Some(&wert) = h.werte.get((k + c - code) as usize) else { break };
+                    let schieben = LUT_BITS - l as u32;
+                    let anfang = (c as usize) << schieben;
+                    for e in anfang..(anfang + (1 << schieben)).min(1 << LUT_BITS) {
+                        h.lut[e] = (l as u16) << 8 | u16::from(wert);
+                    }
+                }
+            }
             code += n;
             k += n;
             h.max[l] = if n > 0 { code - 1 } else { -1 };
@@ -751,61 +1224,126 @@ impl JHuff {
     }
 }
 
-struct JBits<'a> {
-    d: &'a [u8],
-    pos: usize,
-    puffer: u32,
-    anzahl: u32,
+/// Bitleser für die Entropiedaten eines Scans (Füllbytes FF 00, Halt an
+/// Markern: danach Nullen). 32-Bit-Speicher, linksbündig (RISC-V-32 hat
+/// keine 64-Bit-Register): nach `fuellen` mindestens 25 gültige Bits.
+struct JBits<'s, 'a> {
+    s: &'s mut Strom<'a>,
+    acc: u32,
+    n: u32,
+    marker: bool,
 }
 
-impl JBits<'_> {
-    fn bit(&mut self) -> u32 {
-        if self.anzahl == 0 {
-            let mut b = *self.d.get(self.pos).unwrap_or(&0);
-            if b == 0xFF {
-                let n = *self.d.get(self.pos + 1).unwrap_or(&0);
-                if n == 0 {
-                    self.pos += 2;
+impl<'s, 'a> JBits<'s, 'a> {
+    fn neu(s: &'s mut Strom<'a>) -> JBits<'s, 'a> {
+        JBits { s, acc: 0, n: 0, marker: false }
+    }
+
+    fn fuellen(&mut self) {
+        while self.n <= 24 {
+            let mut b = 0u8;
+            if !self.marker {
+                // schnell: zwei Bytes liegen im Puffer
+                let (pos, len) = (self.s.pos, self.s.len);
+                let (x, y) = if pos + 1 < len {
+                    let d = self.s.daten();
+                    (Some(d[pos]), Some(d[pos + 1]))
                 } else {
-                    // Marker: mit Nullen auffüllen, nicht weiterlesen
-                    b = 0;
+                    (self.s.schauen(0), self.s.schauen(1))
+                };
+                match x {
+                    Some(0xFF) => {
+                        if y == Some(0) {
+                            self.s.vor(2);
+                            b = 0xFF;
+                        } else {
+                            // Marker (oder Dateiende): nicht weiterlesen
+                            self.marker = true;
+                        }
+                    }
+                    Some(x) => {
+                        self.s.vor(1);
+                        b = x;
+                    }
+                    None => self.marker = true,
                 }
-            } else {
-                self.pos += 1;
             }
-            self.puffer = u32::from(b);
-            self.anzahl = 8;
+            self.acc |= u32::from(b) << (24 - self.n);
+            self.n += 8;
         }
-        self.anzahl -= 1;
-        (self.puffer >> self.anzahl) & 1
     }
-    fn bits(&mut self, n: u32) -> i32 {
-        let mut v = 0;
-        for _ in 0..n {
-            v = v << 1 | self.bit() as i32;
+
+    /// `k` Bits (0–16) lesen.
+    #[inline]
+    fn bits(&mut self, k: u32) -> i32 {
+        if k == 0 {
+            return 0;
         }
-        v
+        if self.n < k {
+            self.fuellen();
+        }
+        let v = self.acc >> (32 - k);
+        self.acc <<= k;
+        self.n -= k;
+        v as i32
     }
+
+    #[inline]
+    fn bit(&mut self) -> u32 {
+        self.bits(1) as u32
+    }
+
     fn huff(&mut self, h: &JHuff) -> Result<u8, Fehler> {
-        let mut code = 0i32;
-        for l in 1..=16 {
-            code = code << 1 | self.bit() as i32;
-            if code <= h.max[l] {
-                return h.werte.get((h.val_ptr[l] + code - h.min[l]) as usize).copied().ok_or(Fehler::Format);
+        if self.n < 16 {
+            self.fuellen();
+        }
+        let e = h.lut[(self.acc >> (32 - LUT_BITS)) as usize];
+        if e != 0 {
+            let l = u32::from(e >> 8);
+            self.acc <<= l;
+            self.n -= l;
+            return Ok(e as u8);
+        }
+        for l in 1..=16u32 {
+            let code = (self.acc >> (32 - l)) as i32;
+            if code <= h.max[l as usize] {
+                self.acc <<= l;
+                self.n -= l;
+                return h.werte.get((h.val_ptr[l as usize] + code - h.min[l as usize]) as usize).copied().ok_or(Fehler::Format);
             }
         }
         Err(Fehler::Format)
     }
+
     fn erweitern(v: i32, n: u32) -> i32 {
         if n == 0 { 0 } else if v < 1 << (n - 1) { v - (1 << n) + 1 } else { v }
     }
+
+    /// Restart: Bits verwerfen, hinter den RSTn-Marker springen.
     fn neu_ausrichten(&mut self) {
-        self.anzahl = 0;
-        // Restart-Marker überspringen
-        while self.pos + 1 < self.d.len() && !(self.d[self.pos] == 0xFF && (0xD0..=0xD7).contains(&self.d[self.pos + 1])) {
-            self.pos += 1;
+        self.acc = 0;
+        self.n = 0;
+        self.marker = false;
+        while let Some(b) = self.s.schauen(0) {
+            if b == 0xFF && self.s.schauen(1).is_some_and(|m| (0xD0..=0xD7).contains(&m)) {
+                self.s.vor(2);
+                return;
+            }
+            self.s.vor(1);
         }
-        self.pos += 2;
+    }
+
+    /// Nach einem Scan: bis zum nächsten Marker (nicht RSTn, nicht Füllbyte).
+    fn zum_marker(self) {
+        while let Some(b) = self.s.schauen(0) {
+            if b == 0xFF {
+                match self.s.schauen(1) {
+                    Some(m) if m != 0 && m != 0xFF && !(0xD0..=0xD7).contains(&m) => return,
+                    _ => {}
+                }
+            }
+            self.s.vor(1);
+        }
     }
 }
 
@@ -814,38 +1352,57 @@ const ZIGZAG: [usize; 64] = [
     50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63,
 ];
 
-fn idct(k: &[i32; 64], out: &mut [u8; 64]) {
-    // getrennte 1D-IDCT (Gleitkomma), genau genug für Anzeige
-    let mut t = [0f32; 64];
-    let c = |u: usize| if u == 0 { core::f32::consts::FRAC_1_SQRT_2 } else { 1.0 };
-    static mut COS: [[f32; 8]; 8] = [[0.0; 8]; 8];
-    static INIT: std::sync::Once = std::sync::Once::new();
-    INIT.call_once(|| {
-        for x in 0..8 {
-            for u in 0..8 {
-                // SAFETY: einmalige Initialisierung unter `Once`.
-                unsafe { COS[x][u] = ((2 * x + 1) as f32 * u as f32 * core::f32::consts::PI / 16.0).cos() };
+/// Kosinus-Tabelle der IDCT mit `n` Punkten: cos((2x+1)uπ/(2n)).
+fn cos_tabelle(n: usize) -> &'static [[f32; 8]; 8] {
+    static TAB: [std::sync::OnceLock<[[f32; 8]; 8]>; 4] =
+        [std::sync::OnceLock::new(), std::sync::OnceLock::new(), std::sync::OnceLock::new(), std::sync::OnceLock::new()];
+    let i = n.trailing_zeros() as usize;
+    TAB[i].get_or_init(|| {
+        let mut t = [[0f32; 8]; 8];
+        for (x, z) in t.iter_mut().enumerate().take(n) {
+            for (u, c) in z.iter_mut().enumerate().take(n) {
+                *c = ((2 * x + 1) as f32 * u as f32 * core::f32::consts::PI / (2 * n) as f32).cos();
             }
         }
-    });
-    // SAFETY: nach Initialisierung nur gelesen.
-    let cos = unsafe { &*core::ptr::addr_of!(COS) };
-    for y in 0..8 {
-        for x in 0..8 {
+        t
+    })
+}
+
+/// Auf 0–255 begrenzen und runden. Ohne `f32::round`: das ist auf
+/// RISC-V ein Bibliotheksaufruf (je Bildpunkt mehrmals).
+#[inline]
+fn runden_u8(v: f32) -> u8 {
+    (v.clamp(0.0, 255.0) + 0.5) as u8
+}
+
+/// IDCT eines Blocks auf `n`×`n` Bildpunkte (n = 8, 4, 2, 1; verkleinert
+/// wie libjpeg: nur die n×n tiefsten Frequenzen, gleicher Faktor ½ je
+/// Richtung, sodass der Mittelwert erhalten bleibt). `k` in natürlicher
+/// Reihenfolge, dequantisiert; Ergebnis zeilenweise in `out[..n*n]`.
+fn idct_n(k: &[i32; 64], n: usize, out: &mut [u8; 64]) {
+    if n == 1 {
+        out[0] = runden_u8(k[0] as f32 / 8.0 + 128.0);
+        return;
+    }
+    let c = |u: usize| if u == 0 { core::f32::consts::FRAC_1_SQRT_2 } else { 1.0 };
+    let cos = cos_tabelle(n);
+    let mut t = [0f32; 64];
+    for v in 0..n {
+        for x in 0..n {
             let mut s = 0.0;
-            for u in 0..8 {
-                s += c(u) * k[y * 8 + u] as f32 * cos[x][u];
+            for u in 0..n {
+                s += c(u) * k[v * 8 + u] as f32 * cos[x][u];
             }
-            t[y * 8 + x] = s / 2.0;
+            t[v * 8 + x] = s / 2.0;
         }
     }
-    for x in 0..8 {
-        for y in 0..8 {
+    for x in 0..n {
+        for y in 0..n {
             let mut s = 0.0;
-            for v in 0..8 {
+            for v in 0..n {
                 s += c(v) * t[v * 8 + x] * cos[y][v];
             }
-            out[y * 8 + x] = (s / 2.0 + 128.0).round().clamp(0.0, 255.0) as u8;
+            out[y * n + x] = runden_u8(s / 2.0 + 128.0);
         }
     }
 }
@@ -860,35 +1417,107 @@ struct Komp {
     pred: i32,
     ebene: Vec<u8>,
     breite: usize,
+    /// Progressiv: je Block die Koeffizienten ≠ 0 (Bit = natürlicher Index)
+    /// und die behaltenen n×n Werte (nicht dequantisiert)
+    masken: Vec<u64>,
+    werte: Vec<i16>,
+    /// Blöcke je Zeile (mit MCU-Auffüllung)
+    bw_voll: usize,
 }
 
+/// Ein Block eines progressiven Scans: vollständig wird nur festgehalten,
+/// ob ein Koeffizient ≠ 0 ist (nötig, um den Bitstrom zu lesen); Werte nur
+/// für die n×n tiefsten Frequenzen, die das verkleinerte Bild braucht.
+struct Block<'b> {
+    maske: &'b mut u64,
+    werte: &'b mut [i16],
+    n: usize,
+}
+
+impl Block<'_> {
+    #[inline]
+    fn platz(&self, z: usize) -> Option<usize> {
+        let (r, c) = (z / 8, z % 8);
+        (r < self.n && c < self.n).then_some(r * self.n + c)
+    }
+    #[inline]
+    fn nicht_null(&self, z: usize) -> bool {
+        *self.maske >> z & 1 != 0
+    }
+    fn setzen(&mut self, z: usize, v: i32) {
+        if v != 0 {
+            *self.maske |= 1 << z;
+        } else {
+            *self.maske &= !(1 << z);
+        }
+        if let Some(i) = self.platz(z) {
+            self.werte[i] = v as i16;
+        }
+    }
+    fn wert(&self, z: usize) -> i32 {
+        self.platz(z).map_or(0, |i| i32::from(self.werte[i]))
+    }
+}
+
+/// Ergebnis: Bild, Originalmasse, Faktor (1, 2, 4, 8).
+type JpegErgebnis = (Rgba, (u32, u32), u32);
+
 fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
+    let mut s = Strom::speicher(d);
+    // libimg: Rohbild ohne EXIF-Drehung, volle Grösse
+    jpeg_strom(&mut s, &|w, h, _, _| (w <= 16384 && h <= 16384).then_some(1), false).map(|(b, _, _)| b)
+}
+
+/// Wählt den Verkleinerungsfaktor: (Breite, Höhe, progressiv, Blöcke aller
+/// Komponenten) → 1, 2, 4, 8 oder None (zu gross).
+type TeilerWahl<'t> = &'t dyn Fn(u32, u32, bool, u64) -> Option<u32>;
+
+/// JPEG (Baseline und progressiv) aus `s`. Mit dem Faktor von `teiler`
+/// rechnet die IDCT gleich auf 8/Faktor Bildpunkte je Block; der Speicher
+/// wächst nur mit dem verkleinerten Bild. `drehen`: EXIF-Ausrichtung
+/// anwenden (beim Umrechnen in RGB, ohne zweiten Puffer).
+fn jpeg_strom(s: &mut Strom, teiler: TeilerWahl, drehen: bool) -> Result<JpegErgebnis, Fehler> {
+    if s.byte() != Some(0xFF) || s.byte() != Some(0xD8) {
+        return Err(Fehler::Format);
+    }
     let mut q = [[0i32; 64]; 4];
     let mut dc: [JHuff; 4] = Default::default();
     let mut ac: [JHuff; 4] = Default::default();
     let mut komp: Vec<Komp> = Vec::new();
     let (mut w, mut h, mut restart) = (0u32, 0u32, 0u32);
     let mut adobe_rgb = false;
-    // Progressiv (SOF2, B0b): Koeffizienten je Komponente über alle Scans
-    // sammeln (natürliche Reihenfolge, noch nicht dequantisiert), am Ende
-    // umrechnen.
+    let mut ausrichtung = 1u16;
     let mut progressiv = false;
-    let mut koeff: Vec<Vec<[i32; 64]>> = Vec::new();
-    let mut o = 2;
+    let mut f = 1u32;
+    let mut n = 8usize;
+    let mut koeff_bereit = false;
     loop {
-        while d.get(o) == Some(&0xFF) && d.get(o + 1) == Some(&0xFF) {
-            o += 1;
-        }
-        if d.get(o) != Some(&0xFF) {
+        // Marker: FF (Füllbytes FF) m
+        if s.byte().ok_or(Fehler::Format)? != 0xFF {
             return Err(Fehler::Format);
         }
-        let m = *d.get(o + 1).ok_or(Fehler::Format)?;
-        o += 2;
+        let mut m = s.byte().ok_or(Fehler::Format)?;
+        while m == 0xFF {
+            m = s.byte().ok_or(Fehler::Format)?;
+        }
         if m == 0xD9 {
             break;
         }
-        let len = d.get(o..o + 2).map(|b| u16::from_be_bytes([b[0], b[1]]) as usize).ok_or(Fehler::Format)?;
-        let seg = d.get(o + 2..o + len).ok_or(Fehler::Format)?;
+        if m == 0x01 || (0xD0..=0xD7).contains(&m) {
+            continue;
+        }
+        let len = usize::from(u16::from_be_bytes([s.byte().ok_or(Fehler::Format)?, s.byte().ok_or(Fehler::Format)?]));
+        if len < 2 {
+            return Err(Fehler::Format);
+        }
+        let len = len - 2;
+        // unwichtige Segmente (APPn ausser EXIF/Adobe, Kommentare) überspringen
+        if matches!(m, 0xE0 | 0xE2..=0xED | 0xEF | 0xFE) {
+            s.ueberspringen(len as u64)?;
+            continue;
+        }
+        let seg = s.nehmen(len)?;
+        let byte = |i: usize| seg.get(i).copied().ok_or(Fehler::Format);
         match m {
             0xDB => {
                 let mut i = 0;
@@ -897,35 +1526,51 @@ fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
                     i += 1;
                     for z in ZIGZAG {
                         q[t][z] = if p == 0 {
-                            i32::from(seg[i])
+                            i32::from(byte(i)?)
                         } else {
-                            i32::from(u16::from_be_bytes([seg[i], seg[i + 1]]))
+                            i32::from(u16::from_be_bytes([byte(i)?, byte(i + 1)?]))
                         };
                         i += if p == 0 { 1 } else { 2 };
                     }
                 }
             }
             0xC0..=0xC2 => {
-                if seg[0] != 8 {
+                if byte(0)? != 8 {
                     return Err(Fehler::NichtUnterstuetzt);
                 }
                 progressiv = m == 0xC2;
-                h = u32::from(u16::from_be_bytes([seg[1], seg[2]]));
-                w = u32::from(u16::from_be_bytes([seg[3], seg[4]]));
-                for i in 0..usize::from(seg[5]) {
-                    let s = &seg[6 + 3 * i..9 + 3 * i];
+                h = u32::from(u16::from_be_bytes([byte(1)?, byte(2)?]));
+                w = u32::from(u16::from_be_bytes([byte(3)?, byte(4)?]));
+                komp.clear();
+                for i in 0..usize::from(byte(5)?) {
+                    let (id, hv, qt) = (byte(6 + 3 * i)?, byte(7 + 3 * i)?, byte(8 + 3 * i)?);
                     komp.push(Komp {
-                        id: s[0],
-                        h: u32::from(s[1] >> 4).max(1),
-                        v: u32::from(s[1] & 15).max(1),
-                        q: usize::from(s[2] & 3),
+                        id,
+                        h: u32::from(hv >> 4).clamp(1, 4),
+                        v: u32::from(hv & 15).clamp(1, 4),
+                        q: usize::from(qt & 3),
                         dc: 0,
                         ac: 0,
                         pred: 0,
                         ebene: Vec::new(),
                         breite: 0,
+                        masken: Vec::new(),
+                        werte: Vec::new(),
+                        bw_voll: 0,
                     });
                 }
+                if w == 0 || h == 0 || komp.is_empty() || komp.len() > 4 {
+                    return Err(Fehler::Format);
+                }
+                let hmax = komp.iter().map(|k| k.h).max().unwrap_or(1);
+                let vmax = komp.iter().map(|k| k.v).max().unwrap_or(1);
+                let (mx, my) = (u64::from(w.div_ceil(8 * hmax)), u64::from(h.div_ceil(8 * vmax)));
+                let bloecke: u64 = komp.iter().map(|k| mx * u64::from(k.h) * my * u64::from(k.v)).sum();
+                f = teiler(w, h, progressiv, bloecke).ok_or(Fehler::ZuGross)?;
+                if !matches!(f, 1 | 2 | 4 | 8) {
+                    return Err(Fehler::NichtUnterstuetzt);
+                }
+                n = 8 / f as usize;
             }
             0xC3 | 0xC5..=0xC7 | 0xC9..=0xCB | 0xCD..=0xCF => return Err(Fehler::NichtUnterstuetzt),
             0xC4 => {
@@ -933,28 +1578,29 @@ fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
                 while i < seg.len() {
                     let (klasse, id) = (seg[i] >> 4, usize::from(seg[i] & 3));
                     let mut anz = [0u8; 16];
-                    anz.copy_from_slice(&seg[i + 1..i + 17]);
-                    let n: usize = anz.iter().map(|&c| usize::from(c)).sum();
-                    let werte = seg[i + 17..i + 17 + n].to_vec();
+                    anz.copy_from_slice(seg.get(i + 1..i + 17).ok_or(Fehler::Format)?);
+                    let zahl: usize = anz.iter().map(|&c| usize::from(c)).sum();
+                    let werte = seg.get(i + 17..i + 17 + zahl).ok_or(Fehler::Format)?.to_vec();
                     let t = JHuff::neu(&anz, werte);
                     if klasse == 0 {
                         dc[id] = t;
                     } else {
                         ac[id] = t;
                     }
-                    i += 17 + n;
+                    i += 17 + zahl;
                 }
             }
-            0xDD => restart = u32::from(u16::from_be_bytes([seg[0], seg[1]])),
+            0xDD => restart = u32::from(u16::from_be_bytes([byte(0)?, byte(1)?])),
             0xEE => adobe_rgb = seg.len() >= 12 && seg.starts_with(b"Adobe") && seg[11] == 0,
+            0xE1 => ausrichtung = exif_ausrichtung(&seg).unwrap_or(ausrichtung),
             0xDA => {
-                if w == 0 || h == 0 || komp.is_empty() || w > 16384 || h > 16384 {
+                if w == 0 || h == 0 || komp.is_empty() || w > 65535 || h > 65535 {
                     return Err(Fehler::Format);
                 }
-                let n = usize::from(seg[0]);
+                let zahl = usize::from(byte(0)?);
                 let mut im_scan = Vec::new();
-                for i in 0..n {
-                    let (id, t) = (seg[1 + 2 * i], seg[2 + 2 * i]);
+                for i in 0..zahl {
+                    let (id, t) = (byte(1 + 2 * i)?, byte(2 + 2 * i)?);
                     if let Some(ki) = komp.iter().position(|k| k.id == id) {
                         komp[ki].dc = usize::from(t >> 4 & 3);
                         komp[ki].ac = usize::from(t & 3);
@@ -963,34 +1609,34 @@ fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
                 }
                 let hmax = komp.iter().map(|k| k.h).max().unwrap_or(1);
                 let vmax = komp.iter().map(|k| k.v).max().unwrap_or(1);
-                let (mcu_w, mcu_h) = (8 * hmax, 8 * vmax);
-                let (mx, my) = (w.div_ceil(mcu_w), h.div_ceil(mcu_h));
+                let (mx, my) = (w.div_ceil(8 * hmax), h.div_ceil(8 * vmax));
                 if progressiv {
-                    let p = 1 + 2 * n;
-                    let (ss, se) = (usize::from(*seg.get(p).ok_or(Fehler::Format)?), usize::from(*seg.get(p + 1).ok_or(Fehler::Format)?));
-                    let a = *seg.get(p + 2).ok_or(Fehler::Format)?;
+                    let p = 1 + 2 * zahl;
+                    let (ss, se) = (usize::from(byte(p)?), usize::from(byte(p + 1)?));
+                    let a = byte(p + 2)?;
                     let (ah, al) = (u32::from(a >> 4), u32::from(a & 15));
                     if ss > se || se > 63 || (ss == 0 && se != 0) || (ss > 0 && im_scan.len() != 1) || al > 13 {
                         return Err(Fehler::Format);
                     }
-                    if koeff.is_empty() {
+                    if !koeff_bereit {
                         for k in komp.iter_mut() {
-                            k.breite = (mx * k.h * 8) as usize;
+                            k.bw_voll = (mx * k.h) as usize;
+                            let bloecke = k.bw_voll * (my * k.v) as usize;
+                            k.masken = vec![0u64; bloecke];
+                            k.werte = vec![0i16; bloecke * n * n];
                         }
-                        koeff = komp.iter().map(|k| vec![[0i32; 64]; ((mx * k.h) * (my * k.v)) as usize]).collect();
+                        koeff_bereit = true;
                     }
-                    let mut b = JBits { d, pos: o + len, puffer: 0, anzahl: 0 };
                     for k in komp.iter_mut() {
                         k.pred = 0;
                     }
+                    let mut b = JBits::neu(s);
                     let mut eobrun = 0u32;
                     let scan = ScanProg { ss, se, ah, al };
                     if im_scan.len() == 1 {
-                        // Nicht verschachtelt: Blöcke der Komponente zeilenweise
-                        // (nur die Fläche der Komponente, nicht die MCU-Auffüllung)
+                        // nicht verschachtelt: Blöcke der Komponente zeilenweise
                         let ki = im_scan[0];
                         let k = &komp[ki];
-                        let bw_voll = (mx * k.h) as usize;
                         let bw = ((w * k.h).div_ceil(hmax)).div_ceil(8) as usize;
                         let bh = ((h * k.v).div_ceil(vmax)).div_ceil(8) as usize;
                         let mut zaehler = 0u32;
@@ -1002,13 +1648,14 @@ fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
                                     eobrun = 0;
                                 }
                                 zaehler += 1;
-                                let (dci, aci) = (komp[ki].dc, komp[ki].ac);
-                                let blk = &mut koeff[ki][by * bw_voll + bx];
-                                prog_block(&mut b, blk, &scan, &dc[dci], &ac[aci], &mut komp[ki].pred, &mut eobrun)?;
+                                let k = &mut komp[ki];
+                                let i = by * k.bw_voll + bx;
+                                let mut blk = Block { maske: &mut k.masken[i], werte: &mut k.werte[i * n * n..(i + 1) * n * n], n };
+                                prog_block(&mut b, &mut blk, &scan, &dc[k.dc], &ac[k.ac], &mut k.pred, &mut eobrun)?;
                             }
                         }
                     } else {
-                        // Verschachtelt (nur DC-Scans): MCU-Reihenfolge
+                        // verschachtelt (nur DC-Scans): MCU-Reihenfolge
                         let mut zaehler = 0u32;
                         for my_i in 0..my {
                             for mx_i in 0..mx {
@@ -1020,29 +1667,30 @@ fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
                                 }
                                 zaehler += 1;
                                 for &ki in &im_scan {
-                                    let (kh, kv, dci) = (komp[ki].h, komp[ki].v, komp[ki].dc);
-                                    let bw_voll = (mx * kh) as usize;
-                                    for by in 0..kv {
-                                        for bx in 0..kh {
-                                            let idx = ((my_i * kv + by) as usize) * bw_voll + (mx_i * kh + bx) as usize;
-                                            let blk = &mut koeff[ki][idx];
-                                            prog_block(&mut b, blk, &scan, &dc[dci], &ac[0], &mut komp[ki].pred, &mut eobrun)?;
+                                    let k = &mut komp[ki];
+                                    for by in 0..k.v {
+                                        for bx in 0..k.h {
+                                            let i = ((my_i * k.v + by) as usize) * k.bw_voll + (mx_i * k.h + bx) as usize;
+                                            let mut blk = Block { maske: &mut k.masken[i], werte: &mut k.werte[i * n * n..(i + 1) * n * n], n };
+                                            prog_block(&mut b, &mut blk, &scan, &dc[k.dc], &ac[0], &mut k.pred, &mut eobrun)?;
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                    // Weiter beim nächsten Marker nach den Scan-Daten
-                    o = naechster_marker(d, b.pos.saturating_sub(2).max(o + len)).ok_or(Fehler::Format)?;
+                    b.zum_marker();
                     continue;
                 }
+                // Baseline: Block für Block dekodieren und gleich verkleinert
+                // in die Ebenen schreiben
                 for k in komp.iter_mut() {
-                    k.breite = (mx * k.h * 8) as usize;
-                    k.ebene = vec![0; k.breite * (my * k.v * 8) as usize];
+                    k.breite = (mx * k.h) as usize * n;
+                    k.ebene = vec![0; k.breite * (my * k.v) as usize * n];
                 }
-                let mut b = JBits { d, pos: o + len, puffer: 0, anzahl: 0 };
+                let mut b = JBits::neu(s);
                 let mut zaehler = 0u32;
+                let mut blk = [0u8; 64];
                 for my_i in 0..my {
                     for mx_i in 0..mx {
                         if restart > 0 && zaehler > 0 && zaehler % restart == 0 {
@@ -1056,15 +1704,19 @@ fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
                             for by in 0..k.v {
                                 for bx in 0..k.h {
                                     let mut koeff = [0i32; 64];
-                                    let s = u32::from(b.huff(&dc[k.dc])?);
-                                    let diff = JBits::erweitern(b.bits(s), s);
-                                    k.pred += diff;
-                                    koeff[0] = k.pred * q[k.q][0];
+                                    let t = u32::from(b.huff(&dc[k.dc])?);
+                                    // DC-Klasse höchstens 16 (kaputte Tabelle)
+                                    if t > 16 {
+                                        return Err(Fehler::Format);
+                                    }
+                                    let diff = JBits::erweitern(b.bits(t), t);
+                                    k.pred = k.pred.wrapping_add(diff);
+                                    koeff[0] = k.pred.wrapping_mul(q[k.q][0]);
                                     let mut i = 1;
                                     while i < 64 {
                                         let rs = b.huff(&ac[k.ac])?;
-                                        let (r, s) = (usize::from(rs >> 4), u32::from(rs & 15));
-                                        if s == 0 {
+                                        let (r, t) = (usize::from(rs >> 4), u32::from(rs & 15));
+                                        if t == 0 {
                                             if r == 15 {
                                                 i += 16;
                                                 continue;
@@ -1075,51 +1727,64 @@ fn jpeg(d: &[u8]) -> Result<Rgba, Fehler> {
                                         if i > 63 {
                                             break;
                                         }
-                                        koeff[ZIGZAG[i]] = JBits::erweitern(b.bits(s), s) * q[k.q][ZIGZAG[i]];
+                                        let z = ZIGZAG[i];
+                                        let v = JBits::erweitern(b.bits(t), t);
+                                        // nur die gebrauchten Frequenzen dequantisieren
+                                        if z / 8 < n && z % 8 < n {
+                                            koeff[z] = v.wrapping_mul(q[k.q][z]);
+                                        }
                                         i += 1;
                                     }
-                                    let mut blk = [0u8; 64];
-                                    idct(&koeff, &mut blk);
-                                    let x0 = ((mx_i * k.h + bx) * 8) as usize;
-                                    let y0 = ((my_i * k.v + by) * 8) as usize;
-                                    for yy in 0..8 {
+                                    idct_n(&koeff, n, &mut blk);
+                                    let x0 = (mx_i * k.h + bx) as usize * n;
+                                    let y0 = (my_i * k.v + by) as usize * n;
+                                    for yy in 0..n {
                                         let a = (y0 + yy) * k.breite + x0;
-                                        k.ebene[a..a + 8].copy_from_slice(&blk[yy * 8..yy * 8 + 8]);
+                                        k.ebene[a..a + n].copy_from_slice(&blk[yy * n..yy * n + n]);
                                     }
                                 }
                             }
                         }
                     }
                 }
-                return Ok(farbe(&komp, w, h, adobe_rgb));
+                let (ws, hs) = (w.div_ceil(f), h.div_ceil(f));
+                let bild = farbe(&komp, ws, hs, adobe_rgb, if drehen { ausrichtung } else { 1 });
+                return Ok((bild, (w, h), f));
             }
             _ => {}
         }
-        o += len;
     }
-    if !progressiv || koeff.is_empty() {
+    if !progressiv || !koeff_bereit {
         return Err(Fehler::Format);
     }
     // Progressiv: dequantisieren, IDCT, in die Ebenen schreiben
-    for (ki, k) in komp.iter_mut().enumerate() {
-        let bw_voll = k.breite / 8;
-        let zeilen = koeff[ki].len() / bw_voll.max(1);
-        k.ebene = vec![0; k.breite * zeilen * 8];
-        for (i, c) in koeff[ki].iter().enumerate() {
-            let mut deq = [0i32; 64];
-            for z in 0..64 {
-                deq[z] = c[z] * q[k.q][z];
+    let vmax = komp.iter().map(|k| k.v).max().unwrap_or(1);
+    let my = h.div_ceil(8 * vmax);
+    for k in komp.iter_mut() {
+        k.breite = k.bw_voll * n;
+        let zeilen = (my * k.v) as usize;
+        k.ebene = vec![0; k.breite * zeilen * n];
+        let mut deq = [0i32; 64];
+        let mut blk = [0u8; 64];
+        for i in 0..k.masken.len() {
+            for r in 0..n {
+                for c in 0..n {
+                    let z = r * 8 + c;
+                    deq[z] = i32::from(k.werte[i * n * n + r * n + c]).wrapping_mul(q[k.q][z]);
+                }
             }
-            let mut blk = [0u8; 64];
-            idct(&deq, &mut blk);
-            let (x0, y0) = ((i % bw_voll) * 8, (i / bw_voll) * 8);
-            for yy in 0..8 {
+            idct_n(&deq, n, &mut blk);
+            let (x0, y0) = ((i % k.bw_voll) * n, (i / k.bw_voll) * n);
+            for yy in 0..n {
                 let a = (y0 + yy) * k.breite + x0;
-                k.ebene[a..a + 8].copy_from_slice(&blk[yy * 8..yy * 8 + 8]);
+                k.ebene[a..a + n].copy_from_slice(&blk[yy * n..yy * n + n]);
             }
         }
+        k.masken = Vec::new();
+        k.werte = Vec::new();
     }
-    Ok(farbe(&komp, w, h, adobe_rgb))
+    let (ws, hs) = (w.div_ceil(f), h.div_ceil(f));
+    Ok((farbe(&komp, ws, hs, adobe_rgb, if drehen { ausrichtung } else { 1 }), (w, h), f))
 }
 
 /// Parameter eines progressiven Scans (Spektralauswahl Ss..Se,
@@ -1134,15 +1799,18 @@ struct ScanProg {
 /// Ein Block eines progressiven Scans (ITU T.81, G.1.2): DC erster Scan /
 /// Verfeinerung, AC erster Scan (mit EOB-Läufen) / Verfeinerung.
 /// Koeffizienten in natürlicher Reihenfolge, nicht dequantisiert.
-fn prog_block(b: &mut JBits, blk: &mut [i32; 64], s: &ScanProg, dc: &JHuff, ac: &JHuff, pred: &mut i32, eobrun: &mut u32) -> Result<(), Fehler> {
+fn prog_block(b: &mut JBits, blk: &mut Block, s: &ScanProg, dc: &JHuff, ac: &JHuff, pred: &mut i32, eobrun: &mut u32) -> Result<(), Fehler> {
     if s.ss == 0 {
         if s.ah == 0 {
             let t = u32::from(b.huff(dc)?);
+            if t > 16 {
+                return Err(Fehler::Format);
+            }
             let diff = JBits::erweitern(b.bits(t), t);
-            *pred += diff;
-            blk[0] = *pred * (1 << s.al);
+            *pred = pred.wrapping_add(diff);
+            blk.setzen(0, pred.wrapping_mul(1 << s.al));
         } else if b.bit() != 0 {
-            blk[0] |= 1 << s.al;
+            blk.setzen(0, blk.wert(0) | 1 << s.al);
         }
         return Ok(());
     }
@@ -1170,7 +1838,7 @@ fn prog_block(b: &mut JBits, blk: &mut [i32; 64], s: &ScanProg, dc: &JHuff, ac: 
                 if k > 63 {
                     return Err(Fehler::Format);
                 }
-                blk[ZIGZAG[k]] = JBits::erweitern(b.bits(t), t) * (1 << s.al);
+                blk.setzen(ZIGZAG[k], JBits::erweitern(b.bits(t), t).wrapping_mul(1 << s.al));
                 k += 1;
             }
         }
@@ -1178,9 +1846,12 @@ fn prog_block(b: &mut JBits, blk: &mut [i32; 64], s: &ScanProg, dc: &JHuff, ac: 
     }
     // AC, Verfeinerung
     let p1 = 1i32 << s.al;
-    let verfeinern = |b: &mut JBits, c: &mut i32| {
-        if b.bit() != 0 && *c & p1 == 0 {
-            if *c >= 0 { *c += p1 } else { *c -= p1 }
+    let verfeinern = |b: &mut JBits, blk: &mut Block, z: usize| {
+        if b.bit() != 0 {
+            let c = blk.wert(z);
+            if blk.platz(z).is_some() && c & p1 == 0 {
+                blk.setzen(z, if c >= 0 { c + p1 } else { c - p1 });
+            }
         }
     };
     let mut k = s.ss;
@@ -1207,12 +1878,12 @@ fn prog_block(b: &mut JBits, blk: &mut [i32; 64], s: &ScanProg, dc: &JHuff, ac: 
             while k <= s.se {
                 let z = ZIGZAG[k];
                 k += 1;
-                if blk[z] != 0 {
-                    verfeinern(b, &mut blk[z]);
+                if blk.nicht_null(z) {
+                    verfeinern(b, blk, z);
                 } else {
                     if r == 0 {
                         if wert != 0 {
-                            blk[z] = wert;
+                            blk.setzen(z, wert);
                         }
                         break;
                     }
@@ -1225,8 +1896,8 @@ fn prog_block(b: &mut JBits, blk: &mut [i32; 64], s: &ScanProg, dc: &JHuff, ac: 
         // Rest des Blocks: nur vorhandene Koeffizienten verfeinern
         while k <= s.se {
             let z = ZIGZAG[k];
-            if blk[z] != 0 {
-                verfeinern(b, &mut blk[z]);
+            if blk.nicht_null(z) {
+                verfeinern(b, blk, z);
             }
             k += 1;
         }
@@ -1235,62 +1906,101 @@ fn prog_block(b: &mut JBits, blk: &mut [i32; 64], s: &ScanProg, dc: &JHuff, ac: 
     Ok(())
 }
 
-/// Erster Marker (0xFF + nicht 0, nicht RSTn, nicht Füllbyte) ab `ab`.
-fn naechster_marker(d: &[u8], ab: usize) -> Option<usize> {
-    let mut i = ab;
-    while i + 1 < d.len() {
-        if d[i] == 0xFF {
-            let m = d[i + 1];
-            if m != 0 && m != 0xFF && !(0xD0..=0xD7).contains(&m) {
-                return Some(i);
-            }
+/// EXIF-Ausrichtung (Tag 0x0112) aus einem APP1-Segment: 1 = normal,
+/// 3 = 180°, 6 = 90° im Uhrzeigersinn, 8 = 90° dagegen, 2/4/5/7 gespiegelt.
+fn exif_ausrichtung(seg: &[u8]) -> Option<u16> {
+    let t = seg.strip_prefix(b"Exif\0\0")?;
+    let le = match t.get(..2)? {
+        b"II" => true,
+        b"MM" => false,
+        _ => return None,
+    };
+    let u16_ = |o: usize| t.get(o..o + 2).map(|b| if le { u16::from_le_bytes([b[0], b[1]]) } else { u16::from_be_bytes([b[0], b[1]]) });
+    let u32_ = |o: usize| t.get(o..o + 4).map(|b| if le { u32::from_le_bytes([b[0], b[1], b[2], b[3]]) } else { u32::from_be_bytes([b[0], b[1], b[2], b[3]]) });
+    let ifd = u32_(4)? as usize;
+    let anzahl = usize::from(u16_(ifd)?);
+    for i in 0..anzahl.min(200) {
+        let e = ifd + 2 + 12 * i;
+        if u16_(e)? == 0x0112 {
+            let v = u16_(e + 8)?;
+            return (1..=8).contains(&v).then_some(v);
         }
-        i += 1;
     }
     None
 }
 
+/// Zielpunkt eines Bildpunkts (x, y) eines w×h-Bildes nach der
+/// EXIF-Ausrichtung `o` (2/4 spiegeln, 3 = 180°, 5/7 quer gespiegelt,
+/// 6 = 90° im Uhrzeigersinn, 8 = 90° dagegen).
+fn gedreht(x: usize, y: usize, w: usize, h: usize, o: u16) -> (usize, usize) {
+    match o {
+        2 => (w - 1 - x, y),
+        3 => (w - 1 - x, h - 1 - y),
+        4 => (x, h - 1 - y),
+        5 => (y, x),
+        6 => (h - 1 - y, x),
+        7 => (h - 1 - y, w - 1 - x),
+        8 => (y, w - 1 - x),
+        _ => (x, y),
+    }
+}
+
 /// Ebenen hochrechnen (unterabgetastete Komponenten zentriert-bilinear wie
-/// libjpegs „fancy upsampling“) und in RGB umwandeln.
-fn farbe(komp: &[Komp], w: u32, h: u32, adobe_rgb: bool) -> Rgba {
-                let hmax = komp.iter().map(|k| k.h).max().unwrap_or(1);
-                let vmax = komp.iter().map(|k| k.v).max().unwrap_or(1);
-                let mut px = vec![0u32; (w * h) as usize];
-                let kw: Vec<f32> = komp.iter().map(|k| (w * k.h).div_ceil(hmax) as f32).collect();
-                let kh: Vec<f32> = komp.iter().map(|k| (h * k.v).div_ceil(vmax) as f32).collect();
-                let probe = |ki: usize, x: u32, y: u32| -> i32 {
-                    let k = &komp[ki];
-                    let p = |sx: usize, sy: usize| f32::from(k.ebene[sy * k.breite + sx]);
-                    if k.h == hmax && k.v == vmax {
-                        return p(x as usize, y as usize) as i32;
-                    }
-                    let fx = ((x as f32 + 0.5) * k.h as f32 / hmax as f32 - 0.5).clamp(0.0, kw[ki] - 1.0);
-                    let fy = ((y as f32 + 0.5) * k.v as f32 / vmax as f32 - 0.5).clamp(0.0, kh[ki] - 1.0);
-                    let (x0, y0) = (fx as usize, fy as usize);
-                    let (x1, y1) = ((x0 + 1).min(kw[ki] as usize - 1), (y0 + 1).min(kh[ki] as usize - 1));
-                    let (ax, ay) = (fx - x0 as f32, fy - y0 as f32);
-                    let o = p(x0, y0) * (1.0 - ax) + p(x1, y0) * ax;
-                    let u = p(x0, y1) * (1.0 - ax) + p(x1, y1) * ax;
-                    (o * (1.0 - ay) + u * ay).round() as i32
-                };
-                for y in 0..h {
-                    for x in 0..w {
-                        let c = if komp.len() >= 3 {
-                            let (yy, cb, cr) = (probe(0, x, y), probe(1, x, y) - 128, probe(2, x, y) - 128);
-                            if adobe_rgb {
-                                argb(255, yy as u32, (cb + 128) as u32, (cr + 128) as u32)
-                            } else {
-                                let r = (yy as f32 + 1.402 * cr as f32).round().clamp(0.0, 255.0) as u32;
-                                let g = (yy as f32 - 0.344_136 * cb as f32 - 0.714_136 * cr as f32).round().clamp(0.0, 255.0) as u32;
-                                let bl = (yy as f32 + 1.772 * cb as f32).round().clamp(0.0, 255.0) as u32;
-                                argb(255, r, g, bl)
-                            }
-                        } else {
-                            let g = probe(0, x, y) as u32;
-                            argb(255, g, g, g)
-                        };
-                        px[(y * w + x) as usize] = c;
-                    }
+/// libjpegs „fancy upsampling“), in RGB umwandeln und gleich nach der
+/// EXIF-Ausrichtung `o` ablegen (kein zweiter Bildpuffer).
+fn farbe(komp: &[Komp], w: u32, h: u32, adobe_rgb: bool, o: u16) -> Rgba {
+    let hmax = komp.iter().map(|k| k.h).max().unwrap_or(1);
+    let vmax = komp.iter().map(|k| k.v).max().unwrap_or(1);
+    let mut px = vec![0u32; (w * h) as usize];
+    // Unterabgetastete Komponenten: bilinear. Stützstellen und Gewichte je
+    // Spalte und Zeile einmal vorab (nicht je Bildpunkt teilen).
+    let achse = |aus: u32, f: u32, fmax: u32| -> Vec<(usize, usize, f32)> {
+        let kn = (aus * f).div_ceil(fmax);
+        (0..aus)
+            .map(|i| {
+                let v = ((i as f32 + 0.5) * f as f32 / fmax as f32 - 0.5).clamp(0.0, kn as f32 - 1.0);
+                let i0 = v as usize;
+                (i0, (i0 + 1).min(kn as usize - 1), v - i0 as f32)
+            })
+            .collect()
+    };
+    let spalten: Vec<Vec<(usize, usize, f32)>> = komp.iter().map(|k| if k.h == hmax { Vec::new() } else { achse(w, k.h, hmax) }).collect();
+    let zeilen: Vec<Vec<(usize, usize, f32)>> = komp.iter().map(|k| if k.v == vmax { Vec::new() } else { achse(h, k.v, vmax) }).collect();
+    let probe = |ki: usize, x: u32, y: u32| -> i32 {
+        let k = &komp[ki];
+        let p = |sx: usize, sy: usize| f32::from(k.ebene[sy * k.breite + sx]);
+        if k.h == hmax && k.v == vmax {
+            return i32::from(k.ebene[y as usize * k.breite + x as usize]);
+        }
+        let (x0, x1, ax) = if k.h == hmax { (x as usize, x as usize, 0.0) } else { spalten[ki][x as usize] };
+        let (y0, y1, ay) = if k.v == vmax { (y as usize, y as usize, 0.0) } else { zeilen[ki][y as usize] };
+        let o = p(x0, y0) * (1.0 - ax) + p(x1, y0) * ax;
+        let u = p(x0, y1) * (1.0 - ax) + p(x1, y1) * ax;
+        (o * (1.0 - ay) + u * ay + 0.5) as i32
+    };
+    let (wu, hu) = (w as usize, h as usize);
+    let quer = (5..=8).contains(&o);
+    let zw = if quer { hu } else { wu };
+    for y in 0..h {
+        for x in 0..w {
+            let c = if komp.len() >= 3 {
+                let (yy, cb, cr) = (probe(0, x, y), probe(1, x, y) - 128, probe(2, x, y) - 128);
+                if adobe_rgb {
+                    argb(255, yy as u32, (cb + 128) as u32, (cr + 128) as u32)
+                } else {
+                    let r = u32::from(runden_u8(yy as f32 + 1.402 * cr as f32));
+                    let g = u32::from(runden_u8(yy as f32 - 0.344_136 * cb as f32 - 0.714_136 * cr as f32));
+                    let bl = u32::from(runden_u8(yy as f32 + 1.772 * cb as f32));
+                    argb(255, r, g, bl)
                 }
-                Rgba { w, h, px, delay: 0 }
+            } else {
+                let g = probe(0, x, y) as u32;
+                argb(255, g, g, g)
+            };
+            let (zx, zy) = gedreht(x as usize, y as usize, wu, hu, o);
+            px[zy * zw + zx] = c;
+        }
+    }
+    let (rw, rh) = if quer { (h, w) } else { (w, h) };
+    Rgba { w: rw, h: rh, px, delay: 0 }
 }
