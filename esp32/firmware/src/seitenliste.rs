@@ -42,7 +42,7 @@ mod spur {
         _naechster: *const u8,
         _voriger: *const u8,
     }
-    const ANZAHL: usize = 1500;
+    const ANZAHL: usize = 6000;
     pub fn starten() {
         // SAFETY: Puffer im PSRAM, gross genug für ANZAHL Einträge (≤ 96 Byte).
         unsafe {
@@ -81,7 +81,9 @@ mod spur {
         let mut v: Vec<_> = gruppen.into_iter().collect();
         v.sort_by(|a, b| b.1.1.cmp(&a.1.1));
         let summe: usize = v.iter().map(|x| x.1.1).sum();
-        log::warn!("HEAPSPUR: {} Gruppen, {summe} Byte intern noch belegt", v.len());
+        // SAFETY: reine Abfrage
+        let n = unsafe { heap_trace_get_count() };
+        log::warn!("HEAPSPUR: {n} von {ANZAHL} Einträgen, {} Gruppen, {summe} Byte intern noch belegt", v.len());
         for (k, (anz, bytes)) in v.iter().take(60) {
             log::warn!("HEAPSPUR {bytes:6} B {anz:4}x  {k}");
         }

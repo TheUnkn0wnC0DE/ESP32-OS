@@ -67,7 +67,27 @@ struct ns_transport {
 	char *url, *methode, *kopfzeilen, *agent;
 	void *koerper;
 	size_t koerper_n;
+	/* BR1: Browser-Sitzung des Auftraggebers; der Besitzer hat freigegeben */
+	unsigned sitzung;
+	volatile bool besitzer_weg;
 };
+
+/* BR1: Nummer der laufenden Browser-Sitzung (Systemdaten, überlebt das
+ * Programmende). Ein Abruf aus einer früheren Sitzung gehört einem Browser,
+ * den es nicht mehr gibt (z. B. zwangsbeendet): nicht mehr laden – sonst
+ * belegen seine Verbindungen weiter internen RAM und halten die Arbeiter
+ * für die neue Seite auf. */
+static volatile unsigned sitzung;
+
+void ns_transport_neue_sitzung(void)
+{
+	sitzung++;
+}
+
+static bool verwaist(const struct ns_transport *t)
+{
+	return t->sitzung != sitzung;
+}
 
 /* Warteschlange der noch nicht begonnenen Anfragen */
 static SemaphoreHandle_t arbeit, schlange_sperre;
@@ -228,7 +248,7 @@ static void ablauf(struct ns_transport *t)
 	int64_t beginn = esp_timer_get_time();
 	int status;
 	while (heap_caps_get_free_size(MALLOC_CAP_INTERNAL) < RESERVE_INTERN) {
-		if (t->abgebrochen)
+		if (t->abgebrochen || verwaist(t))
 			return;
 		if (esp_timer_get_time() - beginn > WARTE_INTERN_US) {
 			ESP_LOGW(TAG, "zu wenig interner RAM (%u KB) - nicht verbunden: %s",
@@ -297,7 +317,7 @@ static void ablauf(struct ns_transport *t)
 	}
 	for (;;) {
 		int n;
-		if (t->abgebrochen)
+		if (t->abgebrochen || verwaist(t))
 			break;
 		n = esp_http_client_read(cl, (char *)puffer, BLOCK);
 		if (n > 0) {
@@ -342,8 +362,13 @@ static void arbeiter(void *arg)
 		xSemaphoreGive(schlange_sperre);
 		if (t == NULL)
 			continue;
-		if (!t->abgebrochen)
+		if (!t->abgebrochen && !verwaist(t))
 			ablauf(t);
+		/* Besitzer aus einer früheren Sitzung gibt nie mehr frei: für ihn */
+		if (verwaist(t) && !t->besitzer_weg) {
+			t->besitzer_weg = true;
+			loslassen(t);
+		}
 		loslassen(t);
 	}
 }
@@ -377,6 +402,7 @@ struct ns_transport *ns_transport_starten(const char *url, const char *methode, 
 		return NULL;
 	t->sperre = xSemaphoreCreateMutexStatic(&t->sperre_speicher);
 	t->halter = 2; /* NetSurf und Arbeiter */
+	t->sitzung = sitzung;
 	t->url = kopie(url);
 	t->methode = kopie(methode);
 	t->kopfzeilen = kopie(kopfzeilen ? kopfzeilen : "");
@@ -429,5 +455,6 @@ enum ns_transport_art ns_transport_holen(struct ns_transport *t, struct ns_trans
 void ns_transport_freigeben(struct ns_transport *t)
 {
 	t->abgebrochen = true;
+	t->besitzer_weg = true;
 	loslassen(t);
 }

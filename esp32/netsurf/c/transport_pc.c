@@ -296,6 +296,11 @@ enum ns_transport_art ns_transport_holen(struct ns_transport *t, struct ns_trans
 	return e->art;
 }
 
+void ns_transport_neue_sitzung(void)
+{
+	/* PC: Abrufe laufen im Browser-Faden, nichts überlebt das Programm */
+}
+
 void ns_transport_freigeben(struct ns_transport *t)
 {
 	/* läuft der Faden noch (Abbruch), gibt er am Ende selbst frei */

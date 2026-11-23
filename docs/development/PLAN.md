@@ -1407,6 +1407,20 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   den Bootloader zu gross. Nächste Schritte: Spurpuffer 4000 und Zählung
   ausgeben; prüfen, warum esp_http_client seine Header-Listen nicht frei
   gibt (Abbruch des Browsers mitten im Abruf?).
+  24.11.: Abrufe eines beendeten Browsers werden jetzt verworfen
+  (Sitzungsnummer im Transport, `ns_transport_neue_sitzung`) – richtig, aber
+  nicht die Ursache: Lauf br_kurz2 zeigt dasselbe Muster (86→73→46→31 KB).
+  Spur mit 6000 Einträgen (br_spur4, 1493 belegt, kein Überlauf): über
+  Seite 2–3 bleiben 29 KB interner RAM in kleinen Blöcken belegt – passt
+  zum Abfall (82→42 KB). Inhalt: HTTP-Kopfzeilen als getrennte Namen und
+  Werte (Content-Type, Content-Length, Accept-Encoding, Strict-Transport-
+  Security, NEL-JSON, Set-Cookie-Werte …), je 20–43 Kopien ≈ je Abruf eine.
+  Ausgeschlossen: Kopien des Transports (PSRAM), esp_http_client (gibt
+  Kopf-Listen beim cleanup frei, Ereignis-Loop bekommt nur den Zeiger),
+  Funktion 68.12 (kein Rückfall auf den Systemheap), verwaiste Abrufe
+  (Sitzungsnummer). Offen: welcher Code die Kopfzeilen mit dem Systemheap
+  kopiert – Kandidaten: QuickJS-Gruppe (ohne ns_programm.h; fetch/XHR
+  geben Kopfzeilen an JS), libc-Funktionen in NetSurf (strndup u. a.).
 - [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
   Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
   mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.

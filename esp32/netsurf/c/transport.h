@@ -47,5 +47,7 @@ enum ns_transport_art ns_transport_holen(struct ns_transport *t, struct ns_trans
 
 /* Bricht ab (falls die Anfrage noch läuft) und gibt die Anfrage frei. */
 void ns_transport_freigeben(struct ns_transport *t);
+/* Neue Browser-Sitzung (beim Start): Abrufe früherer Sitzungen verwerfen */
+void ns_transport_neue_sitzung(void);
 
 #endif

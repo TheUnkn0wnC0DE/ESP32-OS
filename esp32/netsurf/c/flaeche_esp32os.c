@@ -653,6 +653,8 @@ static const nsfb_surface_rtns_t esp32os_rtns = {
 
 /* Einstieg des Programms „browser“ (vom Rust-Programm nach dem
  * Zurückspielen der statischen Daten gerufen). */
+void ns_transport_neue_sitzung(void); /* transport.h */
+
 int ns_esp32os_main(const char *url)
 {
 	/* -b 16: das Frontend wählt Formate und Plotter passend zur Fläche;
@@ -660,6 +662,8 @@ int ns_esp32os_main(const char *url)
 	static char breite[12], hoehe[12];
 	static char *argv[] = { "netsurf", "--enable_javascript=1", "-f", "esp32os", "-b", "16", "-w", breite, "-h", hoehe, NULL, NULL };
 	int b, h;
+	/* Abrufe eines früheren (z. B. zwangsbeendeten) Browsers verwerfen */
+	ns_transport_neue_sitzung();
 	_nsfb_register_surface(NSFB_SURFACE_ABLE, &esp32os_rtns, "esp32os");
 	/* Bitmaps (Bilder, Baumansicht der Lesezeichen) legt das Frontend auf
 	 * libnsfbs RAM-Fläche an. ram.c meldet sie über einen Konstruktor an –
