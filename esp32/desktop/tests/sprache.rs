@@ -48,7 +48,7 @@ fn foto(name: &str) {
     std::thread::sleep(Duration::from_millis(250));
     let (w, h, px) = sys::foto();
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
-    std::fs::write(dir.join(format!("{name}.png")), spatz::image::encode_png(w, h, &px)).unwrap();
+    desktop::bild_schreiben(&dir.join(format!("{name}.png")), &spatz::image::encode_png(w, h, &px));
 }
 
 fn da(titel: &str) -> bool {

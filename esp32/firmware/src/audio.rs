@@ -20,6 +20,22 @@ struct Tx(sys::i2s_chan_handle_t);
 // SAFETY: Der Kanal wird nur noch vom Audio-Thread benutzt.
 unsafe impl Send for Tx {}
 
+/// Synthesizer plus PCM-Strom der Programme des Desktops ([`kern::ton`],
+/// Musikplayer A5): erst der Synth, dann der Strom dazugemischt. Ohne
+/// laufendes Programm ist der Strom leer (Spiele unverändert).
+pub struct MitProgrammen(pub pudding_core::audio::Synth);
+
+impl Klangquelle for MitProgrammen {
+    fn poll(&mut self, q: &CmdQueue) {
+        self.0.poll(q);
+    }
+
+    fn render(&mut self, out: &mut [i16]) {
+        self.0.render(out);
+        kern::ton::dazumischen(out);
+    }
+}
+
 /// Zeit im Synthesizer (µs, Messung).
 pub static RENDER_US: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 

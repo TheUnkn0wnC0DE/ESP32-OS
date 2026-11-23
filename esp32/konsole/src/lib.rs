@@ -80,6 +80,11 @@ pub trait Spiel {
     fn ruhe_jetzt(&mut self) -> bool {
         false
     }
+    /// Bildschirm an lassen bzw. aufwecken, ohne die Eingabe zu sperren
+    /// (z. B. Wecker klingelt); zählt wie eine Eingabe für Schoner/Ruhe.
+    fn wach_halten(&mut self) -> bool {
+        false
+    }
     /// Eigene Eingabequelle des Spiels (Touch-Autopilot): einen Schritt
     /// vorrücken; true = ein Finger liegt. Die Firmware ruft das in jedem
     /// Durchlauf (auch im Ruhezustand) und zählt es für Schoner/Aufwecken.
@@ -206,6 +211,10 @@ impl Rahmen {
 
     pub fn ruhe_jetzt(&mut self) -> bool {
         self.spiel.ruhe_jetzt()
+    }
+
+    pub fn wach_halten(&mut self) -> bool {
+        self.spiel.wach_halten()
     }
 
     pub fn fremde_eingabe(&mut self) -> bool {

@@ -8,12 +8,60 @@ pub mod dateimanager;
 pub mod einstellungen;
 pub mod ersteinrichtung;
 pub mod gesten;
+pub mod kalender;
 pub mod konfig;
+pub mod musik;
 pub mod notizen;
 pub mod rechner;
 pub mod shell;
 pub mod taskmanager;
 pub mod tastatur;
+pub mod uhr;
+
+/// Test- und Erwartungsbild schreiben (Tests): unter Windows hält zuweilen
+/// ein anderer Prozess (Dateibeobachter) die eben geschriebene Datei kurz
+/// offen – dann bis 2 s erneut versuchen.
+#[doc(hidden)]
+pub fn bild_schreiben(pfad: &std::path::Path, daten: &[u8]) {
+    for i in 0..40 {
+        match std::fs::write(pfad, daten) {
+            Ok(()) => return,
+            Err(e) if i < 39 => {
+                if i == 0 {
+                    eprintln!("{}: {e} – neuer Versuch", pfad.display());
+                }
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            Err(e) => panic!("{}: {e}", pfad.display()),
+        }
+    }
+}
+
+/// Zuletzt angezeigter Text eines Programms (Tests, Board-Log) – fester
+/// Puffer statt `String`: Ein `static` mit Heap-Daten zeigte nach dem Ende
+/// des Programms in dessen freigegebenen Heap (Neustart → Heap kaputt).
+pub(crate) struct Textmerker(std::sync::Mutex<([u8; 64], usize)>);
+
+impl Textmerker {
+    pub(crate) const fn neu() -> Textmerker {
+        Textmerker(std::sync::Mutex::new(([0; 64], 0)))
+    }
+
+    pub(crate) fn setzen(&self, s: &str) {
+        let mut g = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        let mut n = s.len().min(64);
+        while !s.is_char_boundary(n) {
+            n -= 1;
+        }
+        g.0[..n].copy_from_slice(&s.as_bytes()[..n]);
+        g.1 = n;
+    }
+
+    pub(crate) fn holen(&self) -> String {
+        let g = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        String::from_utf8_lossy(&g.0[..g.1]).into_owned()
+    }
+}
 pub mod wlan;
 
 use kern::sys::Schirm;
@@ -199,6 +247,12 @@ impl Spiel for Desktop {
         if konfig::TON_PROBE.swap(false, Relaxed) {
             f(AudioCmd::Sfx(pudding_core::audio::Sfx::Cherry));
         }
+        // Signalton der Uhr (Wecker/Timer, A3)
+        let n = konfig::SIGNAL.swap(0, Relaxed);
+        if n > 0 {
+            f(AudioCmd::Sfx(pudding_core::audio::Sfx::Checkpoint));
+            kern::sys::debug_text(&format!("Ton: Signal der Uhr an den Synth (Lautstärke {v})"));
+        }
     }
 
     /// Akkustand von der Firmware (nur mit Spannungsteiler, siehe board.rs).
@@ -216,6 +270,11 @@ impl Spiel for Desktop {
 
     fn ruhe_jetzt(&mut self) -> bool {
         konfig::RUHE_JETZT.swap(false, Relaxed)
+    }
+
+    /// Wecker/Timer klingelt (A3): Bildschirm an, auch aus dem Ruhezustand.
+    fn wach_halten(&mut self) -> bool {
+        uhr::KLINGELN.load(Relaxed) != 0
     }
 
     fn fremde_eingabe(&mut self) -> bool {
@@ -287,7 +346,7 @@ macro_rules! eintrag {
 }
 
 /// Shell-Programme (ohne C-Programme).
-const SHELL: [kern::ProgrammEintrag; 17] = [
+const SHELL: [kern::ProgrammEintrag; 20] = [
     eintrag!("@meldung", shell::meldung, 256),
     eintrag!("@tastatur", tastatur::dienst, 512),
     eintrag!("@start", shell::start, 512),
@@ -304,6 +363,12 @@ const SHELL: [kern::ProgrammEintrag; 17] = [
     eintrag!("taskmanager", taskmanager::programm, 256),
     eintrag!("notizen", notizen::programm, 1024),
     eintrag!("rechner", rechner::programm, 128),
+    eintrag!("uhr", uhr::programm, 128),
+    eintrag!("kalender", kalender::programm, 128),
+    // Musik: Lesepuffer des Decoders (256 KB), Ausgabe, Dateiliste; der
+    // Decoder braucht viel Stapel (am PC ~80 KB, am Board mehr; mit 48 KB
+    // Stack-Überlauf), Stapel liegt im Heap des Programms (PSRAM)
+    kern::ProgrammEintrag { name: "musik", heap_kb: 2048, stapel_kb: 256, start: musik::programm },
     // Testprogramm (A6), nicht im Menü
     eintrag!("endlostest", taskmanager::endlostest, 64),
 ];
@@ -311,7 +376,7 @@ const SHELL: [kern::ProgrammEintrag; 17] = [
 /// Programme des Desktops (statisch eingelinkt): Shell + KolibriOS-C-Programme.
 #[cfg(target_pointer_width = "32")]
 pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
-    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15], SHELL[16],
+    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15], SHELL[16], SHELL[17], SHELL[18], SHELL[19],
     eintrag!("absturz_test", kolibri::absturz_test, 128),
     eintrag!("basic_gui", kolibri::basic_gui, 512),
     eintrag!("boxlib_demo", kolibri::boxlib_demo, 512),
@@ -333,7 +398,7 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &SHELL;
 /// folgen mit P/A, Spiele mit S).
 pub fn anwendungen() -> Vec<shell::Anwendung> {
     let a = |programm, titel, titel_de, symbol, auf_desktop| shell::Anwendung { programm, titel, titel_de, symbol, auf_desktop };
-    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("rechner", "Calculator", "Rechner", 4, true), a("@konsole", "Games", "Spiele", 35, true)];
+    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("rechner", "Calculator", "Rechner", 4, true), a("uhr", "Clock", "Uhr", 119, true), a("kalender", "Calendar", "Kalender", 52, true), a("musik", "Music", "Musik", 65, true), a("@konsole", "Games", "Spiele", 35, true)];
     if cfg!(target_pointer_width = "32") {
         v.extend([
             a("browser", "Browser", "Browser", 125, true),

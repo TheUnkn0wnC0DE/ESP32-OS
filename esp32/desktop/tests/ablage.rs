@@ -108,7 +108,7 @@ fn kopieren_einfuegen_per_kontextmenue() {
     std::thread::sleep(Duration::from_millis(200));
     let (w, h, px) = sys::foto();
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
-    std::fs::write(dir.join("d9_kontextmenue.png"), spatz::image::encode_png(w, h, &px)).unwrap();
+    desktop::bild_schreiben(&dir.join("d9_kontextmenue.png"), &spatz::image::encode_png(w, h, &px));
     f.tippen(ax + 40, ay + 2 + 44 + 22);
     bis(|| sys::ablage_text().as_deref() == Some("Grüezi Wält"), "in der Zwischenablage");
     // Feld B antippen, langer Druck → „Einfügen“ (3. Eintrag)
@@ -117,5 +117,5 @@ fn kopieren_einfuegen_per_kontextmenue() {
     f.tippen(bx + 40, by + 2 + 2 * 44 + 22);
     bis(|| TEXTE.lock().unwrap().1 == "Grüezi Wält", "in B eingefügt");
     let (w, h, px) = sys::foto();
-    std::fs::write(dir.join("d9_eingefuegt.png"), spatz::image::encode_png(w, h, &px)).unwrap();
+    desktop::bild_schreiben(&dir.join("d9_eingefuegt.png"), &spatz::image::encode_png(w, h, &px));
 }

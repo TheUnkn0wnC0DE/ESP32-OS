@@ -1,0 +1,4 @@
+W (2411) pudding_fw::speicher: Musik-Test: Testton 1.mp3 (31824 Byte): Ok(())
+W (2561) pudding_fw::speicher: Musik-Test: Testton 2.mp3 (36000 Byte): Ok(())
+I (28336) puddingGuru Meditation Error: Core  1 panic'ed (Stack protection fault). 
+Detected in task "musik" at 0x48043d8e

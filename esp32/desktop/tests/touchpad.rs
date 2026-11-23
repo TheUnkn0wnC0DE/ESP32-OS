@@ -76,7 +76,7 @@ fn touchpad_zeiger_tippen_halten() {
     std::thread::sleep(Duration::from_millis(100));
     let (w, h, px) = sys::foto();
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
-    std::fs::write(dir.join("d10_touchpad.png"), spatz::image::encode_png(w, h, &px)).unwrap();
+    desktop::bild_schreiben(&dir.join("d10_touchpad.png"), &spatz::image::encode_png(w, h, &px));
     // Zeiger sichtbar: Pfeilspitze (schwarzer Rand) an der Zeigerposition
     assert_ne!(px[(p.1 as usize) * w + p.0 as usize], kern::grafik::von565(kern::grafik::zu565(0xC03030)), "Pfeil liegt über dem Ziel");
     // Halten = Rechtsklick am Zeiger

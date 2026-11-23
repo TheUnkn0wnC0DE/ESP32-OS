@@ -55,6 +55,7 @@ check and are compiled into the firmware.
 | **zlib 1.4** | same | Jean-loup Gailly, Mark Adler | zlib license |
 | **ESP-IDF v5.5.5** | esp-idf-sys (Cargo build) | Espressif Systems | Apache-2.0 (components with their own licenses) |
 | **esp_hosted 3.1.0**, **esp_wifi_remote 1.6.5** | `esp32/firmware/werkzeuge/komponenten_holen.py`, ESP component manager | Espressif Systems | Apache-2.0 |
+| **nanomp3 0.2.0**, **nanomp3-core 0.2.0** (MP3 decoder of the music player, a Rust port of minimp3) | Cargo (`Cargo.lock`) | Robert B. Langer; minimp3: lieff (CC0-1.0) | MIT OR Apache-2.0 |
 | Rust crates (esp-idf-svc, esp-idf-hal, esp-idf-sys, log, …) | Cargo (`Cargo.lock`) | their authors | mostly MIT OR Apache-2.0 – see each crate |
 
 ## Game data (never contained, never distributed)

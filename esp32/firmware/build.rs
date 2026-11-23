@@ -7,4 +7,10 @@ fn main() {
     if std::env::var_os("ESP32OS_TESTBILDER").is_some() {
         println!("cargo:rustc-cfg=esp32os_testbilder");
     }
+    // Entwicklungs-Build mit Testtönen für den Musikplayer (A5-Nachweis)
+    println!("cargo:rustc-check-cfg=cfg(esp32os_musik_test)");
+    println!("cargo:rerun-if-env-changed=ESP32OS_MUSIK_TEST");
+    if std::env::var_os("ESP32OS_MUSIK_TEST").is_some() {
+        println!("cargo:rustc-cfg=esp32os_musik_test");
+    }
 }

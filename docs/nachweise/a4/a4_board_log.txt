@@ -1,0 +1,16 @@
+I (12990) pudding_p4: [debug] Kalender: November 2026
+I (15925) pudding_fw::wlan: NTP: Uhr gestellt – 23.11.2026 05:15:36 Ortszeit
+I (27190) pudding_fw::foto: BILD 0 720 1280 3000000 0
+I (34083) pudding_p4: Bildschirmschoner: Hintergrundlicht aus
+I (44185) pudding_p4: Bildschirmschoner: aufgeweckt
+I (47190) pudding_fw::foto: BILD 1 720 1280 3000000 0
+I (60326) pudding_p4: [debug] Kalender: Oktober 2026
+I (64365) pudding_p4: [debug] Kalender: September 2026
+I (67190) pudding_fw::foto: BILD 2 720 1280 3000000 0
+I (80385) pudding_p4: [debug] Kalender: Oktober 2026
+I (84522) pudding_p4: [debug] Kalender: November 2026
+I (86520) pudding_p4: [debug] Kalender: Dezember 2026
+I (89189) pudding_fw::foto: BILD 3 720 1280 3000000 0
+I (101523) pudding_p4: [debug] Kalender: November 2026
+I (104188) pudding_fw::foto: BILD 4 720 1280 3000000 0
+I (126339) pudding_p4: Bildschirmschoner: Hintergrundlicht aus

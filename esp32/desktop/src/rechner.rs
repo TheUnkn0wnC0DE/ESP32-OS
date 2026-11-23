@@ -32,11 +32,11 @@ pub const TASTEN: [[(&str, char); 4]; 5] = [
 const K_TASTE: u32 = 10;
 
 /// Zuletzt angezeigter Text (für Tests und das Board-Log).
-static ZULETZT: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
+static ZULETZT: crate::Textmerker = crate::Textmerker::neu();
 
 /// Text, den der Rechner zuletzt angezeigt hat.
 pub fn anzeige_zuletzt() -> String {
-    ZULETZT.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    ZULETZT.holen()
 }
 
 /// Rechenwerk (ohne Oberfläche – auch für Tests).
@@ -225,7 +225,7 @@ fn anzeige_zeichnen(r: &Rechner) {
     let (x, y, w, h) = ANZEIGE;
     sys::rechteck((x as u32) << 16 | w as u32, (y as u32) << 16 | h as u32, 0xFFFFFF);
     let s = r.anzeige();
-    *ZULETZT.lock().unwrap_or_else(|e| e.into_inner()) = s.clone();
+    ZULETZT.setzen(&s);
     // rechtsbündig, grosse Schrift (16 px je Zeichen)
     let breite = s.chars().count() as i32 * 16;
     text(x + w - 8 - breite, y + (h - 32) / 2, &s, if r.fehler { 0xB03020 } else { 0x101010 }, true);

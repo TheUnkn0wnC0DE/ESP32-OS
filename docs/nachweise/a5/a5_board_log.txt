@@ -1,0 +1,29 @@
+W (2252) pudding_fw::speicher: Musik-Test: Testton 1.mp3 schon da
+W (2254) pudding_fw::speicher: Musik-Test: Testton 2.mp3 schon da
+I (11565) pudding_fw::wlan: WLAN: musik /sd0/1/ESP32-OS/Musik_Test gestartet (6)
+I (11584) pudding_p4: [debug] Musik: 2 Titel in /sd0/1/ESP32-OS/Musik_Test
+I (28150) pudding_p4: [debug] Musik: spielt Testton 1.mp3 (44100 Hz, 1 Kanal/Kanäle)
+I (30111) pudding_p4: [debug] Musik: Pause bei 0:01
+I (30864) pudding_fw::foto: BILD 0 720 1280 3000000 0
+I (43103) pudding_p4: [debug] Musik: weiter bei 0:01
+I (43726) pudding_p4: [debug] Musik: Testton 1.mp3 bei 0:02, ausgegeben 45056 Frames
+I (45108) pudding_p4: [debug] Musik: nächster → Testton 2.mp3
+I (45156) pudding_p4: [debug] Musik: spielt Testton 2.mp3 (48000 Hz, 1 Kanal/Kanäle)
+I (45534) pudding_p4: [debug] Musik: Testton 2.mp3 bei 0:00, ausgegeben 75776 Frames
+I (47114) pudding_p4: [debug] Musik: zurück → Testton 1.mp3
+I (47159) pudding_p4: [debug] Musik: spielt Testton 1.mp3 (44100 Hz, 1 Kanal/Kanäle)
+I (49115) pudding_p4: [debug] Musik: nächster → Testton 2.mp3
+I (49163) pudding_p4: [debug] Musik: spielt Testton 2.mp3 (48000 Hz, 1 Kanal/Kanäle)
+I (50860) pudding_fw::foto: BILD 1 720 1280 3000000 0
+I (64864) pudding_fw::foto: BILD 2 720 1280 3000000 0
+I (71897) pudding_p4: [debug] Musik: spielt Testton 1.mp3 (44100 Hz, 1 Kanal/Kanäle)
+I (72219) pudding_p4: [debug] Musik: Testton 1.mp3 bei 0:00, ausgegeben 278476 Frames
+I (74228) pudding_p4: [debug] Musik: Testton 1.mp3 bei 0:02, ausgegeben 322764 Frames
+I (76245) pudding_p4: [debug] Musik: Testton 1.mp3 bei 0:04, ausgegeben 367052 Frames
+I (78234) pudding_p4: [debug] Musik: Testton 1.mp3 bei 0:06, ausgegeben 411084 Frames
+I (80230) pudding_p4: [debug] Musik: Ende von Testton 1.mp3
+I (80278) pudding_p4: [debug] Musik: spielt Testton 2.mp3 (48000 Hz, 1 Kanal/Kanäle)
+I (80383) pudding_p4: [debug] Musik: Testton 2.mp3 bei 0:00, ausgegeben 454731 Frames
+I (82693) pudding_p4: [debug] Musik: Testton 2.mp3 bei 0:02, ausgegeben 499531 Frames
+I (84711) pudding_p4: [debug] Musik: Testton 2.mp3 bei 0:04, ausgegeben 544075 Frames
+I (86668) pudding_p4: [debug] Musik: Ende von Testton 2.mp3

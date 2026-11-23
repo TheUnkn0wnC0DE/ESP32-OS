@@ -1,0 +1,63 @@
+W (2874) pudding_p4: ESP32OS_INI: alarm=05:23 (gesetzt)
+W (3579) pudding_p4: ESP32OS_INI: alarm_on=1 (gesetzt)
+I (15925) pudding_fw::wlan: NTP: Uhr gestellt – 23.11.2026 05:15:36 Ortszeit
+I (126339) pudding_p4: Bildschirmschoner: Hintergrundlicht aus
+I (426359) pudding_p4: Ruhezustand: Panel schläft (0/0)
+I (460001) pudding_p4: [debug] Uhr: Wecker 05:23 klingelt
+I (460123) pudding_p4: Ruhezustand: vom Programm geweckt (Panel 0/0)
+I (460123) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (461096) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (462111) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (463126) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (464141) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (465156) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (466170) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (467180) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (468195) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (469210) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (470229) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (471244) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (472259) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (473274) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (474189) pudding_fw::foto: BILD 5 720 1280 3000000 0
+I (481082) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (481352) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (482366) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (483380) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (484395) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (485409) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (486419) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (487434) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (488449) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (489464) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (490474) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (491489) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (492504) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (493514) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (494529) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (495539) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (496554) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (497569) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (498584) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (499594) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (500609) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (501624) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (502634) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (503648) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (504188) pudding_fw::foto: BILD 6 720 1280 3000000 0
+I (511081) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (511731) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (512751) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (513760) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (514780) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (515794) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (516809) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (517824) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (518838) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (519858) pudding_p4: [debug] Ton: Signal der Uhr an den Synth (Lautstärke 6)
+I (520056) pudding_p4: [debug] Uhr: Klingeln nach 60 s beendet
+I (545056) pudding_p4: Bildschirmschoner: Hintergrundlicht aus
+I (564188) pudding_p4: Bildschirmschoner: aufgeweckt
+I (567837) pudding_p4: [debug] Uhr: Wecker 05:23 aus
+I (570188) pudding_fw::foto: BILD 7 720 1280 3000000 0
+I (591334) pudding_p4: Bildschirmschoner: Hintergrundlicht aus

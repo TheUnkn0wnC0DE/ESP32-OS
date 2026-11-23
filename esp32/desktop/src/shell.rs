@@ -456,6 +456,8 @@ pub fn taskbar() {
     let mut letzte = (u32::MAX, 0usize);
     loop {
         let e = sys::warte_ereignis_max(50);
+        // Wecker der Uhr (A3) – klingelt auch, wenn die Uhr nicht offen ist
+        crate::uhr::wecker_pruefen();
         // Uhrzeit 0x00SSMMHH: nur Stunden und Minuten zählen
         let stand = (
             sys::uhrzeit() & 0xFFFF | u32::from(crate::konfig::AKKU.load(core::sync::atomic::Ordering::Relaxed)) << 16 | wlan_stand() << 24,
@@ -518,20 +520,27 @@ fn menue_eintraege(mehr: bool) -> Vec<(String, &'static str, usize)> {
         eintraege.push((kern::sprache::t("Task manager", "Task-Manager").into(), "taskmanager", 57));
         eintraege.push((kern::sprache::t("Screenshot", "Bildschirmfoto").into(), "@screenshot", 70));
         eintraege.push((if sys::eingabe::touchpad() { kern::sprache::t("Touchpad mode off", "Touchpad-Modus aus") } else { kern::sprache::t("Touchpad mode on", "Touchpad-Modus ein") }.into(), "@touchpad", 54));
-        eintraege.push((kern::sprache::t("Sleep", "Ruhezustand").into(), "@ruhe", 119));
+        eintraege.push((kern::sprache::t("Sleep", "Ruhezustand").into(), "@ruhe", 76));
         eintraege.push((kern::sprache::t("Restart", "Neustart").into(), "@neustart", 12));
     }
     eintraege
 }
 
-/// Aufbau des Startmenüs: (Spalten, Zeilen, Breite, Höhe, y des Fensters).
-fn menue_aufbau(n: usize, skin: i32) -> (usize, i32, i32, i32, i32) {
+/// Aufbau des Startmenüs: (Zeilen, Spaltenbreite, Breite, Höhe, y des
+/// Fensters). Bis 6 Einträge eine Spalte, bis 10 zwei, darüber drei
+/// schmalere (höchstens 5 Zeilen passen über die Taskleiste).
+fn menue_aufbau(n: usize, skin: i32) -> (i32, i32, i32, i32, i32) {
     let (_, h) = bildschirm();
-    let spalten = if n > 6 { 2 } else { 1 };
+    let spalten = match n {
+        0..=6 => 1,
+        7..=10 => 2,
+        _ => 3,
+    };
+    let sw = if spalten == 3 { 210 } else { 230 };
     let zeilen = n.div_ceil(spalten) as i32;
-    let mw = 230 * spalten as i32 + 10;
+    let mw = sw * spalten as i32 + 10;
     let mh = (skin + 5 + zeilen * ZEILE_M + 10).min(h - LEISTE_H);
-    (spalten, zeilen, mw, mh, h - LEISTE_H - mh)
+    (zeilen, sw, mw, mh, h - LEISTE_H - mh)
 }
 
 /// Bildschirm-Mitte des Eintrags `programm` im Startmenü (ohne „mehr“) –
@@ -540,9 +549,9 @@ pub fn menue_eintrag_mitte(programm: &str) -> Option<(i32, i32)> {
     let eintraege = menue_eintraege(false);
     let i = eintraege.iter().position(|e| e.1 == programm)? as i32;
     let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
-    let (_, zeilen, _, _, my) = menue_aufbau(eintraege.len(), skin);
+    let (zeilen, sw, _, _, my) = menue_aufbau(eintraege.len(), skin);
     let (sp, ze) = (i / zeilen, i % zeilen);
-    Some((5 + 2 + sp * 230 + 112, my + skin + 2 + ze * ZEILE_M + (ZEILE_M - 3) / 2))
+    Some((5 + 2 + sp * sw + (sw - 5) / 2, my + skin + 2 + ze * ZEILE_M + (ZEILE_M - 3) / 2))
 }
 
 /// Startmenü: Programme mit Symbol, „Über ESP32-OS“, Spielekonsole, Neustart.
@@ -551,15 +560,15 @@ pub fn menu() {
     let mehr = kern::argumente() == "mehr";
     let eintraege = menue_eintraege(mehr);
     let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
-    let (_, zeilen, mw, mh, my) = menue_aufbau(eintraege.len(), skin);
+    let (zeilen, sw, mw, mh, my) = menue_aufbau(eintraege.len(), skin);
     sys::maske(0x07);
     let zeichnen = || {
         sys::neuzeichnen(1);
         sys::fenster((mw - 1) as u32, (my as u32) << 16 | (mh - 1) as u32, 0x33 << 24 | 0xF4F4F4, 0, Some(NAME));
         for (i, (t, _, s)) in eintraege.iter().enumerate() {
             let (sp, ze) = (i as i32 / zeilen, i as i32 % zeilen);
-            let (x, y) = (2 + sp * 230, 2 + ze * ZEILE_M);
-            sys::knopf((x as u32) << 16 | 225, (y as u32) << 16 | (ZEILE_M - 3) as u32, 10 + i as u32, 0xF4F4F4);
+            let (x, y) = (2 + sp * sw, 2 + ze * ZEILE_M);
+            sys::knopf((x as u32) << 16 | (sw - 5) as u32, (y as u32) << 16 | (ZEILE_M - 3) as u32, 10 + i as u32, 0xF4F4F4);
             bild_auf(&symbol(*s, 32), x + 6, y + (ZEILE_M - 32) / 2 - 1, |_, _| 0xF4F4F4);
             text(x + 46, y + (ZEILE_M - 16) / 2 - 1, t, 0x101010);
         }

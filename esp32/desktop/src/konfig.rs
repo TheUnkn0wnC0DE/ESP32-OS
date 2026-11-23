@@ -19,6 +19,11 @@ pub static HELLIGKEIT: AtomicU8 = AtomicU8::new(8);
 pub static LAUTSTAERKE: AtomicU8 = AtomicU8::new(6);
 /// Probeton nach dem Ändern der Lautstärke.
 pub static TON_PROBE: AtomicBool = AtomicBool::new(false);
+/// Angeforderte Signaltöne der Uhr (Wecker/Timer, A3); der Desktop schickt
+/// sie an den Synth.
+pub static SIGNAL: AtomicU32 = AtomicU32::new(0);
+/// Wecker (A3): Minute des Tages (0..1440), Bit 16 = an. Standard 07:00 aus.
+pub static WECKER: AtomicU32 = AtomicU32::new(7 * 60);
 /// Sekunden ohne Eingabe bis Bildschirm aus (0 = nie).
 pub static BILDSCHIRM_AUS: AtomicU32 = AtomicU32::new(120);
 /// Sekunden nach „Bildschirm aus“ bis zum Ruhezustand (0 = nie).
@@ -59,7 +64,7 @@ pub const VERLAEUFE: [(&str, &str, u32, u32); 4] = [
 static HINTERGRUND: Mutex<Option<Hintergrund>> = Mutex::new(None);
 
 /// 2020-01-01: davor gilt die Uhr als nicht gestellt.
-const UHR_GUELTIG_AB: i64 = 1_577_836_800;
+pub const UHR_GUELTIG_AB: i64 = 1_577_836_800;
 
 fn lesen(schluessel: &str) -> Option<String> {
     libini::lesen(DATEI, SEKTION, schluessel)
@@ -92,6 +97,16 @@ pub fn laden() {
     }
     if let Some(s) = zahl("sleep_after") {
         RUHE_NACH.store(s.clamp(0, 86_400) as u32, Ordering::Relaxed);
+    }
+    // Wecker „HH:MM“ und an/aus (A3)
+    if let Some((h, m)) = lesen("alarm").and_then(|w| {
+        let (h, m) = w.trim().split_once(':')?;
+        Some((h.parse::<u32>().ok()?, m.parse::<u32>().ok()?))
+    }) && h < 24
+        && m < 60
+    {
+        let an = zahl("alarm_on").is_some_and(|a| a != 0);
+        WECKER.store(h * 60 + m | u32::from(an) << 16, Ordering::Relaxed);
     }
     // Internetzeit (W3b), Standard an
     kern::zeit::ntp_an_setzen(zahl("ntp").is_none_or(|n| n != 0));
@@ -144,6 +159,13 @@ pub fn lautstaerke_setzen(v: u8) -> bool {
     LAUTSTAERKE.store(v, Ordering::Relaxed);
     TON_PROBE.store(true, Ordering::Relaxed);
     speichern("volume", &v.to_string())
+}
+
+/// Wecker stellen (Minute des Tages) und speichern.
+pub fn wecker_setzen(minute: u32, an: bool) -> bool {
+    let minute = minute % (24 * 60);
+    WECKER.store(minute | u32::from(an) << 16, Ordering::Relaxed);
+    speichern("alarm", &format!("{:02}:{:02}", minute / 60, minute % 60)) && speichern("alarm_on", if an { "1" } else { "0" })
 }
 
 pub fn bildschirm_aus_setzen(s: u32) -> bool {

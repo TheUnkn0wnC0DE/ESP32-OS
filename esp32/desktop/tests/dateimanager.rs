@@ -70,14 +70,14 @@ fn foto(name: &str) {
             let teil: Vec<u32> = s.puffer[i].px.iter().map(|&c| kern::grafik::von565(c)).collect();
             if teil != voll {
                 let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
-                std::fs::write(dir.join(format!("{name}.teil.png")), spatz::image::encode_png(w, h, &teil)).unwrap();
+                desktop::bild_schreiben(&dir.join(format!("{name}.teil.png")), &spatz::image::encode_png(w, h, &teil));
                 panic!("{name}: Teilbild (Dirty-Rects) weicht vom Vollbild ab");
             }
         }
     }
     let (w, h, px) = sys::foto();
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
-    std::fs::write(dir.join(format!("{name}.png")), spatz::image::encode_png(w, h, &px)).unwrap();
+    desktop::bild_schreiben(&dir.join(format!("{name}.png")), &spatz::image::encode_png(w, h, &px));
 }
 
 fn titel() -> String {

@@ -29,6 +29,7 @@ pub mod schrift;
 pub mod skin;
 pub mod sprache;
 pub mod sys;
+pub mod ton;
 pub mod wlan;
 pub mod zeit;
 pub mod zeiger;

@@ -40,6 +40,14 @@ Stand: 22.11.2026 morgens, Repo: dieser Ordner, Branch `esp32-os` (von
   geöffnet (Testordner `/sd0/1/ESP32-OS/Notizen_Test`).
 - ✔ A2 Rechner: neues Programm mit grossen Tasten, am Board per
   Autopilot „12 × 3,5 =“ getippt → 42 (Foto und Log).
+- ✔ A3 Uhr mit Wecker und Timer: Timer und Wecker klingeln am Board mit
+  Signalton jede Sekunde; der Wecker weckt das Board auch aus dem
+  Ruhezustand und startet die Uhr, wenn sie zu ist. Nebenbei einen
+  Heap-Fehler beim Neustart von Programmen gefunden und behoben.
+- ✔ A4 Kalender: Monatsansicht, Monatswechsel per Wischen am Board.
+- ✔ A5 Musikplayer: MP3 von der SD-Karte über den Lautsprecher (eigener
+  Decoder-Weg, Ton-Ring im Kern), Pause/Weiter/Nächster/Zurück am Board.
+  Testtöne selbst erzeugt (keine fremde Musik im Repo).
 
 ## B9: 20 echte Webseiten am Board (Nacht 23.11.)
 

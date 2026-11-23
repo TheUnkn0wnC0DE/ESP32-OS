@@ -61,5 +61,5 @@ fn absturz_wird_gemeldet() {
     std::thread::sleep(Duration::from_millis(200));
     let (w, h, px) = sys::foto();
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
-    std::fs::write(dir.join("d12_meldung.png"), spatz::image::encode_png(w, h, &px)).unwrap();
+    desktop::bild_schreiben(&dir.join("d12_meldung.png"), &spatz::image::encode_png(w, h, &px));
 }

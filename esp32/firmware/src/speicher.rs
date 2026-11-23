@@ -122,6 +122,31 @@ pub fn netsurf_testreste_loeschen() {
     log::warn!("NetSurf-Testreste – nachher {} Dateien, Ordner vorhanden: {}", nachher.len(), std::fs::metadata(wurzel).is_ok());
 }
 
+/// Entwicklungs-Build (A5): die eigenen Testtöne (`werkzeuge/test_mp3.py`)
+/// in den Testordner `ESP32-OS/Musik_Test` der SD-Karte legen – nur in den
+/// eigenen Ordner von ESP32-OS, vorhandene gleich grosse Dateien bleiben.
+#[cfg(esp32os_musik_test)]
+pub fn musik_testdaten() {
+    const DATEIEN: [(&str, &[u8]); 2] = [
+        ("Testton 1.mp3", include_bytes!("../../desktop/tests/daten/Testton 1.mp3")),
+        ("Testton 2.mp3", include_bytes!("../../desktop/tests/daten/Testton 2.mp3")),
+    ];
+    if std::fs::metadata("/sdcard/ESP32-OS").is_err() {
+        log::warn!("Musik-Test: kein Ordner ESP32-OS auf der SD-Karte");
+        return;
+    }
+    let ordner = "/sdcard/ESP32-OS/Musik_Test";
+    let _ = std::fs::create_dir_all(ordner);
+    for (n, d) in DATEIEN {
+        let p = format!("{ordner}/{n}");
+        if std::fs::metadata(&p).is_ok_and(|m| m.len() == d.len() as u64) {
+            log::warn!("Musik-Test: {n} schon da");
+            continue;
+        }
+        log::warn!("Musik-Test: {n} ({} Byte): {:?}", d.len(), std::fs::write(&p, d).map_err(|e| e.to_string()));
+    }
+}
+
 pub fn sd_testreste_loeschen() {
     fn liste(pfad: &str) -> Vec<String> {
         let mut v: Vec<String> = std::fs::read_dir(pfad)

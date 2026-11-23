@@ -21,12 +21,12 @@ fn bild(name: &str) -> Vec<u32> {
     let maske: Vec<u32> = px.iter().enumerate().map(|(i, &p)| if i % w >= w - 60 && i / w >= h - 40 { 0 } else { p }).collect();
     let ist = format!("{:016x}", fnv(&maske));
     if std::env::var_os("ERWARTET_NEU").is_some() {
-        std::fs::write(dir.join(format!("{name}.png")), spatz::image::encode_png(w, h, &px)).unwrap();
+        desktop::bild_schreiben(&dir.join(format!("{name}.png")), &spatz::image::encode_png(w, h, &px));
         std::fs::write(dir.join(format!("{name}.fnv")), &ist).unwrap();
     } else {
         let soll = std::fs::read_to_string(dir.join(format!("{name}.fnv"))).expect("ERWARTET_NEU=1");
         if soll.trim() != ist {
-            std::fs::write(dir.join(format!("{name}.ist.png")), spatz::image::encode_png(w, h, &px)).unwrap();
+            desktop::bild_schreiben(&dir.join(format!("{name}.ist.png")), &spatz::image::encode_png(w, h, &px));
             panic!("Bild {name} weicht ab");
         }
     }

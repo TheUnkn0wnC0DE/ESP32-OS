@@ -69,5 +69,5 @@ fn rechner_12_mal_3_5() {
     std::thread::sleep(Duration::from_millis(300));
     let (w, h, px) = sys::foto();
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
-    std::fs::write(dir.join("a2_rechner.png"), spatz::image::encode_png(w, h, &px)).unwrap();
+    desktop::bild_schreiben(&dir.join("a2_rechner.png"), &spatz::image::encode_png(w, h, &px));
 }

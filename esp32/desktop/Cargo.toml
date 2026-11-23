@@ -11,6 +11,9 @@ kern = { path = "../kern" }
 kolibri = { path = "../kolibri" }
 konsole = { path = "../konsole" }
 pudding-core = { path = "../game" }
+# Musikplayer (A5): MP3-Decoder in reinem Rust (Port von minimp3, MIT/Apache-2.0);
+# ohne SIMD (`wide`) und ohne Layer I/II
+nanomp3 = { version = "0.2", default-features = false, features = ["std"] }
 
 # 32 Bit (i686, Board): Browser (NetSurf, B1)
 [target.'cfg(target_pointer_width = "32")'.dependencies]

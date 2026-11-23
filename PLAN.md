@@ -855,11 +855,75 @@ Entscheidung und Begründung: STATUS „Browser-Architektur“ (22.11.).
   `a2_rechner.png`). Nachweis (Board, Runde 49, `docs/nachweise/a2/`):
   Autopilot tippt 1 2 × 3 , 5 = → Log „Rechner: = → 42“, Foto zeigt 42
   (`a2_board_42.png`, `a2_board_log.txt`).
-- [ ] **A3 Uhr mit Wecker und Timer** (Ton bei Ablauf). Nachweis: Autopilot,
+- [x] **A3 Uhr mit Wecker und Timer** (Ton bei Ablauf). Nachweis: Autopilot,
   Foto + Ton-Log.
-- [ ] **A4 Kalender**. Nachweis: Foto, Monatswechsel per Wischen.
-- [ ] **A5 Musikplayer (MP3 von SD)** über ES8311. Nachweis: Log Wiedergabe,
+  Umsetzung: `desktop/src/uhr.rs`, Reiter Uhr (Zeit gross, Datum, Wecker-
+  Stand), Wecker (Stunde/Minute mit +/−, an/aus, gespeichert in
+  `esp32os.ini` als `alarm`/`alarm_on`) und Timer (±1 min, ±10 s,
+  Start/Pause, Zurück). Beim Ablauf: grosser „Stopp“, Signalton jede
+  Sekunde (`konfig::SIGNAL` → Desktop → Synth, Sfx „Checkpoint“), nach 60 s
+  von selbst still. Den Wecker prüft die Taskleiste alle 0,5 s – er klingelt
+  auch bei geschlossener Uhr (sie wird gestartet). Neu dafür:
+  `Spiel::wach_halten` – solange es klingelt, weckt die Firmware Bildschirm
+  und Panel (auch aus dem Ruhezustand, dort lief bisher kein Ton), ohne die
+  Eingabe zu sperren. Unterwegs gefunden und behoben: `static Mutex<String>`
+  im Programm (Rechner, Uhr) zeigte nach dem Ende in den freigegebenen Heap
+  des Programms → Heap kaputt beim Neustart (jetzt fester Puffer
+  `Textmerker`). PC: `desktop/tests/uhr.rs` (Wecker stellen und speichern,
+  Timer 10 s (9,5–11,5 s), Signaltöne, Stopp, Wecker bei geschlossener Uhr,
+  `wach_halten`), Unit-Test `timer_stellen_und_anzeigen`.
+  Nachweis Board (`docs/nachweise/a3/`): Runde 50 – Timer per Autopilot
+  gestartet, „Timer abgelaufen“ 112,8 s, danach 60 Signaltöne im Log
+  („Ton: Signal der Uhr an den Synth“, je ~1,0 s), Foto
+  `a3_board_timer_abgelaufen.png`; Wecker 05:08 klingelt (Foto
+  `a3_board_wecker_klingelt.png`). Runde 51 – Board im Ruhezustand
+  (426,4 s), Wecker 05:23 bei geschlossener Uhr: „Wecker klingelt“ 460,0 s →
+  „Ruhezustand: vom Programm geweckt“ 460,1 s, Foto
+  `a3_board_wecker_aus_ruhezustand.png`, nach 60 s still, danach per
+  Autopilot ausgeschaltet („Wecker 05:23 aus“).
+- [x] **A4 Kalender**. Nachweis: Foto, Monatswechsel per Wischen.
+  Umsetzung: `desktop/src/kalender.rs`, Monatsansicht ab Montag, heute
+  blau, Wochenende grau; links/oben wischen = nächster Monat, rechts/unten
+  = voriger (genau einer je Wischbewegung), Knöpfe „<“ „>“, Monatsname →
+  heute, Pfeiltasten. PC: `desktop/tests/kalender.rs` (Wischen in alle
+  Richtungen, Knöpfe, heute), Unit-Test `monate_und_wochentage`.
+  Nachweis Board (Runde 51, `docs/nachweise/a4/`): rechts gewischt →
+  „Kalender: Oktober 2026“, „September 2026“, nach oben gewischt →
+  „Oktober 2026“, „>“ „>“ → Dezember, Monatsname → „November 2026“
+  (Fotos `a4_board_september_gewischt.png`, `a4_board_november_heute.png`
+  mit dem 23. markiert). Startmenü dafür auf drei Spalten ab 11 Einträgen
+  (sonst passt es nicht mehr über die Taskleiste).
+- [x] **A5 Musikplayer (MP3 von SD)** über ES8311. Nachweis: Log Wiedergabe,
   Autopilot Pause/Weiter/Nächster.
+  Umsetzung: `desktop/src/musik.rs` (Startmenü, Desktop, Dateimanager
+  öffnet .mp3): Titelliste links, rechts Titel, Zeit, grosse Knöpfe
+  zurück/Pause-Weiter/nächster; nach dem Ende der nächste Titel. MP3-Decoder
+  `nanomp3` 0.2 (reiner Rust-Port von minimp3, MIT/Apache-2.0, ohne SIMD),
+  liest die Datei in Stücken über Funktion 70; Umrechnung auf 22 050 Hz
+  (Rate des Synthesizers, mit Mittelung gegen Aliasing), Lautstärke aus den
+  Einstellungen. Neu im Kern `kern::ton`: PCM-Ring (Stereo, 0,74 s,
+  ein Programm hält ihn); die Firmware mischt ihn im Audio-Faden zum
+  Synthesizer (`audio::MitProgrammen`) → I²S → ES8311. Pause nimmt die
+  noch nicht gespielten Frames aus dem Ring zurück (sofort still, Weiter
+  genau an der Stelle, ohne Sprung in der Datei). Testdaten: eigene Töne,
+  ohne Encoder erzeugt (`werkzeuge/test_mp3.py`: gültige MPEG-1-Layer-III-
+  Frames mit je einer Spektrallinie; mit ffmpeg gegengeprüft).
+  PC: `desktop/tests/musik.rs` (ein Test-Faden holt den Strom wie der
+  Audio-Faden ab: Titel 1 ~382 Hz, Titel 2 ~1916 Hz, Pause still, Weiter
+  an derselben Stelle, automatisch nächster, zurück/nächster, Ende),
+  Unit-Test `testtoene_dekodieren`.
+  Nachweis Board (Runde 54, `docs/nachweise/a5/`, Testordner
+  `/sd0/1/ESP32-OS/Musik_Test`, Test-Build legt die Töne dort ab): Log
+  „spielt Testton 1.mp3 (44100 Hz …)“, „Pause bei 0:01“, „weiter bei
+  0:01“, „nächster → Testton 2.mp3“, „zurück → Testton 1.mp3“, „Ende von
+  Testton 1.mp3“ → „spielt Testton 2.mp3“; „ausgegeben … Frames“ steigt um
+  ~22 050 je Sekunde (der Audio-Faden holt den Strom wirklich ab). Fotos
+  `a5_board_pause.png`, `a5_board_titel2_spielt.png`. Unterwegs: am Board
+  Stack-Überlauf (`a5_board_vorher_stapel.txt`) – der Leser (23 KB) wurde
+  mehrfach auf dem Stapel verschoben; jetzt im Heap, Stapel 256 KB (PSRAM).
+  Gesamtlänge: aus dem VBR-Kopf, sonst aus Dateigrösse und Bitrate des
+  ersten Frames (ID3v2 übersprungen; Unit-Test `laenge_schaetzen`) – ohne
+  Vorab-Durchlauf der ganzen Datei.
 - [x] **A6 Taskmanager** (Prozesse, Speicher, beenden). Nachweis: Autopilot
   beendet Programm, Foto.
   **Pflicht (Vorgabe Nutzer 21.11.):** Hängende Programme (keine

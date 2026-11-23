@@ -184,6 +184,9 @@ fn main() {
         if option_env!("ESP32OS_SD_AUFRAEUMEN").is_some() {
             pudding_fw::speicher::sd_testreste_loeschen();
         }
+        // Test-Build (A5): Testtöne für den Musikplayer auf die SD-Karte
+        #[cfg(esp32os_musik_test)]
+        pudding_fw::speicher::musik_testdaten();
         // Test-Build: Testreste des ersten Browser-Versuchs (B1) löschen
         if option_env!("ESP32OS_NETSURF_RESTE").is_some() {
             pudding_fw::speicher::netsurf_testreste_loeschen();
@@ -310,7 +313,7 @@ fn main() {
         Daten::Doom(_) => Box::new(doom::DoomKlang::new()),
         #[cfg(feature = "quake")]
         Daten::Quake(_) => Box::new(quake::QuakeKlang),
-        _ => Box::new(Synth::new()),
+        _ => Box::new(audio::MitProgrammen(Synth::new())),
     };
     if let Err(e) = audio::start(klang) {
         log::error!("I2S: {e} – kein Ton");
@@ -528,6 +531,22 @@ fn main() {
         // Autopilot (Spiel-eigene Eingabe) zählt wie eine Berührung
         let fremd = rahmen.fremde_eingabe();
         let beruehrt = input.touching() || input.held != 0 || fremd;
+        // Programm will den Bildschirm an (Wecker klingelt): aufwecken wie
+        // eine Berührung, aber ohne die Eingabe zu sperren (Stopp antippen)
+        if !beruehrt && rahmen.wach_halten() {
+            if schoner_dunkel {
+                if ruhe {
+                    let (a, b) = disp.schlafen(false);
+                    log::info!("Ruhezustand: vom Programm geweckt (Panel {a}/{b})");
+                    ruhe = false;
+                } else {
+                    log::info!("Bildschirmschoner: vom Programm geweckt");
+                }
+                schoner_dunkel = false;
+                pudding_fw::wlan::SPAREN.store(false, Ordering::Relaxed);
+            }
+            letzte_eingabe = start;
+        }
         if beruehrt {
             if schoner_dunkel {
                 schoner_weckt = true;
