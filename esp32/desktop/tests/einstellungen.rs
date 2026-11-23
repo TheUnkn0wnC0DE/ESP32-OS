@@ -181,7 +181,7 @@ fn einstellungen_per_touch_und_nach_neustart() {
     assert!(kern::liste().iter().any(|p| p.name == "@icon"), "@icon läuft noch");
     // Pixel rechts oben im Desktop = vorbereitetes Hintergrundbild
     let soll = desktop::konfig::hintergrund_lesen(640, 360).unwrap();
-    for (x, y) in [(600usize, 30usize), (400, 200), (20, 300)] {
+    for (x, y) in [(600usize, 30usize), (600, 200), (20, 300)] {
         let s = kern::grafik::von565(kern::grafik::zu565(soll.px[y * 640 + x]));
         assert_eq!(px[y * 640 + x], s, "Hintergrundbild bei ({x}, {y})");
     }

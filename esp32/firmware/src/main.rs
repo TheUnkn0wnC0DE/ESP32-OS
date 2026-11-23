@@ -145,19 +145,20 @@ fn main() {
         slots::umschalten(SpielId::Konsole);
     }
     // --- ESP32-OS: Standardstart ist der Desktop ----------------------------
-    // Ausnahmen: ein Spiel als Startziel, der einmalige Merker „Spiele“ (alter
-    // Launcher, gesetzt vom Desktop-Symbol) oder ein Build mit ESP32OS_KONSOLE.
-    let modus_konsole = nvs.as_deref().and_then(|n| n.lesen(desktop::shell::MODUS_SCHLUESSEL)).is_some();
-    if modus_konsole && let Some(n) = nvs.as_deref() {
+    // Ausnahme: ein Spiel als Startziel (Desktop-Symbol bzw. Ordner „Spiele“).
+    // Den alten Launcher gibt es nicht mehr (S0, Auftrag 13.8); ein Merker aus
+    // älteren Versionen wird nur gelöscht.
+    if let Some(n) = nvs.as_deref()
+        && n.lesen(desktop::shell::MODUS_SCHLUESSEL).is_some()
+    {
         n.loeschen(desktop::shell::MODUS_SCHLUESSEL);
+        log::info!("Alter Merker „Launcher“ gelöscht");
     }
     // Doom-/Quake-Programme starten nie den Desktop (Startziel Konsole →
     // Umschalten ins ESP32-OS-Programm): zur Übersetzungszeit aus, damit
     // Desktop, Kern und WLAN nicht in deren 2,5-MB-Plätze gelinkt werden.
     let desktop_start = !cfg!(any(feature = "doom", feature = "quake"))
         && ziel == SpielId::Konsole
-        && !modus_konsole
-        && option_env!("ESP32OS_KONSOLE").is_none()
         && !selbsttest
         && !dateitest;
     if desktop_start {
@@ -253,12 +254,12 @@ fn main() {
                 // SAFETY: Neustart auf Wunsch des Nutzers.
                 unsafe { esp_idf_svc::sys::esp_restart() };
             },
-            konsole: || {
+            spiel: |id| {
                 if let Ok(n) = store::Nvs::open() {
-                    n.schreiben(desktop::shell::MODUS_SCHLUESSEL, b"k");
+                    n.schreiben(start::START_SCHLUESSEL, &[id]);
                 }
-                log::info!("Spielekonsole (Neustart in den Launcher)");
-                // SAFETY: Neustart, Merker steht im NVS.
+                log::info!("Spiel {:?} (Neustart ins Spiel)", SpielId::aus_u8(id));
+                // SAFETY: Neustart, das Startziel steht im NVS.
                 unsafe { esp_idf_svc::sys::esp_restart() };
             },
         });
@@ -522,6 +523,22 @@ fn main() {
                         *slot = Some(panel_to_raster(p, LCD_W as u16, LCD_H as u16, flip, raster));
                         i += 1;
                     }
+                }
+            }
+        }
+        // Entwicklung (S1–S4): `ESP32OS_SPIEL_TIPPEN="35:30:30,40:160:123"` –
+        // in einem Spiel s Sekunden nach dem Start bei (x, y) im Raster des
+        // Spiels 0,3 s antippen (wie ein Finger; (30, 30) = Home-Taste des
+        // Rahmens) – Nachweis „zurück in den Desktop“
+        if aktuell != SpielId::Konsole
+            && let Some(liste) = option_env!("ESP32OS_SPIEL_TIPPEN")
+        {
+            for e in liste.split(',') {
+                let v: Vec<i64> = e.split(':').filter_map(|z| z.trim().parse().ok()).collect();
+                if let [s, x, y] = v[..]
+                    && (s * 1_000_000..s * 1_000_000 + 300_000).contains(&start)
+                {
+                    input.touch[0] = Some((x as u16, y as u16));
                 }
             }
         }

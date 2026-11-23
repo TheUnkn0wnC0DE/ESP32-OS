@@ -8,7 +8,8 @@ use kern::sys;
 use kolibri::dekoder::Rgba;
 use std::sync::{Mutex, OnceLock};
 
-/// NVS-Schlüssel des einmaligen Merkers „Spiele“ (Neustart in den Launcher).
+/// NVS-Schlüssel des früheren Merkers „Spiele“ (Neustart in den alten
+/// Launcher); den Launcher gibt es nicht mehr – die Firmware löscht ihn nur.
 pub const MODUS_SCHLUESSEL: &str = "esp32os_modus";
 
 /// Höhe der Taskleiste (logische Pixel; Knöpfe 41 px ≈ 7,1 mm).
@@ -41,7 +42,8 @@ impl Anwendung {
 #[derive(Clone, Copy)]
 pub struct Haken {
     pub neustart: fn(),
-    pub konsole: fn(),
+    /// Spiel starten (Neustart mit Startziel, `konsole::SpielId` als u8).
+    pub spiel: fn(u8),
 }
 
 static HAKEN: Mutex<Option<Haken>> = Mutex::new(None);
@@ -148,10 +150,25 @@ fn farbe(i: usize) -> u32 {
 /// Programm starten (wie Funktion 70.7 mit /sys/<name>).
 pub fn starten(programm: &str) {
     match programm {
-        "@konsole" => {
+        p if p.starts_with("@spiel_") => {
+            let id = match &p[7..] {
+                "pudding" => konsole::SpielId::Pudding,
+                "wuerfelwelt" => konsole::SpielId::Wuerfelwelt,
+                "doom" => konsole::SpielId::Doom,
+                "quake" => konsole::SpielId::Quake,
+                _ => {
+                    sys::debug_text(&format!("Start {p}: unbekanntes Spiel"));
+                    return;
+                }
+            };
+            sys::debug_text(&format!("Spiel starten: {id:?}"));
+            let _ = crate::konfig::uhr_sichern();
             if let Some(h) = haken() {
-                (h.konsole)();
+                (h.spiel)(id.als_u8());
             }
+        }
+        "@spiele" => {
+            let _ = kern::datei::starten("/sys/@menu", "spiele");
         }
         "@touchpad" => {
             let _ = crate::konfig::touchpad_setzen(!sys::eingabe::touchpad());
@@ -301,6 +318,16 @@ fn icon_zeichnen(w: i32, h: i32, grund: &Grund) {
     }
     sys::neuzeichnen(2);
     sys::debug_text(&format!("@icon: gezeichnet in {} ms\n", (sys::zeit_ns() - t0) / 1_000_000));
+}
+
+/// Bildschirm-Mitte des Desktop-Symbols von `programm` – für Tests und den
+/// Autopiloten (Raster wie beim Zeichnen: spaltenweise, 108×84).
+pub fn symbol_mitte(programm: &str) -> Option<(i32, i32)> {
+    let (_, h) = bildschirm();
+    let zeilen = ((h - LEISTE_H - 8) / ZELLE_H).max(1);
+    let i = anwendungen().iter().filter(|a| a.auf_desktop).position(|a| a.programm == programm)? as i32;
+    let (sp, ze) = (i / zeilen, i % zeilen);
+    Some((8 + sp * ZELLE_W + ZELLE_W / 2, 8 + ze * ZELLE_H + ZELLE_H / 2))
 }
 
 /// Desktop: Hintergrund und Symbole (unterste Ebene).
@@ -510,19 +537,25 @@ const ZEILE_M: i32 = 44;
 
 /// Einträge des Startmenüs (Name, Programm, Symbol). `ordner`: "" = das
 /// Hauptmenü, "mehr" = Programme ohne Desktop-Symbol (Beispiele), "system" =
-/// Task-Manager, Bildschirmfoto, Touchpad-Modus. Das Hauptmenü bleibt so bei
-/// höchstens 15 Einträgen (3 Spalten × 5 Zeilen über der Taskleiste).
+/// Task-Manager, Bildschirmfoto, Touchpad-Modus, "spiele" = die Spiele. Das
+/// Hauptmenü bleibt so bei höchstens 15 Einträgen (3 Spalten × 5 Zeilen über
+/// der Taskleiste).
 fn menue_eintraege(ordner: &str) -> Vec<(String, &'static str, usize)> {
     let alle = anwendungen();
     match ordner {
         "mehr" => alle.iter().filter(|a| !a.auf_desktop).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect(),
+        "spiele" => alle.iter().filter(|a| a.programm.starts_with("@spiel_")).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect(),
         "system" => vec![
             (kern::sprache::t("Task manager", "Task-Manager").into(), "taskmanager", 57),
             (kern::sprache::t("Screenshot", "Bildschirmfoto").into(), "@screenshot", 70),
             (if sys::eingabe::touchpad() { kern::sprache::t("Touchpad mode off", "Touchpad-Modus aus") } else { kern::sprache::t("Touchpad mode on", "Touchpad-Modus ein") }.into(), "@touchpad", 54),
         ],
         _ => {
-            let mut eintraege: Vec<(String, &'static str, usize)> = alle.iter().filter(|a| a.auf_desktop).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect();
+            let mut eintraege: Vec<(String, &'static str, usize)> =
+                alle.iter().filter(|a| a.auf_desktop && !a.programm.starts_with("@spiel_")).map(|a| (a.name().to_string(), a.programm, a.symbol)).collect();
+            if alle.iter().any(|a| a.programm.starts_with("@spiel_")) {
+                eintraege.push((kern::sprache::t("Games...", "Spiele...").into(), "@spiele", 35));
+            }
             if !eintraege.iter().any(|e| e.1 == "info") {
                 eintraege.push((format!("{} {NAME}", kern::sprache::t("About", "Über")), "info", 113));
             }
@@ -561,7 +594,8 @@ pub fn menue_eintrag_mitte(programm: &str) -> Option<(i32, i32)> {
     menue_eintrag_mitte_in("", programm)
 }
 
-/// Wie [`menue_eintrag_mitte`], im Ordner `ordner` ("", "mehr", "system").
+/// Wie [`menue_eintrag_mitte`], im Ordner `ordner` ("", "mehr", "system",
+/// "spiele").
 pub fn menue_eintrag_mitte_in(ordner: &str, programm: &str) -> Option<(i32, i32)> {
     let eintraege = menue_eintraege(ordner);
     let i = eintraege.iter().position(|e| e.1 == programm)? as i32;
@@ -573,7 +607,8 @@ pub fn menue_eintrag_mitte_in(ordner: &str, programm: &str) -> Option<(i32, i32)
 
 /// Startmenü: Programme mit Symbol, „Über ESP32-OS“, Spielekonsole, Neustart.
 pub fn menu() {
-    // Parameter: Ordner („mehr“: Programme ohne Desktop-Symbol, „system“)
+    // Parameter: Ordner („mehr“: Programme ohne Desktop-Symbol, „system“,
+    // „spiele“)
     let eintraege = menue_eintraege(&kern::argumente());
     let skin = sys::stil(4, 0, 0, &mut []).0 as i32;
     let (zeilen, sw, mw, mh, my) = menue_aufbau(eintraege.len(), skin);

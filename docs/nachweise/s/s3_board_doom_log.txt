@@ -1,0 +1,38 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2187) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2311) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2840) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (29073) pudding_p4: [debug] Spiel starten: Doom
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2015) pudding_p4: Programm „esp32os_a“, Startziel Doom
+I (2454) pudding_p4: Doom liegt in „"doomapp"“ – Neustart dorthin
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (1350) pudding_p4: Programm „doomapp“, Startziel Doom
+I (1384) pudding_fw::slots: Programm „doomapp“ als gültig markiert (war in Prüfung, Code 0)
+I (2707) pudding_p4: Startziel Doom, Spielstand neu
+I (3198) pudding_fw::doom_board: Doom: WAD 4097 KB in 471 ms geladen
+W_Init: Init WADfiles.
+I (5792) pudding_p4: 54.8 FPS (640x360 weich), Frame 14.8 ms, Streifen 16/29, Rendern 4.5/10.1 ms, Skalieren 0.0/0.0 ms, PPA 5.1/1.8 ms, Ausgabe 13.3 ms, Panel 54.61 Hz
+I (7801) pudding_p4: 54.9 FPS (640x360 weich), Frame 12.6 ms, Streifen 18/27, Rendern 5.0/8.5 ms, Skalieren 0.0/0.0 ms, PPA 5.6/2.2 ms, Ausgabe 11.3 ms, Panel 54.94 Hz
+I (9811) pudding_p4: 54.9 FPS (640x360 weich), Frame 13.2 ms, Streifen 17/28, Rendern 4.5/9.7 ms, Skalieren 0.0/0.0 ms, PPA 5.2/1.7 ms, Ausgabe 11.5 ms, Panel 54.87 Hz
+I (11820) pudding_p4: 54.9 FPS (640x360 weich), Frame 15.5 ms, Streifen 15/30, Rendern 4.4/12.3 ms, Skalieren 0.0/0.0 ms, PPA 1.7/0.9 ms, Ausgabe 13.9 ms, Panel 54.96 Hz
+I (13820) pudding_p4: 54.9 FPS (640x360 weich), Frame 17.7 ms, Streifen 11/34, Rendern 2.7/10.8 ms, Skalieren 0.0/0.0 ms, PPA 3.7/3.9 ms, Ausgabe 15.1 ms, Panel 54.97 Hz
+I (15836) pudding_p4: 54.9 FPS (640x360 weich), Frame 13.4 ms, Streifen 20/25, Rendern 5.5/5.8 ms, Skalieren 0.0/0.0 ms, PPA 5.4/2.2 ms, Ausgabe 11.6 ms, Panel 54.92 Hz
+I (17837) pudding_p4: 54.9 FPS (640x360 weich), Frame 12.8 ms, Streifen 17/28, Rendern 4.5/9.1 ms, Skalieren 0.0/0.0 ms, PPA 5.4/1.3 ms, Ausgabe 10.6 ms, Panel 54.92 Hz
+I (19837) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.7 ms, Streifen 18/27, Rendern 5.0/6.7 ms, Skalieren 0.0/0.0 ms, PPA 4.7/2.9 ms, Ausgabe 10.4 ms, Panel 54.94 Hz
+I (21838) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.0 ms, Streifen 18/27, Rendern 4.8/6.5 ms, Skalieren 0.0/0.0 ms, PPA 5.2/2.3 ms, Ausgabe 10.6 ms, Panel 54.93 Hz
+I (23839) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.7 ms, Streifen 19/26, Rendern 5.0/8.8 ms, Skalieren 0.0/0.0 ms, PPA 5.3/1.2 ms, Ausgabe 11.1 ms, Panel 54.94 Hz
+I (25839) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.7 ms, Streifen 18/27, Rendern 5.0/6.7 ms, Skalieren 0.0/0.0 ms, PPA 4.6/3.0 ms, Ausgabe 10.3 ms, Panel 54.95 Hz
+I (27842) pudding_p4: 55.0 FPS (640x360 weich), Frame 16.0 ms, Streifen 14/31, Rendern 4.1/12.7 ms, Skalieren 0.0/0.0 ms, PPA 0.6/1.0 ms, Ausgabe 13.9 ms, Panel 54.98 Hz
+I (29843) pudding_p4: 55.0 FPS (640x360 weich), Frame 16.6 ms, Streifen 14/31, Rendern 3.6/12.6 ms, Skalieren 0.0/0.0 ms, PPA 2.3/1.2 ms, Ausgabe 14.0 ms, Panel 54.98 Hz
+I (31844) pudding_p4: 55.0 FPS (640x360 weich), Frame 17.5 ms, Streifen 11/34, Rendern 3.2/15.2 ms, Skalieren 0.0/0.0 ms, PPA 2.9/1.4 ms, Ausgabe 16.8 ms, Panel 54.98 Hz
+I (33785) pudding_p4: Bilanz 30 s: 66.3 FPS, Arbeit je Bild Mittel 14.6 ms, p99 17.8 ms, max 21.1 ms; verpasste Bildwechsel 1 (0.1 je 100)
+I (33845) pudding_p4: 55.0 FPS (640x360 weich), Frame 15.8 ms, Streifen 15/30, Rendern 4.3/10.0 ms, Skalieren 0.0/0.0 ms, PPA 1.1/3.2 ms, Ausgabe 13.7 ms, Panel 54.98 Hz
+I (35861) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.8 ms, Streifen 22/23, Rendern 5.6/8.2 ms, Skalieren 0.0/0.0 ms, PPA 4.1/1.4 ms, Ausgabe 10.4 ms, Panel 54.96 Hz
+I (37872) pudding_p4: 55.0 FPS (640x360 weich), Frame 17.3 ms, Streifen 14/31, Rendern 3.9/12.2 ms, Skalieren 0.0/0.0 ms, PPA 3.8/3.2 ms, Ausgabe 16.0 ms, Panel 54.97 Hz
+I (39883) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.8 ms, Streifen 18/27, Rendern 5.1/6.8 ms, Skalieren 0.0/0.0 ms, PPA 4.6/3.3 ms, Ausgabe 10.5 ms, Panel 54.98 Hz
+I (41588) pudding_p4: Wechsel Doom -> Konsole (Neustart)
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2036) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2153) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2715) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (war in Prüfung, Code 0)

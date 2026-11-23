@@ -987,19 +987,62 @@ Auftrag 13.8: Jedes Spiel ist ein eigenes Programm im Startmenü (Ordner
 Home-Taste zurück in den Desktop. Der alte Launcher fällt in ESP32-OS weg;
 der Knopf „Spiele“ öffnet ihn nicht mehr.
 
-- [ ] **S0 Spiele im Desktop** (Auftrag 13.8) – Ordner „Spiele“ im
+- [x] **S0 Spiele im Desktop** (Auftrag 13.8) – Ordner „Spiele“ im
   Startmenü, vier Desktop-Symbole, kein Launcher mehr erreichbar. Nachweis:
   Fotos Menü und Desktop, Autopilot startet jedes Spiel.
-- [ ] **S1 Pudding-Panik** startet aus dem Desktop im Vollbild, ≥ 55 FPS,
+  Umsetzung: Programme `@spiel_pudding`, `@spiel_wuerfelwelt`,
+  `@spiel_doom`, `@spiel_quake` (Desktop-Symbole), im Startmenü nur im
+  Ordner „Spiele...“; Antippen → Haken `spiel` der Firmware: Startziel ins
+  NVS, Neustart (Doom/Quake: Umschalten in ihre Partition). Der Merker und
+  der Build-Schalter des alten Launchers sind weg (ein alter Merker wird nur
+  gelöscht). PC: `desktop/tests/spiele.rs` (vier Symbole, kein „@konsole“,
+  Spiele nicht im Hauptmenü, Ordner → Doom, Symbole → die anderen drei;
+  Bilder `s0_desktop`, `s0_menue`, `s0_ordner_spiele`).
+  Board (`docs/nachweise/s/`): Foto `s0_board_ordner_spiele.png` (Desktop mit
+  den vier Spielsymbolen, Ordner „Spiele...“ offen); Autopilot startet
+  Pudding-Panik über den Ordner (Runde 58), Würfelwelt (Runde 59), Doom und
+  Quake über ihre Symbole (S3, S4).
+- [x] **S1 Pudding-Panik** startet aus dem Desktop im Vollbild, ≥ 55 FPS,
   Home-Taste zurück. Nachweis: Bildbilanz-Log, Autopilot.
-- [ ] **S2 Würfelwelt** startet aus dem Desktop im Vollbild, ≥ 27,5 FPS,
+  Nachweis Board (Runde 57/58, `s1_board_pudding_log.txt`): „Spiel starten:
+  Pudding“ → Neustart → „Startziel Pudding“, 55,0 FPS je 2 s (Bilanz
+  30 s ohne Foto 63,2 FPS; mit 6,9-s-Foto 51,6); zurück über den Eintrag
+  „ZUM DESKTOP“ im eigenen Hauptmenü von Pudding-Panik (das Spiel hat seine
+  eigene Home-Steuerung; früher „ZUR KONSOLE“) per Autopilot
+  (Entwicklungs-Schalter `ESP32OS_SPIEL_TIPPEN`, tippt im Raster des
+  Spiels) → „Wechsel Pudding -> Konsole“ → Neustart in den Desktop.
+- [x] **S2 Würfelwelt** startet aus dem Desktop im Vollbild, ≥ 27,5 FPS,
   Home-Taste zurück. Nachweis: Log, Autopilot.
-- [ ] **S3 Doom** (eigener Port) startet aus dem Desktop (ggf. Neustart in
+  Nachweis Board (Runde 59, `s2_board_wuerfelwelt_log.txt`, Foto
+  `s2_board_wuerfelwelt.png`): Desktop-Symbol → „Startziel Wuerfelwelt“,
+  gleichmässig 27,5 FPS je 2 s, Home-Taste des Rahmens angetippt →
+  „Wechsel Wuerfelwelt -> Konsole“ → Desktop.
+- [x] **S3 Doom** (eigener Port) startet aus dem Desktop (ggf. Neustart in
   eigene Partition), ≥ 55 FPS; Home-Taste bzw. Beenden kehrt direkt in den
   ESP32-OS-Desktop zurück, nie in den Launcher. Nachweis: Log.
-- [ ] **S4 Quake** (eigener Port, Warp-Fix) startet aus dem Desktop, ≥ 27,5
+  Nachweis Board (Runde 60, `s3_board_doom_log.txt`): Desktop-Symbol →
+  „Spiel starten: Doom“ → „Doom liegt in doomapp – Neustart dorthin“ →
+  WAD 4097 KB in 471 ms, 54,8–55,0 FPS je 2 s (Bilanz 30 s 66,3 FPS) →
+  Home-Taste des Rahmens (Autopilot im Spiel) → „Wechsel Doom -> Konsole“
+  → Neustart in esp32os_a, Startziel Konsole = Desktop (den Launcher gibt
+  es nicht mehr, S0). „Beenden“ im Doom-Menü nimmt denselben Weg
+  (`beendet` → `Wechsel::Starte(Konsole)`).
+- [x] **S4 Quake** (eigener Port, Warp-Fix) startet aus dem Desktop, ≥ 27,5
   FPS, „y“-Abfrage per Touch-Knopf; Rückkehr direkt in den ESP32-OS-
   Desktop. Nachweis: Log + Foto Dialog.
+  „y“-Abfrage: Quake nahm dort nur die Taste „y“, die Touch-Steuerung hat
+  keine – jetzt beantwortet der grüne OK-Knopf (Enter) die Abfrage mit Ja
+  (`quakegeneric/menu.c`, `M_Quit_Key`).
+  Nachweis Board: Runde 61 (`s4_board_quake_home_log.txt`) – Desktop-
+  Symbol → Partition quakeapp, PAK 17 847 KB von der SD, 27,5 FPS je 2 s
+  (in der Vorführung kurz 24–27), Home-Taste → „Wechsel Quake -> Konsole“
+  → Desktop. Runde 62 (`s4_board_quake_beenden_log.txt`, Foto
+  `s4_board_quake_abfrage.png`) – per Touch Menü → 4× runter → OK →
+  Abfrage „… Is this true?“ mit OK-Knopf, OK → Quake endet (Neustart) →
+  esp32os_a, Startziel Konsole = Desktop.
+  Ein PC-Test der Abfrage geht nicht im Testprozess: „Quit“ beendet Quake
+  über einen Haken, der am Board neu startet; am PC blockiert der
+  wartende Quake-Faden die Bildschleife (Prüfung daher am Board).
 - [ ] **S5 Spieldaten nicht im Release** (Auftrag 12.8) – `DOOM1.WAD` und
   `pak0.pak` weder im Release noch in der Firmware; beim ersten Start von der
   SD laden oder per WLAN herunterladen, mit Hinweis auf die

@@ -400,7 +400,7 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &SHELL;
 /// folgen mit P/A, Spiele mit S).
 pub fn anwendungen() -> Vec<shell::Anwendung> {
     let a = |programm, titel, titel_de, symbol, auf_desktop| shell::Anwendung { programm, titel, titel_de, symbol, auf_desktop };
-    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("rechner", "Calculator", "Rechner", 4, true), a("uhr", "Clock", "Uhr", 119, true), a("kalender", "Calendar", "Kalender", 52, true), a("musik", "Music", "Musik", 65, true), a("@konsole", "Games", "Spiele", 35, true)];
+    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("rechner", "Calculator", "Rechner", 4, true), a("uhr", "Clock", "Uhr", 119, true), a("kalender", "Calendar", "Kalender", 52, true), a("musik", "Music", "Musik", 65, true)];
     if cfg!(target_pointer_width = "32") {
         v.extend([
             a("browser", "Browser", "Browser", 125, true),
@@ -411,5 +411,13 @@ pub fn anwendungen() -> Vec<shell::Anwendung> {
             a("netz_laden", "Download test", "Download-Test", 50, false),
         ]);
     }
+    // Spiele (S0, Auftrag 13.8): je ein Desktop-Symbol, im Startmenü im
+    // Ordner „Spiele...“; Start per Neustart ins Spiel (alter Launcher weg)
+    v.extend([
+        a("@spiel_pudding", "Pudding Panic", "Pudding-Panik", 98, true),
+        a("@spiel_wuerfelwelt", "Cube World", "Würfelwelt", 130, true),
+        a("@spiel_doom", "Doom", "Doom", 43, true),
+        a("@spiel_quake", "Quake", "Quake", 56, true),
+    ]);
     v
 }

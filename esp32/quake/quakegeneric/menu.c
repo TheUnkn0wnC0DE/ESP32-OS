@@ -1607,6 +1607,9 @@ void M_Quit_Key (int key)
 
 	case 'Y':
 	case 'y':
+	/* ESP32-OS: der grüne OK-Knopf der Touch-Steuerung (Enter) beantwortet
+	   die „y/n“-Abfrage mit Ja – eine Tastatur gibt es am Gerät nicht */
+	case K_ENTER:
 		key_dest = key_console;
 		Host_Quit_f ();
 		break;

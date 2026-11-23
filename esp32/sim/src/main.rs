@@ -272,7 +272,7 @@ fn konsole_bilder(dir: &Path) -> std::io::Result<()> {
     warte(&mut r, 2, Input::touch_at(320, 185));
     warte(&mut r, 9, Input::default());
     konsole_png(&dir.join("5_start.png"), &mut r, 55.0)?;
-    // Pudding-Panik in der Konsole: Hauptmenü mit „ZUR KONSOLE“.
+    // Pudding-Panik in der Konsole: Hauptmenü mit „ZUM DESKTOP“.
     let mut p = Rahmen::new(Box::new(konsole::pudding::neu(None)));
     warte(&mut p, 30, Input::default());
     warte(&mut p, 1, Input::buttons(pudding_core::input::btn::JUMP));

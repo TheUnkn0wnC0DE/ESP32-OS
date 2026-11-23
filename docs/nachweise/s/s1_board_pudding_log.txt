@@ -1,0 +1,34 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2186) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2310) pudding_p4: Startziel Konsole, Spielstand geladen
+I (29075) pudding_p4: [debug] Spiel starten: Pudding
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2013) pudding_p4: Programm „esp32os_a“, Startziel Pudding
+I (2013) pudding_p4: Startziel Pudding, Spielstand geladen
+I (4656) pudding_p4: 55.1 FPS (640x360 weich), Frame 15.7 ms, Streifen 13/32, Rendern 7.6/14.2 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 15.2 ms, Panel 55.19 Hz
+I (6657) pudding_p4: 55.1 FPS (640x360 weich), Frame 14.3 ms, Streifen 13/32, Rendern 7.3/12.7 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.7 ms, Ausgabe 13.5 ms, Panel 55.07 Hz
+I (8670) pudding_p4: 55.1 FPS (640x360 weich), Frame 14.0 ms, Streifen 13/32, Rendern 7.1/12.3 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 13.3 ms, Panel 55.09 Hz
+I (10675) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.6 ms, Streifen 12/33, Rendern 6.8/11.9 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 12.8 ms, Panel 55.04 Hz
+I (12680) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.6 ms, Streifen 13/32, Rendern 7.5/11.4 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 12.8 ms, Panel 55.00 Hz
+I (14685) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.1 ms, Streifen 14/31, Rendern 7.5/10.9 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 12.5 ms, Panel 54.99 Hz
+I (16688) pudding_p4: 55.0 FPS (640x360 weich), Frame 12.9 ms, Streifen 13/32, Rendern 7.0/11.1 ms, Skalieren 0.0/0.0 ms, PPA 0.4/0.8 ms, Ausgabe 12.1 ms, Panel 55.04 Hz
+I (24546) pudding_p4: 55.0 FPS (640x360 weich), Frame 6901.5 ms, Streifen 13/32, Rendern 6.8/10.3 ms, Skalieren 0.0/0.0 ms, PPA 0.3/1.5 ms, Ausgabe 11.9 ms, Panel 55.02 Hz
+I (26552) pudding_p4: 55.0 FPS (640x360 weich), Frame 13.5 ms, Streifen 13/32, Rendern 7.2/11.3 ms, Skalieren 0.0/0.0 ms, PPA 0.2/0.8 ms, Ausgabe 13.0 ms, Panel 55.00 Hz
+I (28565) pudding_p4: 55.0 FPS (640x360 weich), Frame 14.7 ms, Streifen 13/32, Rendern 7.2/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 13.9 ms, Panel 55.01 Hz
+I (30574) pudding_p4: 55.0 FPS (640x360 weich), Frame 17.6 ms, Streifen 11/34, Rendern 6.5/15.8 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 16.8 ms, Panel 54.99 Hz
+I (32592) pudding_p4: 53.4 FPS (640x360 weich), Frame 19.6 ms, Streifen 13/32, Rendern 7.8/17.7 ms, Skalieren 0.0/0.0 ms, PPA 0.4/0.9 ms, Ausgabe 18.8 ms, Panel 55.00 Hz
+I (32670) pudding_p4: Bilanz 30 s: 51.6 FPS, Arbeit je Bild Mittel 18.9 ms, p99 19.8 ms, max 6901.5 ms; verpasste Bildwechsel 11 (0.7 je 100)
+I (34604) pudding_p4: 52.9 FPS (640x360 weich), Frame 18.7 ms, Streifen 12/33, Rendern 7.5/16.7 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 18.1 ms, Panel 55.01 Hz
+I (34947) pudding_p4: Wechsel Pudding -> Konsole (Neustart)
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2003) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2120) pudding_p4: Startziel Konsole, Spielstand geladen
+I (28883) pudding_p4: [debug] Spiel starten: Pudding
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2003) pudding_p4: Programm „esp32os_a“, Startziel Pudding
+I (2003) pudding_p4: Startziel Pudding, Spielstand geladen
+I (4655) pudding_p4: 54.9 FPS (640x360 weich), Frame 15.2 ms, Streifen 13/32, Rendern 7.6/13.6 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.8 ms, Ausgabe 14.5 ms, Panel 54.96 Hz
+I (2002) pudding_p4: Programm „esp32os_a“, Startziel Pudding
+I (2002) pudding_p4: Startziel Pudding, Spielstand geladen
+I (32655) pudding_p4: Bilanz 30 s: 51.9 FPS, Arbeit je Bild Mittel 18.9 ms, p99 19.5 ms, max 6900.8 ms; verpasste Bildwechsel 7 (0.4 je 100)
+I (62675) pudding_p4: Bilanz 30 s: 63.2 FPS, Arbeit je Bild Mittel 15.6 ms, p99 20.0 ms, max 20.7 ms; verpasste Bildwechsel 19 (1.2 je 100)

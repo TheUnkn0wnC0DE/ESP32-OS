@@ -1,5 +1,5 @@
 //! Pudding-Panik als Spiel der Konsole: dieselbe App wie bisher, die
-//! Rückkehr zur Konsole steht im Hauptmenü („ZUR KONSOLE“), die FPS zeigt
+//! Rückkehr in den Desktop steht im Hauptmenü („ZUM DESKTOP“), die FPS zeigt
 //! der Rahmen wie in jedem Spiel.
 
 use crate::{Spiel, SpielId, Wechsel};
@@ -81,12 +81,12 @@ mod tests {
         if w == Wechsel::Bleiben { w2 } else { w }
     }
 
-    /// Hauptmenü → ganz unten „ZUR KONSOLE“ → das Spiel will zur Konsole.
+    /// Hauptmenü → ganz unten „ZUM DESKTOP“ → das Spiel will zur Konsole.
     #[test]
     fn hauptmenue_fuehrt_zur_konsole() {
         let mut r = Rahmen::new(Box::new(neu(None)));
         assert_eq!(druecke(&mut r, btn::JUMP), Wechsel::Bleiben); // Titel → Hauptmenü
-        // Ohne Spielstand: NEUES SPIEL, OPTIONEN, REKORDE, ZUR KONSOLE.
+        // Ohne Spielstand: NEUES SPIEL, OPTIONEN, REKORDE, ZUM DESKTOP.
         for _ in 0..3 {
             assert_eq!(druecke(&mut r, btn::DOWN), Wechsel::Bleiben);
         }

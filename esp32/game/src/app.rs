@@ -459,9 +459,9 @@ pub struct App {
     pub perf: Perf,
     /// Akkustand in Prozent (falls die Firmware ihn kennt).
     pub battery: Option<u8>,
-    /// Läuft in der Spielekonsole: Hauptmenü bekommt „ZUR KONSOLE“.
+    /// Läuft unter ESP32-OS: Hauptmenü bekommt „ZUM DESKTOP“ (Rückweg).
     pub konsole: bool,
-    /// „ZUR KONSOLE“ wurde gewählt (einmaliges Signal, siehe [`App::zur_konsole`]).
+    /// „ZUM DESKTOP“ wurde gewählt (einmaliges Signal, siehe [`App::zur_konsole`]).
     zur_konsole: bool,
 }
 
@@ -546,7 +546,7 @@ impl App {
         Some(self.save.to_bytes())
     }
 
-    /// „ZUR KONSOLE“ gewählt? Liefert das Signal nur einmal.
+    /// „ZUM DESKTOP“ gewählt? Liefert das Signal nur einmal.
     pub fn zur_konsole(&mut self) -> bool {
         core::mem::take(&mut self.zur_konsole)
     }
@@ -1085,7 +1085,7 @@ impl App {
             Item::MainMenu => fmt(format_args!("HAUPTMENÜ")),
             Item::Yes => fmt(format_args!("JA, ALLES LÖSCHEN")),
             Item::No => fmt(format_args!("NEIN")),
-            Item::ZurKonsole => fmt(format_args!("ZUR KONSOLE")),
+            Item::ZurKonsole => fmt(format_args!("ZUM DESKTOP")),
         }
     }
 
@@ -1735,7 +1735,7 @@ mod tests {
         touch(app, &[], 1);
     }
 
-    /// In der Spielekonsole: Hauptmenü-Eintrag „ZUR KONSOLE“ gibt einmal das
+    /// In der Spielekonsole: Hauptmenü-Eintrag „ZUM DESKTOP“ gibt einmal das
     /// Signal zur Rückkehr (ohne Konsole gibt es den Eintrag nicht).
     #[test]
     fn hauptmenue_fuehrt_zur_konsole() {

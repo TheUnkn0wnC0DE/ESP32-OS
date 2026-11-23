@@ -1,0 +1,47 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2187) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2311) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2840) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (schon gültig, Code 0)
+I (29071) pudding_p4: [debug] Spiel starten: Quake
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2015) pudding_p4: Programm „esp32os_a“, Startziel Quake
+I (2458) pudding_p4: Quake liegt in „"quakeapp"“ – Neustart dorthin
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (1354) pudding_p4: Programm „quakeapp“, Startziel Quake
+I (1388) pudding_fw::slots: Programm „quakeapp“ als gültig markiert (war in Prüfung, Code 0)
+I (2712) pudding_p4: Startziel Quake, Spielstand neu
+I (2771) pudding_fw::quake_board: Quake: PAK 17847 KB auf der SD-Karte
+I (6349) pudding_p4: 55.0 FPS (640x360 weich), Frame 2719.9 ms, Streifen 0/0, Rendern 0.0/0.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/0.0 ms, Ausgabe 0.0 ms, Panel 55.01 Hz
+I (8369) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.1 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.8 ms, Ausgabe 20.6 ms, Panel 55.19 Hz
+I (10370) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 26.5 ms, Panel 55.08 Hz
+I (12375) pudding_p4: 26.5 FPS (640x360 weich), Frame 40.1 ms, Streifen 0/45, Rendern 0.0/9.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 40.1 ms, Panel 55.01 Hz
+I (14403) pudding_p4: 25.7 FPS (640x360 weich), Frame 41.4 ms, Streifen 0/45, Rendern 0.0/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.3 ms, Ausgabe 41.3 ms, Panel 54.94 Hz
+I (16427) pudding_p4: 25.4 FPS (640x360 weich), Frame 31.5 ms, Streifen 0/45, Rendern 0.0/12.7 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 31.5 ms, Panel 55.02 Hz
+I (18458) pudding_p4: 27.4 FPS (640x360 weich), Frame 34.4 ms, Streifen 0/45, Rendern 0.0/12.6 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.3 ms, Ausgabe 34.3 ms, Panel 54.95 Hz
+I (20470) pudding_p4: 24.3 FPS (640x360 weich), Frame 48.4 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.8 ms, Ausgabe 48.3 ms, Panel 54.99 Hz
+I (22483) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.4 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 25.4 ms, Panel 55.01 Hz
+I (24502) pudding_p4: 26.9 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.4 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 26.6 ms, Panel 55.00 Hz
+I (26503) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/11.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.2 ms, Ausgabe 24.3 ms, Panel 55.00 Hz
+I (28503) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.3 ms, Streifen 0/45, Rendern 0.0/12.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 19.3 ms, Panel 55.00 Hz
+I (30504) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 30.9 ms, Panel 55.00 Hz
+I (32505) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 27.9 ms, Panel 55.00 Hz
+I (33632) pudding_p4: Bilanz 30 s: 24.5 FPS, Arbeit je Bild Mittel 40.8 ms, p99 52.8 ms, max 2719.9 ms; verpasste Bildwechsel 33 (2.0 je 100)
+I (34506) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 16.8 ms, Panel 54.99 Hz
+I (36506) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/11.6 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.2 ms, Ausgabe 27.4 ms, Panel 54.99 Hz
+I (38507) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.6 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 17.8 ms, Panel 54.99 Hz
+I (40508) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.8 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.6 ms, Ausgabe 30.0 ms, Panel 54.99 Hz
+I (42509) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 36.0 ms, Panel 54.99 Hz
+I (44509) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.1 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.7 ms, Ausgabe 31.9 ms, Panel 54.99 Hz
+I (46534) pudding_p4: 24.9 FPS (640x360 weich), Frame 47.6 ms, Streifen 0/45, Rendern 0.0/9.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 47.6 ms, Panel 54.98 Hz
+I (48565) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.6 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 22.8 ms, Panel 54.99 Hz
+I (50584) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.1 ms, Streifen 0/45, Rendern 0.0/12.6 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 29.6 ms, Panel 54.99 Hz
+I (52606) pudding_p4: 27.4 FPS (640x360 weich), Frame 39.8 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 39.7 ms, Panel 54.98 Hz
+I (54640) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/8.9 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.9 ms, Ausgabe 33.2 ms, Panel 54.99 Hz
+I (56657) pudding_p4: 27.5 FPS (640x360 weich), Frame 38.8 ms, Streifen 0/45, Rendern 0.0/12.4 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.3 ms, Ausgabe 38.7 ms, Panel 54.97 Hz
+I (58660) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/12.5 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.4 ms, Ausgabe 27.4 ms, Panel 54.99 Hz
+I (60661) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 0/45, Rendern 0.0/13.0 ms, Skalieren 0.0/0.0 ms, PPA 0.0/1.5 ms, Ausgabe 28.5 ms, Panel 54.99 Hz
+I (61631) pudding_p4: Wechsel Quake -> Konsole (Neustart)
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2039) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2156) pudding_p4: Startziel Konsole, Spielstand geladen
+I (2719) pudding_fw::slots: Programm „esp32os_a“ als gültig markiert (war in Prüfung, Code 0)

@@ -1,0 +1,25 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2201) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2325) pudding_p4: Startziel Konsole, Spielstand geladen
+I (29084) pudding_p4: [debug] Spiel starten: Wuerfelwelt
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2029) pudding_p4: Programm „esp32os_a“, Startziel Wuerfelwelt
+I (2034) pudding_p4: Startziel Wuerfelwelt, Spielstand geladen
+I (5612) pudding_p4: 27.7 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.5/17.5 ms, Skalieren 0.0/0.0 ms, PPA 0.5/0.9 ms, Ausgabe 18.5 ms, Panel 55.47 Hz
+I (7613) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.7/17.4 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 18.4 ms, Panel 55.22 Hz
+I (9613) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.5/17.2 ms, Skalieren 0.0/0.0 ms, PPA 0.6/0.9 ms, Ausgabe 18.4 ms, Panel 55.14 Hz
+I (11614) pudding_p4: 27.6 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.5/17.6 ms, Skalieren 0.0/0.0 ms, PPA 0.6/0.8 ms, Ausgabe 18.5 ms, Panel 55.10 Hz
+I (13615) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.8/17.0 ms, Skalieren 0.0/0.0 ms, PPA 0.3/1.4 ms, Ausgabe 18.5 ms, Panel 55.08 Hz
+I (15615) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.5/17.1 ms, Skalieren 0.0/0.0 ms, PPA 0.5/0.9 ms, Ausgabe 18.3 ms, Panel 55.06 Hz
+I (17616) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.6/17.1 ms, Skalieren 0.0/0.0 ms, PPA 0.5/1.2 ms, Ausgabe 18.5 ms, Panel 55.05 Hz
+I (25487) pudding_p4: 27.5 FPS (640x360 weich), Frame 6925.0 ms, Streifen 13/32, Rendern 6.6/17.0 ms, Skalieren 0.0/0.0 ms, PPA 0.5/0.9 ms, Ausgabe 18.3 ms, Panel 55.04 Hz
+I (27493) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.6/17.1 ms, Skalieren 0.0/0.0 ms, PPA 0.5/0.9 ms, Ausgabe 18.3 ms, Panel 55.02 Hz
+I (29493) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.4/17.6 ms, Skalieren 0.0/0.0 ms, PPA 0.7/0.9 ms, Ausgabe 18.6 ms, Panel 55.02 Hz
+I (31494) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.7/17.4 ms, Skalieren 0.0/0.0 ms, PPA 0.3/0.9 ms, Ausgabe 18.4 ms, Panel 55.01 Hz
+I (33495) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.7/17.2 ms, Skalieren 0.0/0.0 ms, PPA 0.5/0.9 ms, Ausgabe 18.4 ms, Panel 55.01 Hz
+I (33603) pudding_p4: Bilanz 30 s: 21.3 FPS, Arbeit je Bild Mittel 47.0 ms, p99 36.5 ms, max 6925.0 ms; verpasste Bildwechsel 4 (0.2 je 100)
+I (35495) pudding_p4: 27.5 FPS (640x360 weich), Frame 36.4 ms, Streifen 13/32, Rendern 6.6/17.5 ms, Skalieren 0.0/0.0 ms, PPA 0.5/0.9 ms, Ausgabe 18.5 ms, Panel 55.01 Hz
+I (37278) pudding_p4: Wechsel Wuerfelwelt -> Konsole (Neustart)
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2025) pudding_p4: Programm „esp32os_a“, Startziel Konsole
+I (2142) pudding_p4: Startziel Konsole, Spielstand geladen
