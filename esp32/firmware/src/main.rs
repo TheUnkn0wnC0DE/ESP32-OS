@@ -608,7 +608,13 @@ fn main() {
                 schoner_weckt = true;
                 if ruhe {
                     let (a, b) = disp.schlafen(false);
-                    log::info!("Ruhezustand: aufgeweckt (Panel {a}/{b}) nach {} s", (start - letzte_eingabe) / 1_000_000);
+                    // C3: WLAN-Zustand beim Aufwachen (Nachweis „WLAN wieder da“)
+                    let z = kern::wlan::zustand();
+                    log::info!(
+                        "Ruhezustand: aufgeweckt (Panel {a}/{b}) nach {} s, WLAN {}",
+                        (start - letzte_eingabe) / 1_000_000,
+                        if z.verbunden { "verbunden" } else if z.verbindet { "verbindet" } else { "getrennt" }
+                    );
                     ruhe = false;
                 } else {
                     log::info!("Bildschirmschoner: aufgeweckt");

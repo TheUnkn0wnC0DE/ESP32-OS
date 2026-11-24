@@ -5,7 +5,7 @@ target = "riscv32imafc-esp-espidf"
 linker = "ldproxy"
 runner = "espflash flash --monitor --partition-table partitions.csv"
 # --wrap: ESP32-OS-Absturzmerker vor dem Panic-Handler (komponenten/esp32os/absturz.c)
-rustflags = ["--cfg", "espidf_time64", "-C", "link-arg=-Wl,--wrap=esp_panic_handler"]
+rustflags = ["--cfg", "espidf_time64", "-C", "link-arg=-Wl,--wrap=esp_panic_handler", "-C", "link-arg=-Wl,--wrap=xt_unhandled_exception"]
 
 [unstable]
 build-std = ["std", "panic_abort"]

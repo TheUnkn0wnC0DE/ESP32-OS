@@ -1,0 +1,5 @@
+# esp_hosted wie beim Host (C:\ec, komponenten_holen.py) – gleiche Version
+dependencies:
+  espressif/esp_hosted:
+    version: "3.1.0"
+    override_path: "C:/ec/v3.1.0/espressif__esp_hosted"

@@ -1,0 +1,13 @@
+# ESP32-OS, C2 (W2): C6 als esp_hosted-Koprozessor am P4 (SDIO, wie der Host)
+CONFIG_IDF_TARGET="esp32c6"
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+# OTA vom P4 aus (spätere Updates über SDIO): zwei App-Plätze
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+# Rolle Koprozessor (Standard wäre Host); Transport SDIO ist beim C6 Standard
+CONFIG_ESP_HOSTED_CP=y
+CONFIG_EH_TRANSPORT_CP_SDIO=y
+# Funktionen wie der Host (firmware/sdkconfig): WLAN und iTWT (W5); RPC und
+# System (mit OTA vom P4) sind Standard
+CONFIG_ESP_HOSTED_CP_FEAT_WIFI=y
+CONFIG_ESP_HOSTED_CP_FEAT_WIFI_EXT_ITWT=y

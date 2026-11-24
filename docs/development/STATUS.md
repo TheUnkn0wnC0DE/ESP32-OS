@@ -14,8 +14,12 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 - **Board ist weg** (seit 24.11. 06:20). Kein Zugriff auf COM3, bis du
   „Board ist wieder da, mach weiter“ schreibst. Bis dahin PC-Arbeit und
   Vorbereitung der Board-Tests (Liste unten, „Board-Tests“).
-- Läuft: Review des Browser-Diffs (Teil B, Subagent); danach BR3 (lexbor
-  prüfen), Vorbereitung der Stabilitätsrunde, C1 Konsole am PC.
+- Ohne Board erledigt (24.11.): Review Teil B (3 Befunde behoben), BR3
+  lexbor geprüft, Fehlerbericht Fall 1 und 2 behoben (PC-Test), Stabilitäts-
+  runde vorbereitet (PC-Test + 38-min-Autopilot), C1 Konsole am PC fertig
+  (Shell, Matrix, Touch-Test), C2 C6-Firmware gebaut (Schreiben wartet auf
+  deinen Adapter/OK), C3 Standby vorbereitet, D5 Absturzschutz gebaut
+  (nur am Board prüfbar). Alles mit Board-Skript in der Liste unten.
 - 24.11. vormittags: Meldung „Verbindung fehlgeschlagen (-28674)“ bei dir
   unterwegs = ESP_ERR_HTTP_CONNECT (Server nicht erreichbar, auch im
   Browser) – vermutlich das WLAN vor Ort (Anmeldeseite/kein Internet). Die
@@ -74,18 +78,31 @@ jedes Skript schreibt am Ende wieder die normale Firmware aufs Board).
    `konsole_touch.rs`: Konsole über das Menü, `ver`, `touch neu`, `ls`,
    `rm neu` auf der Bildschirmtastatur, Kreuz; Matrix öffnen und schliessen;
    Fotos nach 41 s und 66 s).
-6. **C2 WLAN 6:** Messung vorher (Durchsatz, Verbindungsaufbau), W2
-   C6-Firmware vom P4 aus aktualisieren (Rückweg bereit), W5 iTWT,
-   Messung nachher.
-7. **C3 Standby:** Bildschirm aus, Wecken per Touch, WLAN wieder da,
-   Programme laufen weiter (Log + Fotos per Autopilot).
+6. **C2 WLAN 6:** Messung vorher (`werkzeuge/durchsatz.py`,
+   Verbindungsaufbau aus dem Log); nur mit deinem OK und Adapter:
+   `c6_flashen.ps1 -Sichern`, dann `-Schreiben` (Rückweg `-Zurueck`), Log
+   „coprocessor=3.1.0“, W5 iTWT-Setup, Messung nachher.
+7. **C3 Standby:** `c3_lauf.ps1 -Ziel …\c3` (Matrix, Ruhezustand 90 s,
+   Wecken per Touch, Fotos, Log „aufgeweckt … WLAN verbunden“).
 8. **SC Stabilitätsrunde** (mit Konsole und Standby).
-9. **Teil D:** D5 Absturzschutz (Testprogramm mit absichtlichem Fehler),
-   D4, D1, D2 (Ton), D3; danach **SD Stabilitätsrunde**.
+9. **Teil D:** D5 Absturzschutz `d5_lauf.ps1 -Ziel …\d5` (drei Mal
+   absturz_test: Schreiben 0, Lesen 4, unerlaubter Befehl – erwartet drei
+   abgefangen, kein Neustart, Foto mit Meldung); dann D4, D1, D2 (Ton), D3;
+   danach **SD Stabilitätsrunde**.
 
 ## Offene Fragen
 
-- **kmatrix (C1) – Lizenz:** kmatrix steht unter GPL-3.0-or-later, unsere
+- **C2 (eigene C6-Firmware):** Die Firmware ist gebaut und geprüft, das
+  Schreiben ist vorbereitet (mit Sicherung und Rückweg). Das allererste Mal
+  geht es nur mit einem **USB-UART-Adapter (3,3 V) an den C6-Pins** (TX,
+  RX, GND, dazu BOOT/GPIO9 und EN) – die alte C6-Firmware kann kein Update
+  über SDIO. Hast du so einen Adapter und darf ich das machen, wenn das
+  Board zurück ist? Bis dahin: C2-Messung „vorher“ läuft trotzdem, der Rest
+  wartet. (Vernünftigste Lösung ohne Antwort: C2 bleibt nach der
+  Vorher-Messung offen, kein Eingriff am C6.)
+
+- ~~**kmatrix (C1) – Lizenz:**~~ Entschieden (24.11.): nicht einbauen,
+  eigene „Matrix“ bleibt (Abweichung in PLAN). (alter Text:) kmatrix steht unter GPL-3.0-or-later, unsere
   Firmware enthält NetSurf unter GPL-2.0-only. Beides zusammen in einer
   Firmware ist nicht erlaubt (GPLv3 verlangt v3 für das Ganze, NetSurf
   erlaubt nur v2). Vernünftigste Lösung (umgesetzt): ein eigenes Programm

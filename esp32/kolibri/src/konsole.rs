@@ -8,8 +8,8 @@
 //! im Original). Jeder Faden hat seine eigene Konsole (Zeiger im Faden des
 //! Kerns, Speicher im Heap des Programms – endet mit ihm). Ausgaben werden
 //! sofort gezeichnet, aber nur die geänderten Zellen einer Zeile (ein Bild
-//! je Zeilenstück). Die Bildschirmtastatur erscheint, solange die Konsole
-//! offen ist; sie hält die Zeile mit der Schreibmarke frei.
+//! je Zeilenstück). Die Bildschirmtastatur erscheint, sobald das Programm
+//! auf eine Taste wartet; sie hält die Zeile mit der Schreibmarke frei.
 //!
 //! Abweichungen vom Original (PLAN, „Abweichungen“): kein Zurückblättern
 //! (Bildschirmpuffer = sichtbarer Bereich), Schliessen des Fensters beendet
@@ -113,6 +113,10 @@ pub struct Konsole {
     vorrat: VecDeque<u16>,
     /// Zeilen, um die der Bildschirm insgesamt gerollt ist (Zeileneingabe)
     gerollt: usize,
+    /// Bildschirmtastatur angefordert: erst, wenn das Programm auf Eingabe
+    /// wartet (Matrix u. a. schreiben nur – sonst wanderte die Tastatur mit
+    /// der Schreibmarke und deckte die Taskleiste zu)
+    tastatur: bool,
     titel: String,
     fertig: bool,
     /// Fensterlage (Pixel) beim Anlegen
@@ -147,6 +151,7 @@ impl Konsole {
             warte_scancode: None,
             vorrat: VecDeque::new(),
             gerollt: 0,
+            tastatur: false,
             titel,
             fertig: false,
             fx: 0,
@@ -462,7 +467,9 @@ impl Konsole {
             self.marke = Some((self.x, self.y));
         }
         // Bildschirmtastatur: Zeile der Schreibmarke frei halten
-        sys::textfeld_lage(0, self.y as i32 * ZH, self.w as i32 * ZB, ZH);
+        if self.tastatur {
+            sys::textfeld_lage(0, self.y as i32 * ZH, self.w as i32 * ZB, ZH);
+        }
     }
 
     /// Ereignisse abarbeiten; `warten`: bis eine Taste kommt. Liefert die
@@ -496,7 +503,8 @@ impl Konsole {
                 }
                 6 => {
                     // Antippen ins Fenster: Bildschirmtastatur wieder zeigen
-                    if sys::maus(2) & 1 != 0 {
+                    // (nur bei Programmen, die Eingaben lesen)
+                    if self.tastatur && sys::maus(2) & 1 != 0 {
                         sys::textfeld_fokus(true);
                         self.zeichnen();
                     }
@@ -511,6 +519,12 @@ impl Konsole {
     fn taste2(&mut self) -> u16 {
         if let Some(t) = self.vorrat.pop_front() {
             return t;
+        }
+        // wartet auf eine Taste: jetzt die Bildschirmtastatur
+        if !self.tastatur {
+            self.tastatur = true;
+            sys::textfeld_fokus(true);
+            sys::textfeld_lage(0, self.y as i32 * ZH, self.w as i32 * ZB, ZH);
         }
         getch2_aus(self.ereignisse(true).unwrap_or(0))
     }
@@ -586,7 +600,6 @@ pub unsafe fn kos_con_init(ww: u32, wh: u32, sw: u32, sh: u32, titel: *const c_c
     k.fy = 4;
     sys::maske(0x27);
     k.rahmen();
-    sys::textfeld_fokus(true);
     k.zeichnen();
     if !kern::bibliothek_setzen(Box::into_raw(k) as usize) {
         return -1;

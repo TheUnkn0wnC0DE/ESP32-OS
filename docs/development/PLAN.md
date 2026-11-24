@@ -1577,9 +1577,28 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   versionsgleich, Update vom P4 aus), iTWT. Vorher/Nachher: Durchsatz,
   Verbindungsaufbau, Stromverbrauch soweit messbar. Nachweis: Log mit
   gleichen Versionen, iTWT-Setup ok, Messwerte.
+  Vorbereitet (24.11., ohne Board): eigenes C6-Projekt `esp32/c6_firmware`
+  (esp_hosted 3.1.0 als Koprozessor wie der Host, SDIO, Funktionen WLAN und
+  iTWT wie am Host, eigene Partitionstabelle mit zwei App-Plätzen à
+  1,875 MB für spätere Updates vom P4); Bau `werkzeuge/c6_bauen.ps1`
+  (esp32os_c6.bin 1,07 MB, Wi-Fi- und iTWT-Funktionen gelinkt); Schreiben
+  nur mit geprüfter Sicherung `werkzeuge/board/c6_flashen.ps1` (-Sichern
+  liest zweimal und vergleicht SHA-256, -Schreiben, -Zurueck). Das erste
+  Schreiben braucht einen USB-UART-Adapter an den C6-Pins (die alte
+  C6-Firmware 0.0.0 kann kein Update über SDIO) – Frage in STATUS.
 - [ ] **C3 Standby** (vorher P5 ohne Akku) – Bildschirm aus, Aufwachen per
   Touch, danach WLAN-Verbindung wieder da und offene Programme laufen
   weiter. Nachweis: Log und Fotos vor/nach dem Standby per Autopilot.
+  Vorbereitet (24.11.): Ruhezustand gibt es seit P5 (Startmenü →
+  Ruhezustand, Panel schläft, Antippen weckt, WLAN spart). PC-Test
+  `desktop/tests/standby_touch.rs`: Matrix läuft, Menüeintrag fordert den
+  Ruhezustand an; erzeugt den Board-Autopilot (`c3_autopilot.txt`,
+  `c3_lauf.ps1`: 90 s schlafen, wecken, Fotos danach und 15 s später). Das
+  Log beim Aufwachen nennt jetzt den WLAN-Zustand. Dabei gefunden und
+  behoben: die Konsole forderte die Bildschirmtastatur schon beim Start an
+  und schob sie mit der Schreibmarke – bei Matrix lag sie über der
+  Taskleiste, der Startknopf war nicht erreichbar. Jetzt erst, wenn das
+  Programm auf eine Taste wartet.
 - [ ] **SC Stabilitätsrunde nach Teil C** – wie SB, dazu Konsole und
   Standby. Nachweis: Log ≥ 30 min, 0 Abstürze.
 - [ ] **C4 v1.1 vorbereiten** – README, CHANGELOG, Release-Paket,
@@ -1640,6 +1659,18 @@ und Verzeichnis auf GitHub).
   Grenzen ehrlich unter „Abweichungen“. Nachweis: PC-/Board-Test mit
   absichtlichem Fehler in einem Testprogramm – Programm endet, Desktop
   läuft weiter, Foto.
+  Vorbereitet (24.11., ohne Board – nur am Board prüfbar): Der
+  Ausnahme-Handler von ESP-IDF (`xt_unhandled_exception`, aus vectors.S)
+  ist per Linker umhüllt (`absturz.c`, `--wrap`). Kommt ein Adress- oder
+  Zugriffsfehler bzw. ein unerlaubter Befehl aus einem Programm-Faden
+  (kein Kern-Code, nicht geschützt, kein `abort()`, nicht aus einer
+  Unterbrechung, Cache an, erster Fehler dieses Fadens), wird `mepc` auf
+  `esp32os_programm_fehler_ende` gesetzt und zurückgekehrt – der Faden
+  beendet sich dort wie nach einer Rust-Panik („Absturz“, Meldung mit Art
+  und Adressen). Alles andere wie bisher: Panik, Neustart, Meldung danach.
+  Testprogramm `absturz_test` mit drei Arten (Schreiben 0, Lesen 4,
+  unerlaubter Befehl); Board-Lauf `werkzeuge/board/d5_lauf.ps1` (erwartet:
+  drei abgefangen, kein Neustart). Firmware gebaut.
 - [ ] **D4 Dateimanager** – Kopieren, Verschieben, Löschen mit
   Papierkorb, per Touch (lange drücken = Menü). Nachweis: PC-Test per
   Autopilot, Board-Foto.
@@ -1659,6 +1690,18 @@ und Verzeichnis auf GitHub).
 
 ## Abweichungen
 
+- **D5 Absturzschutz ohne Speicherschutz (24.11.):** Ohne User-Mode und
+  PMP (siehe Antwort zur Isolation) teilen alle Programme einen
+  Adressraum. D5 fängt nur den Fehler selbst ab: Was ein Programm vorher
+  falsch geschrieben hat (auch in Kern- oder fremde Daten), bleibt kaputt.
+  Nicht abgefangen (weiter Neustart): Fehler in Kern-Code, in geschützten
+  Abschnitten (Treiber, Netz, Update), in Unterbrechungen, bei
+  abgeschaltetem Flash-Cache, `abort()` (zeigt kaputten Systemzustand an,
+  z. B. Heap), Wächter (Watchdog), Stapelüberlauf mit kaputtem Stapelzeiger
+  (zweiter Fehler im selben Faden). Hält das Programm beim Fehler eine
+  System-Sperre (z. B. einen kritischen Abschnitt), kann das System danach
+  hängen – der Wächter startet es dann neu.
+
 - **C1 Shell, zwei Dateien angepasst (24.11.):** `cmd/cmd_lsmod.c` fragte
   die Treiberliste mit Inline-Assembler ab (`int $0x40`, 68.31) – jetzt
   über kos_syscall; ESP32-OS hat keine ladbaren Treiber, lsmod meldet das.
@@ -1667,11 +1710,11 @@ und Verzeichnis auf GitHub).
   (libc.obj): eine Grösse ohne Verweis auf den eigenen, noch
   unvollständigen Typ (gcc/clang lehnen das ab, tcc nicht). Alles andere
   unverändert.
-- **C1 kmatrix nicht übernommen (24.11.):** kmatrix steht unter
+- **C1 kmatrix nicht übernommen (24.11., vom Nutzer entschieden: nicht
+  einbauen, eigene „Matrix“ bleibt):** kmatrix steht unter
   GPL-3.0-or-later; die Firmware enthält NetSurf (GPL-2.0-only) – beides in
   einem Abbild verletzt eine der Lizenzen. Ersatz: eigenes Programm
-  „Matrix“ (GPL-2.0), das die Konsole genauso nutzt. Frage an den Nutzer in
-  STATUS (eigenes Abbild wie Doom/Quake wäre möglich).
+  „Matrix“ (GPL-2.0), das die Konsole genauso nutzt.
 - **C1 Konsole ohne Zurückblättern (24.11.):** console.obj hat einen
   Bildschirmpuffer mit Zurückblättern (Standard 300 Zeilen); hier ist der
   Puffer so gross wie der sichtbare Bereich (80×25). Grund: Touch-Bedienung

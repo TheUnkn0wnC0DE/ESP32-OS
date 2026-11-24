@@ -66,6 +66,12 @@ pub struct Faden {
     /// Zeiger für Bibliotheken des Programms (C1: Zustand der Konsole,
     /// console.obj). Zeigt in den Heap des Programms und endet mit ihm.
     pub bibliothek: Cell<usize>,
+    /// D5: Hardware-Fehler dieses Fadens (Ursache + 1, 0 = keiner), Befehls-
+    /// und Datenadresse – gesetzt im Ausnahme-Handler der Plattform, gelesen
+    /// beim Beenden. Ein zweiter Fehler startet das System neu.
+    pub hw_fehler: AtomicU32,
+    pub hw_pc: AtomicU32,
+    pub hw_adresse: AtomicU32,
 }
 
 /// Setzt `ende_flag` in allen laufenden Fäden des Prozesses. Nur unter der
@@ -162,6 +168,53 @@ pub(crate) fn speicher_voll_melden() {
         // SAFETY: eigener Faden.
         unsafe { (*fd).speicher_voll.set(true) };
     }
+}
+
+/// D5: Darf ein Hardware-Fehler (CPU-Ausnahme) des laufenden Fadens nur
+/// dieses Programm beenden? Ja, wenn es ein Programm-Faden ist, der gerade
+/// keinen Kern-Code ausführt, nicht geschützt ist und noch keinen Fehler
+/// hatte. Merkt Ursache und Adressen. Läuft im Ausnahme-Handler: nur
+/// Atomics, kein Speicher, keine Sperren.
+pub fn hw_fehler_abfangen(ursache: u32, pc: u32, adresse: u32) -> bool {
+    let fd = faden();
+    if fd.is_null() {
+        return false;
+    }
+    // SAFETY: eigener Faden (der Fehler kam aus ihm), lebt.
+    let f = unsafe { &*fd };
+    if f.im_kern.load(Relaxed) != 0 || f.geschuetzt.load(Relaxed) != 0 {
+        return false;
+    }
+    if f.hw_fehler.swap(ursache + 1, Relaxed) != 0 {
+        return false;
+    }
+    f.hw_pc.store(pc, Relaxed);
+    f.hw_adresse.store(adresse, Relaxed);
+    true
+}
+
+/// D5: nach einem abgefangenen Hardware-Fehler (der Ausnahme-Handler hat
+/// den Faden hierher umgeleitet): Programm mit „Absturz“ beenden wie bei
+/// einer Rust-Panik, das System läuft weiter.
+pub fn hw_fehler_beenden() -> ! {
+    let fd = faden();
+    // SAFETY: eigener Faden.
+    let (u, pc, a) = unsafe { ((*fd).hw_fehler.load(Relaxed).saturating_sub(1), (*fd).hw_pc.load(Relaxed), (*fd).hw_adresse.load(Relaxed)) };
+    let art = match u {
+        0 => "Instruction address misaligned",
+        1 => "Instruction access fault",
+        2 => "Illegal instruction",
+        4 => "Load address misaligned",
+        5 => "Load access fault",
+        6 => "Store address misaligned",
+        7 => "Store access fault",
+        _ => "CPU exception",
+    };
+    // Text im System-Heap: er landet im Protokoll und überlebt den Bereich
+    let msg = kern_abschnitt(|| format!("{art} bei 0x{pc:08x} (Adresse 0x{a:08x})"));
+    // SAFETY: eigener Faden.
+    unsafe { *(*fd).panik.borrow_mut() = Some(kern_abschnitt(|| msg.clone())) };
+    beende_selbst(Ende::Absturz(msg))
 }
 
 /// Bibliothekszeiger des eigenen Fadens (0 = keiner oder kein
@@ -422,6 +475,9 @@ fn starte_faden_fuer(
         ende_flag: AtomicBool::new(false),
         pruef_zaehler: Cell::new(0),
         bibliothek: Cell::new(0),
+        hw_fehler: AtomicU32::new(0),
+        hw_pc: AtomicU32::new(0),
+        hw_adresse: AtomicU32::new(0),
     })) as usize;
     if let Some(p) = sperre(&k.prozesse).iter_mut().find(|p| p.pid == pid) {
         // Programm soll schon enden: neuer Faden bekommt das Flag gleich mit

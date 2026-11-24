@@ -189,6 +189,20 @@ pub static BOARD: Plattform = Plattform {
     system_frei,
 };
 
+/// D5: vom Ausnahme-Handler (absturz.c) gefragt – darf der Fehler nur das
+/// Programm beenden? Im Handler: nur Atomics (siehe kern::hw_fehler_abfangen).
+#[unsafe(no_mangle)]
+pub extern "C" fn esp32os_programm_fehler_abfangen(ursache: u32, pc: u32, adresse: u32) -> bool {
+    kern::hw_fehler_abfangen(ursache, pc, adresse)
+}
+
+/// D5: Ziel der Umleitung – läuft wieder im Faden des Programms.
+#[unsafe(no_mangle)]
+pub extern "C" fn esp32os_programm_fehler_ende() -> ! {
+    log::error!("Hardware-Fehler in Programm {:?} – nur dieses Programm wird beendet", kern::eigene_pid());
+    kern::hw_fehler_beenden()
+}
+
 fn system_frei() -> usize {
     // SAFETY: reine Abfrage der Heap-Verwaltung.
     unsafe { sys::heap_caps_get_largest_free_block(sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) }
