@@ -409,7 +409,25 @@ pub fn starte(e: &'static ProgrammEintrag) -> Result<u32, StartFehler> {
 }
 
 /// Wie [`starte`], mit Startparametern (Funktion 70.7).
+///
+/// M4 (Dauertest): Ein eben geschlossenes Programm gibt seinen Bereich erst
+/// beim Aufräumen frei (asynchron). Fehlt der Speicher, zuerst aufräumen und
+/// bis 1 s erneut versuchen – sonst scheiterte z. B. der PDF-Betrachter
+/// (8 MB) direkt nach dem Schliessen des Musikplayers.
 pub fn starte_mit(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32, StartFehler> {
+    for _ in 0..20 {
+        match starte_mit_einmal(e, argumente) {
+            Err(StartFehler::KeinSpeicher) => {
+                aufraeumen();
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            r => return r,
+        }
+    }
+    starte_mit_einmal(e, argumente)
+}
+
+fn starte_mit_einmal(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32, StartFehler> {
     kern_abschnitt(|| {
         let k = kern();
         let laenge = (e.heap_kb + e.stapel_kb) * 1024 + MIN_BEREICH + 4096;

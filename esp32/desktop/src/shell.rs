@@ -207,6 +207,9 @@ pub fn starten(programm: &str) {
         return;
     }
     match programm {
+        p if p.starts_with("@spiel_") && crate::konfig::AUTOPILOT_AKTIV.load(core::sync::atomic::Ordering::Relaxed) => {
+            sys::debug_text(&format!("Autopilot: Spielstart {p} unterdrückt"));
+        }
         p if p.starts_with("@spiel_") => {
             let id = match &p[7..] {
                 "pudding" => konsole::SpielId::Pudding,
@@ -620,6 +623,8 @@ pub fn taskbar() {
     let mut liste = Vec::new();
     let mut erst = true;
     let mut letzte = (u32::MAX, 0usize);
+    // S1: Änderungen der Fensterliste sofort (Ereignis statt Abfrage)
+    sys::fensterliste_beobachten();
     loop {
         let e = sys::warte_ereignis_max(50);
         // Wecker der Uhr (A3) – klingelt auch, wenn die Uhr nicht offen ist

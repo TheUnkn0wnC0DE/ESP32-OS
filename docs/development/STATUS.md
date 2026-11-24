@@ -11,6 +11,31 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **Zwischenstand 24.11., 22:15:** M4 Lauf 3 (Pool, 4 MB Systemreserve)
+  abgebrochen: dem System blieben nur 0,4–1,3 MB PSRAM (Fensterpuffer,
+  WLAN, Kern) – zu knapp für neue Fenster. Jetzt 6 MB Reserve, dafür
+  @icon 2,5 statt 4 MB (Spitze am Board 948 KB, PC-Test mit Hintergrundbild
+  grün): System 3,4 MB frei, Pool 11,1 MB frei (Browser braucht 10,6).
+  Läuft: M4 Lauf 4 (m4e). Fertig am PC: S1 Taskleiste per Ereignis (Test
+  < 150 ms), S2 Dateimanager blättert nur die Liste (Test: gleicht dem
+  Vollbild), S4 abgehakt. Vorbereitet: S3 Bildrate je Phase am Board
+  (`s3_lauf.ps1`, Auswertung `s3_auswertung.py`), vorher/nachher für S2.
+
+- **Zwischenstand 24.11., 22 Uhr (Vorrang M):** Programm-Pool gebaut
+  (`kern::bereichspool`, PC-Test: 200 Runden Menü/Musik/PDF ohne
+  Zerstückelung; Firmware reserviert ihn beim ersten Programmstart, Stand in
+  der Speicherwacht). Läuft am Board: M4 Dauertest Lauf 3 mit Pool. Bereit:
+  Lecksuche `leck_lauf.ps1` (Heap-Spur über 2 Runden), läuft danach.
+
+- **M4 Dauertest Lauf 2 (75 min): 0 Abstürze.** Interner RAM 221 → 213 KB
+  (kleines Leck, ~1 KB je 10 min) und 13 Startfehler grosser Programme
+  wegen zerstückeltem PSRAM → M4 noch nicht erledigt. Nächstes: Leck mit
+  der Heap-Spur suchen, Programmbereiche aus einem festen Pool.
+- **Neu: Abschnitt S (Bedienung)** – Taskleiste im selben Bild, Dateimanager
+  flüssig, fps-Messung der Oberfläche, Ersteinrichtung per X erledigt.
+  Kommt nach den Speicher-Punkten M; Stabilität hat Vorrang. Läuft gerade:
+  M4 Dauertest am Board (71 min).
+
 - **24.11. abends: Board wieder angeschlossen** – Board-Tests laufen in der
   Reihenfolge von Vorrang M. Läuft: M1 Messlauf (`m1_lauf.ps1`, Mess-Build
   mit Stabilitäts-Autopilot, danach normale Firmware). Statisch (aus dem
@@ -126,6 +151,30 @@ jedes Skript schreibt am Ende wieder die normale Firmware aufs Board).
    D2 (Ton), D3; danach **SD Stabilitätsrunde**.
 
 ## Offene Fragen
+
+- **T1 ColibriOS (geprüft 24.11. abends, nur Webseiten gelesen):**
+  ColibriOS ist das umbenannte KolibriOS (Commit „Rename KolibriOS to
+  ColibriOS across the tree“, 31.10.2026; Quellen
+  git.colibrios.org/colibrios/colibrios, Ports git.colibrios.org/colibrios/ports).
+  Lizenz: `COPYING.TXT` der Quellen und `LICENSE` der Ports sind die
+  GPL-2.0 (Juni 1991); die Webseite sagt nur „GPL“. Einzelne Programme
+  tragen eigene Köpfe (wie bei kmatrix, das GPL-3.0 war) – jedes Programm
+  vor dem Übernehmen einzeln prüfen. Mit unserem GPL-2.0-only verträglich
+  ist „GPL“ ohne Version, „GPL-2.0“ und „GPL-2.0-or-later“, nicht
+  GPL-3.0. build.colibrios.org/ports war nicht erreichbar (DNS); das
+  Ports-Repo enthält ein C/C++-SDK (newlib, SDL2, Qt5) und Ports grosser
+  Programme (SDL2-Spiele, Quake 2/3, Wesnoth, NetSurf, Transmission) – die
+  brauchen SDL/C++ bzw. x86 und passen nicht zu unserem ksys.h-Weg.
+  Kandidaten im Quellbaum (Ordner gesehen, C-Quellen und ksys.h noch nicht
+  geöffnet): programs/other – Timer, Weather, calc, table, period,
+  planet_v, rainbow, mousepos, pipet (PasswordGen und TinyHashView haben wir
+  schon); programs/games – 2048, 15, flood-it, c4, checkers, LaserTank,
+  sudoku, tetris, snake, xonix. Viele Programme dort sind FASM oder C--
+  (x86) und lassen sich nicht übernehmen. **Frage:** Soll ich nach Teil D
+  einige dieser C-Programme (Vorschlag: Timer, 2048, flood-it, sudoku)
+  einzeln prüfen und übernehmen? Dafür müsste ich den Quellbaum
+  herunterladen (git clone, ca. 1–2 GB, nur in den Scratch-Ordner). Ohne
+  dein OK mache ich das nicht; bis dahin bleibt es bei dieser Liste.
 
 - ~~**C2 Adapter**~~ – erledigt (24.11.): Du willst den Weg über OTA ohne
   Adapter. Geprüft: sehr wahrscheinlich ja (die Werks-Firmware ist ein

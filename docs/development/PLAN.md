@@ -1338,7 +1338,7 @@ Vor allen anderen Punkten; Teil C und D pausieren (C2-OTA und D4 wurden
 noch sauber abgeschlossen). Grund: das System stürzt am Board ständig ab.
 Erst M1–M5, dann M6, dann weiter mit C/D.
 
-- [ ] **M1 Messen statt raten** – laufend loggen: freier interner RAM,
+- [x] **M1 Messen statt raten** – laufend loggen: freier interner RAM,
   freies PSRAM, grösster zusammenhängender Block in beiden, Verbrauch je
   Programm; jeden Absturz mit Grund und Speicherstand festhalten (Meldung
   nach dem Neustart). Zuerst eine Tabelle: was verbraucht wie viel internen
@@ -1380,6 +1380,11 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   (nur lebende Tasks benannt), Messlauf 3 läuft. Nächster Schritt (M2):
   Bildstreifen der Anzeige im Desktop-Modus in den PSRAM (render1 hält
   125 KB intern; Spiele starten ohnehin neu in ihren eigenen Modus).
+  Nachweis: Log-Zeilen `SPEICHER t=…` in jedem Board-Lauf (z. B. m4e:
+  „SPEICHER t=20s intern frei 220 KB (Block 84, Min 144) PSRAM frei 3412 KB
+  (Block 2816, Min 2887) Pool 11106/14848 KB …“), Absturzmeldung mit
+  Speicherstand am Board (Messlauf 2, oben), Tabelle des internen RAM je
+  Task bei M2 (Messlauf 3).
 - [ ] **M2 Interner RAM so leer wie möglich** – alles ins PSRAM, was nicht
   zwingend intern sein muss (WLAN- und lwIP-Puffer, mbedTLS, Stapel wo
   sicher, Kern-Strukturen, Puffer der Programme); grosse Puffer
@@ -1420,6 +1425,27 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   (Menü auf, zu) erzeugt `dauertest_autopilot.txt` (10 Runden à 430 s =
   71 min); `werkzeuge/board/m4_lauf.ps1` zählt Abstürze und vergleicht den
   freien internen RAM bei t=20 s mit der letzten Speicherzeile (Leck).
+  Lauf 1 (24.11. abends): nach 12 min abgebrochen, kein Absturz – der
+  PDF-Betrachter (8 MB Bereich) startete nicht („Fehler 30“, kein Speicher),
+  weil der eben geschlossene Musikplayer seinen Bereich erst beim
+  Aufräumen freigibt; die folgenden Tipps trafen das Pudding-Symbol →
+  Neustart ins Spiel. Intern bis dahin 218 KB frei (Min 144). Behoben: ein
+  Start ohne Speicher räumt erst auf und versucht es bis 1 s erneut
+  (`kern::starte_mit`); in Autopilot-Builds startet kein Spiel. Lauf 2 läuft.
+  S4: Merker setup=1 am Board gesetzt (Log „Ersteinrichtung: schon
+  erledigt“), Schliessen mit X gilt jetzt als erledigt (PC-Test).
+  **Lauf 2 (24.11., 75 min, `m4b`): 0 Abstürze, 0 Neustarts** (kein Guru,
+  abort, Panik, Speicher voll). Interner RAM: Anfang 221 KB, Ende 213 KB
+  (−8 KB, gleichmässig ~1 KB je 10 min über alle Programme, grösster Block
+  stabil 84 KB, Minimum 145 KB) → Leck-Kriterium **nicht erfüllt**. Dazu 13
+  Startfehler „kein Speicher“ bei grossen Programmen (PDF-Betrachter 8 MB,
+  Browser 10 MB): PSRAM fragmentiert (grösster Block 11,5 → 6,2 MB bei
+  ~10 MB frei). Kern-Tabellen geprüft (Protokoll auf 256 begrenzt, Ordner
+  je Faden wird entfernt). Nächste Schritte: (a) Leck mit der Heap-Spur
+  (`ESP32OS_HEAP_TRACE`, Werkzeug aus BR1) über mehrere Runden suchen;
+  (b) Fragmentierung: Programmbereiche aus einem beim Start reservierten
+  Pool statt aus dem System-Heap; Heap des Desktop-Programms @icon 4 MB
+  (Spitze 948 KB) verkleinern (Übergang zu M6).
 - [ ] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
 - [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5) –
   intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM
@@ -1429,6 +1455,62 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Seitengrösse) und den Programmen geben. Vorher/Nachher in PLAN: interner
   RAM frei, PSRAM frei, Speicher des Browsers, wie viele der 30 Testseiten
   laden.
+
+## S. Bedienung (Nutzer 24.11. abends; nach den Speicher-Punkten M, Stabilität hat Vorrang)
+
+- [ ] **S1 Taskleiste im selben Bild** – Fenster und Eintrag in der
+  Taskleiste erscheinen (und verschwinden) im selben Bild; Taskleiste per
+  Ereignis statt per Abfrage. Nachweis: PC-Test (Bild nach Öffnen/
+  Schliessen), Board-Foto/Messung.
+  Stand 24.11. (PC): Die Taskleiste fragte alle 500 ms ab. Jetzt meldet
+  sie sich beim Kern als Beobachter der Fensterliste
+  (`sys::fensterliste_beobachten`); neues/geschlossenes/aktiviertes/
+  minimiertes Fenster und Titeländerung lösen sofort ein Neuzeichnen aus
+  (`Welt::liste_geaendert`). PC-Test `desktop/tests/taskleiste_sofort.rs`:
+  Eintrag erscheint und verschwindet < 150 ms nach dem Fenster (3 Runden).
+  Offen: Board-Messung.
+- [ ] **S2 Dateimanager flüssig scrollen** – so flüssig wie der Browser
+  (32 fps): nur den sichtbaren Teil neu zeichnen, Symbole und Einträge
+  zwischenspeichern. Nachweis: fps vorher/nachher am Board.
+  Stand 24.11. (PC): Jeder Blätterschritt zeichnete das ganze Fenster neu
+  (Rahmen, Geräteleiste, Knopfleiste) und mischte jedes Symbol neu
+  (Kopie 4 KB je Zeile). Jetzt: `liste_blaettern` entfernt nur die Knöpfe
+  der bisher sichtbaren Zeilen und zeichnet Liste und Bildlaufanzeige neu;
+  Symbole fertig auf die Zeilenfarbe gemischt im Zwischenspeicher
+  (`sym_auf`). PC-Test `desktop/tests/dateimanager_blaettern.rs`: nach
+  4 Blätterschritten gleicht das Bild jeweils dem vollen Neuzeichnen
+  (auch das Teilbild aus den Dirty-Rects), die Knöpfe der neuen Zeilen
+  stimmen (oberste Zeile öffnet die Datei dort, Zurückblättern öffnet den
+  ersten Ordner); mit absichtlich entferntem Leeren der Bildlaufspur
+  schlägt er fehl. Offen: fps am Board (mit S3).
+- [ ] **S3 Oberfläche allgemein** – per Autopilot messen, wo die Bildrate
+  einbricht (Fenster öffnen/schliessen, Menü, Scrollen in allen
+  Programmen, Tastatur); schlimmste Stellen zuerst; Ziel überall ≥ 30 fps
+  beim Scrollen, keine sichtbaren Verzögerungen beim Öffnen/Schliessen.
+  Nachweis: Vorher/Nachher-fps in PLAN.
+- [x] **S4 Ersteinrichtung** – Schliessen mit dem X gilt als erledigt
+  (kommt nicht bei jedem Start wieder); am Board des Nutzers den Merker
+  setup=1 setzen. Nachweis: PC-Test, Board-Log „schon erledigt“.
+  Nachweis: PC-Test `desktop/tests/ersteinrichtung_kreuz.rs` (X → Merker
+  setup=1, nach Neustart keine Ersteinrichtung); Merker am Board einmal
+  gesetzt (Build mit `ESP32OS_SETUP_ERLEDIGT`), danach in jedem Lauf mit
+  normaler Firmware Log „Ersteinrichtung: schon erledigt“ (M4-Lauf 24.11.,
+  I (3583)).
+
+## T. Nach Teil S (Nutzer 24.11. abends)
+
+- [x] **T1 ColibriOS prüfen** – KolibriOS heisst jetzt ColibriOS
+  (colibrios.org), viele neue Programme und Ports (build.colibrios.org/
+  ports). Prüfen: Lizenz der ColibriOS-Quellen und der Ports; welche
+  Programme sich mit unserem ksys.h-Weg (kolibri/include, praefix.py)
+  einfach übernehmen lassen. Nachweis: Ergebnis in STATUS unter „Offene
+  Fragen“. (Info: Der Haupt-Designer hat unsere Oberfläche auf Reddit
+  gelobt.)
+  Nachweis: STATUS „Offene Fragen“, Eintrag T1 (24.11.): Lizenz GPL-2.0
+  (COPYING.TXT und Ports-LICENSE über die Gitea-API gelesen), Kandidaten aus
+  programs/other und programs/games, Ports (SDL/C++) passen nicht; Frage zum
+  Übernehmen einzelner C-Programme an den Nutzer. Vorgezogen, während das
+  Board den Dauertest M4 lief (S braucht das Board).
 
 ## Gesamtauftrag 24.11. (ersetzt den vom 23.11. nachts)
 

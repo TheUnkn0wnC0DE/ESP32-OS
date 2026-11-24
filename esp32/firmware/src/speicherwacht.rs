@@ -41,8 +41,9 @@ pub fn zeile(sekunden: u64) -> String {
         .into_iter()
         .map(|p| format!("{} {}/{} KB (Spitze {})", p.name, p.heap_belegt / 1024, p.heap_groesse / 1024, p.heap_spitze / 1024))
         .collect();
+    let pool = crate::kern_board::pool_stand().map_or(String::new(), |(f, b, g)| format!(" Pool {f}/{g} KB (Block {b})"));
     format!(
-        "SPEICHER t={sekunden}s intern frei {i} KB (Block {ib}, Min {imin}) PSRAM frei {p} KB (Block {pb}, Min {pmin}) | {}",
+        "SPEICHER t={sekunden}s intern frei {i} KB (Block {ib}, Min {imin}) PSRAM frei {p} KB (Block {pb}, Min {pmin}){pool} | {}",
         programme.join(", ")
     )
 }
@@ -55,6 +56,8 @@ pub fn starten() {
     let ok = crate::update::psram_faden(c"speicherwacht", 6 * 1024, move || {
         let beginn = crate::hw::now_us() as u64;
         let mut n: u64 = 0;
+        #[cfg(esp32os_heap_trace)]
+        let (mut spur_an, mut spur_aus) = (false, false);
         loop {
             let s = (crate::hw::now_us() as u64 - beginn) / 1_000_000;
             let (i, ib, p, pb) = stand();
@@ -64,6 +67,22 @@ pub fn starten() {
             // (Desktop steht, WLAN da, Autopilot noch nicht begonnen)
             if n % 30 == 0 || s == 20 {
                 log::info!("{}", zeile(s));
+            }
+            // M4-Lecksuche (Build `ESP32OS_HEAP_TRACE`): Spur ab 60 s (Desktop
+            // ruht), Ausgabe nach `ESP32OS_HEAPSPUR_ENDE` s (Ende einer
+            // Autopilot-Runde, alle Programme zu) – was dann noch belegt ist
+            // und sich wiederholt, ist das Leck
+            #[cfg(esp32os_heap_trace)]
+            {
+                let ende: u64 = option_env!("ESP32OS_HEAPSPUR_ENDE").and_then(|t| t.parse().ok()).unwrap_or(885);
+                if s >= 60 && !spur_an && option_env!("ESP32OS_SEITENLISTE").is_none() {
+                    spur_an = true;
+                    crate::seitenliste::spur::starten();
+                }
+                if s >= ende && spur_an && !spur_aus {
+                    spur_aus = true;
+                    crate::seitenliste::spur::ausgeben();
+                }
             }
             if berichte.contains(&s) {
                 // SAFETY: Bericht über Tasks und Heap (speicherbericht.c).

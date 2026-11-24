@@ -170,6 +170,7 @@ impl Desktop {
     /// "ms:x1:y1:x2:y2" zwei Finger. Die Fingerlage gilt bis zum nächsten
     /// Eintrag und geht durch die Gestenerkennung wie echte Berührungen.
     pub fn autopilot(&mut self, skript: &str) {
+        konfig::AUTOPILOT_AKTIV.store(true, Relaxed);
         self.autopilot = skript
             .split(',')
             .filter_map(|t| {
@@ -359,7 +360,10 @@ const SHELL: [kern::ProgrammEintrag; 22] = [
     eintrag!("@meldung", shell::meldung, 256),
     eintrag!("@tastatur", tastatur::dienst, 512),
     eintrag!("@start", shell::start, 512),
-    eintrag!("@icon", shell::icon, 4096),
+    // 2,5 MB: Spitze am Board 948 KB (Verlauf), mit Hintergrundbild etwa
+    // 1,7 MB (Bild 640×340 RGBA, halbes Bild beim Lesen, Desktop-Puffer);
+    // vorher 4 MB – die fehlten im Programm-Pool (M4)
+    eintrag!("@icon", shell::icon, 2560),
     eintrag!("@taskbar", shell::taskbar, 512),
     eintrag!("@menu", shell::menu, 1024),
     eintrag!("info", shell::info, 256),

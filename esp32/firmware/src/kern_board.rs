@@ -162,13 +162,74 @@ fn fortsetzen(g: usize) {
     unsafe { sys::vTaskResume(g.handle) };
 }
 
+/// M4: Pool für Programmbereiche (kern::bereichspool) – einmal reserviert
+/// (`pool_anlegen`, nach Anzeige und Pipeline): grösster freier PSRAM-Block minus
+/// `POOL_RESERVE` für das System (Fenster, Abrufe, Bilder). Ohne Pool lagen
+/// die Bereiche zwischen den System-Belegungen, der PSRAM zerfiel (Dauertest:
+/// 10 MB frei, grösster Block 6 MB, Browser startete nicht). Reserve 6 MB:
+/// mit 4 MB blieben dem System im Dauertest nur 0,4–1,3 MB (Fensterpuffer,
+/// WLAN, Kern) – zu knapp für neue Fenster und Notzuteilungen.
+static POOL: std::sync::Mutex<Option<kern::bereichspool::Pool>> = std::sync::Mutex::new(None);
+const POOL_RESERVE: usize = 6 * 1024 * 1024;
+const POOL_MIN: usize = 8 * 1024 * 1024;
+
+/// Stand des Pools (frei, grösstes Stück, Grösse) in KB, None ohne Pool.
+pub fn pool_stand() -> Option<(usize, usize, usize)> {
+    let g = POOL.lock().unwrap_or_else(|e| e.into_inner());
+    g.as_ref().map(|p| {
+        let (f, b) = p.stand();
+        (f / 1024, b / 1024, POOL_GROESSE.load(core::sync::atomic::Ordering::Relaxed) / 1024)
+    })
+}
+static POOL_GROESSE: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
+
+/// Pool anlegen – nach Anzeige und Pipeline (deren Bildspeicher müssen
+/// vorher liegen, sonst bliebe dem System zu wenig; erster Versuch am
+/// Board: Pool beim ersten Programmstart nach 2,9 s, danach nur 1,3 MB PSRAM
+/// für das System). Programme, die vorher starten, kommen aus dem
+/// System-Heap.
+pub fn pool_anlegen() {
+    let mut g = POOL.lock().unwrap_or_else(|e| e.into_inner());
+    if g.is_some() {
+        return;
+    }
+    // SAFETY: reine Abfrage.
+    let block = unsafe { sys::heap_caps_get_largest_free_block(sys::MALLOC_CAP_SPIRAM) };
+    let groesse = block.saturating_sub(POOL_RESERVE) / 1024 * 1024;
+    if groesse < POOL_MIN {
+        log::warn!("Programm-Pool: PSRAM-Block nur {} KB – ohne Pool", block / 1024);
+        return;
+    }
+    // SAFETY: Belegung im PSRAM, lebt für immer (Pool).
+    let p = unsafe { sys::heap_caps_malloc(groesse, sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) };
+    if !p.is_null() {
+        *g = Some(kern::bereichspool::Pool::neu(p as usize, groesse));
+        POOL_GROESSE.store(groesse, core::sync::atomic::Ordering::Relaxed);
+        log::info!("Programm-Pool: {} KB reserviert (PSRAM-Block war {} KB)", groesse / 1024, block / 1024);
+    }
+}
+
 fn holen(n: usize) -> *mut u8 {
+    let mut g = POOL.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(a) = g.as_mut().and_then(|p| p.holen(n)) {
+        return a as *mut u8;
+    }
+    drop(g);
+    // Rückfall: System-Heap (Pool voll oder nicht angelegt)
     // SAFETY: einfache Belegung im PSRAM.
     unsafe { sys::heap_caps_malloc(n, sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) }.cast()
 }
 
-fn frei(p: *mut u8, _n: usize) {
-    // SAFETY: p aus `holen`.
+fn frei(p: *mut u8, n: usize) {
+    let mut g = POOL.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(pool) = g.as_mut()
+        && pool.enthaelt(p as usize)
+    {
+        pool.frei(p as usize, n);
+        return;
+    }
+    drop(g);
+    // SAFETY: p aus `holen` (Rückfall).
     unsafe { sys::heap_caps_free(p.cast()) }
 }
 

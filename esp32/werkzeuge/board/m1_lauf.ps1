@@ -50,7 +50,7 @@ if ($NurBauen) { "MESS-BUILD GEBAUT (sdkconfig.defaults wiederhergestellt)"; exi
 
 cmd /c "python `"$esp32\firmware\bildschirmfoto.py`" 460 `"$Ziel`" $Port --reset > `"$Ziel\board_log.txt`" 2>&1"
 & python "$esp32\firmware\werkzeuge\log_schwaerzen.py" "$Ziel\board_log.txt"
-Select-String -Path "$Ziel\board_log.txt" -Pattern 'BERICHT|TASK|TASKS:|HEAPTASK|SPEICHER t=|Heap|heap|WLAN: Transport|Start: intern' -Encoding UTF8 |
+Select-String -Path "$Ziel\board_log.txt" -Pattern 'BERICHT|TASK|TASKS:|HEAPTASK|MAINBLOCK|SPEICHER t=|Heap|heap|WLAN: Transport|Start: intern|Programm-Pool' -Encoding UTF8 |
     ForEach-Object { $_.Line } | Set-Content "$Ziel\bericht.txt" -Encoding UTF8
 
 # Board wieder mit der normalen Firmware

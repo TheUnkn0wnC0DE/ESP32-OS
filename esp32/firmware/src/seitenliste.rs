@@ -24,7 +24,7 @@ pub fn starten() {
 /// Entwicklung (BR1): Heap-Tracing der Systemallokationen über Seite 2–3;
 /// danach die noch belegten internen Blöcke mit Aufrufern ausgeben.
 #[cfg(esp32os_heap_trace)]
-mod spur {
+pub(crate) mod spur {
     unsafe extern "C" {
         fn heap_trace_init_standalone(puffer: *mut u8, anzahl: usize) -> i32;
         fn heap_trace_start(modus: u32) -> i32;

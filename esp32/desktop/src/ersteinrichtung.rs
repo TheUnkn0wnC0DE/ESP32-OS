@@ -145,7 +145,12 @@ pub fn programm() {
                 let id = sys::knopf_id() >> 8;
                 match id {
                     // Schliessen ohne Abschluss: beim nächsten Start wieder
-                    1 => sys::ende(),
+                    1 => {
+                        // S4: Schliessen mit dem X gilt als erledigt – sonst
+                        // kam die Einrichtung bei jedem Start wieder
+                        let _ = konfig::einrichtung_abschliessen();
+                        sys::ende()
+                    }
                     ZURUECK => i = i.saturating_sub(1),
                     WEITER => match SCHRITTE[i] {
                         Schritt::Uhr => {

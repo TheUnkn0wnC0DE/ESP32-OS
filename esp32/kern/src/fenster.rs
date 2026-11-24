@@ -214,6 +214,10 @@ pub struct Welt {
     pub schmutz: Vec<Clip>,
     /// Faden, dessen Textfeld den Eingabefokus hat (Bildschirmtastatur, D8).
     pub textfokus: Option<u32>,
+    /// S1: Faden, der bei jeder Änderung der Fensterliste sofort ein
+    /// Neuzeichnen-Ereignis bekommt (Taskleiste; vorher fragte sie alle
+    /// 500 ms ab – der Eintrag kam eine halbe Sekunde nach dem Fenster).
+    pub listen_beobachter: Option<u32>,
     /// Lage des fokussierten Textfelds (Bildschirm) – Tastatur weicht aus.
     pub textfeld: Option<Clip>,
     /// Bildschirmtastatur von Hand ein/aus (None = automatisch nach Fokus).
@@ -286,11 +290,23 @@ impl Welt {
             hg_zuletzt: crate::grafik::LEER,
             schmutz: vec![Clip { x0: 0, y0: 0, x1: w, y1: h }],
             textfokus: None,
+            listen_beobachter: None,
             textfeld: None,
             tastatur_manuell: None,
             touchpad: false,
             zeiger: Vec::new(),
             pfeil: crate::zeiger::pfeil(),
+        }
+    }
+
+    /// S1: Fensterliste geändert (Fenster neu, zu, aktiv, minimiert, Titel):
+    /// den Beobachter (Taskleiste) sofort neu zeichnen lassen.
+    pub fn liste_geaendert(&mut self) {
+        if let Some(t) = self.listen_beobachter
+            && let Some(fz) = self.faden(t)
+        {
+            fz.redraw = true;
+            wecken();
         }
     }
 
@@ -430,8 +446,14 @@ impl Welt {
         if let Some(s) = self.slot_von(tid) {
             let alt_aktiv = self.aktiv();
             self.markiere_fenster(s);
+            let hatte_fenster = self.slots[s].as_ref().is_some_and(|f| f.fenster.is_some());
             self.slots[s] = None;
             self.stapel.retain(|&x| x != s);
+            if self.listen_beobachter == Some(tid) {
+                self.listen_beobachter = None;
+            } else if hatte_fenster {
+                self.liste_geaendert();
+            }
             if self.druck.is_some_and(|d| d.0 == s) {
                 self.druck = None;
             }
@@ -461,6 +483,9 @@ impl Welt {
         }
         self.einreihen(s);
         let neu = self.aktiv();
+        if alt != neu || war_minimiert || !war_oben {
+            self.liste_geaendert();
+        }
         if alt != neu {
             if let Some(a) = alt {
                 self.kopf_neu(a);

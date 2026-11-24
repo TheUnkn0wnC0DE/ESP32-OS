@@ -337,6 +337,11 @@ fn main() {
     // --- Display und Ausgabe --------------------------------------------------
     let mut disp = Display::new(hex(0x2A1030)).expect("Display");
     let mut pipeline = Pipeline::new().expect("PPA");
+    // M4: Programm-Pool erst jetzt (Bildspeicher von Anzeige und Pipeline
+    // liegen schon) – nur im Desktop (Spiele haben ihre eigenen Abbilder)
+    if ziel == SpielId::Konsole {
+        pudding_fw::kern_board::pool_anlegen();
+    }
 
     // --- Spiel ----------------------------------------------------------------
     let (aktuell, spiel): (SpielId, Box<dyn Spiel>) = match (ziel, daten) {
@@ -422,6 +427,11 @@ fn main() {
                     }
                     std::thread::sleep(std::time::Duration::from_millis(300));
                 }
+            }
+            // S4 (Entwicklung, einmal am Board des Nutzers): Ersteinrichtung als
+            // erledigt merken (Merker setup=1), ohne sie zu bedienen
+            if option_env!("ESP32OS_SETUP_ERLEDIGT").is_some() {
+                log::warn!("Ersteinrichtung als erledigt gemerkt: {}", desktop::konfig::einrichtung_abschliessen());
             }
             log::info!("ESP32-OS-Desktop startet ({prog})");
             let mut d = desktop::Desktop::neu(|| hw::now_us() as u64);

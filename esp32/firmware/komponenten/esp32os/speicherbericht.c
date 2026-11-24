@@ -84,6 +84,41 @@ void esp32os_speicherbericht(void)
         intern_summe += summen[i].size[0];
     }
     ESP_LOGW(TAG, "HEAPTASK Summe intern %u B in %u Tasks", (unsigned)intern_summe, (unsigned)anzahl);
+    /* M6: die grössten Blöcke des Tasks „main“ (Bildspeicher, Caches …) */
+    TaskHandle_t haupt = xTaskGetHandle("main");
+    if (haupt != NULL) {
+        static heap_task_block_t bloecke[700];
+        static heap_task_totals_t summe_main[2];
+        size_t n_main = 0;
+        heap_task_info_params_t b = { 0 };
+        b.caps[0] = MALLOC_CAP_INTERNAL;
+        b.mask[0] = MALLOC_CAP_INTERNAL;
+        b.caps[1] = MALLOC_CAP_SPIRAM;
+        b.mask[1] = MALLOC_CAP_SPIRAM;
+        b.tasks = &haupt;
+        b.num_tasks = 1;
+        b.totals = summe_main;
+        b.num_totals = &n_main;
+        b.max_totals = 2;
+        b.blocks = bloecke;
+        b.max_blocks = sizeof bloecke / sizeof bloecke[0];
+        size_t nb = heap_caps_get_per_task_info(&b);
+        /* die 25 grössten ausgeben (einfache Auswahl, nb ist klein) */
+        for (int k = 0; k < 25; k++) {
+            size_t beste = nb;
+            for (size_t i = 0; i < nb; i++) {
+                if (bloecke[i].size > 0 && (beste == nb || bloecke[i].size > bloecke[beste].size)) {
+                    beste = i;
+                }
+            }
+            if (beste == nb) {
+                break;
+            }
+            ESP_LOGW(TAG, "MAINBLOCK %8u B bei %p (%s)", (unsigned)bloecke[beste].size, bloecke[beste].address,
+                     esp_ptr_internal(bloecke[beste].address) ? "intern" : "PSRAM");
+            bloecke[beste].size = 0;
+        }
+    }
 #if CONFIG_FREERTOS_USE_TRACE_FACILITY
     heap_caps_free(leben);
 #endif

@@ -31,6 +31,12 @@ pub static RUHE_NACH: AtomicU32 = AtomicU32::new(300);
 /// Ruhezustand sofort (Startmenü).
 pub static RUHE_JETZT: AtomicBool = AtomicBool::new(false);
 
+/// Entwicklung: ein Autopilot spielt Berührungen ein (Desktop::autopilot).
+/// Dann startet kein Spiel – ein Tipp, der wegen eines fehlenden Fensters
+/// auf ein Desktop-Symbol fällt, würde den Messlauf in ein Spiel umleiten
+/// (Dauertest M4: Pudding-Panik).
+pub static AUTOPILOT_AKTIV: AtomicBool = AtomicBool::new(false);
+
 /// Auswahl „Bildschirm aus nach“ (Sekunden, 0 = nie).
 pub const AUS_WAHL: [u32; 6] = [30, 60, 120, 300, 600, 0];
 /// Auswahl „Ruhezustand nach“ (Sekunden nach dem Abschalten, 0 = nie).

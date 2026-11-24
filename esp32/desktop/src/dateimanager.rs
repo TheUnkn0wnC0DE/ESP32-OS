@@ -584,6 +584,11 @@ struct Zustand {
     ablage: Ablage,
     geraete: Vec<Geraet>,
     symbole: Vec<(usize, Rgba)>,
+    /// S2: Symbole fertig auf eine Hintergrundfarbe gemischt (Symbol, Farbe)
+    gemischt: Vec<((usize, u32), Rgba)>,
+    /// S2: oberste sichtbare Zeile beim letzten Zeichnen der Liste (deren
+    /// Knöpfe werden beim Blättern entfernt)
+    gezeichnet_oben: usize,
 }
 
 impl Zustand {
@@ -609,6 +614,24 @@ impl Zustand {
         self.oben = 0;
         self.meldung.clear();
         self.neu_lesen();
+    }
+
+    /// S2: Symbol `i` auf die einfarbige Fläche `farbe` gemischt – einmal,
+    /// danach aus dem Zwischenspeicher (vorher je Bild und Zeile neu gemischt
+    /// und kopiert: Blättern ruckelte).
+    fn sym_auf(&mut self, i: usize, farbe: u32) -> Rgba {
+        if let Some((_, b)) = self.gemischt.iter().find(|(k, _)| *k == (i, farbe)) {
+            return b.clone();
+        }
+        let roh = self.sym(i);
+        let mut m = roh.clone();
+        for (z, &p) in m.px.iter_mut().zip(&roh.px) {
+            let a = p >> 24;
+            let k = |s: u32| ((p >> s & 255) * a + (farbe >> s & 255) * (255 - a)) / 255;
+            *z = 0xFF00_0000 | k(16) << 16 | k(8) << 8 | k(0);
+        }
+        self.gemischt.push(((i, farbe), m.clone()));
+        m
     }
 
     fn sym(&mut self, i: usize) -> Rgba {
@@ -680,8 +703,14 @@ fn zeichnen(z: &mut Zustand) {
     };
     let ix = x0 + if ab > 0 { 330 } else { 224 };
     text(ix, 15, &kuerzen(&info, ((w - ix - 4) / 8).max(0) as usize), 0x404040);
-    // Liste
-    let lx = x0;
+    liste_zeichnen(z);
+    sys::neuzeichnen(2);
+}
+
+/// Dateiliste und Bildlaufanzeige (S2: beim Blättern nur dieser Teil).
+fn liste_zeichnen(z: &mut Zustand) {
+    let (w, h) = masse();
+    let lx = SEITE_W + 4;
     let lw = w - lx - 10;
     let n = sichtbar(h);
     sys::rechteck((lx as u32) << 16 | lw as u32, (LEISTE as u32) << 16 | (h - LEISTE) as u32, 0xFFFFFF);
@@ -696,21 +725,33 @@ fn zeichnen(z: &mut Zustand) {
         let farbe = if markiert { 0xE8E8E8 } else { farbe };
         sys::knopf((lx as u32) << 16 | (lw - 1) as u32, (y as u32) << 16 | (ZEILE - 1) as u32, (K_EINTRAG + (z.oben + i) as u32) | 0x4000_0000, farbe);
         sys::rechteck((lx as u32) << 16 | lw as u32, (y as u32) << 16 | ZEILE as u32, farbe);
-        let b = z.sym(symbol_fuer(e));
-        bild_auf(&b, lx + 6, y + (ZEILE - 32) / 2, |_, _| farbe);
+        let b = z.sym_auf(symbol_fuer(e), farbe);
+        kolibri::libimg::zeichnen(&b, lx + 6, y + (ZEILE - 32) / 2, b.w, b.h, 0, 0);
         let g = if e.ordner { String::new() } else { groesse_text(e.groesse) };
         let platz = ((lw - 46 - 90) / 8) as usize;
         text(lx + 46, y + (ZEILE - 16) / 2, &kuerzen(&e.name, platz), if markiert { 0x808080 } else if e.ordner { 0x1A4A8A } else { 0x101010 });
         text(lx + lw - 8 - g.chars().count() as i32 * 8, y + (ZEILE - 16) / 2, &g, 0x606060);
     }
-    // Bildlaufanzeige
+    // Bildlaufanzeige (Spur erst leeren: beim Blättern bleibt das Fenster
+    // sonst stehen und der alte Schieber sichtbar)
+    sys::rechteck(((lx + lw) as u32) << 16 | 10, (LEISTE as u32) << 16 | (h - LEISTE) as u32, HG);
     if z.liste.len() > n {
         let bh = h - LEISTE;
         let dh = (bh * n as i32 / z.liste.len() as i32).max(12);
         let dy = LEISTE + (bh - dh) * z.oben as i32 / (z.liste.len() - n) as i32;
         sys::rechteck(((lx + lw + 2) as u32) << 16 | 6, (dy as u32) << 16 | dh as u32, 0x9AA4B0);
     }
-    sys::neuzeichnen(2);
+    z.gezeichnet_oben = z.oben;
+}
+
+/// S2: Blättern – Knöpfe der bisher sichtbaren Zeilen entfernen, dann nur
+/// die Liste neu zeichnen (nicht das ganze Fenster mit Geräten und Leiste).
+fn liste_blaettern(z: &mut Zustand) {
+    let (_, h) = masse();
+    for i in z.gezeichnet_oben..z.gezeichnet_oben + sichtbar(h) {
+        sys::knopf(0, 0, (K_EINTRAG + i as u32) | 0x8000_0000, 0);
+    }
+    liste_zeichnen(z);
 }
 
 /// Meldung, wenn ein Programm nicht startet (Rückgabe von `datei::starten`).
@@ -933,7 +974,17 @@ pub fn programm() {
     } else {
         geraete.first().map_or_else(|| "/sys".to_string(), |g| g.pfad.clone())
     };
-    let mut z = Zustand { pfad: String::new(), liste: Vec::new(), oben: 0, meldung: String::new(), ablage: None, geraete, symbole: Vec::new() };
+    let mut z = Zustand {
+        pfad: String::new(),
+        liste: Vec::new(),
+        oben: 0,
+        meldung: String::new(),
+        ablage: None,
+        geraete,
+        symbole: Vec::new(),
+        gemischt: Vec::new(),
+        gezeichnet_oben: 0,
+    };
     z.oeffne_ordner(start);
     sys::maske(0x27);
     loop {
@@ -981,7 +1032,7 @@ pub fn programm() {
                     let neu = (z.oben as i32 + s.signum() * (s.abs() / 3).max(1)).clamp(0, max as i32) as usize;
                     if neu != z.oben {
                         z.oben = neu;
-                        zeichnen(&mut z);
+                        liste_blaettern(&mut z);
                     }
                 }
             }

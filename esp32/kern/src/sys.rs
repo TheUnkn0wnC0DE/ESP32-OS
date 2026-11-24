@@ -183,11 +183,19 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
 /// Funktion 71.1: Fenstertitel setzen.
 pub fn titel(t: &str) {
     mit_faden(|w, s| {
-        if let Some(f) = w.slots[s].as_mut().and_then(|f| f.fenster.as_mut()) {
+        let mut anders = false;
+        if let Some(f) = w.slots[s].as_mut().and_then(|f| f.fenster.as_mut())
+            && f.titel != t
+        {
             f.titel = t.into();
+            anders = true;
         }
         w.kopf_neu(s);
         w.markiere_fenster(s);
+        // S1: Taskleiste zeigt den neuen Titel sofort
+        if anders {
+            w.liste_geaendert();
+        }
     });
 }
 
@@ -929,6 +937,7 @@ pub fn minimieren(ecx: u32, edx: u32) -> u32 {
                 if let Some(f) = w.slots[s].as_mut().and_then(|f| f.fenster.as_mut()) {
                     f.minimiert = true;
                 }
+                w.liste_geaendert();
                 if let Some(a) = w.aktiv() {
                     w.kopf_neu(a);
                     w.markiere_fenster(a);
@@ -939,6 +948,13 @@ pub fn minimieren(ecx: u32, edx: u32) -> u32 {
             0
         })
     })
+}
+
+/// S1: Der eigene Faden bekommt bei jeder Änderung der Fensterliste sofort
+/// ein Neuzeichnen-Ereignis (Taskleiste).
+pub fn fensterliste_beobachten() {
+    let Some(tid) = eigene_tid() else { return };
+    kern_abschnitt(|| fenster::mit_welt(|w| w.listen_beobachter = Some(tid)));
 }
 
 /// Alle Fenster neu zeichnen lassen (ESP32-OS: Sprache, Hintergrund).
