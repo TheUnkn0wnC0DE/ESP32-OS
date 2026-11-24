@@ -11,6 +11,22 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **24.11., 23 Uhr – Nutzer schläft, ich arbeite allein weiter.** Stand:
+  C1 und D1 am Board nachgewiesen (Fotos `docs/nachweise/c1/`), S2
+  abgehakt (17,8 → 25,2 Bilder/s), S3 gemessen (Grenze 55-Hz-Takt,
+  Abweichung). Läuft: M4 Lauf 5 (Browser passt jetzt in den Pool), Review
+  des Diffs. Danach: Commit/Push, C3/D4/D5-Board-Nachweise, M5.
+
+- **Zwischenstand 24.11., 22:45:** M4 Lauf 4 (m4e) nach 25 min
+  abgebrochen: 0 Abstürze, intern stabil (220 → 217 KB), aber der Browser
+  startete nie („Fehler 30“) – er braucht 10,6 MB am Stück, das grösste
+  freie Pool-Stück war 10,5 MB. Behoben: Dienste mit kleinerem Heap
+  (@tastatur 256, @taskbar 256, @menu 384 KB; Spitzen am Board 54–56 KB).
+  Neu am PC: **D1 Shell** – `>`, `>>`, `<`, Pipes, cat/grep/wc/head/tail/
+  sort, Skripte; zwei Fehler der Original-Shell behoben (`ls -1`,
+  Skript-Erkennung). **T1** ColibriOS geprüft (siehe Offene Fragen).
+  Läuft: S3-Bildrate am Board (nachher), danach vorher, C1/D1-Foto, M4 Lauf 5.
+
 - **Zwischenstand 24.11., 22:15:** M4 Lauf 3 (Pool, 4 MB Systemreserve)
   abgebrochen: dem System blieben nur 0,4–1,3 MB PSRAM (Fensterpuffer,
   WLAN, Kern) – zu knapp für neue Fenster. Jetzt 6 MB Reserve, dafür
@@ -152,6 +168,18 @@ jedes Skript schreibt am Ende wieder die normale Firmware aufs Board).
 
 ## Offene Fragen
 
+- **S5 „Editor-Fenster“:** Gefunden und behoben ist der abgehackte obere
+  Rand bei PasswordGen, TinyHashView und Beispiel-GUI (alte
+  KolibriOS-Programme zeichneten in die höhere Touch-Titelleiste). Welches
+  Fenster meinst du mit „Editor“? Die Notizen haben eine vollständige
+  Titelleiste, liegen aber wie Dateimanager und Einstellungen bündig am
+  oberen Bildschirmrand (y = 0). Wenn das stört: Vorschlag, alle Fenster
+  mit einigen Pixeln Abstand zum oberen Rand zu öffnen – sag Bescheid.
+
+- ~~**T1 ColibriOS**~~ – beantwortet (24.11. spät): nach Teil D nur die
+  Wetter-App übernehmen (Lizenz vorher prüfen, Touch, Standort in den
+  Einstellungen, Daten über WLAN); passt sie nicht, eine eigene mit einem
+  freien Wetterdienst ohne API-Schlüssel – PLAN T2. (alter Text:)
 - **T1 ColibriOS (geprüft 24.11. abends, nur Webseiten gelesen):**
   ColibriOS ist das umbenannte KolibriOS (Commit „Rename KolibriOS to
   ColibriOS across the tree“, 31.10.2026; Quellen

@@ -38,3 +38,6 @@ AUFTRAG-KolibriOS-P4.md
 
 # Web-Flasher-Firmware kommt aus dem Release (GitHub Pages), nie ins Repo
 /docs/flasher/firmware/
+
+# S5: Fotos je Programm (fenster_raender.rs schreibt sie bei jedem Lauf)
+esp32/desktop/tests/erwartet/s5/

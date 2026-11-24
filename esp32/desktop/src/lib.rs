@@ -358,14 +358,17 @@ macro_rules! eintrag {
 /// Shell-Programme (ohne C-Programme).
 const SHELL: [kern::ProgrammEintrag; 22] = [
     eintrag!("@meldung", shell::meldung, 256),
-    eintrag!("@tastatur", tastatur::dienst, 512),
+    // Dienste: Spitze am Board (M4, 24.11.) @tastatur 56 KB, @taskbar
+    // 54 KB, @menu 56 KB – vorher 512/512/1024 KB; der Browser (10,6 MB am
+    // Stück) fand daneben im Programm-Pool keinen Platz mehr
+    eintrag!("@tastatur", tastatur::dienst, 256),
     eintrag!("@start", shell::start, 512),
     // 2,5 MB: Spitze am Board 948 KB (Verlauf), mit Hintergrundbild etwa
     // 1,7 MB (Bild 640×340 RGBA, halbes Bild beim Lesen, Desktop-Puffer);
     // vorher 4 MB – die fehlten im Programm-Pool (M4)
     eintrag!("@icon", shell::icon, 2560),
-    eintrag!("@taskbar", shell::taskbar, 512),
-    eintrag!("@menu", shell::menu, 1024),
+    eintrag!("@taskbar", shell::taskbar, 256),
+    eintrag!("@menu", shell::menu, 384),
     eintrag!("info", shell::info, 256),
     eintrag!("dateimanager", dateimanager::programm, 1024),
     // 8 MB: startet neben Dateimanager und Diensten (O4; mit 12 MB blieb

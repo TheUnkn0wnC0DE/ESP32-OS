@@ -3,6 +3,7 @@ const command_t COMMANDS[]=
 {
 	{"about",   "  Displays information about Shell\n\r", &cmd_about},
 	{"alias",   "  Allows the user view the current aliases\n\r", &cmd_alias},
+	{"cat",     "  Prints files or the piped input. Usage:\n\r    cat <file> ...\n\r", &cmd_cat},
 	{"cd",      "  Changes current directory. Usage:\n\r    cd <directory name>\n\r", &cmd_cd},
 	{"clear",   "  Clears the screen\n\r", &cmd_clear},
 	{"cp",      "  Copies file\n\r", &cmd_cp},
@@ -12,6 +13,8 @@ const command_t COMMANDS[]=
 	{"echo",    "  Echoes the data to the screen. Usage:\n\r    echo <data>\n\r", &cmd_echo},
 	{"exit",    "  Exits from Shell\n\r", &cmd_exit},
 	{"free",    "  Displays total, free and used memory\n\r", &cmd_memory},
+	{"grep",    "  Prints lines containing a text. Usage:\n\r    grep [-i] [-v] [-c] <text> [file ...]\n\r", &cmd_grep},
+	{"head",    "  Prints the first lines. Usage:\n\r    head [-n N] [file]\n\r", &cmd_head},
 	{"help",    "  Gives help on commands. Usage:\n\r    help ;it lists all builtins\n\r    help <command> ;help on command\n\r", &cmd_help},
 	{"history", "  Lists used commands\n\r", &cmd_history},	
 	{"kfetch",  "  Prints logo and information about system.\n\r", &cmd_kfetch},
@@ -27,10 +30,13 @@ const command_t COMMANDS[]=
 	{"rm",      "  Removes a file. Usage:\n\r    rm file name>\n\r", &cmd_rm},
 	{"rmdir",   "  Removes a folder. Usage:\n\r    rmdir <directory>\n\r", &cmd_rmdir},
 	{"shutdown","  Turns off the computer\n\r", &cmd_shutdown},
+	{"sort",    "  Sorts lines. Usage:\n\r    sort [-r] [file]\n\r", &cmd_sort},
 	{"sleep",   "  Stops the shell for the desired period. Usage:\n\r    sleep <time in the 1/100 of second>\n\r  Example:\n\r    sleep 500 ;pause for 5sec.\n\r", &cmd_sleep},
+	{"tail",    "  Prints the last lines. Usage:\n\r    tail [-n N] [file]\n\r", &cmd_tail},
 	{"touch",   "  Creates an empty file or updates the time/date stamp on a file. Usage:\n\r    touch <file name>\n\r", &cmd_touch},
 	{"uptime",  "  Displays the uptime\n\r", &cmd_uptime},
 	{"ver",     "  Displays version. Usage:\n\r    ver ;Shell version\n\r    ver kernel ;version of KolibriOS kernel\n\r    ver cpu ;information about CPU\n\r", &cmd_ver},
+	{"wc",      "  Counts lines, words and bytes. Usage:\n\r    wc [-l] [-w] [-c] [file ...]\n\r", &cmd_wc},
 	{"waitfor", "  Stops console waiting while process finish. Usage:\n\r    waitfor ;waiting previous started executable LASTPID\n\r    waitfor <PID>;awaiting PID finish\n\r", &cmd_waitfor},
 };
 

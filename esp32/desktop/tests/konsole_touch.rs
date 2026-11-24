@@ -64,7 +64,16 @@ fn tippe(l: &mut Lauf, text: &str) {
             sondertaste("enter", 640)
         } else {
             let (ebene, x, y) = tastenmitte(c, 640).unwrap_or_else(|| panic!("Taste {c:?}"));
-            assert_eq!(ebene, "normal", "nur Kleinbuchstaben und Leerzeichen: {c:?}");
+            // D1: Sonderzeichen (|) über die Ebene „123“, danach zurück
+            assert!(ebene == "normal" || ebene == "sonder", "Kleinbuchstaben, Leerzeichen, Sonderzeichen: {c:?}");
+            if ebene == "sonder" {
+                let (sx, sy) = sondertaste("123", 640);
+                l.tipp(sx, oben + sy, 300);
+                l.tipp(x, oben + y, 300);
+                let (sx, sy) = sondertaste("123", 640);
+                l.tipp(sx, oben + sy, 300);
+                continue;
+            }
             (x, y)
         };
         l.tipp(x, oben + y, if c == '\n' { 1500 } else { 300 });
@@ -123,6 +132,11 @@ fn konsole_per_touch() {
     l.foto();
     tippe(&mut l, "rm neu\n");
     assert!(!wurzel.join("neu").exists(), "per Touch getipptes rm löscht die Datei");
+    // D1 am Board: Pipe und neue Befehle (nur lesen, nichts schreiben)
+    tippe(&mut l, "clear\n");
+    tippe(&mut l, "ls | wc\n");
+    tippe(&mut l, "help sort\n");
+    l.foto();
     let (x, y) = kreuz_von("SHELL");
     l.tipp(x, y, 2500);
     assert!(!titel().iter().any(|t| t.starts_with("SHELL")), "Konsole zu: {:?}", titel());

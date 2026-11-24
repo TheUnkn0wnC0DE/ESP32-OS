@@ -20,10 +20,15 @@ int cmd_ls(char dir[]) {
 	k70.p20 = 0;
 
 
-	if (!strnicmp(dir,"-1",1)) 
+	/* ESP32-OS D1: war strnicmp(dir,"-1",1) und „dir += 3“ – bei „ls -1“
+	 * ohne Ordner (nach trim nur „-1“) und bei „ls -“ las ls hinter dem
+	 * Textende */
+	if (dir[0] == '-' && dir[1] == '1' && (dir[2] == 0 || dir[2] == ' '))
 		{
 		single_column_mode = TRUE;
-		dir += 3;
+		dir += 2;
+		while (*dir == ' ')
+			dir++;
 		}
 
 	if ( !strlen(dir) ) // if argument is empty, list current directory

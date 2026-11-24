@@ -112,6 +112,11 @@ pub struct Fenster {
     pub ebene: i32,
     /// Zeiger des Fensters (37.5); 0 = Standardpfeil.
     pub zeiger: u32,
+    /// S5: Fenster mit Skin ohne Flag „relativ“ (KolibriOS-Programme, die in
+    /// Fensterkoordinaten zeichnen und die Höhe der KolibriOS-Titelleiste
+    /// annehmen): Inhalt um so viel nach unten, wie die Touch-Titelleiste
+    /// höher ist; das Fenster ist um so viel höher. 0 sonst.
+    pub versatz: i32,
 }
 
 impl Fenster {
@@ -130,7 +135,19 @@ impl Fenster {
     /// Arbeitsbereich, sonst das ganze Fenster (0, 0, Breite − 1, Höhe − 1
     /// wie `box`). Gilt für Funktion 9 und 37.1.
     pub fn clientbox(&self, skin: &Skin) -> (i32, i32, i32, i32) {
-        if self.flags & 2 != 0 { self.arbeitsbereich(skin) } else { (0, 0, self.w - 1, self.h - 1) }
+        if self.flags & 2 != 0 { self.arbeitsbereich(skin) } else { (0, self.versatz, self.w - 1, self.h - 1 - self.versatz) }
+    }
+
+    /// Ursprung der Zeichen-, Knopf- und Mauskoordinaten des Programms
+    /// (relativ zum Fenster): Arbeitsbereich mit Flag „relativ“, sonst die
+    /// Fensterecke (S5: um `versatz` tiefer).
+    pub fn ursprung(&self, skin: &Skin) -> (i32, i32) {
+        if self.flags & 2 != 0 {
+            let (ax, ay, _, _) = self.arbeitsbereich(skin);
+            (ax, ay)
+        } else {
+            (0, self.versatz)
+        }
     }
 
     pub fn enthaelt(&self, x: i32, y: i32) -> bool {

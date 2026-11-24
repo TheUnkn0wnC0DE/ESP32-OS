@@ -21,7 +21,7 @@ lauf "64 kolibri" cargo test --release -p kolibri
 lauf "64 desktop" cargo test --release -p desktop
 lauf "i686 kern" cargo test --release -p kern --target i686-pc-windows-msvc
 lauf "i686 kolibri" cargo test --release -p kolibri --target i686-pc-windows-msvc
-lauf "i686 desktop (C-Programme, Startmenü, Stabilität)" cargo test --release -p desktop --target i686-pc-windows-msvc --test c_programme --test thashview --test menue_start --test stabil --test browser_menue --test konsole_touch --test standby_touch --test ersteinrichtung_kreuz --test fps_lauf
+lauf "i686 desktop (C-Programme, Startmenü, Stabilität)" cargo test --release -p desktop --target i686-pc-windows-msvc --test c_programme --test thashview --test menue_start --test stabil --test browser_menue --test konsole_touch --test standby_touch --test ersteinrichtung_kreuz --test fps_lauf --test fenster_raender
 cd netsurf || exit 1
 lauf "64 netsurf" cargo test --release
 lauf "i686 netsurf" cargo test --release --target i686-pc-windows-msvc

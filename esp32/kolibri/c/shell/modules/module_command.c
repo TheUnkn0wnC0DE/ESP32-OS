@@ -360,6 +360,9 @@ void command_execute()
     int result;
 
     trim(CMD);
+    /* ESP32-OS D1: Zeilen mit |, >, >>, < (c/shell_zusatz.c) */
+    if (esp32os_umleitung())
+        return;
     arg = command_get_cmd(cmd);
 
     if ( !strlen(cmd) )

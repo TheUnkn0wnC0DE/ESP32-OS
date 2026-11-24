@@ -16,12 +16,15 @@
 #define alias_split shell_alias_split
 #define cmd_about shell_cmd_about
 #define cmd_alias shell_cmd_alias
+#define cmd_cat shell_cmd_cat
 #define cmd_cd shell_cmd_cd
 #define cmd_clear shell_cmd_clear
 #define cmd_cp shell_cmd_cp
 #define cmd_date shell_cmd_date
 #define cmd_echo shell_cmd_echo
 #define cmd_exit shell_cmd_exit
+#define cmd_grep shell_cmd_grep
+#define cmd_head shell_cmd_head
 #define cmd_help shell_cmd_help
 #define cmd_history shell_cmd_history
 #define cmd_kfetch shell_cmd_kfetch
@@ -41,10 +44,13 @@
 #define cmd_rmdir shell_cmd_rmdir
 #define cmd_shutdown shell_cmd_shutdown
 #define cmd_sleep shell_cmd_sleep
+#define cmd_sort shell_cmd_sort
+#define cmd_tail shell_cmd_tail
 #define cmd_touch shell_cmd_touch
 #define cmd_uptime shell_cmd_uptime
 #define cmd_ver shell_cmd_ver
 #define cmd_waitfor shell_cmd_waitfor
+#define cmd_wc shell_cmd_wc
 #define cmdline shell_cmdline
 #define command_execute shell_command_execute
 #define command_get shell_command_get
@@ -53,6 +59,7 @@
 #define cur_dir shell_cur_dir
 #define dir_check shell_dir_check
 #define dir_truncate shell_dir_truncate
+#define esp32os_umleitung shell_esp32os_umleitung
 #define executable_run shell_executable_run
 #define file_check shell_file_check
 #define file_not_found shell_file_not_found

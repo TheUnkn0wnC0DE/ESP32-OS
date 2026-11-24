@@ -109,7 +109,9 @@ fn blaettern_zeichnet_nur_die_liste_und_gleicht_dem_vollbild() {
         // volles Neuzeichnen an derselben Stelle muss das gleiche Bild geben
         sys::alle_neu_zeichnen();
         let voll = ruhiges_bild(&mut schirm);
-        if voll != nach {
+        // ohne Taskleiste (ihre Uhr kann zwischen den Bildern umspringen)
+        let oben = (360 - desktop::shell::LEISTE_H) as usize * 640;
+        if voll[..oben] != nach[..oben] {
             let (w, h, _) = sys::foto();
             let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
             desktop::bild_schreiben(&dir.join("s2_blaettern.ist.png"), &spatz::image::encode_png(w, h, &nach));

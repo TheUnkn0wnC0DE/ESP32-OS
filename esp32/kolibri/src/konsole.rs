@@ -122,6 +122,8 @@ pub struct Konsole {
     /// Fensterlage (Pixel) beim Anlegen
     fx: i32,
     fy: i32,
+    /// D1: Ausgabe auffangen statt anzeigen (Umleitung/Pipe der Shell)
+    aufnahme: Option<Vec<u8>>,
 }
 
 fn faden_konsole() -> Option<&'static mut Konsole> {
@@ -156,6 +158,7 @@ impl Konsole {
             fertig: false,
             fx: 0,
             fy: 0,
+            aufnahme: None,
         }
     }
 
@@ -650,7 +653,12 @@ ffi_fn! {
 pub unsafe fn kos_con_write_asciiz(s: *const c_char) {
     if let Some(k) = faden_konsole() {
         // SAFETY: Vertrag des Aufrufers.
-        k.schreiben(unsafe { c_text(s) });
+        let t = unsafe { c_text(s) };
+        if let Some(a) = k.aufnahme.as_mut() {
+            aufnehmen(a, t);
+            return;
+        }
+        k.schreiben(t);
         k.ereignisse(false);
     }
 }
@@ -665,9 +673,65 @@ pub unsafe fn kos_con_write_string(s: *const c_char, n: u32) {
         && !s.is_null()
     {
         // SAFETY: Vertrag des Aufrufers.
-        k.schreiben(unsafe { core::slice::from_raw_parts(s.cast::<u8>(), n as usize) });
+        let t = unsafe { core::slice::from_raw_parts(s.cast::<u8>(), n as usize) };
+        if let Some(a) = k.aufnahme.as_mut() {
+            aufnehmen(a, t);
+            return;
+        }
+        k.schreiben(t);
         k.ereignisse(false);
     }
+}
+}
+
+/// D1: höchstens so viel Ausgabe auffangen (Heap der Shell; Rest verworfen,
+/// wie `ZS_MAX` in c/shell_zusatz.c).
+const AUFNAHME_MAX: usize = 256 * 1024;
+
+fn aufnehmen(a: &mut Vec<u8>, t: &[u8]) {
+    let n = t.len().min(AUFNAHME_MAX.saturating_sub(a.len()));
+    if n > 0 && a.try_reserve(n).is_ok() {
+        a.extend_from_slice(&t[..n]);
+    }
+}
+
+ffi_fn! {
+/// D1: Ausgabe der eigenen Konsole ab jetzt auffangen (Umleitung/Pipe der
+/// Shell, c/shell_zusatz.c) statt anzeigen. Nur dieser Faden.
+#[unsafe(no_mangle)]
+pub fn kos_konsole_aufnahme_start() {
+    if let Some(k) = faden_konsole() {
+        k.aufnahme = Some(Vec::new());
+    }
+}
+}
+
+ffi_fn! {
+/// D1: Länge der bisher aufgefangenen Ausgabe in Bytes.
+#[unsafe(no_mangle)]
+pub fn kos_konsole_aufnahme_laenge() -> c_int {
+    faden_konsole().and_then(|k| k.aufnahme.as_ref()).map_or(0, |a| a.len().min(c_int::MAX as usize) as c_int)
+}
+}
+
+ffi_fn! {
+/// D1: Auffangen beenden; höchstens `max` Bytes nach `ziel` (null ist
+/// erlaubt), Rückgabe: kopierte Bytes. Danach wird wieder angezeigt.
+///
+/// # Safety
+/// `ziel` ist null oder zeigt auf `max` beschreibbare Bytes.
+#[unsafe(no_mangle)]
+pub unsafe fn kos_konsole_aufnahme_ende(ziel: *mut c_char, max: c_int) -> c_int {
+    let Some(a) = faden_konsole().and_then(|k| k.aufnahme.take()) else { return 0 };
+    if ziel.is_null() {
+        return 0;
+    }
+    let n = a.len().min(max.max(0) as usize);
+    if n > 0 {
+        // SAFETY: Vertrag des Aufrufers.
+        unsafe { core::ptr::copy_nonoverlapping(a.as_ptr(), ziel.cast::<u8>(), n) };
+    }
+    n as c_int
 }
 }
 

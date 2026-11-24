@@ -57,6 +57,18 @@ pub fn aufnehmen() -> Result<(String, usize), String> {
 pub fn programm() {
     // Menü bzw. Kontextmenü verschwinden lassen, dann aufnehmen
     sys::warten(60);
+    // … und warten, bis das Bild ruhig steht (höchstens 1,5 s): unter Last
+    // zeigte die Taskleiste sonst noch den gedrückten Startknopf
+    let pruefsumme = || sys::foto().2.iter().fold(0xcbf2_9ce4_8422_2325u64, |h, &p| (h ^ u64::from(p)).wrapping_mul(0x100_0000_01b3));
+    let mut alt = pruefsumme();
+    for _ in 0..15 {
+        sys::warten(10);
+        let neu = pruefsumme();
+        if neu == alt {
+            break;
+        }
+        alt = neu;
+    }
     match aufnehmen() {
         Ok((pfad, n)) => {
             sys::debug_text(&format!("Screenshot: {pfad} ({n} Bytes, gelesen und geprüft)\n"));

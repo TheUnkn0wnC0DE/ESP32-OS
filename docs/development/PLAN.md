@@ -1469,7 +1469,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   (`Welt::liste_geaendert`). PC-Test `desktop/tests/taskleiste_sofort.rs`:
   Eintrag erscheint und verschwindet < 150 ms nach dem Fenster (3 Runden).
   Offen: Board-Messung.
-- [ ] **S2 Dateimanager flüssig scrollen** – so flüssig wie der Browser
+- [x] **S2 Dateimanager flüssig scrollen** – so flüssig wie der Browser
   (32 fps): nur den sichtbaren Teil neu zeichnen, Symbole und Einträge
   zwischenspeichern. Nachweis: fps vorher/nachher am Board.
   Stand 24.11. (PC): Jeder Blätterschritt zeichnete das ganze Fenster neu
@@ -1483,11 +1483,39 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   stimmen (oberste Zeile öffnet die Datei dort, Zurückblättern öffnet den
   ersten Ordner); mit absichtlich entferntem Leeren der Bildlaufspur
   schlägt er fehl. Offen: fps am Board (mit S3).
+  Nachweis (Board, S3-Lauf 24.11., gleicher Autopilot, nur der
+  Dateimanager getauscht): Blättern **vorher 17,8 Bilder/s** (Fläche
+  185 762 px/Bild, Compositor 9,2 ms) → **nachher 25,2 Bilder/s** (101 221
+  px/Bild, 4,4 ms); Browser im selben Lauf 24,9 bzw. 24,7 – so flüssig wie
+  der Browser. 0 Abstürze. Grenze ≥ 30: siehe S3.
 - [ ] **S3 Oberfläche allgemein** – per Autopilot messen, wo die Bildrate
   einbricht (Fenster öffnen/schliessen, Menü, Scrollen in allen
   Programmen, Tastatur); schlimmste Stellen zuerst; Ziel überall ≥ 30 fps
   beim Scrollen, keine sichtbaren Verzögerungen beim Öffnen/Schliessen.
   Nachweis: Vorher/Nachher-fps in PLAN.
+  Messung gebaut (24.11.): PC-Test `desktop/tests/fps_lauf.rs` prüft den
+  Ablauf und erzeugt den Autopiloten (Ruhe, Menü 6× auf/zu, Rechner 3×
+  auf/zu, Dateimanager wischen, Tippen auf der Bildschirmtastatur in den
+  Notizen, Browser wischen); `werkzeuge/board/s3_lauf.ps1` mit
+  `s3_auswertung.py` mittelt die Log-Zeilen „Desktop: … Bilder/s neu“ je
+  Phase. Board 24.11. (neue Bilder je s, Mittel / Fläche je Bild):
+
+  | Phase | vorher | nachher |
+  |---|---|---|
+  | Dateimanager wischen | 17,8 (185 762 px) | 25,2 (101 221 px) |
+  | Browser wischen | 24,9 | 24,7 |
+  | Tastatur tippen | 15,3 (128 416 px) | 15,0 (99 905 px) |
+  | Menü auf/zu | 3,4 | 3,8 |
+  | Fenster auf/zu | 2,5 | 2,2 |
+
+  (Menü, Fenster, Tastatur: so viele Bilder, wie sich etwas ändert – die
+  Tipps kommen alle 0,3–0,7 s; wischen: 0,5 s Bewegung, 0,25 s Pause.)
+  Ursache der Grenze bei ~25–29: die Anzeige zeigt Bilder im 55-Hz-Takt des
+  Panels; braucht ein Bild länger als 18 ms, kommt es erst einen Takt
+  später → höchstens 27,5 Bilder/s (Log „28,7 FPS, PPA 25 ms“ beim
+  Blättern: der PPA vergrössert die geänderten Zeilen 640×360 → Panel in
+  ~25 ms). Siehe Abweichungen „S3“. Offen: Ausgabeweg schneller (≤ 18 ms
+  je Bild beim Blättern), dann erneut messen.
 - [x] **S4 Ersteinrichtung** – Schliessen mit dem X gilt als erledigt
   (kommt nicht bei jedem Start wieder); am Board des Nutzers den Merker
   setup=1 setzen. Nachweis: PC-Test, Board-Log „schon erledigt“.
@@ -1496,6 +1524,38 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   gesetzt (Build mit `ESP32OS_SETUP_ERLEDIGT`), danach in jedem Lauf mit
   normaler Firmware Log „Ersteinrichtung: schon erledigt“ (M4-Lauf 24.11.,
   I (3583)).
+
+- [ ] **S5 Fensterränder einheitlich** (Nutzer 24.11. spät, nach dem
+  aktuellen Schritt) – beim Editor-Fenster und beim Passwort-Generator
+  wirkt der obere Rand abgehackt. (1) Ursache finden (Titelleiste,
+  Rahmen, Position oder Höhe falsch berechnet?); (2) jedes Programm per
+  Autopilot öffnen, Bildschirmfoto (bildschirmfoto.py), oberen Rand,
+  Titelleiste, alle Ränder und Ecken vergleichen; (3) alle betroffenen
+  Programme beheben, alle Fenster einheitlich und sauber; (4) Nachweis:
+  Fotos aller Programme vorher und nachher, PC-Test, der für jedes
+  Programm prüft, dass die Titelleiste vollständig und gleich gezeichnet
+  ist.
+  Ursache (24.11.): KolibriOS-Programme ohne Flag „relativ“ (Stil 0x13/
+  0x14: PasswordGen, TinyHashView, Beispiel-GUI) zeichnen in
+  Fensterkoordinaten und rechnen mit der Titelleiste des KolibriOS-Skins
+  (22 px); unsere Touch-Titelleiste ist doppelt so hoch (Skin ×2) – ihr
+  Inhalt lag in der unteren Hälfte der Titelleiste. TinyHashView ist dazu
+  breiter als der Bildschirm und zeichnete über den rechten Rand.
+  Behoben im Kern: solche Fenster sind um die Mehrhöhe (`versatz`) höher,
+  Zeichnen, Knöpfe, Maus (37.1) und Clientbox (9) liegen um `versatz`
+  tiefer; in Fenstern mit Skin zeichnen sie und ihre Knöpfe nur im
+  Arbeitsbereich (Titelleiste und Rahmen bleiben ganz).
+  PC-Test `desktop/tests/fenster_raender.rs` (i686, 21 Programme): je
+  Programm Foto und Vergleich von Titelleiste, linkem, rechtem und unterem
+  Rand mit der Neuzeichnung des Kerns, Fenster ganz auf dem Bildschirm.
+  Vorher (alter Kern): basic_gui 2736, passwordgen 1149, thashview 540
+  Bildpunkte in der Titelleiste, thashview 330 im rechten Rand; nachher:
+  alle 21 sauber. Fotos `desktop/tests/erwartet/s5/vorher|nachher/`.
+  Board-Ablauf `desktop/tests/fenster_board.rs` → `s5_lauf.ps1` (18
+  Programme über das Startmenü, je ein Foto). Offen: Board-Fotos vorher/
+  nachher. Hinweis: Notizen, Dateimanager, Einstellungen und Boxlib liegen
+  bei y = 0 (bündig oben) – Titelleiste vollständig; ob „Editor“ eines
+  dieser Fenster meint, steht in STATUS (Frage).
 
 ## T. Nach Teil S (Nutzer 24.11. abends)
 
@@ -1511,6 +1571,14 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   programs/other und programs/games, Ports (SDL/C++) passen nicht; Frage zum
   Übernehmen einzelner C-Programme an den Nutzer. Vorgezogen, während das
   Board den Dauertest M4 lief (S braucht das Board).
+- [ ] **T2 Wetter-App** (Nutzer 24.11. spät; **nach Teil D**) – nur die
+  Wetter-App „Weather“ aus ColibriOS übernehmen, die anderen Programme
+  nicht. Vorher die Lizenz prüfen. Per Touch bedienbar, Standort in den
+  Einstellungen festlegbar, Daten über WLAN. Passt die ColibriOS-Version
+  nicht (Lizenz, Wetterdienst, Aufwand), stattdessen eine eigene Wetter-App
+  mit einem freien Wetterdienst ohne API-Schlüssel bauen. Nachweis:
+  Lizenzprüfung in PLAN, PC-Test (Touch, Einstellungen), Board-Foto mit
+  echten Wetterdaten.
 
 ## Gesamtauftrag 24.11. (ersetzt den vom 23.11. nachts)
 
@@ -1725,7 +1793,7 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
 
 ## K. Teil C: v1.1 (Auftrag 23.11. nachts, Gesamtauftrag 24.11.)
 
-- [ ] **C1 Konsole** (vorher Z4) – console.obj nativ nachbauen (gleiche
+- [x] **C1 Konsole** (vorher Z4) – console.obj nativ nachbauen (gleiche
   Schnittstelle wie KolibriOS), KolibriOS-Shell unverändert (wenn C), dazu
   kmatrix; bedienbar per Touch und Bildschirmtastatur. Vorher prüfen, ob es
   in Flash-Platz und Programm-Heap passt. Nachweis: PC-Test der
@@ -1753,6 +1821,11 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   und verschwindet), Kreuz; Matrix öffnen/schliessen – erzeugt den
   Board-Autopilot (`werkzeuge/board/c1_autopilot.txt`, `c1_lauf.ps1`).
   Offen: Board per Touch (Liste „Board-Tests“, Punkt 5).
+  Nachweis Board (24.11., `c1_lauf.ps1`, Autopilot aus konsole_touch.rs):
+  Konsole über Startmenü → Mehr Programme, „ver“, „touch neu“, „ls“,
+  „rm neu“ auf der Bildschirmtastatur getippt, Kreuz; Matrix öffnen und
+  schliessen; 0 Abstürze, 0 Neustarts. Fotos
+  `docs/nachweise/c1/c1_board_shell.png`, `c1_board_matrix.png`.
 - [ ] **C2 WLAN 6** (vorher W2 und W5) – eigene C6-Firmware (Host/Slave
   versionsgleich, Update vom P4 aus), iTWT. Vorher/Nachher: Durchsatz,
   Verbindungsaufbau, Stromverbrauch soweit messbar. Nachweis: Log mit
@@ -1895,8 +1968,36 @@ und Verzeichnis auf GitHub).
   wie bisher. PC-Test `desktop/tests/dateimanager.rs` per Touch: in den
   Papierkorb, wiederherstellen, erneut löschen, endgültig löschen, Leeren
   (Foto `d4_papierkorb.png`). Offen: Board-Foto.
-- [ ] **D1 Shell ausbauen** – Pipes, Umleitungen, Skripte, möglichst viele
+- [x] **D1 Shell ausbauen** – Pipes, Umleitungen, Skripte, möglichst viele
   Standardbefehle. Nachweis: PC-Tests je Funktion, Board-Foto.
+  Stand 24.11. (PC): `kolibri/c/shell_zusatz.c` (eingebunden in
+  `shell_haupt.c`; in der Shell nur ein Aufruf am Anfang von
+  `command_execute` und sechs Zeilen in der Befehlstabelle): `>`, `>>`, `<`
+  und Pipes `a | b | c` für alle eingebauten Befehle; neue Befehle cat,
+  grep (-i, -v, -c), wc (-l, -w, -c), head/tail (-n N), sort (-r). Die
+  Ausgabe fängt die native Konsole je Faden auf
+  (`kos_konsole_aufnahme_*` in `kolibri/src/konsole.rs`), andere
+  Konsolenprogramme schreiben ungestört weiter. Skripte (#SHS) gab es schon;
+  zwei Fehler der Original-Shell behoben: `ls -1` las hinter dem Textende
+  („Error!“), die Skript-Erkennung verglich 4 Bytes ohne Nullzeichen.
+  PC-Test `kolibri/tests/shell_umleitung.rs` (i686): 10 Befehlszeilen mit
+  Umleitung/Pipe gegen die geschriebenen Dateien geprüft, Skript mit
+  Umleitungen, Foto `d1_shell_pipe` (Pipe auf dem Bildschirm, `help grep`),
+  `echo x >` ohne Datei meldet einen Fehler. Offen: Board-Foto.
+  Nachweis Board (24.11., C1-Lauf): per Touch getippt „ls | wc“ → „2 8
+  144“ und „help sort“ (| über die Ebene 123 der Bildschirmtastatur), Foto
+  `docs/nachweise/c1/d1_board_pipe.png`; 0 Abstürze.
+  Review 24.11. (Diff seit 62a34e3 gegen M/S/D1 und Abschnitt 9) – behoben:
+  (1) Shell prüfte malloc/realloc nicht (Datei 450–880 KB → NULL-Schreiben →
+  Neustart): jetzt jede Belegung geprüft, höchstens 256 KB je Datei/Pipe,
+  Aufnahme der Konsole ebenso begrenzt; (2) Rückfall am Pool vorbei leerte
+  die PSRAM-Reserve: nur noch, wenn 2 MB grösster Block bleiben; (3) lange
+  Zeilen über printf (2 KB) abgeschnitten: Zeilen direkt geschrieben;
+  (4) „ls -“ las hinter das Textende; (5) Dateiname nach > / < endet an
+  | < >, > nur nach dem letzten, < nur nach dem ersten Befehl; dazu (alt,
+  Original-Shell) Zeilen über 250 Zeichen und überlange Skriptzeilen
+  überschrieben den Stapel bzw. CMD → abgelehnt bzw. gekürzt. Test
+  `shell_umleitung.rs` um grosse Dateien und falsche Umleitungen erweitert.
 - [ ] **D2 Medienplayer** – MP3, Ogg, WAV, MIDI über den
   ES8311-Lautsprecher, per Touch; vorhandenen KolibriOS-Player nehmen, wenn
   passend. Nachweis: PC-Test der Dekoder, Board: Ton (Log), Foto.
@@ -1910,6 +2011,22 @@ und Verzeichnis auf GitHub).
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **S3, ≥ 30 fps beim Scrollen noch nicht erreicht (24.11.):** Programme
+  zeichnen schnell genug (Dateimanager nach S2 4,4 ms Compositor je Bild),
+  aber die Anzeige zeigt im 55-Hz-Takt: ein Bild, das länger als 18 ms
+  braucht, erscheint einen Takt später – zwischen 27,5 und 55 Bilder/s gibt
+  es keine Stufe. Beim Blättern braucht der PPA für die geänderten Zeilen
+  ~25 ms, deshalb 25–29 Bilder/s (Dateimanager wie Browser). Ersatz: S2
+  (Dateimanager so flüssig wie der Browser) erreicht; für ≥ 30 muss der
+  Ausgabeweg in der Firmware schneller werden (Vergrössern der geänderten
+  Zeilen unter 18 ms) – bleibt als offener Teil von S3 stehen.
+
+- **D1, Umleitung nur für eingebaute Befehle (24.11.):** Gestartete
+  Programme haben eine eigene Konsole (eigener Faden); ihre Ausgabe lässt
+  sich nicht in eine Pipe oder Datei umleiten. Zeilenenden in Dateien und
+  Pipes sind LF (die Shell schreibt sonst LF+CR, auch das upstream-
+  `echo >`). Grep sucht Text, keine regulären Ausdrücke.
 
 - **C2 Sicherung beim Update über OTA (24.11.):** Geplant war eine
   byte-genaue Sicherung des C6-Flash (esptool read_flash) – das geht nur

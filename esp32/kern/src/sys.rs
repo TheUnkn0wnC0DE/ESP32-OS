@@ -58,10 +58,19 @@ fn mit_fenster<R>(f: impl FnOnce(&mut Zeichner<'_>) -> R) -> Option<R> {
             let (ax, ay, aw, ah) = fe.arbeitsbereich(&skin);
             let relativ = fe.flags & 2 != 0;
             let (bw, bh) = (fe.w, fe.h);
+            let versatz = fe.versatz;
+            let mit_skin = matches!(fe.stil, 3 | 4);
             let mut z = Zeichner::neu(&mut fe.buf);
             if relativ {
                 z.ox = ax;
                 z.oy = ay;
+                z.clip = Clip { x0: ax, y0: ay, x1: ax + aw, y1: ay + ah };
+            } else if mit_skin {
+                // S5: Inhalt unter die (höhere) Touch-Titelleiste und nur in
+                // den Arbeitsbereich – Titelleiste und Rahmen bleiben ganz
+                // (TinyHashView ist breiter als der Bildschirm und zeichnete
+                // über den rechten Rand)
+                z.oy = versatz;
                 z.clip = Clip { x0: ax, y0: ay, x1: ax + aw, y1: ay + ah };
             } else {
                 z.clip = Clip { x0: 0, y0: 0, x1: bw, y1: bh };
@@ -106,7 +115,10 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
         let neu = w.slots[s].as_ref().is_some_and(|f| f.fenster.is_none());
         if neu {
             let (mut x, mut y) = (hoch(ebx), hoch(ecx));
-            let (mut fw, mut fh) = (tief(ebx) + 1, tief(ecx) + 1);
+            // S5: KolibriOS-Programme ohne Flag „relativ“ rechnen mit der
+            // Titelleiste des KolibriOS-Skins (Höhe ohne Touch-Faktor)
+            let versatz = if matches!(stil, 3 | 4) && (edx >> 28) & 2 == 0 { skin.hoehe - skin.hoehe / skin.skala.max(1) } else { 0 };
+            let (mut fw, mut fh) = (tief(ebx) + 1, tief(ecx) + 1 + versatz);
             if x < 0 || x + fw > sw {
                 x = 0;
                 if fw > sw {
@@ -144,6 +156,7 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
                 unbeweglich: esi >> 24 & 0xF == 1,
                 ebene: 0,
                 zeiger: 0,
+                versatz,
             });
             // aktivieren reiht ein und zeichnet den Kopf des bisher aktiven Fensters inaktiv
             w.aktivieren(s);
@@ -214,7 +227,7 @@ pub fn fenster_bewegen(x: i32, y: i32, bw: i32, bh: i32) {
         let nx = if x == -1 { f.x } else { x };
         let ny = if y == -1 { f.y } else { y };
         let nw = if bw == -1 { f.w } else { (bw + 1).clamp(1, sw) };
-        let nh = if bh == -1 { f.h } else { (bh + 1).clamp(1, sh) };
+        let nh = if bh == -1 { f.h } else { (bh + 1 + f.versatz).clamp(1, sh) };
         let groesse = nw != f.w || nh != f.h;
         // neue Grösse nur mit Puffer (System-Heap knapp: Grösse bleibt,
         // Fehlerbericht 24.11.)
@@ -371,8 +384,7 @@ pub fn knopf(ebx: u32, ecx: u32, edx: u32, esi: u32) {
     mit_faden(|w, s| {
         let skin = w.skin.clone();
         let Some(f) = w.slots[s].as_mut().and_then(|f| f.fenster.as_mut()) else { return };
-        let (ax, ay, _, _) = f.arbeitsbereich(&skin);
-        let (ox, oy) = if f.flags & 2 != 0 { (ax, ay) } else { (0, 0) };
+        let (ox, oy) = f.ursprung(&skin);
         let (x, y, bw, bh) = (hoch(ebx) + ox, hoch(ecx) + oy, tief(ebx) + 1, tief(ecx) + 1);
         if bw <= 0 || bh <= 0 || bw >= 0x8000 || bh >= 0x8000 {
             return;
@@ -386,7 +398,14 @@ pub fn knopf(ebx: u32, ecx: u32, edx: u32, esi: u32) {
             None => f.knoepfe.push(Knopf { id, x, y, w: bw, h: bh, kein_rahmen, system: false }),
         }
         if zeichnen {
-            knopf_zeichnen(&mut Zeichner::neu(&mut f.buf), x, y, bw, bh, esi & 0xFF_FFFF);
+            // S5: Knöpfe in Fenstern mit Skin nur im Arbeitsbereich (Rahmen
+            // und Titelleiste bleiben ganz, auch bei zu breiten Programmen)
+            let innen = matches!(f.stil, 3 | 4).then(|| f.arbeitsbereich(&skin));
+            let mut z = Zeichner::neu(&mut f.buf);
+            if let Some((ax, ay, aw, ah)) = innen {
+                z.clip = Clip { x0: ax, y0: ay, x1: ax + aw, y1: ay + ah };
+            }
+            knopf_zeichnen(&mut z, x, y, bw, bh, esi & 0xFF_FFFF);
             // nur der Knopf hat sich geändert (Tastatur: eine Taste neu)
             let (fx, fy, sichtbar) = (f.x, f.y, !f.minimiert);
             if sichtbar {
@@ -524,10 +543,9 @@ pub fn textfeld_lage(x: i32, y: i32, w: i32, h: i32) {
             let skin = wl.skin.clone();
             let Some(f) = wl.faden(tid).and_then(|z| z.fenster.as_ref()) else { return };
             let (ax, ay) = if f.flags & 2 != 0 {
-                let (ax, ay, _, _) = f.arbeitsbereich(&skin);
-                (ax, ay)
+                f.ursprung(&skin)
             } else {
-                (0, 0)
+                (0, f.versatz)
             };
             let (sx, sy) = (f.x + ax + x, f.y + ay + y);
             wl.textfeld = Some(Clip { x0: sx, y0: sy, x1: sx + w, y1: sy + h });

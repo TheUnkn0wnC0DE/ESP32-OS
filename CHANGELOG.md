@@ -1,6 +1,23 @@
 # Changelog
 
-## 1.0.2 (not yet released)
+## 1.0.3 (not yet released)
+
+- Browser: tapping the Start button while the browser is open no longer crashes the system. A page that cannot load shows a readable reason (name not found, no connection, timeout) instead of an error code; DNS falls back to 1.1.1.1 when the router's server does not answer.
+- Firmware update: connection errors are shown as readable text instead of codes like -28674.
+- Stability: a program that uses up its own memory ends with "memory full" instead of taking the system down; windows and buffers are only created when the system keeps a reserve; new network connections need 48 KB of internal RAM.
+- Internal RAM under load: about 206 KB free instead of 86 KB (display strips of the desktop and variables of the C programs moved to PSRAM).
+- Large programs (browser, PDF viewer, image viewer) start reliably after long use: their memory comes from a pool reserved at start-up, so PSRAM no longer breaks into small pieces.
+- A hardware fault in a program (for example a load or store access fault) ends only that program.
+- After a crash and restart, the message names the reason and the memory state at the time.
+- File manager: recycle bin with restore; scrolling redraws only the list.
+- Taskbar: a window's entry appears together with the window.
+- Start button: tapping it again closes the open menu.
+- First-run wizard: closing it with the X counts as done; it no longer appears at every start.
+- Console: the KolibriOS shell runs in a native console window, and a new Matrix program shows falling characters.
+- Shell: output redirection (>, >>), input from a file (<) and pipes (|) for built-in commands; new commands cat, grep, wc, head, tail and sort. Fixed two bugs of the original shell (ls -1, script detection).
+- Sleep mode from the Start menu: the screen turns off, a tap wakes the board.
+
+## 1.0.2 (2026-11-24)
 
 - Quake: "New Game" no longer aborts with "progs.dat has wrong version number". The firmware treated the end of the PAK directory as the end of the file; in the shareware `pak0.pak` the game code lies behind the directory and was read as zeros.
 - On-screen keyboard: a key is drawn smaller and darker while a finger rests on it, for every key including Shift, Backspace, Space and Enter. Only that key is redrawn.

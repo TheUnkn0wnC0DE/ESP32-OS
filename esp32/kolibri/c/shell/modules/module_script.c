@@ -2,7 +2,9 @@
 
 int script_check(char file[]) {
     kol_struct70	k70;
-    char		buf[4];
+    /* ESP32-OS D1: war buf[4] – strcmp las hinter die 4 Bytes (kein
+     * Nullzeichen), die Signatur wurde je nach Stapelinhalt nicht erkannt */
+    char		buf[5] = {0};
 
     k70.p00 = 0;
     k70.p04 = 0;
@@ -77,7 +79,11 @@ int script_run(char exec[], char args[]) {
                 CMD[i] = '\0';
                 break;
                 }
-            CMD[i] = buf[pos];
+            /* ESP32-OS: Zeile höchstens so lang wie CMD (vorher unbegrenzt) */
+            if (i < sizeof(CMD) - 1)
+                CMD[i] = buf[pos];
+            else
+                i--;
             pos++;
             }
 

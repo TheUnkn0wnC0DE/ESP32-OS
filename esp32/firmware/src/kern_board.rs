@@ -172,6 +172,9 @@ fn fortsetzen(g: usize) {
 static POOL: std::sync::Mutex<Option<kern::bereichspool::Pool>> = std::sync::Mutex::new(None);
 const POOL_RESERVE: usize = 6 * 1024 * 1024;
 const POOL_MIN: usize = 8 * 1024 * 1024;
+/// So viel grösster freier PSRAM-Block bleibt dem System, wenn ein Bereich
+/// am Pool vorbei aus dem System-Heap kommt.
+const RUECKFALL_RESERVE: usize = 2 * 1024 * 1024;
 
 /// Stand des Pools (frei, grösstes Stück, Grösse) in KB, None ohne Pool.
 pub fn pool_stand() -> Option<(usize, usize, usize)> {
@@ -214,8 +217,19 @@ fn holen(n: usize) -> *mut u8 {
     if let Some(a) = g.as_mut().and_then(|p| p.holen(n)) {
         return a as *mut u8;
     }
+    let mit_pool = g.is_some();
     drop(g);
-    // Rückfall: System-Heap (Pool voll oder nicht angelegt)
+    // Rückfall: System-Heap (Pool voll oder nicht angelegt). Mit Pool nur,
+    // wenn dem System danach noch RUECKFALL_RESERVE bleibt – sonst endet der
+    // Start mit „kein Speicher“ statt die Reserve für Fenster, WLAN und Kern
+    // zu leeren (Review 24.11.).
+    if mit_pool {
+        // SAFETY: reine Abfrage.
+        let block = unsafe { sys::heap_caps_get_largest_free_block(sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) };
+        if block < n.saturating_add(RUECKFALL_RESERVE) {
+            return core::ptr::null_mut();
+        }
+    }
     // SAFETY: einfache Belegung im PSRAM.
     unsafe { sys::heap_caps_malloc(n, sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) }.cast()
 }
