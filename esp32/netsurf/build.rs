@@ -119,7 +119,7 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     for n in ["libwapcaplet", "libparserutils", "libhubbub", "libdom"] {
         for f in dir_sources(&bib(n)) {
             // B7: als Kopie (dom_textarea_kopie)
-            if f.ends_with("html/html_text_area_element.c") {
+            if f.ends_with("html/html_text_area_element.c") || f.ends_with("html/html_document.c") {
                 continue;
             }
             g.f(f);
@@ -127,6 +127,7 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     }
     g.f(bib("libdom").join("bindings/hubbub/parser.c"));
     g.f(dom_textarea_kopie(q, &aus.join("dom")));
+    g.f(dom_dokument_kopie(q, &aus.join("dom")));
     g.proben.push(c("probe.c"));
     v.push(g);
 
@@ -308,9 +309,11 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     }
     // gui.c als geprüfte Kopie (Suche aus der Adressleiste, Suchanbieter)
     g.f(gui_kopie(q, aus));
-    for f in "framebuffer.c schedule.c bitmap.c fetch.c findfile.c corewindow.c local_history.c clipboard.c font_internal.c".split_whitespace() {
+    for f in "framebuffer.c bitmap.c fetch.c findfile.c corewindow.c local_history.c clipboard.c font_internal.c".split_whitespace() {
         g.f(fe.join(f));
     }
+    // schedule.c als geprüfte Kopie (BR2: calloc ohne Prüfung)
+    g.f(schedule_kopie(q, aus));
     // fbtk.c als geprüfte Kopie (B6: Schreibmarke → Bildschirmtastatur);
     // sie bindet widget.h aus dem fbtk-Ordner ein
     g.p(fe.join("fbtk"));
@@ -962,6 +965,22 @@ fn kopie_mit(q: &Path, ziel: &Path, rel: &str, name: &str, ersetzungen: &[(&str,
     datei
 }
 
+/// `frontends/framebuffer/schedule.c` als geprüfte Kopie (BR2): Bei vollem
+/// Heap lieferte calloc NULL und `gettimeofday(&nscb->tv, …)` schrieb an
+/// Adresse 8 (am Board: Absturz in `_gettimeofday_r`). Jetzt NSERROR_NOMEM.
+fn schedule_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "frontends/framebuffer/schedule.c",
+        "fb_schedule.c",
+        &[(
+            "\tnscb = calloc(1, sizeof(struct nscallback));\n\n\tgettimeofday(&nscb->tv, NULL);",
+            "\tnscb = calloc(1, sizeof(struct nscallback));\n\tif (nscb == NULL) {\n\t\treturn NSERROR_NOMEM; /* ESP32-OS (BR2) */\n\t}\n\n\tgettimeofday(&nscb->tv, NULL);",
+        )],
+    )
+}
+
 /// `frontends/framebuffer/fbtk/event.c` als geprüfte Kopie (B8): Tastencodes
 /// ab 0x10000 sind schon Unicode (Zeichen der Bildschirmtastatur, auch
 /// Grossbuchstaben, Umlaute, „%“ und „{|}~“, für die nsfb keine Codes hat;
@@ -1208,6 +1227,27 @@ fn interaction_kopie(q: &Path, ziel: &Path) -> PathBuf {
 /// `set_value` den Inhalt – der ist aber die Vorgabe, defaultValue/reset();
 /// NetSurf liest den Wert nur über `get_value`), und `get_value` gibt den
 /// vorigen Text frei, solange der Wert noch dem Inhalt folgt.
+/// libdom `html_document.c` als geprüfte Kopie (BR2): Schlägt beim Anlegen
+/// eines Dokuments schon `memoised` fehl (Heap voll), räumte der Fehlerweg
+/// `doc->elements` auf, bevor es gesetzt war – das Dokument stammt aus
+/// malloc, der Zeiger war Müll (am Board: Absturz in
+/// `_dom_html_document_initialise`, Zeiger zeigte auf Text).
+fn dom_dokument_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "../libdom/src/html/html_document.c",
+        "dom_html_document.c",
+        &[
+            (
+                "\tdoc->body = NULL;\n\n\tdoc->memoised = calloc(",
+                "\tdoc->body = NULL;\n\t/* ESP32-OS (BR2): vor dem ersten goto out gesetzt */\n\tdoc->memoised = NULL;\n\tdoc->elements = NULL;\n\n\tdoc->memoised = calloc(",
+            ),
+            ("#include \"html_document_strings.h\"", "#include \"html/html_document_strings.h\""),
+        ],
+    )
+}
+
 fn dom_textarea_kopie(q: &Path, ziel: &Path) -> PathBuf {
     kopie_mit(
         q,

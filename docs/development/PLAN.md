@@ -1435,6 +1435,13 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   zwei Abstürze des Browsers unter Speicherdruck (Wikipedia, Heap fast
   voll): `_dom_html_document_initialise` (libdom html_document.c:184, Zeiger
   zeigt auf Text) und `_gettimeofday_r` (Schreiben an Adresse 8) → BR2.
+  ✔ Beide behoben (24.11.): libdom-Fehlerweg las `doc->elements`, bevor es
+  gesetzt war (geprüfte Kopie dom_html_document.c); Scheduler des
+  Framebuffer-Frontends nutzte calloc ohne Prüfung (fb_schedule.c). Board,
+  Lauf br_absturz1: 6 Seiten ohne Absturz, alle geladen (47/10/23/30/53/82
+  Abrufe), interner RAM nach jeder Seite 86–91 KB
+  (`docs/nachweise/br/br_stabil.txt`). Offen für BR1: der Messlauf über
+  alle 30 Seiten mit Tabelle – braucht das Board (ab 24.11. 06:20 weg).
 - [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
   Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
   mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.

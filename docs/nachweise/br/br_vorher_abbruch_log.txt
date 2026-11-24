@@ -1,0 +1,1532 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+E (4022) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (7042) pudding_p4: Frei: 85 KB intern, 13524 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (12053) pudding_p4: Frei: 89 KB intern, 13515 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (15582) pudding_p4: Frei: 89 KB intern, 13515 KB PSRAM (grösster Block 12288 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (22165) pudding_fw::seitenliste: SEITE 1/30: https://de.wikipedia.org/wiki/Schweiz
+I (22201) pudding_p4: Frei: 92 KB intern, 2131 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (24574) pudding_p4: Frei: 84 KB intern, 1948 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (31301) pudding_p4: Frei: 81 KB intern, 1808 KB PSRAM (grösster Block 1440 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (33774) pudding_p4: Frei: 68 KB intern, 1996 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (35790) pudding_p4: Frei: 63 KB intern, 1993 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (37858) pudding_p4: Frei: 58 KB intern, 1994 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (39883) pudding_p4: Frei: 57 KB intern, 1998 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (41988) pudding_p4: Frei: 49 KB intern, 1993 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (44062) pudding_p4: Frei: 79 KB intern, 2052 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (46080) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (48099) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (50120) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (52140) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (54164) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (56182) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (58199) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (60222) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (62241) pudding_p4: Frei: 81 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (64264) pudding_p4: Frei: 84 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (72742) pudding_p4: Frei: 84 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (74839) pudding_p4: Frei: 84 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (76860) pudding_p4: Frei: 84 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78882) pudding_p4: Frei: 84 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (79165) pudding_fw::seitenliste: SEITE 1/30 Ende: Browser-Heap belegt 1043 KB, Spitze 10372 KB von 10628 KB
+I (79186) pudding_fw::seitenliste: SEITE 1/30: Browser beendet (Beendet)
+I (82165) pudding_fw::seitenliste: SEITE 2/30: https://www.google.com/
+I (82201) pudding_p4: Frei: 84 KB intern, 2099 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (84946) pudding_p4: Frei: 74 KB intern, 1994 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (88825) pudding_p4: Frei: 73 KB intern, 2057 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (90839) pudding_p4: Frei: 68 KB intern, 2007 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (139165) pudding_fw::seitenliste: SEITE 2/30 Ende: Browser-Heap belegt 2856 KB, Spitze 4738 KB von 10628 KB
+I (139177) pudding_p4: Frei: 70 KB intern, 2487 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (139185) pudding_fw::seitenliste: SEITE 2/30: Browser beendet (Beendet)
+I (142165) pudding_fw::seitenliste: SEITE 3/30: https://duckduckgo.com/
+I (142201) pudding_p4: Frei: 70 KB intern, 2095 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (144227) pudding_p4: Frei: 64 KB intern, 1937 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (146312) pudding_p4: Frei: 56 KB intern, 1974 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (148402) pudding_p4: Frei: 51 KB intern, 1972 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (151363) pudding_p4: Frei: 47 KB intern, 2054 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (153372) pudding_p4: Frei: 43 KB intern, 2001 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (155436) pudding_p4: Frei: 42 KB intern, 2036 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (199165) pudding_fw::seitenliste: SEITE 3/30 Ende: Browser-Heap belegt 3071 KB, Spitze 7133 KB von 10628 KB
+I (199174) pudding_p4: Frei: 44 KB intern, 2440 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (199185) pudding_fw::seitenliste: SEITE 3/30: Browser beendet (Beendet)
+I (202165) pudding_fw::seitenliste: SEITE 4/30: https://github.com/
+I (202201) pudding_p4: Frei: 44 KB intern, 2048 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (204205) pudding_p4: Frei: 37 KB intern, 1876 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (206407) pudding_p4: Frei: 30 KB intern, 1907 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (208884) pudding_p4: Frei: 28 KB intern, 1600 KB PSRAM (grösster Block 1568 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (210904) pudding_p4: Frei: 25 KB intern, 1937 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (213045) pudding_p4: Frei: 20 KB intern, 1402 KB PSRAM (grösster Block 1376 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (216544) pudding_p4: Frei: 14 KB intern, 1938 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (218562) pudding_p4: Frei: 17 KB intern, 2039 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (220583) pudding_p4: Frei: 17 KB intern, 2039 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (222614) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (224637) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (226659) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (228676) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (230696) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (232720) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (234741) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (236760) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (238777) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (240797) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (242820) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (244843) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (252740) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (254750) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (256770) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258790) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (259165) pudding_fw::seitenliste: SEITE 4/30 Ende: Browser-Heap belegt 8494 KB, Spitze 10372 KB von 10628 KB
+I (259186) pudding_fw::seitenliste: SEITE 4/30: Browser beendet (Beendet)
+I (262165) pudding_fw::seitenliste: SEITE 5/30: https://www.srf.ch/
+I (262201) pudding_p4: Frei: 23 KB intern, 2041 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (264572) pudding_p4: Frei: 16 KB intern, 1811 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (271436) pudding_p4: Frei: 16 KB intern, 1645 KB PSRAM (grösster Block 1536 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (277319) pudding_p4: Frei: 0 KB intern, 1986 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (277328) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277328) esp-tls: Failed to open new connection
+E (277328) transport_base: Failed to open a new connection
+E (277328) HTTP_CLIENT: Connection failed, sock < 0
+E (277329) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277329) esp-tls: Failed to open new connection
+E (277329) transport_base: Failed to open a new connection
+E (277329) HTTP_CLIENT: Connection failed, sock < 0
+E (277331) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277331) esp-tls: Failed to open new connection
+E (277331) transport_base: Failed to open a new connection
+E (277331) HTTP_CLIENT: Connection failed, sock < 0
+E (277335) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277335) esp-tls: Failed to open new connection
+E (277335) transport_base: Failed to open a new connection
+E (277335) HTTP_CLIENT: Connection failed, sock < 0
+E (277336) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277336) esp-tls: Failed to open new connection
+E (277337) transport_base: Failed to open a new connection
+E (277337) HTTP_CLIENT: Connection failed, sock < 0
+E (277350) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277350) esp-tls: Failed to open new connection
+E (277350) transport_base: Failed to open a new connection
+E (277350) HTTP_CLIENT: Connection failed, sock < 0
+E (277352) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277352) esp-tls: Failed to open new connection
+E (277352) transport_base: Failed to open a new connection
+E (277352) HTTP_CLIENT: Connection failed, sock < 0
+E (277354) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277354) esp-tls: Failed to open new connection
+E (277354) transport_base: Failed to open a new connection
+E (277354) HTTP_CLIENT: Connection failed, sock < 0
+E (277356) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277356) esp-tls: Failed to open new connection
+E (277356) transport_base: Failed to open a new connection
+E (277356) HTTP_CLIENT: Connection failed, sock < 0
+E (277387) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277387) esp-tls: Failed to open new connection
+E (277387) transport_base: Failed to open a new connection
+E (277387) HTTP_CLIENT: Connection failed, sock < 0
+E (277439) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277439) esp-tls: Failed to open new connection
+E (277439) transport_base: Failed to open a new connection
+E (277439) HTTP_CLIENT: Connection failed, sock < 0
+E (277441) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277441) esp-tls: Failed to open new connection
+E (277441) transport_base: Failed to open a new connection
+E (277441) HTTP_CLIENT: Connection failed, sock < 0
+E (277443) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277443) esp-tls: Failed to open new connection
+E (277443) transport_base: Failed to open a new connection
+E (277443) HTTP_CLIENT: Connection failed, sock < 0
+E (277445) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277445) esp-tls: Failed to open new connection
+E (277445) transport_base: Failed to open a new connection
+E (277445) HTTP_CLIENT: Connection failed, sock < 0
+E (277446) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277446) esp-tls: Failed to open new connection
+E (277446) transport_base: Failed to open a new connection
+E (277446) HTTP_CLIENT: Connection failed, sock < 0
+E (277460) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277460) esp-tls: Failed to open new connection
+E (277460) transport_base: Failed to open a new connection
+E (277460) HTTP_CLIENT: Connection failed, sock < 0
+E (277465) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277465) esp-tls: Failed to open new connection
+E (277465) transport_base: Failed to open a new connection
+E (277465) HTTP_CLIENT: Connection failed, sock < 0
+E (277466) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277466) esp-tls: Failed to open new connection
+E (277466) transport_base: Failed to open a new connection
+E (277467) HTTP_CLIENT: Connection failed, sock < 0
+E (277468) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277468) esp-tls: Failed to open new connection
+E (277468) transport_base: Failed to open a new connection
+E (277468) HTTP_CLIENT: Connection failed, sock < 0
+E (277470) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277470) esp-tls: Failed to open new connection
+E (277470) transport_base: Failed to open a new connection
+E (277470) HTTP_CLIENT: Connection failed, sock < 0
+E (277503) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277503) esp-tls: Failed to open new connection
+E (277503) transport_base: Failed to open a new connection
+E (277503) HTTP_CLIENT: Connection failed, sock < 0
+E (277507) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277507) esp-tls: Failed to open new connection
+E (277507) transport_base: Failed to open a new connection
+E (277507) HTTP_CLIENT: Connection failed, sock < 0
+E (277516) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277516) esp-tls: Failed to open new connection
+E (277516) transport_base: Failed to open a new connection
+E (277516) HTTP_CLIENT: Connection failed, sock < 0
+E (277518) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277518) esp-tls: Failed to open new connection
+E (277518) transport_base: Failed to open a new connection
+E (277518) HTTP_CLIENT: Connection failed, sock < 0
+E (277520) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277520) esp-tls: Failed to open new connection
+E (277520) transport_base: Failed to open a new connection
+E (277520) HTTP_CLIENT: Connection failed, sock < 0
+E (277549) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277549) esp-tls: Failed to open new connection
+E (277549) transport_base: Failed to open a new connection
+E (277549) HTTP_CLIENT: Connection failed, sock < 0
+E (277551) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277551) esp-tls: Failed to open new connection
+E (277551) transport_base: Failed to open a new connection
+E (277551) HTTP_CLIENT: Connection failed, sock < 0
+E (277552) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277552) esp-tls: Failed to open new connection
+E (277553) transport_base: Failed to open a new connection
+E (277553) HTTP_CLIENT: Connection failed, sock < 0
+E (277596) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277596) esp-tls: Failed to open new connection
+E (277596) transport_base: Failed to open a new connection
+E (277597) HTTP_CLIENT: Connection failed, sock < 0
+E (277598) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277598) esp-tls: Failed to open new connection
+E (277598) transport_base: Failed to open a new connection
+E (277598) HTTP_CLIENT: Connection failed, sock < 0
+E (277600) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277600) esp-tls: Failed to open new connection
+E (277600) transport_base: Failed to open a new connection
+E (277600) HTTP_CLIENT: Connection failed, sock < 0
+E (277612) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277612) esp-tls: Failed to open new connection
+E (277612) transport_base: Failed to open a new connection
+E (277612) HTTP_CLIENT: Connection failed, sock < 0
+E (277614) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277614) esp-tls: Failed to open new connection
+E (277614) transport_base: Failed to open a new connection
+E (277614) HTTP_CLIENT: Connection failed, sock < 0
+E (277615) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277621) esp-tls: Failed to open new connection
+E (277626) transport_base: Failed to open a new connection
+E (277635) HTTP_CLIENT: Connection failed, sock < 0
+E (277639) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277643) esp-tls: Failed to open new connection
+E (277649) transport_base: Failed to open a new connection
+E (277654) HTTP_CLIENT: Connection failed, sock < 0
+E (277661) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277663) esp-tls: Failed to open new connection
+E (277668) transport_base: Failed to open a new connection
+E (277674) HTTP_CLIENT: Connection failed, sock < 0
+E (277681) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277685) esp-tls: Failed to open new connection
+E (277688) transport_base: Failed to open a new connection
+E (277696) HTTP_CLIENT: Connection failed, sock < 0
+E (277702) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277710) esp-tls: Failed to open new connection
+E (277715) transport_base: Failed to open a new connection
+E (277721) HTTP_CLIENT: Connection failed, sock < 0
+E (277738) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277738) esp-tls: Failed to open new connection
+E (277740) transport_base: Failed to open a new connection
+E (277746) HTTP_CLIENT: Connection failed, sock < 0
+E (277753) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277757) esp-tls: Failed to open new connection
+E (277762) transport_base: Failed to open a new connection
+E (277768) HTTP_CLIENT: Connection failed, sock < 0
+E (277772) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277779) esp-tls: Failed to open new connection
+E (277782) transport_base: Failed to open a new connection
+E (277788) HTTP_CLIENT: Connection failed, sock < 0
+E (277794) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277799) esp-tls: Failed to open new connection
+E (277804) transport_base: Failed to open a new connection
+E (277807) HTTP_CLIENT: Connection failed, sock < 0
+E (277814) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277818) esp-tls: Failed to open new connection
+E (277824) transport_base: Failed to open a new connection
+E (277829) HTTP_CLIENT: Connection failed, sock < 0
+E (277841) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277843) esp-tls: Failed to open new connection
+E (277849) transport_base: Failed to open a new connection
+E (277854) HTTP_CLIENT: Connection failed, sock < 0
+E (277861) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277865) esp-tls: Failed to open new connection
+E (277871) transport_base: Failed to open a new connection
+E (277874) HTTP_CLIENT: Connection failed, sock < 0
+E (277883) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277885) esp-tls: Failed to open new connection
+E (277890) transport_base: Failed to open a new connection
+E (277901) HTTP_CLIENT: Connection failed, sock < 0
+E (277903) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277912) esp-tls: Failed to open new connection
+E (277915) transport_base: Failed to open a new connection
+E (277924) HTTP_CLIENT: Connection failed, sock < 0
+E (277928) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277932) esp-tls: Failed to open new connection
+E (277937) transport_base: Failed to open a new connection
+E (277943) HTTP_CLIENT: Connection failed, sock < 0
+E (277950) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277954) esp-tls: Failed to open new connection
+E (277957) transport_base: Failed to open a new connection
+E (277965) HTTP_CLIENT: Connection failed, sock < 0
+E (277969) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277979) esp-tls: Failed to open new connection
+E (277985) transport_base: Failed to open a new connection
+E (277985) HTTP_CLIENT: Connection failed, sock < 0
+E (277991) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277999) esp-tls: Failed to open new connection
+E (278004) transport_base: Failed to open a new connection
+E (278010) HTTP_CLIENT: Connection failed, sock < 0
+E (278016) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278018) esp-tls: Failed to open new connection
+E (278026) transport_base: Failed to open a new connection
+E (278029) HTTP_CLIENT: Connection failed, sock < 0
+E (278037) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278046) esp-tls: Failed to open new connection
+E (278046) transport_base: Failed to open a new connection
+E (278051) HTTP_CLIENT: Connection failed, sock < 0
+E (278059) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278065) esp-tls: Failed to open new connection
+E (278074) transport_base: Failed to open a new connection
+E (278076) HTTP_CLIENT: Connection failed, sock < 0
+E (279319) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (279319) esp-tls: Failed to open new connection
+E (279319) transport_base: Failed to open a new connection
+E (279319) HTTP_CLIENT: Connection failed, sock < 0
+I (279333) pudding_p4: Frei: 0 KB intern, 2035 KB PSRAM (grösster Block 1632 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+abort() was called at PC 0x4ff070b3 on core 1
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+W (2650) pudding_p4: Letzter Neustart nach Absturz von „browser“: Illegal instruction
+E (3830) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (6888) pudding_p4: Frei: 84 KB intern, 13044 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11396) pudding_p4: Frei: 87 KB intern, 13032 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (21975) pudding_fw::seitenliste: SEITE 1/30: https://de.wikipedia.org/wiki/Schweiz
+I (22007) pudding_p4: Frei: 90 KB intern, 1651 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (24952) pudding_p4: Frei: 80 KB intern, 1271 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (35248) pudding_p4: Frei: 61 KB intern, 1509 KB PSRAM (grösster Block 1008 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (37402) pudding_p4: Frei: 56 KB intern, 1514 KB PSRAM (grösster Block 1008 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (39448) pudding_p4: Frei: 53 KB intern, 1516 KB PSRAM (grösster Block 1008 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (41521) pudding_p4: Frei: 50 KB intern, 1509 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (43816) pudding_p4: Frei: 48 KB intern, 1518 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (49458) pudding_p4: Frei: 43 KB intern, 633 KB PSRAM (grösster Block 352 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (51717) pudding_p4: Frei: 44 KB intern, 1602 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78975) pudding_fw::seitenliste: SEITE 1/30 Ende: Browser-Heap belegt 2734 KB, Spitze 10356 KB von 10628 KB
+I (78988) pudding_p4: Frei: 77 KB intern, 2009 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (79017) pudding_fw::seitenliste: SEITE 1/30: Browser beendet (Beendet)
+I (81975) pudding_fw::seitenliste: SEITE 2/30: https://www.google.com/
+I (82007) pudding_p4: Frei: 77 KB intern, 1617 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (84112) pudding_p4: Frei: 70 KB intern, 1526 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (86544) pudding_p4: Frei: 69 KB intern, 1375 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (88562) pudding_p4: Frei: 66 KB intern, 1573 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (90576) pudding_p4: Frei: 62 KB intern, 1522 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (111396) pudding_p4: Frei: 63 KB intern, 1612 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (138975) pudding_fw::seitenliste: SEITE 2/30 Ende: Browser-Heap belegt 2856 KB, Spitze 4738 KB von 10628 KB
+I (138987) pudding_p4: Frei: 63 KB intern, 2005 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (138996) pudding_fw::seitenliste: SEITE 2/30: Browser beendet (Beendet)
+I (141975) pudding_fw::seitenliste: SEITE 3/30: https://duckduckgo.com/
+I (142008) pudding_p4: Frei: 63 KB intern, 1612 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (144356) pudding_p4: Frei: 57 KB intern, 1442 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (146382) pudding_p4: Frei: 47 KB intern, 1498 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (148434) pudding_p4: Frei: 39 KB intern, 1486 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (151021) pudding_p4: Frei: 38 KB intern, 1559 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (153685) pudding_p4: Frei: 36 KB intern, 1556 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (155785) pudding_p4: Frei: 33 KB intern, 1468 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (171803) pudding_p4: Frei: 36 KB intern, 1566 KB PSRAM (grösster Block 1120 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (198975) pudding_fw::seitenliste: SEITE 3/30 Ende: Browser-Heap belegt 3071 KB, Spitze 7067 KB von 10628 KB
+I (198987) pudding_p4: Frei: 37 KB intern, 1958 KB PSRAM (grösster Block 1120 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (198996) pudding_fw::seitenliste: SEITE 3/30: Browser beendet (Beendet)
+I (201975) pudding_fw::seitenliste: SEITE 4/30: https://github.com/
+I (202007) pudding_p4: Frei: 37 KB intern, 1566 KB PSRAM (grösster Block 1120 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (204044) pudding_p4: Frei: 30 KB intern, 1348 KB PSRAM (grösster Block 1120 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (206202) pudding_p4: Frei: 24 KB intern, 1443 KB PSRAM (grösster Block 1120 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (208927) pudding_p4: Frei: 22 KB intern, 1096 KB PSRAM (grösster Block 1056 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (210943) pudding_p4: Frei: 18 KB intern, 1464 KB PSRAM (grösster Block 1120 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (213127) pudding_p4: Frei: 13 KB intern, 893 KB PSRAM (grösster Block 880 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (216679) pudding_p4: Frei: 6 KB intern, 1472 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (218762) pudding_p4: Frei: 11 KB intern, 1558 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (220783) pudding_p4: Frei: 11 KB intern, 1558 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (222815) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (224831) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (226854) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (228872) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (230889) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (232912) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (234930) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (236952) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (238970) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (240990) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (243015) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (245040) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (252550) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (254580) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (256602) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258620) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258975) pudding_fw::seitenliste: SEITE 4/30 Ende: Browser-Heap belegt 8483 KB, Spitze 10372 KB von 10628 KB
+I (258995) pudding_fw::seitenliste: SEITE 4/30: Browser beendet (Beendet)
+I (261975) pudding_fw::seitenliste: SEITE 5/30: https://www.srf.ch/
+I (262007) pudding_p4: Frei: 16 KB intern, 1560 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (264013) pudding_p4: Frei: 11 KB intern, 1478 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (271579) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (271579) esp-tls: Failed to open new connection
+E (271579) transport_base: Failed to open a new connection
+E (271579) HTTP_CLIENT: Connection failed, sock < 0
+E (271581) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (271581) esp-tls: Failed to open new connection
+E (271581) transport_base: Failed to open a new connection
+E (271581) HTTP_CLIENT: Connection failed, sock < 0
+E (271583) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (271583) esp-tls: Failed to open new connection
+E (271583) transport_base: Failed to open a new connection
+E (271583) HTTP_CLIENT: Connection failed, sock < 0
+I (271608) pudding_p4: Frei: 0 KB intern, 1512 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (271755) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (271756) esp-tls: Failed to open new connection
+E (271756) transport_base: Failed to open a new connection
+E (271756) HTTP_CLIENT: Connection failed, sock < 0
+E (271758) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (271758) esp-tls: Failed to open new connection
+E (271758) transport_base: Failed to open a new connection
+E (271758) HTTP_CLIENT: Connection failed, sock < 0
+E (271763) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (271763) esp-tls: Failed to open new connection
+E (271763) transport_base: Failed to open a new connection
+E (271763) HTTP_CLIENT: Connection failed, sock < 0
+E (271765) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (271765) esp-tls: Failed to open new connection
+E (271765) transport_base: Failed to open a new connection
+E (271765) HTTP_CLIENT: Connection failed, sock < 0
+E (273978) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (273978) esp-tls: Failed to open new connection
+E (273978) transport_base: Failed to open a new connection
+E (273978) HTTP_CLIENT: Connection failed, sock < 0
+E (273980) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (273980) esp-tls: Failed to open new connection
+E (273981) transport_base: Failed to open a new connection
+E (273981) HTTP_CLIENT: Connection failed, sock < 0
+E (273984) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (273984) esp-tls: Failed to open new connection
+E (273985) transport_base: Failed to open a new connection
+E (273985) HTTP_CLIENT: Connection failed, sock < 0
+E (273988) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (273988) esp-tls: Failed to open new connection
+E (273988) transport_base: Failed to open a new connection
+E (273988) HTTP_CLIENT: Connection failed, sock < 0
+I (275455) pudding_p4: Frei: 0 KB intern, 1540 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (275457) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (275457) esp-tls: Failed to open new connection
+E (275457) transport_base: Failed to open a new connection
+E (275457) HTTP_CLIENT: Connection failed, sock < 0
+E (275554) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (275554) esp-tls: Failed to open new connection
+E (275554) transport_base: Failed to open a new connection
+E (275555) HTTP_CLIENT: Connection failed, sock < 0
+E (275559) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (275559) esp-tls: Failed to open new connection
+E (275559) transport_base: Failed to open a new connection
+E (275560) HTTP_CLIENT: Connection failed, sock < 0
+E (275561) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (275561) esp-tls: Failed to open new connection
+E (275561) transport_base: Failed to open a new connection
+E (275561) HTTP_CLIENT: Connection failed, sock < 0
+E (275563) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (275563) esp-tls: Failed to open new connection
+E (275563) transport_base: Failed to open a new connection
+E (275563) HTTP_CLIENT: Connection failed, sock < 0
+E (276532) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276532) esp-tls: Failed to open new connection
+E (276532) transport_base: Failed to open a new connection
+E (276532) HTTP_CLIENT: Connection failed, sock < 0
+E (276534) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276534) esp-tls: Failed to open new connection
+E (276534) transport_base: Failed to open a new connection
+E (276534) HTTP_CLIENT: Connection failed, sock < 0
+E (276535) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276535) esp-tls: Failed to open new connection
+E (276535) transport_base: Failed to open a new connection
+E (276535) HTTP_CLIENT: Connection failed, sock < 0
+E (276537) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276537) esp-tls: Failed to open new connection
+E (276537) transport_base: Failed to open a new connection
+E (276537) HTTP_CLIENT: Connection failed, sock < 0
+E (276891) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276891) esp-tls: Failed to open new connection
+E (276892) transport_base: Failed to open a new connection
+E (276892) HTTP_CLIENT: Connection failed, sock < 0
+E (276895) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276896) esp-tls: Failed to open new connection
+E (276896) transport_base: Failed to open a new connection
+E (276896) HTTP_CLIENT: Connection failed, sock < 0
+E (276899) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276899) esp-tls: Failed to open new connection
+E (276900) transport_base: Failed to open a new connection
+E (276900) HTTP_CLIENT: Connection failed, sock < 0
+E (276903) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276904) esp-tls: Failed to open new connection
+E (276904) transport_base: Failed to open a new connection
+E (276904) HTTP_CLIENT: Connection failed, sock < 0
+E (276953) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276953) esp-tls: Failed to open new connection
+E (276953) transport_base: Failed to open a new connection
+E (276953) HTTP_CLIENT: Connection failed, sock < 0
+E (276954) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276954) esp-tls: Failed to open new connection
+E (276955) transport_base: Failed to open a new connection
+E (276955) HTTP_CLIENT: Connection failed, sock < 0
+E (276956) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276956) esp-tls: Failed to open new connection
+E (276956) transport_base: Failed to open a new connection
+E (276956) HTTP_CLIENT: Connection failed, sock < 0
+E (276957) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276958) esp-tls: Failed to open new connection
+E (276958) transport_base: Failed to open a new connection
+E (276958) HTTP_CLIENT: Connection failed, sock < 0
+E (276959) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276959) esp-tls: Failed to open new connection
+E (276959) transport_base: Failed to open a new connection
+E (276959) HTTP_CLIENT: Connection failed, sock < 0
+E (276973) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276973) esp-tls: Failed to open new connection
+E (276973) transport_base: Failed to open a new connection
+E (276973) HTTP_CLIENT: Connection failed, sock < 0
+E (276974) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276974) esp-tls: Failed to open new connection
+E (276974) transport_base: Failed to open a new connection
+E (276974) HTTP_CLIENT: Connection failed, sock < 0
+E (276976) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276976) esp-tls: Failed to open new connection
+E (276976) transport_base: Failed to open a new connection
+E (276976) HTTP_CLIENT: Connection failed, sock < 0
+E (276977) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276977) esp-tls: Failed to open new connection
+E (276977) transport_base: Failed to open a new connection
+E (276978) HTTP_CLIENT: Connection failed, sock < 0
+E (276979) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (276979) esp-tls: Failed to open new connection
+E (276979) transport_base: Failed to open a new connection
+E (276979) HTTP_CLIENT: Connection failed, sock < 0
+E (277011) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277011) esp-tls: Failed to open new connection
+E (277011) transport_base: Failed to open a new connection
+E (277011) HTTP_CLIENT: Connection failed, sock < 0
+E (277013) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277013) esp-tls: Failed to open new connection
+E (277013) transport_base: Failed to open a new connection
+E (277013) HTTP_CLIENT: Connection failed, sock < 0
+E (277015) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277015) esp-tls: Failed to open new connection
+E (277015) transport_base: Failed to open a new connection
+E (277015) HTTP_CLIENT: Connection failed, sock < 0
+E (277016) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277016) esp-tls: Failed to open new connection
+E (277016) transport_base: Failed to open a new connection
+E (277016) HTTP_CLIENT: Connection failed, sock < 0
+E (277018) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277018) esp-tls: Failed to open new connection
+E (277018) transport_base: Failed to open a new connection
+E (277018) HTTP_CLIENT: Connection failed, sock < 0
+E (277031) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277031) esp-tls: Failed to open new connection
+E (277031) transport_base: Failed to open a new connection
+E (277031) HTTP_CLIENT: Connection failed, sock < 0
+E (277032) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277032) esp-tls: Failed to open new connection
+E (277032) transport_base: Failed to open a new connection
+E (277032) HTTP_CLIENT: Connection failed, sock < 0
+E (277034) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277034) esp-tls: Failed to open new connection
+E (277034) transport_base: Failed to open a new connection
+E (277034) HTTP_CLIENT: Connection failed, sock < 0
+E (277035) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277036) esp-tls: Failed to open new connection
+E (277036) transport_base: Failed to open a new connection
+E (277036) HTTP_CLIENT: Connection failed, sock < 0
+E (277057) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277057) esp-tls: Failed to open new connection
+E (277057) transport_base: Failed to open a new connection
+E (277057) HTTP_CLIENT: Connection failed, sock < 0
+E (277059) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277059) esp-tls: Failed to open new connection
+E (277059) transport_base: Failed to open a new connection
+E (277059) HTTP_CLIENT: Connection failed, sock < 0
+E (277060) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277060) esp-tls: Failed to open new connection
+E (277060) transport_base: Failed to open a new connection
+E (277061) HTTP_CLIENT: Connection failed, sock < 0
+E (277062) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277062) esp-tls: Failed to open new connection
+E (277062) transport_base: Failed to open a new connection
+E (277062) HTTP_CLIENT: Connection failed, sock < 0
+E (277064) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277064) esp-tls: Failed to open new connection
+E (277064) transport_base: Failed to open a new connection
+E (277064) HTTP_CLIENT: Connection failed, sock < 0
+E (277077) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277077) esp-tls: Failed to open new connection
+E (277077) transport_base: Failed to open a new connection
+E (277077) HTTP_CLIENT: Connection failed, sock < 0
+E (277078) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277078) esp-tls: Failed to open new connection
+E (277078) transport_base: Failed to open a new connection
+E (277078) HTTP_CLIENT: Connection failed, sock < 0
+E (277080) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277080) esp-tls: Failed to open new connection
+E (277080) transport_base: Failed to open a new connection
+E (277080) HTTP_CLIENT: Connection failed, sock < 0
+E (277081) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277081) esp-tls: Failed to open new connection
+E (277081) transport_base: Failed to open a new connection
+E (277081) HTTP_CLIENT: Connection failed, sock < 0
+E (277083) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277083) esp-tls: Failed to open new connection
+E (277083) transport_base: Failed to open a new connection
+E (277083) HTTP_CLIENT: Connection failed, sock < 0
+E (277121) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277121) esp-tls: Failed to open new connection
+E (277121) transport_base: Failed to open a new connection
+E (277121) HTTP_CLIENT: Connection failed, sock < 0
+E (277123) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277123) esp-tls: Failed to open new connection
+E (277123) transport_base: Failed to open a new connection
+E (277125) HTTP_CLIENT: Connection failed, sock < 0
+E (277131) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277136) esp-tls: Failed to open new connection
+E (277141) transport_base: Failed to open a new connection
+E (277147) HTTP_CLIENT: Connection failed, sock < 0
+E (277151) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277158) esp-tls: Failed to open new connection
+E (277161) transport_base: Failed to open a new connection
+E (277166) HTTP_CLIENT: Connection failed, sock < 0
+E (277173) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277177) esp-tls: Failed to open new connection
+E (277183) transport_base: Failed to open a new connection
+E (277186) HTTP_CLIENT: Connection failed, sock < 0
+E (277205) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277205) esp-tls: Failed to open new connection
+E (277205) transport_base: Failed to open a new connection
+E (277208) HTTP_CLIENT: Connection failed, sock < 0
+E (277938) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277939) esp-tls: Failed to open new connection
+E (277939) transport_base: Failed to open a new connection
+E (277939) HTTP_CLIENT: Connection failed, sock < 0
+I (277957) pudding_p4: Frei: 0 KB intern, 1554 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+abort() was called at PC 0x4ff070b3 on core 0
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+W (2650) pudding_p4: Letzter Neustart nach Absturz von „browser“: Illegal instruction
+E (3829) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (6877) pudding_p4: Frei: 83 KB intern, 13040 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11390) pudding_p4: Frei: 87 KB intern, 13031 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (21975) pudding_fw::seitenliste: SEITE 1/30: https://de.wikipedia.org/wiki/Schweiz
+I (22008) pudding_p4: Frei: 90 KB intern, 1649 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (24539) pudding_p4: Frei: 80 KB intern, 1371 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (29153) pudding_p4: Frei: 79 KB intern, 625 KB PSRAM (grösster Block 608 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (33080) pudding_p4: Frei: 72 KB intern, 1508 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (36253) pudding_p4: Frei: 66 KB intern, 1512 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (38262) pudding_p4: Frei: 67 KB intern, 1560 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (41929) pudding_p4: Frei: 68 KB intern, 1610 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (44007) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (46026) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (48046) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (50065) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (52087) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (54112) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (56131) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (58151) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (60168) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (62192) pudding_p4: Frei: 80 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (64238) pudding_p4: Frei: 82 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (72546) pudding_p4: Frei: 82 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (74554) pudding_p4: Frei: 82 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (76570) pudding_p4: Frei: 82 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78592) pudding_p4: Frei: 82 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78975) pudding_fw::seitenliste: SEITE 1/30 Ende: Browser-Heap belegt 1302 KB, Spitze 10372 KB von 10628 KB
+I (79017) pudding_fw::seitenliste: SEITE 1/30: Browser beendet (Beendet)
+I (81975) pudding_fw::seitenliste: SEITE 2/30: https://www.google.com/
+I (82007) pudding_p4: Frei: 82 KB intern, 1618 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (84296) pudding_p4: Frei: 75 KB intern, 1518 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (86523) pudding_p4: Frei: 73 KB intern, 1239 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (88543) pudding_p4: Frei: 71 KB intern, 1576 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (90742) pudding_p4: Frei: 66 KB intern, 1522 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (132625) pudding_p4: Frei: 68 KB intern, 1612 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (138975) pudding_fw::seitenliste: SEITE 2/30 Ende: Browser-Heap belegt 2856 KB, Spitze 4738 KB von 10628 KB
+I (138987) pudding_p4: Frei: 68 KB intern, 2004 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (139017) pudding_fw::seitenliste: SEITE 2/30: Browser beendet (Beendet)
+I (141975) pudding_fw::seitenliste: SEITE 3/30: https://duckduckgo.com/
+I (142007) pudding_p4: Frei: 68 KB intern, 1612 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (144581) pudding_p4: Frei: 59 KB intern, 1434 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (146641) pudding_p4: Frei: 52 KB intern, 1493 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (149097) pudding_p4: Frei: 45 KB intern, 1572 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (151118) pudding_p4: Frei: 43 KB intern, 1557 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (153637) pudding_p4: Frei: 41 KB intern, 1555 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (155714) pudding_p4: Frei: 38 KB intern, 1474 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (192623) pudding_p4: Frei: 42 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (198975) pudding_fw::seitenliste: SEITE 3/30 Ende: Browser-Heap belegt 3071 KB, Spitze 7133 KB von 10628 KB
+I (198988) pudding_p4: Frei: 42 KB intern, 1958 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (198996) pudding_fw::seitenliste: SEITE 3/30: Browser beendet (Beendet)
+I (201975) pudding_fw::seitenliste: SEITE 4/30: https://github.com/
+I (202007) pudding_p4: Frei: 42 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (204121) pudding_p4: Frei: 35 KB intern, 1284 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (206361) pudding_p4: Frei: 29 KB intern, 1442 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (209396) pudding_p4: Frei: 29 KB intern, 1367 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (214541) pudding_p4: Frei: 21 KB intern, 761 KB PSRAM (grösster Block 736 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (216662) pudding_p4: Frei: 11 KB intern, 1451 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (218718) pudding_p4: Frei: 16 KB intern, 1558 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (220740) pudding_p4: Frei: 16 KB intern, 1558 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (222773) pudding_p4: Frei: 20 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (224792) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (226811) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (228832) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (230856) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (232872) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (234896) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (236916) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (238934) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (240956) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (242981) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (245000) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (252547) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (254549) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (256572) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258595) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258975) pudding_fw::seitenliste: SEITE 4/30 Ende: Browser-Heap belegt 8540 KB, Spitze 10372 KB von 10628 KB
+I (258995) pudding_fw::seitenliste: SEITE 4/30: Browser beendet (Beendet)
+I (261975) pudding_fw::seitenliste: SEITE 5/30: https://www.srf.ch/
+I (262008) pudding_p4: Frei: 21 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (264173) pudding_p4: Frei: 14 KB intern, 1380 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (271473) pudding_p4: Frei: 4 KB intern, 1480 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (277332) pudding_p4: Frei: 0 KB intern, 1508 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (277413) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277413) esp-tls: Failed to open new connection
+E (277413) transport_base: Failed to open a new connection
+E (277413) HTTP_CLIENT: Connection failed, sock < 0
+E (277415) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277415) esp-tls: Failed to open new connection
+E (277415) transport_base: Failed to open a new connection
+E (277415) HTTP_CLIENT: Connection failed, sock < 0
+E (277416) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277416) esp-tls: Failed to open new connection
+E (277416) transport_base: Failed to open a new connection
+E (277416) HTTP_CLIENT: Connection failed, sock < 0
+E (277418) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277418) esp-tls: Failed to open new connection
+E (277418) transport_base: Failed to open a new connection
+E (277418) HTTP_CLIENT: Connection failed, sock < 0
+E (277419) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277420) esp-tls: Failed to open new connection
+E (277420) transport_base: Failed to open a new connection
+E (277420) HTTP_CLIENT: Connection failed, sock < 0
+E (277442) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277443) esp-tls: Failed to open new connection
+E (277443) transport_base: Failed to open a new connection
+E (277443) HTTP_CLIENT: Connection failed, sock < 0
+E (277444) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277444) esp-tls: Failed to open new connection
+E (277444) transport_base: Failed to open a new connection
+E (277444) HTTP_CLIENT: Connection failed, sock < 0
+E (277446) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277446) esp-tls: Failed to open new connection
+E (277446) transport_base: Failed to open a new connection
+E (277446) HTTP_CLIENT: Connection failed, sock < 0
+E (277448) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277448) esp-tls: Failed to open new connection
+E (277448) transport_base: Failed to open a new connection
+E (277448) HTTP_CLIENT: Connection failed, sock < 0
+E (277449) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277449) esp-tls: Failed to open new connection
+E (277449) transport_base: Failed to open a new connection
+E (277449) HTTP_CLIENT: Connection failed, sock < 0
+E (277473) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277473) esp-tls: Failed to open new connection
+E (277473) transport_base: Failed to open a new connection
+E (277473) HTTP_CLIENT: Connection failed, sock < 0
+E (277475) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277475) esp-tls: Failed to open new connection
+E (277475) transport_base: Failed to open a new connection
+E (277475) HTTP_CLIENT: Connection failed, sock < 0
+E (277476) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277476) esp-tls: Failed to open new connection
+E (277476) transport_base: Failed to open a new connection
+E (277477) HTTP_CLIENT: Connection failed, sock < 0
+E (277478) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277478) esp-tls: Failed to open new connection
+E (277478) transport_base: Failed to open a new connection
+E (277478) HTTP_CLIENT: Connection failed, sock < 0
+E (277479) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277480) esp-tls: Failed to open new connection
+E (277480) transport_base: Failed to open a new connection
+E (277480) HTTP_CLIENT: Connection failed, sock < 0
+E (277488) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277488) esp-tls: Failed to open new connection
+E (277488) transport_base: Failed to open a new connection
+E (277488) HTTP_CLIENT: Connection failed, sock < 0
+E (277512) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277512) esp-tls: Failed to open new connection
+E (277512) transport_base: Failed to open a new connection
+E (277512) HTTP_CLIENT: Connection failed, sock < 0
+E (277519) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277519) esp-tls: Failed to open new connection
+E (277519) transport_base: Failed to open a new connection
+E (277519) HTTP_CLIENT: Connection failed, sock < 0
+E (277521) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277521) esp-tls: Failed to open new connection
+E (277521) transport_base: Failed to open a new connection
+E (277521) HTTP_CLIENT: Connection failed, sock < 0
+E (277524) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277524) esp-tls: Failed to open new connection
+E (277524) transport_base: Failed to open a new connection
+E (277524) HTTP_CLIENT: Connection failed, sock < 0
+E (277529) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277529) esp-tls: Failed to open new connection
+E (277529) transport_base: Failed to open a new connection
+E (277529) HTTP_CLIENT: Connection failed, sock < 0
+E (277569) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277569) esp-tls: Failed to open new connection
+E (277569) transport_base: Failed to open a new connection
+E (277569) HTTP_CLIENT: Connection failed, sock < 0
+E (277571) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277571) esp-tls: Failed to open new connection
+E (277571) transport_base: Failed to open a new connection
+E (277571) HTTP_CLIENT: Connection failed, sock < 0
+E (277572) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277572) esp-tls: Failed to open new connection
+E (277572) transport_base: Failed to open a new connection
+E (277573) HTTP_CLIENT: Connection failed, sock < 0
+E (277574) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277574) esp-tls: Failed to open new connection
+E (277574) transport_base: Failed to open a new connection
+E (277574) HTTP_CLIENT: Connection failed, sock < 0
+E (277575) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277575) esp-tls: Failed to open new connection
+E (277575) transport_base: Failed to open a new connection
+E (277575) HTTP_CLIENT: Connection failed, sock < 0
+E (277603) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277603) esp-tls: Failed to open new connection
+E (277603) transport_base: Failed to open a new connection
+E (277604) HTTP_CLIENT: Connection failed, sock < 0
+E (277617) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277617) esp-tls: Failed to open new connection
+E (277617) transport_base: Failed to open a new connection
+E (277617) HTTP_CLIENT: Connection failed, sock < 0
+E (277618) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277618) esp-tls: Failed to open new connection
+E (277618) transport_base: Failed to open a new connection
+E (277618) HTTP_CLIENT: Connection failed, sock < 0
+E (277620) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277620) esp-tls: Failed to open new connection
+E (277620) transport_base: Failed to open a new connection
+E (277620) HTTP_CLIENT: Connection failed, sock < 0
+E (277622) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277622) esp-tls: Failed to open new connection
+E (277622) transport_base: Failed to open a new connection
+E (277622) HTTP_CLIENT: Connection failed, sock < 0
+E (277625) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277625) esp-tls: Failed to open new connection
+E (277625) transport_base: Failed to open a new connection
+E (277625) HTTP_CLIENT: Connection failed, sock < 0
+E (277683) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277683) esp-tls: Failed to open new connection
+E (277683) transport_base: Failed to open a new connection
+E (277683) HTTP_CLIENT: Connection failed, sock < 0
+E (277685) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277685) esp-tls: Failed to open new connection
+E (277685) transport_base: Failed to open a new connection
+E (277685) HTTP_CLIENT: Connection failed, sock < 0
+E (277687) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277687) esp-tls: Failed to open new connection
+E (277687) transport_base: Failed to open a new connection
+E (277687) HTTP_CLIENT: Connection failed, sock < 0
+E (277691) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277691) esp-tls: Failed to open new connection
+E (277691) transport_base: Failed to open a new connection
+E (277691) HTTP_CLIENT: Connection failed, sock < 0
+E (277694) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277694) esp-tls: Failed to open new connection
+E (277694) transport_base: Failed to open a new connection
+E (277694) HTTP_CLIENT: Connection failed, sock < 0
+E (277740) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277741) esp-tls: Failed to open new connection
+E (277741) transport_base: Failed to open a new connection
+E (277741) HTTP_CLIENT: Connection failed, sock < 0
+E (277742) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277742) esp-tls: Failed to open new connection
+E (277742) transport_base: Failed to open a new connection
+E (277746) HTTP_CLIENT: Connection failed, sock < 0
+E (277753) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277757) esp-tls: Failed to open new connection
+E (277760) transport_base: Failed to open a new connection
+E (277769) HTTP_CLIENT: Connection failed, sock < 0
+E (277784) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277784) esp-tls: Failed to open new connection
+E (277784) transport_base: Failed to open a new connection
+E (277788) HTTP_CLIENT: Connection failed, sock < 0
+E (277971) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (277971) esp-tls: Failed to open new connection
+E (277971) transport_base: Failed to open a new connection
+E (277971) HTTP_CLIENT: Connection failed, sock < 0
+E (278447) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278447) esp-tls: Failed to open new connection
+E (278447) transport_base: Failed to open a new connection
+E (278447) HTTP_CLIENT: Connection failed, sock < 0
+E (278449) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278449) esp-tls: Failed to open new connection
+E (278449) transport_base: Failed to open a new connection
+E (278449) HTTP_CLIENT: Connection failed, sock < 0
+E (278450) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278450) esp-tls: Failed to open new connection
+E (278450) transport_base: Failed to open a new connection
+E (278450) HTTP_CLIENT: Connection failed, sock < 0
+E (278452) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278452) esp-tls: Failed to open new connection
+E (278452) transport_base: Failed to open a new connection
+E (278452) HTTP_CLIENT: Connection failed, sock < 0
+E (278698) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278698) esp-tls: Failed to open new connection
+E (278699) transport_base: Failed to open a new connection
+E (278699) HTTP_CLIENT: Connection failed, sock < 0
+E (278700) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278700) esp-tls: Failed to open new connection
+E (278700) transport_base: Failed to open a new connection
+E (278700) HTTP_CLIENT: Connection failed, sock < 0
+E (278701) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278701) esp-tls: Failed to open new connection
+E (278701) transport_base: Failed to open a new connection
+E (278702) HTTP_CLIENT: Connection failed, sock < 0
+E (278703) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278703) esp-tls: Failed to open new connection
+E (278703) transport_base: Failed to open a new connection
+E (278703) HTTP_CLIENT: Connection failed, sock < 0
+E (278846) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278846) esp-tls: Failed to open new connection
+E (278846) transport_base: Failed to open a new connection
+E (278846) HTTP_CLIENT: Connection failed, sock < 0
+E (278848) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278848) esp-tls: Failed to open new connection
+E (278848) transport_base: Failed to open a new connection
+E (278848) HTTP_CLIENT: Connection failed, sock < 0
+E (278849) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278849) esp-tls: Failed to open new connection
+E (278849) transport_base: Failed to open a new connection
+E (278849) HTTP_CLIENT: Connection failed, sock < 0
+E (278851) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278851) esp-tls: Failed to open new connection
+E (278851) transport_base: Failed to open a new connection
+E (278851) HTTP_CLIENT: Connection failed, sock < 0
+E (279332) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (279332) esp-tls: Failed to open new connection
+E (279332) transport_base: Failed to open a new connection
+E (279332) HTTP_CLIENT: Connection failed, sock < 0
+I (279347) pudding_p4: Frei: 0 KB intern, 1552 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+abort() was called at PC 0x4ff070b3 on core 0
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+W (2661) pudding_p4: Letzter Neustart nach Absturz von „browser“: Illegal instruction
+E (3839) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (6893) pudding_p4: Frei: 84 KB intern, 13044 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11406) pudding_p4: Frei: 87 KB intern, 13035 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (21985) pudding_fw::seitenliste: SEITE 1/30: https://de.wikipedia.org/wiki/Schweiz
+I (22018) pudding_p4: Frei: 90 KB intern, 1651 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (24605) pudding_p4: Frei: 80 KB intern, 1352 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (29617) pudding_p4: Frei: 79 KB intern, 517 KB PSRAM (grösster Block 496 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (32492) pudding_p4: Frei: 71 KB intern, 1511 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (34517) pudding_p4: Frei: 63 KB intern, 1511 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (36533) pudding_p4: Frei: 59 KB intern, 1513 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (38626) pudding_p4: Frei: 56 KB intern, 1516 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (40686) pudding_p4: Frei: 55 KB intern, 1518 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (42978) pudding_p4: Frei: 59 KB intern, 1484 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (50949) pudding_p4: Frei: 60 KB intern, 1506 KB PSRAM (grösster Block 472 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (53146) pudding_p4: Frei: 52 KB intern, 1517 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (55449) pudding_p4: Frei: 47 KB intern, 1515 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (57672) pudding_p4: Frei: 43 KB intern, 1511 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (59760) pudding_p4: Frei: 39 KB intern, 1513 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (61808) pudding_p4: Frei: 33 KB intern, 1517 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78985) pudding_fw::seitenliste: SEITE 1/30 Ende: Browser-Heap belegt 1707 KB, Spitze 10368 KB von 10628 KB
+I (78997) pudding_p4: Frei: 55 KB intern, 2013 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (79007) pudding_fw::seitenliste: SEITE 1/30: Browser beendet (Beendet)
+I (81985) pudding_fw::seitenliste: SEITE 2/30: https://www.google.com/
+I (82017) pudding_p4: Frei: 55 KB intern, 1621 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (84566) pudding_p4: Frei: 48 KB intern, 1525 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (86620) pudding_p4: Frei: 45 KB intern, 1395 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (88645) pudding_p4: Frei: 44 KB intern, 1578 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (90666) pudding_p4: Frei: 39 KB intern, 1522 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (92898) pudding_p4: Frei: 38 KB intern, 1616 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (138985) pudding_fw::seitenliste: SEITE 2/30 Ende: Browser-Heap belegt 2856 KB, Spitze 4739 KB von 10628 KB
+I (138998) pudding_p4: Frei: 41 KB intern, 2008 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (139005) pudding_fw::seitenliste: SEITE 2/30: Browser beendet (Beendet)
+I (141985) pudding_fw::seitenliste: SEITE 3/30: https://duckduckgo.com/
+I (142017) pudding_p4: Frei: 42 KB intern, 1616 KB PSRAM (grösster Block 672 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (144745) pudding_p4: Frei: 30 KB intern, 1516 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (146813) pudding_p4: Frei: 25 KB intern, 1492 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (149154) pudding_p4: Frei: 18 KB intern, 1575 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (151172) pudding_p4: Frei: 17 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (153708) pudding_p4: Frei: 15 KB intern, 1559 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (155751) pudding_p4: Frei: 11 KB intern, 1478 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (198985) pudding_fw::seitenliste: SEITE 3/30 Ende: Browser-Heap belegt 3071 KB, Spitze 7055 KB von 10628 KB
+I (198997) pudding_p4: Frei: 15 KB intern, 1961 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (199006) pudding_fw::seitenliste: SEITE 3/30: Browser beendet (Beendet)
+I (201985) pudding_fw::seitenliste: SEITE 4/30: https://github.com/
+I (202017) pudding_p4: Frei: 15 KB intern, 1569 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (204190) pudding_p4: Frei: 7 KB intern, 1424 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (206227) pudding_p4: Frei: 2 KB intern, 1458 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (208242) pudding_p4: Frei: 1 KB intern, 1092 KB PSRAM (grösster Block 1056 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (210403) pudding_p4: Frei: 1 KB intern, 1558 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (210427) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210427) esp-tls: Failed to open new connection
+E (210427) transport_base: Failed to open a new connection
+E (210427) HTTP_CLIENT: Connection failed, sock < 0
+E (210435) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210436) esp-tls: Failed to open new connection
+E (210436) transport_base: Failed to open a new connection
+E (210436) HTTP_CLIENT: Connection failed, sock < 0
+E (210438) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210438) esp-tls: Failed to open new connection
+E (210439) transport_base: Failed to open a new connection
+E (210439) HTTP_CLIENT: Connection failed, sock < 0
+E (210441) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210441) esp-tls: Failed to open new connection
+E (210441) transport_base: Failed to open a new connection
+E (210441) HTTP_CLIENT: Connection failed, sock < 0
+E (210445) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210445) esp-tls: Failed to open new connection
+E (210445) transport_base: Failed to open a new connection
+E (210445) HTTP_CLIENT: Connection failed, sock < 0
+E (210532) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210532) esp-tls: Failed to open new connection
+E (210532) transport_base: Failed to open a new connection
+E (210532) HTTP_CLIENT: Connection failed, sock < 0
+E (210534) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210534) esp-tls: Failed to open new connection
+E (210534) transport_base: Failed to open a new connection
+E (210534) HTTP_CLIENT: Connection failed, sock < 0
+E (210536) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210536) esp-tls: Failed to open new connection
+E (210536) transport_base: Failed to open a new connection
+E (210536) HTTP_CLIENT: Connection failed, sock < 0
+E (210538) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210538) esp-tls: Failed to open new connection
+E (210538) transport_base: Failed to open a new connection
+E (210538) HTTP_CLIENT: Connection failed, sock < 0
+E (210540) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210540) esp-tls: Failed to open new connection
+E (210540) transport_base: Failed to open a new connection
+E (210540) HTTP_CLIENT: Connection failed, sock < 0
+E (210542) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210542) esp-tls: Failed to open new connection
+E (210542) transport_base: Failed to open a new connection
+E (210542) HTTP_CLIENT: Connection failed, sock < 0
+E (210545) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210545) esp-tls: Failed to open new connection
+E (210545) transport_base: Failed to open a new connection
+E (210545) HTTP_CLIENT: Connection failed, sock < 0
+E (210561) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210561) esp-tls: Failed to open new connection
+E (210561) transport_base: Failed to open a new connection
+E (210561) HTTP_CLIENT: Connection failed, sock < 0
+E (210566) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210566) esp-tls: Failed to open new connection
+E (210566) transport_base: Failed to open a new connection
+E (210566) HTTP_CLIENT: Connection failed, sock < 0
+E (210569) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210569) esp-tls: Failed to open new connection
+E (210569) transport_base: Failed to open a new connection
+E (210569) HTTP_CLIENT: Connection failed, sock < 0
+E (210910) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (210910) esp-tls: Failed to open new connection
+E (210910) transport_base: Failed to open a new connection
+E (210910) HTTP_CLIENT: Connection failed, sock < 0
+E (211210) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211211) esp-tls: Failed to open new connection
+E (211211) transport_base: Failed to open a new connection
+E (211211) HTTP_CLIENT: Connection failed, sock < 0
+E (211218) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211218) esp-tls: Failed to open new connection
+E (211218) transport_base: Failed to open a new connection
+E (211218) HTTP_CLIENT: Connection failed, sock < 0
+E (211226) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211226) esp-tls: Failed to open new connection
+E (211226) transport_base: Failed to open a new connection
+E (211226) HTTP_CLIENT: Connection failed, sock < 0
+E (211234) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211234) esp-tls: Failed to open new connection
+E (211234) transport_base: Failed to open a new connection
+E (211234) HTTP_CLIENT: Connection failed, sock < 0
+E (211548) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211548) esp-tls: Failed to open new connection
+E (211548) transport_base: Failed to open a new connection
+E (211548) HTTP_CLIENT: Connection failed, sock < 0
+E (211550) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211550) esp-tls: Failed to open new connection
+E (211550) transport_base: Failed to open a new connection
+E (211550) HTTP_CLIENT: Connection failed, sock < 0
+E (211564) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211564) esp-tls: Failed to open new connection
+E (211564) transport_base: Failed to open a new connection
+E (211564) HTTP_CLIENT: Connection failed, sock < 0
+E (211566) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211566) esp-tls: Failed to open new connection
+E (211566) transport_base: Failed to open a new connection
+E (211566) HTTP_CLIENT: Connection failed, sock < 0
+E (211567) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211567) esp-tls: Failed to open new connection
+E (211567) transport_base: Failed to open a new connection
+E (211568) HTTP_CLIENT: Connection failed, sock < 0
+E (211569) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211569) esp-tls: Failed to open new connection
+E (211569) transport_base: Failed to open a new connection
+E (211569) HTTP_CLIENT: Connection failed, sock < 0
+E (211571) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211571) esp-tls: Failed to open new connection
+E (211572) transport_base: Failed to open a new connection
+E (211572) HTTP_CLIENT: Connection failed, sock < 0
+E (211573) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211573) esp-tls: Failed to open new connection
+E (211573) transport_base: Failed to open a new connection
+E (211573) HTTP_CLIENT: Connection failed, sock < 0
+E (211597) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211597) esp-tls: Failed to open new connection
+E (211597) transport_base: Failed to open a new connection
+E (211598) HTTP_CLIENT: Connection failed, sock < 0
+E (211599) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211599) esp-tls: Failed to open new connection
+E (211599) transport_base: Failed to open a new connection
+E (211599) HTTP_CLIENT: Connection failed, sock < 0
+E (211601) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211601) esp-tls: Failed to open new connection
+E (211601) transport_base: Failed to open a new connection
+E (211601) HTTP_CLIENT: Connection failed, sock < 0
+E (211603) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211603) esp-tls: Failed to open new connection
+E (211603) transport_base: Failed to open a new connection
+E (211603) HTTP_CLIENT: Connection failed, sock < 0
+E (211605) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211605) esp-tls: Failed to open new connection
+E (211605) transport_base: Failed to open a new connection
+E (211605) HTTP_CLIENT: Connection failed, sock < 0
+E (211630) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211630) esp-tls: Failed to open new connection
+E (211630) transport_base: Failed to open a new connection
+E (211630) HTTP_CLIENT: Connection failed, sock < 0
+E (211632) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211632) esp-tls: Failed to open new connection
+E (211632) transport_base: Failed to open a new connection
+E (211632) HTTP_CLIENT: Connection failed, sock < 0
+E (211633) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211633) esp-tls: Failed to open new connection
+E (211634) transport_base: Failed to open a new connection
+E (211634) HTTP_CLIENT: Connection failed, sock < 0
+E (211635) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (211635) esp-tls: Failed to open new connection
+E (211635) transport_base: Failed to open a new connection
+E (211635) HTTP_CLIENT: Connection failed, sock < 0
+I (212585) pudding_p4: Frei: 0 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (215139) pudding_p4: Frei: 0 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (217147) pudding_p4: Frei: 0 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (219168) pudding_p4: Frei: 0 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (221187) pudding_p4: Frei: 0 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (223276) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (225297) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (227319) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (229339) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (231359) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (233379) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (235399) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (237420) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (239438) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (241458) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (243507) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (245527) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (252561) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (254617) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (256637) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258657) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258985) pudding_fw::seitenliste: SEITE 4/30 Ende: Browser-Heap belegt 2179 KB, Spitze 10372 KB von 10628 KB
+I (259006) pudding_fw::seitenliste: SEITE 4/30: Browser beendet (Beendet)
+I (261985) pudding_fw::seitenliste: SEITE 5/30: https://www.srf.ch/
+I (262018) pudding_p4: Frei: 2 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (262159) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (262159) esp-tls: Failed to open new connection
+E (262159) transport_base: Failed to open a new connection
+E (262159) HTTP_CLIENT: Connection failed, sock < 0
+abort() was called at PC 0x4ff070b3 on core 1
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+W (2662) pudding_p4: Letzter Neustart nach Absturz von „browser“: Illegal instruction
+E (3840) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (6890) pudding_p4: Frei: 84 KB intern, 13041 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (9400) pudding_p4: Frei: 89 KB intern, 13044 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11409) pudding_p4: Frei: 87 KB intern, 13035 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (21986) pudding_fw::seitenliste: SEITE 1/30: https://de.wikipedia.org/wiki/Schweiz
+I (22019) pudding_p4: Frei: 90 KB intern, 1649 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (24723) pudding_p4: Frei: 80 KB intern, 1352 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (31965) pudding_p4: Frei: 71 KB intern, 1513 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (34013) pudding_p4: Frei: 66 KB intern, 1513 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (36023) pudding_p4: Frei: 60 KB intern, 1512 KB PSRAM (grösster Block 992 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (38078) pudding_p4: Frei: 58 KB intern, 1513 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (40172) pudding_p4: Frei: 56 KB intern, 1515 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (43020) pudding_p4: Frei: 59 KB intern, 1501 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (49307) pudding_p4: Frei: 59 KB intern, 585 KB PSRAM (grösster Block 560 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (52913) pudding_p4: Frei: 60 KB intern, 1490 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (55019) pudding_p4: Frei: 43 KB intern, 1507 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (57059) pudding_p4: Frei: 40 KB intern, 1545 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (59213) pudding_p4: Frei: 37 KB intern, 1516 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (61288) pudding_p4: Frei: 36 KB intern, 1517 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (63436) pudding_p4: Frei: 53 KB intern, 1514 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (72570) pudding_p4: Frei: 37 KB intern, 1908 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+W (78986) pudding_fw::seitenliste: SEITE 1/30 Ende: Browser läuft nicht mehr (beendet oder abgestürzt)
+I (81986) pudding_fw::seitenliste: SEITE 2/30: https://www.google.com/
+I (82019) pudding_p4: Frei: 39 KB intern, 1055 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (84100) pudding_p4: Frei: 32 KB intern, 964 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (86799) pudding_p4: Frei: 30 KB intern, 779 KB PSRAM (grösster Block 592 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (88815) pudding_p4: Frei: 28 KB intern, 1013 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (91038) pudding_p4: Frei: 24 KB intern, 965 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (132563) pudding_p4: Frei: 25 KB intern, 1051 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (138986) pudding_fw::seitenliste: SEITE 2/30 Ende: Browser-Heap belegt 2856 KB, Spitze 4674 KB von 10628 KB
+I (139001) pudding_p4: Frei: 25 KB intern, 1443 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (139008) pudding_fw::seitenliste: SEITE 2/30: Browser beendet (Beendet)
+I (141986) pudding_fw::seitenliste: SEITE 3/30: https://duckduckgo.com/
+I (142019) pudding_p4: Frei: 25 KB intern, 1051 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (144194) pudding_p4: Frei: 18 KB intern, 871 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (146270) pudding_p4: Frei: 10 KB intern, 933 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (148305) pudding_p4: Frei: 4 KB intern, 928 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (151669) pudding_p4: Frei: 0 KB intern, 996 KB PSRAM (grösster Block 768 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+abort() was called at PC 0x4ff070b3 on core 0
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+W (2650) pudding_p4: Letzter Neustart nach Absturz von „browser“: Illegal instruction
+E (3827) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (6878) pudding_p4: Frei: 84 KB intern, 13043 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11392) pudding_p4: Frei: 88 KB intern, 13035 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (21974) pudding_fw::seitenliste: SEITE 1/30: https://de.wikipedia.org/wiki/Schweiz
+I (22006) pudding_p4: Frei: 90 KB intern, 1649 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (24633) pudding_p4: Frei: 80 KB intern, 1337 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (29147) pudding_p4: Frei: 79 KB intern, 713 KB PSRAM (grösster Block 688 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (31908) pudding_p4: Frei: 71 KB intern, 1512 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (34178) pudding_p4: Frei: 66 KB intern, 1505 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (36196) pudding_p4: Frei: 67 KB intern, 1594 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (41129) pudding_p4: Frei: 68 KB intern, 1609 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (43190) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (45212) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (47231) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (49254) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (51270) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (53298) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (55319) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (57339) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (59359) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (61379) pudding_p4: Frei: 80 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (63405) pudding_p4: Frei: 82 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (65423) pudding_p4: Frei: 82 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (72545) pudding_p4: Frei: 82 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (74546) pudding_p4: Frei: 82 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (76564) pudding_p4: Frei: 82 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78584) pudding_p4: Frei: 82 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78974) pudding_fw::seitenliste: SEITE 1/30 Ende: Browser-Heap belegt 1071 KB, Spitze 10372 KB von 10628 KB
+I (78995) pudding_fw::seitenliste: SEITE 1/30: Browser beendet (Beendet)
+I (81974) pudding_fw::seitenliste: SEITE 2/30: https://www.google.com/
+I (82006) pudding_p4: Frei: 82 KB intern, 1617 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (84021) pudding_p4: Frei: 75 KB intern, 1556 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (86721) pudding_p4: Frei: 73 KB intern, 1217 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (88758) pudding_p4: Frei: 71 KB intern, 1598 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (90771) pudding_p4: Frei: 66 KB intern, 1525 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (96546) pudding_p4: Frei: 65 KB intern, 1612 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (138974) pudding_fw::seitenliste: SEITE 2/30 Ende: Browser-Heap belegt 2856 KB, Spitze 4738 KB von 10628 KB
+I (138988) pudding_p4: Frei: 68 KB intern, 2004 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (138994) pudding_fw::seitenliste: SEITE 2/30: Browser beendet (Beendet)
+I (141974) pudding_fw::seitenliste: SEITE 3/30: https://duckduckgo.com/
+I (142006) pudding_p4: Frei: 68 KB intern, 1612 KB PSRAM (grösster Block 1152 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (144294) pudding_p4: Frei: 59 KB intern, 1510 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (146319) pudding_p4: Frei: 51 KB intern, 1493 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (148351) pudding_p4: Frei: 44 KB intern, 1481 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (151072) pudding_p4: Frei: 43 KB intern, 1558 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (153579) pudding_p4: Frei: 41 KB intern, 1555 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (155626) pudding_p4: Frei: 38 KB intern, 1475 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (198974) pudding_fw::seitenliste: SEITE 3/30 Ende: Browser-Heap belegt 3071 KB, Spitze 7068 KB von 10628 KB
+I (198988) pudding_p4: Frei: 42 KB intern, 1958 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (198994) pudding_fw::seitenliste: SEITE 3/30: Browser beendet (Beendet)
+I (201974) pudding_fw::seitenliste: SEITE 4/30: https://github.com/
+I (202007) pudding_p4: Frei: 42 KB intern, 1566 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (204103) pudding_p4: Frei: 35 KB intern, 1463 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (206213) pudding_p4: Frei: 30 KB intern, 1449 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (209156) pudding_p4: Frei: 29 KB intern, 1145 KB PSRAM (grösster Block 1088 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (211187) pudding_p4: Frei: 23 KB intern, 1460 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (213524) pudding_p4: Frei: 19 KB intern, 922 KB PSRAM (grösster Block 896 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (216702) pudding_p4: Frei: 11 KB intern, 1465 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (218806) pudding_p4: Frei: 14 KB intern, 1559 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (220891) pudding_p4: Frei: 14 KB intern, 1559 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (222920) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (224940) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (226960) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (228977) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (231002) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (233021) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (235044) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (237064) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (239082) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (241101) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (243125) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (245145) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (252540) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (254638) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (256655) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258673) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (258974) pudding_fw::seitenliste: SEITE 4/30 Ende: Browser-Heap belegt 8870 KB, Spitze 10372 KB von 10628 KB
+I (258994) pudding_fw::seitenliste: SEITE 4/30: Browser beendet (Beendet)
+I (261974) pudding_fw::seitenliste: SEITE 5/30: https://www.srf.ch/
+I (262006) pudding_p4: Frei: 19 KB intern, 1561 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (264200) pudding_p4: Frei: 12 KB intern, 1365 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (271526) pudding_p4: Frei: 12 KB intern, 1165 KB PSRAM (grösster Block 1056 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (276533) pudding_p4: Frei: 2 KB intern, 1459 KB PSRAM (grösster Block 1120 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+E (278168) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278168) esp-tls: Failed to open new connection
+E (278168) transport_base: Failed to open a new connection
+E (278168) HTTP_CLIENT: Connection failed, sock < 0
+E (278170) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278170) esp-tls: Failed to open new connection
+E (278170) transport_base: Failed to open a new connection
+E (278170) HTTP_CLIENT: Connection failed, sock < 0
+E (278172) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278172) esp-tls: Failed to open new connection
+E (278172) transport_base: Failed to open a new connection
+E (278172) HTTP_CLIENT: Connection failed, sock < 0
+E (278174) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278174) esp-tls: Failed to open new connection
+E (278174) transport_base: Failed to open a new connection
+E (278174) HTTP_CLIENT: Connection failed, sock < 0
+E (278176) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278176) esp-tls: Failed to open new connection
+E (278176) transport_base: Failed to open a new connection
+E (278176) HTTP_CLIENT: Connection failed, sock < 0
+E (278188) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278189) esp-tls: Failed to open new connection
+E (278189) transport_base: Failed to open a new connection
+E (278189) HTTP_CLIENT: Connection failed, sock < 0
+E (278191) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278191) esp-tls: Failed to open new connection
+E (278191) transport_base: Failed to open a new connection
+E (278191) HTTP_CLIENT: Connection failed, sock < 0
+E (278193) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278193) esp-tls: Failed to open new connection
+E (278193) transport_base: Failed to open a new connection
+E (278193) HTTP_CLIENT: Connection failed, sock < 0
+E (278223) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278223) esp-tls: Failed to open new connection
+E (278223) transport_base: Failed to open a new connection
+E (278223) HTTP_CLIENT: Connection failed, sock < 0
+E (278271) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278271) esp-tls: Failed to open new connection
+E (278271) transport_base: Failed to open a new connection
+E (278271) HTTP_CLIENT: Connection failed, sock < 0
+E (278301) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278301) esp-tls: Failed to open new connection
+E (278301) transport_base: Failed to open a new connection
+E (278301) HTTP_CLIENT: Connection failed, sock < 0
+E (278430) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278430) esp-tls: Failed to open new connection
+E (278430) transport_base: Failed to open a new connection
+E (278430) HTTP_CLIENT: Connection failed, sock < 0
+E (278431) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278431) esp-tls: Failed to open new connection
+E (278431) transport_base: Failed to open a new connection
+E (278431) HTTP_CLIENT: Connection failed, sock < 0
+E (278433) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278433) esp-tls: Failed to open new connection
+E (278433) transport_base: Failed to open a new connection
+E (278433) HTTP_CLIENT: Connection failed, sock < 0
+E (278586) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278586) esp-tls: Failed to open new connection
+E (278586) transport_base: Failed to open a new connection
+E (278586) HTTP_CLIENT: Connection failed, sock < 0
+E (278587) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278587) esp-tls: Failed to open new connection
+E (278588) transport_base: Failed to open a new connection
+E (278588) HTTP_CLIENT: Connection failed, sock < 0
+E (278589) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278589) esp-tls: Failed to open new connection
+E (278589) transport_base: Failed to open a new connection
+E (278589) HTTP_CLIENT: Connection failed, sock < 0
+E (278590) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278590) esp-tls: Failed to open new connection
+E (278590) transport_base: Failed to open a new connection
+E (278590) HTTP_CLIENT: Connection failed, sock < 0
+E (278592) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278592) esp-tls: Failed to open new connection
+E (278592) transport_base: Failed to open a new connection
+E (278592) HTTP_CLIENT: Connection failed, sock < 0
+E (278602) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278602) esp-tls: Failed to open new connection
+E (278602) transport_base: Failed to open a new connection
+E (278602) HTTP_CLIENT: Connection failed, sock < 0
+E (278626) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278626) esp-tls: Failed to open new connection
+E (278626) transport_base: Failed to open a new connection
+E (278626) HTTP_CLIENT: Connection failed, sock < 0
+E (278627) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278627) esp-tls: Failed to open new connection
+E (278627) transport_base: Failed to open a new connection
+E (278627) HTTP_CLIENT: Connection failed, sock < 0
+E (278629) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278629) esp-tls: Failed to open new connection
+E (278629) transport_base: Failed to open a new connection
+E (278629) HTTP_CLIENT: Connection failed, sock < 0
+E (278630) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278630) esp-tls: Failed to open new connection
+E (278630) transport_base: Failed to open a new connection
+E (278630) HTTP_CLIENT: Connection failed, sock < 0
+E (278632) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278632) esp-tls: Failed to open new connection
+E (278632) transport_base: Failed to open a new connection
+E (278632) HTTP_CLIENT: Connection failed, sock < 0
+E (278644) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278644) esp-tls: Failed to open new connection
+E (278644) transport_base: Failed to open a new connection
+E (278644) HTTP_CLIENT: Connection failed, sock < 0
+E (278645) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278645) esp-tls: Failed to open new connection
+E (278645) transport_base: Failed to open a new connection
+E (278645) HTTP_CLIENT: Connection failed, sock < 0
+E (278647) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278647) esp-tls: Failed to open new connection
+E (278647) transport_base: Failed to open a new connection
+E (278647) HTTP_CLIENT: Connection failed, sock < 0
+E (278648) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278648) esp-tls: Failed to open new connection
+E (278648) transport_base: Failed to open a new connection
+E (278648) HTTP_CLIENT: Connection failed, sock < 0
+E (278649) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278649) esp-tls: Failed to open new connection
+E (278650) transport_base: Failed to open a new connection
+E (278650) HTTP_CLIENT: Connection failed, sock < 0
+E (278675) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278676) esp-tls: Failed to open new connection
+E (278676) transport_base: Failed to open a new connection
+E (278676) HTTP_CLIENT: Connection failed, sock < 0
+E (278677) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278677) esp-tls: Failed to open new connection
+E (278677) transport_base: Failed to open a new connection
+E (278677) HTTP_CLIENT: Connection failed, sock < 0
+E (278679) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278679) esp-tls: Failed to open new connection
+E (278679) transport_base: Failed to open a new connection
+E (278679) HTTP_CLIENT: Connection failed, sock < 0
+E (278680) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278680) esp-tls: Failed to open new connection
+E (278680) transport_base: Failed to open a new connection
+E (278680) HTTP_CLIENT: Connection failed, sock < 0
+E (278681) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278681) esp-tls: Failed to open new connection
+E (278681) transport_base: Failed to open a new connection
+E (278681) HTTP_CLIENT: Connection failed, sock < 0
+E (278697) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278697) esp-tls: Failed to open new connection
+E (278697) transport_base: Failed to open a new connection
+E (278697) HTTP_CLIENT: Connection failed, sock < 0
+E (278698) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278698) esp-tls: Failed to open new connection
+E (278698) transport_base: Failed to open a new connection
+E (278698) HTTP_CLIENT: Connection failed, sock < 0
+E (278722) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278722) esp-tls: Failed to open new connection
+E (278722) transport_base: Failed to open a new connection
+E (278722) HTTP_CLIENT: Connection failed, sock < 0
+E (278723) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278723) esp-tls: Failed to open new connection
+E (278723) transport_base: Failed to open a new connection
+E (278723) HTTP_CLIENT: Connection failed, sock < 0
+E (278725) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278725) esp-tls: Failed to open new connection
+E (278725) transport_base: Failed to open a new connection
+E (278725) HTTP_CLIENT: Connection failed, sock < 0
+E (278726) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278726) esp-tls: Failed to open new connection
+E (278726) transport_base: Failed to open a new connection
+E (278726) HTTP_CLIENT: Connection failed, sock < 0
+E (278740) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278740) esp-tls: Failed to open new connection
+E (278740) transport_base: Failed to open a new connection
+E (278740) HTTP_CLIENT: Connection failed, sock < 0
+E (278741) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278741) esp-tls: Failed to open new connection
+E (278741) transport_base: Failed to open a new connection
+E (278741) HTTP_CLIENT: Connection failed, sock < 0
+E (278743) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278743) esp-tls: Failed to open new connection
+E (278743) transport_base: Failed to open a new connection
+E (278743) HTTP_CLIENT: Connection failed, sock < 0
+E (278744) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278744) esp-tls: Failed to open new connection
+E (278747) transport_base: Failed to open a new connection
+E (278752) HTTP_CLIENT: Connection failed, sock < 0
+E (278759) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278763) esp-tls: Failed to open new connection
+E (278769) transport_base: Failed to open a new connection
+E (278772) HTTP_CLIENT: Connection failed, sock < 0
+E (278818) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278818) esp-tls: Failed to open new connection
+E (278818) transport_base: Failed to open a new connection
+E (278818) HTTP_CLIENT: Connection failed, sock < 0
+E (278820) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278820) esp-tls: Failed to open new connection
+E (278820) transport_base: Failed to open a new connection
+E (278820) HTTP_CLIENT: Connection failed, sock < 0
+E (278821) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278825) esp-tls: Failed to open new connection
+E (278830) transport_base: Failed to open a new connection
+E (278833) HTTP_CLIENT: Connection failed, sock < 0
+E (278846) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278846) esp-tls: Failed to open new connection
+E (278850) transport_base: Failed to open a new connection
+E (278855) HTTP_CLIENT: Connection failed, sock < 0
+E (278863) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278866) esp-tls: Failed to open new connection
+E (278872) transport_base: Failed to open a new connection
+E (278875) HTTP_CLIENT: Connection failed, sock < 0
+E (278895) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278897) esp-tls: Failed to open new connection
+E (278902) transport_base: Failed to open a new connection
+E (278908) HTTP_CLIENT: Connection failed, sock < 0
+E (278915) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278925) esp-tls: Failed to open new connection
+E (278925) transport_base: Failed to open a new connection
+E (278927) HTTP_CLIENT: Connection failed, sock < 0
+E (278934) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (278944) esp-tls: Failed to open new connection
+E (278944) transport_base: Failed to open a new connection
+E (278952) HTTP_CLIENT: Connection failed, sock < 0
+E (280156) esp-tls: Failed to create socket (family 2 socktype 1 protocol 0)
+E (280156) esp-tls: Failed to open new connection
+E (280156) transport_base: Failed to open a new connection
+E (280157) HTTP_CLIENT: Connection failed, sock < 0
+I (280171) pudding_p4: Frei: 0 KB intern, 1550 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+abort() was called at PC 0x4ff070b3 on core 0
+rst:0xc (SW_CPU_RESET),boot:0x30f (SPI_FAST_FLASH_BOOT)
+W (2651) pudding_p4: Letzter Neustart nach Absturz von „browser“: Illegal instruction
+E (3829) eh_init_evt: major version mismatch — OTA coprocessor from host
+I (6868) pudding_p4: Frei: 84 KB intern, 13043 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (11878) pudding_p4: Frei: 87 KB intern, 13035 KB PSRAM (grösster Block 11776 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (21975) pudding_fw::seitenliste: SEITE 1/30: https://de.wikipedia.org/wiki/Schweiz
+I (22007) pudding_p4: Frei: 90 KB intern, 1651 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (24871) pudding_p4: Frei: 80 KB intern, 1287 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (33524) pudding_p4: Frei: 79 KB intern, 1308 KB PSRAM (grösster Block 928 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (36652) pudding_p4: Frei: 57 KB intern, 1511 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (38713) pudding_p4: Frei: 55 KB intern, 1511 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (40842) pudding_p4: Frei: 50 KB intern, 1510 KB PSRAM (grösster Block 960 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (42970) pudding_p4: Frei: 49 KB intern, 1558 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (47114) pudding_p4: Frei: 45 KB intern, 963 KB PSRAM (grösster Block 720 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (49993) pudding_p4: Frei: 47 KB intern, 1524 KB PSRAM (grösster Block 544 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (52079) pudding_p4: Frei: 41 KB intern, 1510 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (54106) pudding_p4: Frei: 33 KB intern, 1511 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (56461) pudding_p4: Frei: 29 KB intern, 1514 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (58496) pudding_p4: Frei: 27 KB intern, 1514 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (60975) pudding_p4: Frei: 25 KB intern, 1509 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (63047) pudding_p4: Frei: 43 KB intern, 1562 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78975) pudding_fw::seitenliste: SEITE 1/30 Ende: Browser-Heap belegt 8251 KB, Spitze 10325 KB von 10628 KB
+I (78988) pudding_p4: Frei: 43 KB intern, 2002 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (78996) pudding_fw::seitenliste: SEITE 1/30: Browser beendet (Beendet)
+I (81975) pudding_fw::seitenliste: SEITE 2/30: https://www.google.com/
+I (82007) pudding_p4: Frei: 43 KB intern, 1610 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (84196) pudding_p4: Frei: 36 KB intern, 1519 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (86635) pudding_p4: Frei: 32 KB intern, 1344 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)
+I (88654) pudding_p4: Frei: 32 KB intern, 1591 KB PSRAM (grösster Block 1184 KB); Aufbereiten je Bild: Vertices 0.0 ms, Dreiecke 0.0 ms (0 Takte je Dreieck)

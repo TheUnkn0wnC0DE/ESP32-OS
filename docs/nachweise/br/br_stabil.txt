@@ -1,0 +1,26 @@
+BR1/BR2 – Browser am Board stabil (24.11.2026, Lauf br_absturz1)
+
+Messwerkzeug: Entwicklungs-Build ESP32OS_SEITENLISTE (firmware/src/seitenliste.rs),
+je Seite ein frischer Browser (eigener Datenordner), 60 s, dann beendet.
+
+Vorher (Lauf br_runde0, 23.11.): interner RAM fiel über die Seiten auf 0 KB,
+danach abort() der ganzen Firmware und Neustart; die Liste begann von vorn
+(br_vorher_abbruch_log.txt).
+
+Behoben:
+1. Abrufe verbinden nur mit 32 KB internem RAM Reserve; TIME_WAIT 10 s.
+2. Leck: NetSurf nutzte das strndup der newlib; llcache kopierte jede
+   Kopfzeile in den Systemheap (interner RAM). Jetzt Heap des Programms.
+3. Abrufe eines beendeten Browsers werden verworfen (Sitzungsnummer).
+4. Absturz libdom _dom_html_document_initialise (Fehlerweg bei vollem Heap
+   las nicht gesetzten Zeiger) – geprüfte Kopie dom_html_document.c.
+5. Absturz _gettimeofday_r (Scheduler: calloc ohne Prüfung) – geprüfte
+   Kopie fb_schedule.c.
+
+Ergebnis (br_stabil_log.txt): 0 Abstürze, interner RAM nach jeder Seite:
+  1 Wikipedia (Schweiz)  47 Abrufe   91 KB
+  2 Google               10 Abrufe   91 KB
+  3 DuckDuckGo           23 Abrufe   91 KB
+  4 GitHub               30 Abrufe   91 KB
+  5 SRF                  53 Abrufe   86 KB
+  6 20 Minuten           82 Abrufe   90 KB
