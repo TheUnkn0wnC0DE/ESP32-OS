@@ -11,3 +11,7 @@ CONFIG_EH_TRANSPORT_CP_SDIO=y
 # System (mit OTA vom P4) sind Standard
 CONFIG_ESP_HOSTED_CP_FEAT_WIFI=y
 CONFIG_ESP_HOSTED_CP_FEAT_WIFI_EXT_ITWT=y
+# Kleiner bauen: der alte App-Platz der Werks-Partitionstabelle ist
+# vielleicht nur 1 MB gross (Update vom P4 aus schreibt nur die App)
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y

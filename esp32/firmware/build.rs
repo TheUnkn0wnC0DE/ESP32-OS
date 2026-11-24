@@ -20,6 +20,17 @@ fn main() {
     if std::env::var_os("ESP32OS_HEAP_TRACE").is_some() {
         println!("cargo:rustc-cfg=esp32os_heap_trace");
     }
+    // C2 (W2): Entwicklungs-Build, der die eigene C6-Firmware vom P4 aus
+    // schreibt (Bild aus werkzeuge/c6_bauen.ps1, Bauordner C:\eo\c6)
+    println!("cargo:rustc-check-cfg=cfg(esp32os_c6_ota)");
+    println!("cargo:rerun-if-env-changed=ESP32OS_C6_OTA");
+    if std::env::var_os("ESP32OS_C6_OTA").is_some() {
+        let bild = std::env::var("ESP32OS_C6_BILD").unwrap_or_else(|_| "C:/eo/c6/esp32os_c6.bin".into());
+        assert!(std::path::Path::new(&bild).exists(), "C6-Bild {bild} fehlt – zuerst werkzeuge/c6_bauen.ps1");
+        println!("cargo:rerun-if-changed={bild}");
+        println!("cargo:rustc-env=ESP32OS_C6_BILD={bild}");
+        println!("cargo:rustc-cfg=esp32os_c6_ota");
+    }
     // Entwicklungs-Build mit Test-PDFs für den PDF-Betrachter (Z1-Nachweis)
     println!("cargo:rustc-check-cfg=cfg(esp32os_pdf_test)");
     println!("cargo:rerun-if-env-changed=ESP32OS_PDF_TEST");

@@ -50,6 +50,8 @@ unsafe extern "C" {
     fn esp32os_wlan_zustand(z: *mut ZustandRoh) -> c_int;
     fn esp32os_wlan_suchen(liste: *mut NetzRoh, max: c_int) -> c_int;
     fn esp32os_wlan_versionen(host: *mut u32, cp: *mut u32, cp_ziel: *mut c_char, ziel_len: c_int) -> c_int;
+    #[cfg(esp32os_c6_ota)]
+    fn esp32os_c6_ota(bild: *const u8, n: u32, alte_firmware: c_int) -> c_int;
     fn esp32os_wlan_sparen(an: c_int) -> c_int;
     fn esp32os_ntp_start() -> c_int;
     fn esp32os_ntp_stopp();
@@ -77,6 +79,40 @@ pub fn versionen() -> Versionen {
     let r = unsafe { esp32os_wlan_versionen(&mut h, &mut c, ziel.as_mut_ptr(), ziel.len() as c_int) };
     let b: Vec<u8> = ziel.iter().take_while(|&&x| x != 0).map(|&x| x as u8).collect();
     Versionen { host: drei(h), cp: (r == 0).then(|| drei(c)), cp_ziel: String::from_utf8_lossy(&b).into_owned() }
+}
+
+/// C2 (W2), Entwicklungs-Build `ESP32OS_C6_OTA` (Board-Test 6, nur mit OK
+/// des Nutzers): die eigene C6-Firmware (werkzeuge/c6_bauen.ps1) vom P4 aus
+/// auf den C6 schreiben – einmal je Build (NVS-Merker), danach Neustart des
+/// Boards (der P4 setzt den C6 beim Start zurück, er startet die neue
+/// Firmware). Rückweg: die C6-Firmware schaltet selbst auf die alte zurück,
+/// wenn sich der P4 in der Probezeit nicht meldet (c6_firmware/main/main.c).
+#[cfg(esp32os_c6_ota)]
+fn c6_aktualisieren(alte_firmware: bool) {
+    static BILD: &[u8] = include_bytes!(env!("ESP32OS_C6_BILD"));
+    const MERKER: &str = "c6_ota";
+    let Ok(n) = crate::store::Nvs::open() else {
+        log::error!("C6-Update: NVS nicht offen – kein Update");
+        return;
+    };
+    if n.lesen(MERKER).is_some() {
+        log::warn!("C6-Update: schon einmal versucht (NVS „{MERKER}“) – kein zweites Mal");
+        return;
+    }
+    n.schreiben(MERKER, &[1]);
+    let laenge = BILD.len() as u32;
+    let _ = std::thread::Builder::new().name("c6_ota".into()).stack_size(8192).spawn(move || {
+        // SAFETY: Bild ist statisch, Länge passt.
+        let r = unsafe { esp32os_c6_ota(BILD.as_ptr(), laenge, c_int::from(alte_firmware)) };
+        if r == 0 {
+            log::warn!("C6-Update: fertig – Neustart in 3 s");
+            std::thread::sleep(std::time::Duration::from_secs(3));
+            // SAFETY: Neustart des Boards (setzt auch den C6 zurück).
+            unsafe { esp_idf_svc::sys::esp_restart() };
+        } else {
+            log::error!("C6-Update: gescheitert ({r}) – alte C6-Firmware bleibt aktiv");
+        }
+    });
 }
 
 fn ip_text(ip: [u8; 4]) -> String {
@@ -260,6 +296,11 @@ pub fn im_hintergrund_starten() {
                     "WLAN: Versionen Host {a}.{b}.{c}, Koprozessor {} kennt die Versionsabfrage nicht (alte Firmware, siehe eh_init_evt)",
                     v.cp_ziel
                 ),
+            }
+            #[cfg(esp32os_c6_ota)]
+            if v.cp != Some(v.host) {
+                // ohne Versionsantwort: alte Firmware (vor 2.6, ohne activate)
+                c6_aktualisieren(v.cp.is_none());
             }
         });
         kern::wlan::treiber_setzen(Box::new(C6));

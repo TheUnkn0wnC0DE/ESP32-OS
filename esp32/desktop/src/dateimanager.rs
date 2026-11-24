@@ -7,6 +7,14 @@
 //! (Öffnen, Kopieren, Ausschneiden, Umbenennen, Löschen); oben die Knöpfe
 //! „Hoch“, „Neuer Ordner“, „Einfügen“. Wischen blättert. Namen werden in
 //! einem Dialog mit Eingabefeld eingegeben (Bildschirmtastatur öffnet sich).
+//!
+//! D4 Papierkorb: „Löschen“ verschiebt in den Papierkorb des Geräts (SD:
+//! `ESP32-OS/Papierkorb` – auf der SD-Karte schreibt ESP32-OS nur in seinen
+//! eigenen Ordner; intern: `Papierkorb`), der Herkunftspfad steht in der
+//! Datei `.herkunft` im Papierkorb. Links unter den Geräten öffnet
+//! „Papierkorb“ ihn; dort: Wiederherstellen, Endgültig löschen, Leeren.
+//! Ohne Papierkorb (SD ohne Ordner ESP32-OS) wird wie bisher endgültig
+//! gelöscht.
 //! Jede Änderung schreibt die Dateiliste ins Systemprotokoll (`DM:`).
 
 use crate::shell::{LEISTE_H, bild_auf, kontextmenue, symbol};
@@ -25,10 +33,17 @@ const BLOCK: usize = 32 * 1024;
 const K_HOCH: u32 = 2;
 const K_NEU: u32 = 3;
 const K_EINFUEGEN: u32 = 4;
+const K_KORB: u32 = 5;
+const K_LEEREN: u32 = 6;
+/// Name des Papierkorbs und der Herkunftsliste darin.
+pub const KORB: &str = "Papierkorb";
+const HERKUNFT: &str = ".herkunft";
 const K_GERAET: u32 = 10;
 const K_EINTRAG: u32 = 100;
 
 const HG: u32 = 0xF0F0F0;
+/// Symbol des Papierkorbs (KolibriOS-Symbolsatz).
+const SYMBOL_KORB: usize = 39;
 const WAHL: u32 = 0xCFE0F5;
 
 /// Eintrag eines Ordners.
@@ -193,6 +208,100 @@ pub fn verschieben(q: &str, z: &str) -> Result<(), u32> {
 }
 
 /// Fehlertext zu einem Code von Funktion 70.
+/// D4: Papierkorb des Geräts, zu dem `p` gehört (None: SD-Karte ohne
+/// Ordner ESP32-OS – dann gibt es keinen, gelöscht wird endgültig).
+pub fn papierkorb_von(p: &str) -> Option<String> {
+    let wurzel = format!("/{}", einhaengung(p)?.trim_matches('/'));
+    if liegt_in(&wurzel, "/sd0/1") {
+        let eigen = verbinden(&wurzel, "ESP32-OS");
+        (art(&eigen) == Some(true)).then(|| verbinden(&eigen, KORB))
+    } else {
+        Some(verbinden(&wurzel, KORB))
+    }
+}
+
+/// Ist `p` selbst ein Papierkorb?
+fn ist_korb(p: &str) -> bool {
+    papierkorb_von(p).is_some_and(|k| liegt_in(p, &k) && liegt_in(&k, p))
+}
+
+/// Herkunftsliste (Name im Papierkorb, ursprünglicher Pfad).
+fn herkunft_lesen(korb: &str) -> Vec<(String, String)> {
+    let mut buf = vec![0u8; 64 * 1024];
+    let (_, n) = datei::lesen(&verbinden(korb, HERKUNFT), 0, &mut buf);
+    buf.truncate(n as usize);
+    String::from_utf8_lossy(&buf)
+        .lines()
+        .filter_map(|z| z.split_once('\t').map(|(a, b)| (a.to_string(), b.to_string())))
+        .collect()
+}
+
+fn herkunft_schreiben(korb: &str, liste: &[(String, String)]) -> Result<(), u32> {
+    let text: String = liste.iter().map(|(n, p)| format!("{n}\t{p}\n")).collect();
+    match datei::erstellen(&verbinden(korb, HERKUNFT), text.as_bytes()).0 {
+        datei::OK => Ok(()),
+        c => Err(c),
+    }
+}
+
+/// Ordner samt fehlenden Elternordnern anlegen.
+fn ordner_pfad_anlegen(p: &str) -> Result<(), u32> {
+    if art(p) == Some(true) {
+        return Ok(());
+    }
+    let e = eltern(p);
+    if e != p && art(&e).is_none() {
+        ordner_pfad_anlegen(&e)?;
+    }
+    match datei::ordner_erstellen(p) {
+        datei::OK => Ok(()),
+        c => Err(c),
+    }
+}
+
+/// `p` in den Papierkorb `korb` verschieben (Name dort ggf. „(Kopie)“).
+/// Liefert den Namen im Papierkorb.
+pub fn in_papierkorb(p: &str, korb: &str) -> Result<String, u32> {
+    ordner_pfad_anlegen(korb)?;
+    let name = freier_name(korb, name_von(p)).ok_or(datei::VERWEIGERT)?;
+    verschieben(p, &verbinden(korb, &name))?;
+    let mut h = herkunft_lesen(korb);
+    h.retain(|(n, _)| n != &name);
+    h.push((name.clone(), p.to_string()));
+    herkunft_schreiben(korb, &h)?;
+    Ok(name)
+}
+
+/// Eintrag `name` aus dem Papierkorb an seinen alten Ort zurück (fehlende
+/// Ordner werden angelegt, belegter Name → „(Kopie)“). Liefert den Pfad.
+pub fn wiederherstellen(korb: &str, name: &str) -> Result<String, u32> {
+    let mut h = herkunft_lesen(korb);
+    let orig = h.iter().find(|(n, _)| n == name).map(|(_, p)| p.clone()).ok_or(datei::NICHT_GEFUNDEN)?;
+    let ordner = eltern(&orig);
+    ordner_pfad_anlegen(&ordner)?;
+    let ziel = verbinden(&ordner, &freier_name(&ordner, name_von(&orig)).ok_or(datei::VERWEIGERT)?);
+    verschieben(&verbinden(korb, name), &ziel)?;
+    h.retain(|(n, _)| n != name);
+    herkunft_schreiben(korb, &h)?;
+    Ok(ziel)
+}
+
+/// Eintrag endgültig löschen (und aus der Herkunftsliste nehmen).
+pub fn endgueltig_loeschen(korb: &str, name: &str) -> Result<(), u32> {
+    loeschen(&verbinden(korb, name))?;
+    let mut h = herkunft_lesen(korb);
+    h.retain(|(n, _)| n != name);
+    herkunft_schreiben(korb, &h)
+}
+
+/// Papierkorb leeren: alle Einträge und die Herkunftsliste löschen.
+pub fn papierkorb_leeren(korb: &str) -> Result<(), u32> {
+    for e in lesen(korb)? {
+        loeschen(&verbinden(korb, &e.name))?;
+    }
+    Ok(())
+}
+
 pub fn fehlertext(c: u32) -> &'static str {
     match c {
         datei::NICHT_UNTERSTUETZT => t("not supported", "nicht unterstützt"),
@@ -243,6 +352,20 @@ fn text(x: i32, y: i32, t: &str, farbe: u32) {
 }
 
 /// Text auf `max` Zeichen kürzen („…“ gibt es in der Schrift nicht: „..“).
+/// Text auf höchstens zwei Zeilen zu `max` Zeichen umbrechen (an einem
+/// Leerzeichen, sonst hart); die zweite Zeile kann länger sein (kürzt der
+/// Aufrufer).
+fn zwei_zeilen(t: &str, max: usize) -> (String, String) {
+    let z: Vec<char> = t.chars().collect();
+    if z.len() <= max {
+        return (t.to_string(), String::new());
+    }
+    let schnitt = z[..=max].iter().rposition(|&c| c == ' ').filter(|&i| i > 0).unwrap_or(max);
+    let erste: String = z[..schnitt].iter().collect();
+    let zweite: String = z[schnitt..].iter().collect::<String>().trim_start().to_string();
+    (erste, zweite)
+}
+
 fn kuerzen(t: &str, max: usize) -> String {
     if t.chars().count() <= max { t.to_string() } else { format!("{}..", t.chars().take(max.saturating_sub(2)).collect::<String>()) }
 }
@@ -404,7 +527,12 @@ pub fn frage(titel: &str, frage: &str, ja: &str) -> bool {
                     sys::neuzeichnen(1);
                     sys::fenster((x as u32) << 16 | (w - 1) as u32, (y as u32) << 16 | (h - 1) as u32, 0x33 << 24 | HG, 0, Some(&titel));
                     bild_auf(&symbol(14, 32), 10, 10, |_, _| HG);
-                    text(54, 18, &kuerzen(&frage, 42), 0x202020);
+                    // zwei Zeilen zu 42 Zeichen (lange Namen, D4-Texte)
+                    let (z1, z2) = zwei_zeilen(&frage, 42);
+                    text(54, if z2.is_empty() { 18 } else { 10 }, &z1, 0x202020);
+                    if !z2.is_empty() {
+                        text(54, 28, &kuerzen(&z2, 42), 0x202020);
+                    }
                     knopf(2, w - 10 - 110 - 10 - 120 - 10, 56, 120, 42, 0xC03030, &ja, 0xFFFFFF);
                     knopf(3, w - 10 - 110 - 10, 56, 110, 42, 0xC8C8C8, t("Cancel", "Abbrechen"), 0);
                     sys::neuzeichnen(2);
@@ -461,7 +589,12 @@ struct Zustand {
 impl Zustand {
     fn neu_lesen(&mut self) {
         match lesen(&self.pfad) {
-            Ok(l) => self.liste = l,
+            Ok(mut l) => {
+                if ist_korb(&self.pfad) {
+                    l.retain(|e| e.name != HERKUNFT);
+                }
+                self.liste = l;
+            }
             Err(c) => {
                 self.liste.clear();
                 self.meldung = format!("{}: {}", t("Read", "Lesen"), fehlertext(c));
@@ -516,10 +649,23 @@ fn zeichnen(z: &mut Zustand) {
         bild_auf(&b, 8, y + 6, |_, _| farbe);
         text(46, y + 14, titel, 0x202020);
     }
+    // D4: Papierkorb unter den Geräten
+    let im_korb = ist_korb(&z.pfad);
+    let y = 4 + z.geraete.len() as i32 * 48;
+    let farbe = if im_korb { WAHL } else { 0xE2E6EC };
+    sys::knopf(2 << 16 | (SEITE_W - 9) as u32, (y as u32) << 16 | 43, K_KORB | 0x4000_0000, farbe);
+    sys::rechteck(2 << 16 | (SEITE_W - 8) as u32, (y as u32) << 16 | 44, farbe);
+    let b = z.sym(SYMBOL_KORB);
+    bild_auf(&b, 8, y + 6, |_, _| farbe);
+    text(46, y + 14, t("Recycle bin", "Papierkorb"), 0x202020);
     // Knopfleiste
     let x0 = SEITE_W + 4;
     knopf(K_HOCH, x0, 2, 80, 42, 0xD8D8D8, t("Up", "Hoch"), 0);
-    knopf(K_NEU, x0 + 86, 2, 130, 42, 0xD8D8D8, t("New folder", "Neuer Ordner"), 0);
+    if im_korb {
+        knopf(K_LEEREN, x0 + 86, 2, 130, 42, 0xD8D8D8, t("Empty", "Leeren"), 0);
+    } else {
+        knopf(K_NEU, x0 + 86, 2, 130, 42, 0xD8D8D8, t("New folder", "Neuer Ordner"), 0);
+    }
     let ab = z.ablage.as_ref().map_or(0, |a| a.0.len());
     if ab > 0 {
         knopf(K_EINFUEGEN, x0 + 222, 2, 100, 42, 0x3A7AC0, t("Paste", "Einfügen"), 0xFFFFFF);
@@ -628,8 +774,74 @@ fn einfuegen(z: &mut Zustand) {
     z.neu_lesen();
 }
 
+/// Kontextmenü im Papierkorb: Wiederherstellen, Endgültig löschen.
+fn kontext_korb(z: &mut Zustand, e: &Eintrag) {
+    let m = sys::maus(0);
+    let wahl = kontextmenue((m >> 16) as i32, (m & 0xFFFF) as i32, &[t("Restore", "Wiederherstellen"), t("Delete permanently", "Endgültig löschen")]);
+    let korb = z.pfad.clone();
+    match wahl {
+        Some(0) => {
+            z.meldung = match wiederherstellen(&korb, &e.name) {
+                Ok(p) => format!("{}: {p}", t("Restored", "Wiederhergestellt")),
+                Err(c) => format!("{}: {}", t("Restore", "Wiederherstellen"), fehlertext(c)),
+            };
+            z.neu_lesen();
+        }
+        Some(1) => {
+            let f = match kern::sprache::aktuell() {
+                kern::sprache::Sprache::Englisch => format!("Delete \"{}\" permanently?", e.name),
+                kern::sprache::Sprache::Deutsch => format!("\"{}\" endgültig löschen?", e.name),
+            };
+            if frage(t("Delete", "Löschen"), &f, t("Delete", "Löschen")) {
+                z.meldung = match endgueltig_loeschen(&korb, &e.name) {
+                    Ok(()) => format!("{}: {}", t("Deleted", "Gelöscht"), e.name),
+                    Err(c) => format!("{}: {}", t("Delete", "Löschen"), fehlertext(c)),
+                };
+                z.neu_lesen();
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Papierkorb öffnen: der des aktuellen Geräts, sonst der interne.
+fn korb_oeffnen(z: &mut Zustand) {
+    let korb = papierkorb_von(&z.pfad).or_else(|| z.geraete.iter().find_map(|g| papierkorb_von(&g.pfad).filter(|_| !g.pfad.starts_with("/sd0"))));
+    let Some(korb) = korb else {
+        z.meldung = t("No recycle bin", "Kein Papierkorb").to_string();
+        return;
+    };
+    if let Err(c) = ordner_pfad_anlegen(&korb) {
+        z.meldung = format!("{}: {}", t("Recycle bin", "Papierkorb"), fehlertext(c));
+        return;
+    }
+    z.oeffne_ordner(korb);
+}
+
+fn leeren(z: &mut Zustand) {
+    if z.liste.is_empty() {
+        return;
+    }
+    let f = match kern::sprache::aktuell() {
+        kern::sprache::Sprache::Englisch => format!("Delete all {} objects permanently?", z.liste.len()),
+        kern::sprache::Sprache::Deutsch => format!("Alle {} Objekte endgültig löschen?", z.liste.len()),
+    };
+    if frage(t("Empty", "Leeren"), &f, t("Empty", "Leeren")) {
+        let korb = z.pfad.clone();
+        z.meldung = match papierkorb_leeren(&korb) {
+            Ok(()) => t("Recycle bin emptied", "Papierkorb geleert").to_string(),
+            Err(c) => format!("{}: {}", t("Empty", "Leeren"), fehlertext(c)),
+        };
+        z.neu_lesen();
+    }
+}
+
 fn kontext(z: &mut Zustand, i: usize) {
     let Some(e) = z.liste.get(i).cloned() else { return };
+    if ist_korb(&z.pfad) {
+        kontext_korb(z, &e);
+        return;
+    }
     let m = sys::maus(0);
     let wahl = kontextmenue((m >> 16) as i32, (m & 0xFFFF) as i32, &[t("Open", "Öffnen"), t("Copy", "Kopieren"), t("Cut", "Ausschneiden"), t("Rename", "Umbenennen"), t("Delete", "Löschen")]);
     let p = verbinden(&z.pfad, &e.name);
@@ -661,6 +873,22 @@ fn kontext(z: &mut Zustand, i: usize) {
             }
         }
         Some(4) => {
+            let korb = papierkorb_von(&p).filter(|k| !liegt_in(&p, k) && !liegt_in(k, &p));
+            if let Some(korb) = korb {
+                // D4: in den Papierkorb (Rückfrage bleibt: langer Druck aus Versehen)
+                let f = match kern::sprache::aktuell() {
+                    kern::sprache::Sprache::Englisch => format!("Move \"{}\" to the recycle bin?", e.name),
+                    kern::sprache::Sprache::Deutsch => format!("\"{}\" in den Papierkorb?", e.name),
+                };
+                if frage(t("Delete", "Löschen"), &f, t("Delete", "Löschen")) {
+                    z.meldung = match in_papierkorb(&p, &korb) {
+                        Ok(_) => format!("{}: {}", t("In the recycle bin", "Im Papierkorb"), e.name),
+                        Err(c) => format!("{}: {}", t("Delete", "Löschen"), fehlertext(c)),
+                    };
+                    z.neu_lesen();
+                }
+                return;
+            }
             let f = match (kern::sprache::aktuell(), e.ordner) {
                 (kern::sprache::Sprache::Englisch, true) => format!("Delete folder \"{}\"?", e.name),
                 (kern::sprache::Sprache::Englisch, false) => format!("Delete file \"{}\"?", e.name),
@@ -725,6 +953,8 @@ pub fn programm() {
                     }
                     K_NEU => neuer_ordner(&mut z),
                     K_EINFUEGEN => einfuegen(&mut z),
+                    K_KORB => korb_oeffnen(&mut z),
+                    K_LEEREN => leeren(&mut z),
                     id if (K_GERAET..K_EINTRAG).contains(&id) => {
                         if let Some(g) = z.geraete.get((id - K_GERAET) as usize) {
                             let p = g.pfad.clone();
@@ -766,6 +996,14 @@ mod tests {
 
     /// O4: Startet ein Programm nicht, nennt der Dateimanager den Grund
     /// (vorher hiess jeder Fehler „fehlt“, auch „zu wenig Speicher“).
+    #[test]
+    fn zwei_zeilen_bricht_am_leerzeichen() {
+        let (a, b) = zwei_zeilen("Move \"notiz (Copy).txt\" to the recycle bin?", 42);
+        assert_eq!(a, "Move \"notiz (Copy).txt\" to the recycle");
+        assert_eq!(b, "bin?");
+        assert_eq!(zwei_zeilen("kurz", 42), ("kurz".to_string(), String::new()));
+    }
+
     #[test]
     fn startfehler_nennt_den_grund() {
         assert!(startfehler("bildbetrachter", -30).contains("Speicher") || startfehler("bildbetrachter", -30).contains("memory"));

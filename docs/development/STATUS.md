@@ -11,15 +11,25 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **VORRANG seit 24.11. abends: Stabilität und Speicher (PLAN, Abschnitt
+  M).** Teil C und D pausieren. Reihenfolge M1 Messen → M2 interner RAM
+  leer → M3 feste Grenzen → M4 Dauertest 60 min → M5 v1.0.3 (dein OK) →
+  M6 Speicher für den Browser. Ohne Board baue ich Messung, Umzüge ins
+  PSRAM, Grenzen und den Dauertest-Autopiloten vor; Messwerte und der
+  Dauertest folgen, sobald das Board zurück ist.
+
 - **Board ist weg** (seit 24.11. 06:20). Kein Zugriff auf COM3, bis du
   „Board ist wieder da, mach weiter“ schreibst. Bis dahin PC-Arbeit und
   Vorbereitung der Board-Tests (Liste unten, „Board-Tests“).
 - Ohne Board erledigt (24.11.): Review Teil B (3 Befunde behoben), BR3
   lexbor geprüft, Fehlerbericht Fall 1 und 2 behoben (PC-Test), Stabilitäts-
   runde vorbereitet (PC-Test + 38-min-Autopilot), C1 Konsole am PC fertig
-  (Shell, Matrix, Touch-Test), C2 C6-Firmware gebaut (Schreiben wartet auf
-  deinen Adapter/OK), C3 Standby vorbereitet, D5 Absturzschutz gebaut
-  (nur am Board prüfbar). Alles mit Board-Skript in der Liste unten.
+  (Shell, Matrix, Touch-Test), C2 C6-Firmware gebaut und Update vom P4 über
+  OTA ohne Adapter vorbereitet (mit automatischem Rückweg, Review-Befunde
+  behoben), C3 Standby vorbereitet, D5 Absturzschutz gebaut (nur am Board
+  prüfbar, Review-Befunde behoben), D4 Papierkorb im Dateimanager (PC-Test
+  per Touch). Alles mit Board-Skript in der Liste unten.
+- Als Nächstes ohne Board: D1 Shell ausbauen, dann D2, D3.
 - 24.11. vormittags: Meldung „Verbindung fehlgeschlagen (-28674)“ bei dir
   unterwegs = ESP_ERR_HTTP_CONNECT (Server nicht erreichbar, auch im
   Browser) – vermutlich das WLAN vor Ort (Anmeldeseite/kein Internet). Die
@@ -79,20 +89,29 @@ jedes Skript schreibt am Ende wieder die normale Firmware aufs Board).
    `rm neu` auf der Bildschirmtastatur, Kreuz; Matrix öffnen und schliessen;
    Fotos nach 41 s und 66 s).
 6. **C2 WLAN 6:** Messung vorher (`werkzeuge/durchsatz.py`,
-   Verbindungsaufbau aus dem Log); nur mit deinem OK und Adapter:
-   `c6_flashen.ps1 -Sichern`, dann `-Schreiben` (Rückweg `-Zurueck`), Log
-   „coprocessor=3.1.0“, W5 iTWT-Setup, Messung nachher.
+   Verbindungsaufbau aus dem Log); dann `c2_lauf.ps1 -Ziel …\c2` (C6-Update
+   vom P4 über OTA, ohne Adapter; erwartet „C6-Update: fertig“ und danach
+   Versionen gleich 3.1.0; Rückweg automatisch); W5 iTWT-Setup beim
+   Abdunkeln, Messung nachher. Lehnt die Werks-Firmware OTA ab: C2 wartet
+   auf einen Adapter (`c6_flashen.ps1`), der Rest geht weiter.
 7. **C3 Standby:** `c3_lauf.ps1 -Ziel …\c3` (Matrix, Ruhezustand 90 s,
    Wecken per Touch, Fotos, Log „aufgeweckt … WLAN verbunden“).
 8. **SC Stabilitätsrunde** (mit Konsole und Standby).
 9. **Teil D:** D5 Absturzschutz `d5_lauf.ps1 -Ziel …\d5` (drei Mal
    absturz_test: Schreiben 0, Lesen 4, unerlaubter Befehl – erwartet drei
-   abgefangen, kein Neustart, Foto mit Meldung); dann D4, D1, D2 (Ton), D3;
-   danach **SD Stabilitätsrunde**.
+   abgefangen, kein Neustart, Foto mit Meldung); D4 Papierkorb: Foto
+   Dateimanager → Papierkorb (Board-Foto per Autopilot wie C1); dann D1,
+   D2 (Ton), D3; danach **SD Stabilitätsrunde**.
 
 ## Offene Fragen
 
-- **C2 (eigene C6-Firmware):** Die Firmware ist gebaut und geprüft, das
+- ~~**C2 Adapter**~~ – erledigt (24.11.): Du willst den Weg über OTA ohne
+  Adapter. Geprüft: sehr wahrscheinlich ja (die Werks-Firmware ist ein
+  älterer esp_hosted-Koprozessor; die OTA-Befehle sind älter als 2.6, nur
+  „activate“ fehlt dort – ältere schalten bei „end“ um). Sicher zeigt es
+  erst das Board; der Versuch ist ungefährlich. Umgesetzt mit Rückweg
+  (Probezeit 90 s, sonst zurück zur alten Firmware) – Details in PLAN C2
+  und Abweichungen. (alter Text:) **C2 (eigene C6-Firmware):** Die Firmware ist gebaut und geprüft, das
   Schreiben ist vorbereitet (mit Sicherung und Rückweg). Das allererste Mal
   geht es nur mit einem **USB-UART-Adapter (3,3 V) an den C6-Pins** (TX,
   RX, GND, dazu BOOT/GPIO9 und EN) – die alte C6-Firmware kann kein Update
@@ -820,8 +839,10 @@ der Nutzer hatte B5 als Nächstes genannt – vor B4 nachfragen.
 ## Anleitung: C6-Firmware aktualisieren (W2, später)
 
 Ausgangslage: Der ESP32-C6 (WLAN-Chip) meldet esp_hosted-Firmware 0.0.0.
-Ein Update vom P4 aus über SDIO geht erst ab C6-Firmware 2.6 – also einmal
-per Kabel direkt am C6. **Vorher am Schaltplan von Waveshare prüfen**
+(24.11. berichtigt: Das Update vom P4 aus über OTA geht sehr wahrscheinlich
+auch mit der alten Firmware – nur „activate“ kam erst mit 2.6; Weg:
+`werkzeuge/board/c2_lauf.ps1`. Die Anleitung hier ist der Weg per Kabel,
+falls OTA abgelehnt wird.) **Vorher am Schaltplan von Waveshare prüfen**
 (ESP32-P4-WIFI6-Touch-LCD-5, Seite C6): wo UART TX/RX, BOOT (GPIO9) und EN
 des C6 herausgeführt sind (Stiftleiste oder Testpunkte) – das weiss ich
 noch nicht sicher, darum hier als Prüfschritt.

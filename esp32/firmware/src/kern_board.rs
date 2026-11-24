@@ -199,7 +199,8 @@ pub extern "C" fn esp32os_programm_fehler_abfangen(ursache: u32, pc: u32, adress
 /// D5: Ziel der Umleitung – läuft wieder im Faden des Programms.
 #[unsafe(no_mangle)]
 pub extern "C" fn esp32os_programm_fehler_ende() -> ! {
-    log::error!("Hardware-Fehler in Programm {:?} – nur dieses Programm wird beendet", kern::eigene_pid());
+    // Ausgabe im Kern-Abschnitt (System-Heap), wie der Panik-Hook
+    kern::kern_abschnitt(|| log::error!("Hardware-Fehler in Programm {:?} – nur dieses Programm wird beendet", kern::eigene_pid()));
     kern::hw_fehler_beenden()
 }
 

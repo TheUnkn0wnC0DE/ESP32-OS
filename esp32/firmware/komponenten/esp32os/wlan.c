@@ -12,6 +12,8 @@
 #include "esp_timer.h"
 #include "esp_netif_sntp.h"
 #include "esp_hosted.h"
+#include "esp_hosted_ota.h"
+#include "mbedtls/sha256.h"
 #include "eh_common_fw_version.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -117,6 +119,52 @@ int esp32os_wlan_start(void) {
     r = esp_wifi_start();
     if (r == ESP_OK) gestartet = 1;
     return r;
+}
+
+// C2 (W2): eigene C6-Firmware vom P4 aus schreiben (esp_hosted-OTA: der C6
+// schreibt in seinen freien App-Platz, die laufende Firmware bleibt
+// unberührt). Danach „activate“ (ab C6-Firmware 2.6; ältere schalten schon
+// bei „end“ um). Rückgabe 0 = geschrieben, < 0 = Schritt gescheitert (die
+// alte Firmware bleibt aktiv).
+int esp32os_c6_ota(const uint8_t *bild, uint32_t n, int alte_firmware) {
+    unsigned char sha[32];
+    char hex[65];
+    mbedtls_sha256(bild, n, sha, 0);
+    for (int i = 0; i < 32; i++) sprintf(hex + 2 * i, "%02x", sha[i]);
+    ESP_LOGW(TAG, "C6-Update: %lu Byte, SHA-256 %s", (unsigned long)n, hex);
+    esp_err_t r = esp_hosted_cp_ota_begin();
+    if (r != ESP_OK) {
+        ESP_LOGE(TAG, "C6-Update: begin abgelehnt (%s) – alte Firmware bleibt", esp_err_to_name(r));
+        return -1;
+    }
+    uint32_t schritt = n / 10 + 1, naechste = schritt;
+    for (uint32_t o = 0; o < n;) {
+        uint32_t k = n - o > 1024 ? 1024 : n - o;
+        r = esp_hosted_cp_ota_write(bild + o, k);
+        if (r != ESP_OK) {
+            ESP_LOGE(TAG, "C6-Update: write bei %lu abgelehnt (%s) – alte Firmware bleibt", (unsigned long)o, esp_err_to_name(r));
+            return -2;
+        }
+        o += k;
+        if (o >= naechste) {
+            ESP_LOGW(TAG, "C6-Update: %lu %%", (unsigned long)((uint64_t)o * 100 / n));
+            naechste += schritt;
+        }
+    }
+    r = esp_hosted_cp_ota_end();
+    if (r != ESP_OK) {
+        ESP_LOGE(TAG, "C6-Update: end abgelehnt (%s) – Abbild ungültig, alte Firmware bleibt", esp_err_to_name(r));
+        return -3;
+    }
+    r = esp_hosted_cp_ota_activate();
+    if (r != ESP_OK && !alte_firmware) {
+        /* ab C6-Firmware 2.6 schaltet erst activate um (Review 24.11.) */
+        ESP_LOGE(TAG, "C6-Update: activate abgelehnt (%s) – nicht umgeschaltet, alte Firmware bleibt", esp_err_to_name(r));
+        return -4;
+    }
+    ESP_LOGW(TAG, "C6-Update: geschrieben, activate: %s%s", esp_err_to_name(r),
+             alte_firmware ? " (alte C6-Firmware ohne activate: end hat umgeschaltet)" : "");
+    return 0;
 }
 
 // Versionen von Host (esp_hosted auf dem P4) und Koprozessor (C6) ins Log

@@ -12,6 +12,9 @@
 #include "esp_private/panic_internal.h"
 #include "esp_private/cache_utils.h"
 #include "riscv/rvruntime-frames.h"
+#include "riscv/rv_utils.h"
+#include "soc/soc_caps.h"
+#include "esp_cpu.h"
 
 #define MERKER 0x4F534352u /* "OSCR" */
 
@@ -58,16 +61,42 @@ extern void __real_xt_unhandled_exception(void* frame);
 bool esp32os_programm_fehler_abfangen(uint32_t ursache, uint32_t pc, uint32_t adresse);
 void esp32os_programm_fehler_ende(void);
 
+/* Fehler im Handler selbst (z. B. kaputte Faden-Daten): nicht noch einmal
+ * abfangen, sondern Panik wie bisher (Review 24.11.) */
+static volatile bool im_handler[SOC_CPU_CORES_NUM];
+
+/* Waren Unterbrechungen beim Fehler frei? (MPIE, Schwelle auf Grundwert.)
+ * Sonst lief das Programm in einem kritischen Abschnitt oder unter einer
+ * Sperre – das Ende würde hängen bleiben (Review 24.11.). */
+static bool IRAM_ATTR unterbrechungen_frei(const RvExcFrame* f)
+{
+    if ((f->mstatus & (1u << 7)) == 0) { /* MPIE */
+        return false;
+    }
+#if SOC_INT_CLIC_SUPPORTED
+    if (rv_utils_get_interrupt_threshold() != RVHAL_INTR_ENABLE_THRESH_CLIC) {
+        return false;
+    }
+#endif
+    return true;
+}
+
 void IRAM_ATTR __wrap_xt_unhandled_exception(void* frame)
 {
     RvExcFrame* f = (RvExcFrame*)frame;
     uint32_t c = f->mcause;
+    int kern = esp_cpu_get_core_id();
     /* Adress-/Zugriffsfehler und unerlaubter Befehl; nicht ecall/ebreak */
     bool art = c == 0 || c == 1 || c == 2 || c == 4 || c == 5 || c == 6 || c == 7;
-    if (art && !g_panic_abort && spi_flash_cache_enabled() && !xPortInterruptedFromISRContext()
-        && esp32os_programm_fehler_abfangen(c, f->mepc, f->mtval)) {
-        f->mepc = (uint32_t)(uintptr_t)esp32os_programm_fehler_ende;
-        return;
+    if (art && !im_handler[kern] && !g_panic_abort && spi_flash_cache_enabled() && !xPortInterruptedFromISRContext()
+        && unterbrechungen_frei(f)) {
+        im_handler[kern] = true;
+        bool abgefangen = esp32os_programm_fehler_abfangen(c, f->mepc, f->mtval);
+        im_handler[kern] = false;
+        if (abgefangen) {
+            f->mepc = (uint32_t)(uintptr_t)esp32os_programm_fehler_ende;
+            return;
+        }
     }
     __real_xt_unhandled_exception(frame);
 }

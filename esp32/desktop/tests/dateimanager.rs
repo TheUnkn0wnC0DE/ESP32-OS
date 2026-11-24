@@ -115,6 +115,23 @@ fn menue(f: &mut Finger, i: i32, k: i32, bild: Option<&str>) {
     f.tippen(LX + 40, my + 2 + k * 44 + 22);
 }
 
+/// Wie `menue` für ein Menü mit `n` Einträgen (Papierkorb: 2).
+fn menue_n(f: &mut Finger, i: i32, k: i32, n: i32) {
+    let y = zeile(i);
+    let vorher = sys::fenster_liste().len();
+    f.halten(LX, y, 700);
+    bis(|| sys::fenster_liste().len() > vorher, "Kontextmenü");
+    std::thread::sleep(Duration::from_millis(100));
+    let my = y.min(360 - (n * 44 + 4));
+    f.tippen(LX + 40, my + 2 + k * 44 + 22);
+}
+
+/// Zeile eines Namens in der Liste des Dateimanagers (gleiche Sortierung).
+fn zeile_von(ordner: &str, name: &str) -> i32 {
+    let l = desktop::dateimanager::lesen(ordner).expect("Liste");
+    l.iter().filter(|e| e.name != ".herkunft").position(|e| e.name == name).unwrap_or_else(|| panic!("{name} in {ordner}")) as i32
+}
+
 /// Text über die Bildschirmtastatur tippen (nur Kleinbuchstaben).
 fn tippe(f: &mut Finger, text: &str) {
     bis(|| sys::tastatur_soll().0, "Tastatur erscheint");
@@ -226,11 +243,53 @@ fn dateimanager_per_touch() {
     bis(|| !sys::tastatur_soll().0, "Tastatur weg nach OK");
 
     // Löschen einer Datei (intern: bilder/, bild.png, brief.txt, notiz (Copy).txt)
+    // – D4: in den Papierkorb
     menue(&mut f, 3, 4, None);
     bis(|| sys::fenster_liste().iter().any(|w| w.titel == "Delete"), "Rückfrage");
     foto("p1_loeschen");
     f.tippen(FRAGE_JA.0, FRAGE_JA.1);
     bis(|| !intern.join("notiz (Copy).txt").exists(), "Datei gelöscht");
+    assert!(intern.join("Papierkorb/notiz (Copy).txt").exists(), "im Papierkorb");
+
+    // D4: Papierkorb öffnen (links unter den Geräten), wiederherstellen
+    let (kx, ky) = geraet(2);
+    f.tippen(kx, ky);
+    bis(|| titel() == "File Manager - /rd/1/Papierkorb", "Papierkorb offen");
+    foto("d4_papierkorb");
+    menue_n(&mut f, 0, 0, 2);
+    bis(|| intern.join("notiz (Copy).txt").exists(), "wiederhergestellt");
+    assert!(!intern.join("Papierkorb/notiz (Copy).txt").exists());
+    // wieder löschen und im Papierkorb endgültig löschen
+    let (gx, gy) = geraet(1);
+    f.tippen(gx, gy);
+    bis(|| titel() == "File Manager - /rd/1", "Gerät intern");
+    menue(&mut f, zeile_von("/rd/1", "notiz (Copy).txt"), 4, None);
+    bis(|| sys::fenster_liste().iter().any(|w| w.titel == "Delete"), "Rückfrage 2");
+    f.tippen(FRAGE_JA.0, FRAGE_JA.1);
+    bis(|| intern.join("Papierkorb/notiz (Copy).txt").exists(), "wieder im Papierkorb");
+    f.tippen(kx, ky);
+    bis(|| titel() == "File Manager - /rd/1/Papierkorb", "Papierkorb offen 2");
+    menue_n(&mut f, 0, 1, 2);
+    bis(|| sys::fenster_liste().iter().any(|w| w.titel == "Delete"), "Rückfrage endgültig");
+    f.tippen(FRAGE_JA.0, FRAGE_JA.1);
+    bis(|| !intern.join("Papierkorb/notiz (Copy).txt").exists(), "endgültig gelöscht");
+    // Leeren: brief.txt in den Papierkorb, dann „Leeren“
+    f.tippen(gx, gy);
+    bis(|| titel() == "File Manager - /rd/1", "Gerät intern 2");
+    std::fs::copy(intern.join("brief.txt"), intern.join("weg.txt")).unwrap();
+    // Gerät erneut antippen: Liste neu lesen
+    f.tippen(gx, gy);
+    std::thread::sleep(Duration::from_millis(300));
+    menue(&mut f, zeile_von("/rd/1", "weg.txt"), 4, None);
+    bis(|| sys::fenster_liste().iter().any(|w| w.titel == "Delete"), "Rückfrage 3");
+    f.tippen(FRAGE_JA.0, FRAGE_JA.1);
+    bis(|| intern.join("Papierkorb/weg.txt").exists(), "weg.txt im Papierkorb");
+    f.tippen(kx, ky);
+    bis(|| titel() == "File Manager - /rd/1/Papierkorb", "Papierkorb offen 3");
+    f.tippen(NEU.0, NEU.1); // im Papierkorb: „Leeren“ an der Stelle von „Neuer Ordner“
+    bis(|| sys::fenster_liste().iter().any(|w| w.titel == "Empty"), "Rückfrage Leeren");
+    f.tippen(FRAGE_JA.0, FRAGE_JA.1);
+    bis(|| std::fs::read_dir(intern.join("Papierkorb")).unwrap().count() == 0, "Papierkorb leer");
 
     // Löschen eines Ordners mit Inhalt (SD: ordner/ mit a.txt, notiz.txt, tief/b.txt)
     let (gx, gy) = geraet(0);
@@ -248,6 +307,6 @@ fn dateimanager_per_touch() {
     foto("p1_ergebnis");
     let mut namen: Vec<String> = std::fs::read_dir(&intern).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
     namen.sort();
-    assert_eq!(namen, ["bild.png", "bilder", "brief.txt"]);
+    assert_eq!(namen, ["Papierkorb", "bild.png", "bilder", "brief.txt"]);
     assert_eq!(std::fs::read_dir(&sd).unwrap().count(), 0, "SD leer");
 }

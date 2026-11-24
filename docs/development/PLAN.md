@@ -1332,6 +1332,42 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Details zur Lücke im Repo, in PLAN/STATUS oder Commit-Nachrichten.
   Nachweis: Commit mit dem Patch auf `main`, Release-Text angepasst.
 
+## M. VORRANG: Stabilität und Speicher (Nutzer 24.11. abends)
+
+Vor allen anderen Punkten; Teil C und D pausieren (C2-OTA und D4 wurden
+noch sauber abgeschlossen). Grund: das System stürzt am Board ständig ab.
+Erst M1–M5, dann M6, dann weiter mit C/D.
+
+- [ ] **M1 Messen statt raten** – laufend loggen: freier interner RAM,
+  freies PSRAM, grösster zusammenhängender Block in beiden, Verbrauch je
+  Programm; jeden Absturz mit Grund und Speicherstand festhalten (Meldung
+  nach dem Neustart). Zuerst eine Tabelle: was verbraucht wie viel internen
+  RAM (WLAN, lwIP, TLS, Tasks/Stapel, Treiber, Kern, Programme).
+  Nachweis: Log-Auszug, Tabelle in PLAN.
+- [ ] **M2 Interner RAM so leer wie möglich** – alles ins PSRAM, was nicht
+  zwingend intern sein muss (WLAN- und lwIP-Puffer, mbedTLS, Stapel wo
+  sicher, Kern-Strukturen, Puffer der Programme); grosse Puffer
+  (Bildpuffer, Fenster, Schriften) einmal beim Start reservieren. Ziel:
+  auch unter Last (Browser + mehrere Programme) dauerhaft ≥ 100 KB intern
+  frei. Nachweis: ehrlicher Messwert in PLAN.
+- [ ] **M3 Feste Speichergrenzen** – jedes Programm ein festes Budget,
+  aufgebraucht → nur dieses Programm endet („Speicher voll“); neue
+  Netzverbindungen nur mit genug internem RAM; kein Programm lässt das
+  System wegen vollem Speicher abstürzen. Nachweis: PC-Tests, Board-Lauf.
+- [ ] **M4 Dauertest** – Autopilot ≥ 60 min: alle Programme öffnen und
+  schliessen, Menü oft auf/zu, Browser mit vielen Seiten nacheinander,
+  Startknopf („Home“) aus dem Browser. Freier interner RAM am Ende = am
+  Anfang (sonst Leck), 0 Abstürze. Nachweis: Log, Auswertung.
+- [ ] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
+- [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5) –
+  intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM
+  aufräumen (was belegt ausser dem Browser wie viel: Kern, Fenster,
+  Schriften, Bildpuffer, Spiele-Reserven, Caches; nur bei Bedarf laden);
+  den gewonnenen Speicher dem Browser (> 10 MB, grössere Grenzen für JS und
+  Seitengrösse) und den Programmen geben. Vorher/Nachher in PLAN: interner
+  RAM frei, PSRAM frei, Speicher des Browsers, wie viele der 30 Testseiten
+  laden.
+
 ## Gesamtauftrag 24.11. (ersetzt den vom 23.11. nachts)
 
 Ziel: mit dem Konkurrenzprojekt BMDS (github.com/jthwho/bmds) in jedem
@@ -1583,9 +1619,33 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   1,875 MB für spätere Updates vom P4); Bau `werkzeuge/c6_bauen.ps1`
   (esp32os_c6.bin 1,07 MB, Wi-Fi- und iTWT-Funktionen gelinkt); Schreiben
   nur mit geprüfter Sicherung `werkzeuge/board/c6_flashen.ps1` (-Sichern
-  liest zweimal und vergleicht SHA-256, -Schreiben, -Zurueck). Das erste
-  Schreiben braucht einen USB-UART-Adapter an den C6-Pins (die alte
-  C6-Firmware 0.0.0 kann kein Update über SDIO) – Frage in STATUS.
+  liest zweimal und vergleicht SHA-256, -Schreiben, -Zurueck).
+  Nutzer 24.11.: erstes Schreiben ohne Adapter über die OTA-Funktion von
+  esp_hosted, wenn die Werks-Firmware das kann. Geprüft (Quellen und
+  Board-Logs): die Werks-Firmware ist ein älterer esp_hosted-Koprozessor
+  (kennt die Versionsabfrage nicht → „0.0.0“, WLAN über dasselbe RPC); die
+  OTA-Befehle begin/write/end gibt es im Koprozessor schon lange vor 2.6
+  (das alte `esp_hosted_slave_ota` nutzte sie), nur „activate“ kam mit 2.6 –
+  ältere schalten bei „end“ um; der Host 3.1.0 empfiehlt selbst „OTA
+  coprocessor from host“. Endgültig zeigt es erst das Board; der Versuch ist
+  ungefährlich (OTA schreibt nur in den freien Platz). Umgesetzt: P4-Seite
+  `esp32os_c6_ota` (wlan.c: begin, write in 1-KB-Blöcken, end, activate;
+  SHA-256 im Log), Entwicklungs-Build `ESP32OS_C6_OTA` (C6-Bild eingebettet,
+  einmal je Build, danach Neustart), C6-Seite Rückweg: Probezeit 90 s nach
+  dem ersten Start, meldet sich der P4 nicht (Handshake), schaltet der C6
+  selbst auf die alte Firmware zurück; App auf 1,02 MB verkleinert (passt
+  auch in einen 1-MB-Werksplatz). Board-Lauf `werkzeuge/board/c2_lauf.ps1`.
+  Review (Subagent, 24.11.): Blockgrösse 1 KB < Grenze 1488, Abbruch in
+  begin/write/end lässt die alte Firmware aktiv, factory als Ziel geht.
+  Behoben: Absturz beim Start der neuen Firmware hätte die Probezeit bei
+  jedem Neustart neu begonnen (kein Rückweg) → nach Absturz/Wächter in der
+  Probezeit sofort zurück; Bestätigung erst nach Handshake und 60 s stabil
+  (WLAN-Start eingeschlossen), Schlüssel ist die SHA-256 der Firmware, und
+  `esp_ota_mark_app_valid_cancel_rollback` (sonst nähme ein Werks-Bootloader
+  mit Rollback das Update beim nächsten Rücksetzen still zurück);
+  vorherige Firmware je nach laufendem Platz (ota_1 → ota_0, ota_0 →
+  factory); Rückgabewerte geprüft; „activate“-Fehler bei C6-Firmware ab 2.6
+  gilt als Fehlschlag.
 - [ ] **C3 Standby** (vorher P5 ohne Akku) – Bildschirm aus, Aufwachen per
   Touch, danach WLAN-Verbindung wieder da und offene Programme laufen
   weiter. Nachweis: Log und Fotos vor/nach dem Standby per Autopilot.
@@ -1671,9 +1731,26 @@ und Verzeichnis auf GitHub).
   Testprogramm `absturz_test` mit drei Arten (Schreiben 0, Lesen 4,
   unerlaubter Befehl); Board-Lauf `werkzeuge/board/d5_lauf.ps1` (erwartet:
   drei abgefangen, kein Neustart). Firmware gebaut.
+  Review (Subagent, 24.11., D5 und C2): Rückweg über `_return_from_exception`
+  bestätigt (Panik-Zähler, Anhalten des zweiten Kerns, Wächter kommen erst
+  danach). Behoben: Fehler bei gesperrtem Programm-Heap (das Ende hinge für
+  immer) → jetzt Neustart wie bisher; Fehler bei maskierten Unterbrechungen
+  (kritischer Abschnitt, Schwelle erhöht) → Neustart; Fehler im Handler
+  selbst → kein zweites Abfangen (Wiedereintritt je Kern gesperrt); Meldung
+  im Kern-Abschnitt.
 - [ ] **D4 Dateimanager** – Kopieren, Verschieben, Löschen mit
   Papierkorb, per Touch (lange drücken = Menü). Nachweis: PC-Test per
   Autopilot, Board-Foto.
+  Stand 24.11. (am PC fertig): Kopieren, Ausschneiden/Einfügen, Umbenennen
+  und langer Druck = Menü gab es seit P1. Neu: Papierkorb – „Löschen“
+  verschiebt (nach Rückfrage) in den Papierkorb des Geräts (SD:
+  `ESP32-OS/Papierkorb`, nur im eigenen Ordner; intern: `Papierkorb`), die
+  Herkunft steht in `.herkunft`; links unter den Geräten „Papierkorb“, dort
+  im Menü „Wiederherstellen“ (fehlende Ordner werden angelegt) und
+  „Endgültig löschen“, oben „Leeren“. SD ohne Ordner ESP32-OS: endgültig
+  wie bisher. PC-Test `desktop/tests/dateimanager.rs` per Touch: in den
+  Papierkorb, wiederherstellen, erneut löschen, endgültig löschen, Leeren
+  (Foto `d4_papierkorb.png`). Offen: Board-Foto.
 - [ ] **D1 Shell ausbauen** – Pipes, Umleitungen, Skripte, möglichst viele
   Standardbefehle. Nachweis: PC-Tests je Funktion, Board-Foto.
 - [ ] **D2 Medienplayer** – MP3, Ogg, WAV, MIDI über den
@@ -1689,6 +1766,16 @@ und Verzeichnis auf GitHub).
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **C2 Sicherung beim Update über OTA (24.11.):** Geplant war eine
+  byte-genaue Sicherung des C6-Flash (esptool read_flash) – das geht nur
+  per Kabel am C6. Über esp_hosted-OTA (Nutzer: ohne Adapter) gibt es kein
+  Lesen des Flash. Ersatz: die alte Firmware bleibt unberührt im anderen
+  App-Platz (OTA schreibt nur den freien), und die neue C6-Firmware schaltet
+  in der Probezeit selbst zurück, wenn der P4 sie nicht erreicht. Nicht
+  abgedeckt: startet die neue C6-Firmware gar nicht (Absturz beim Start),
+  bleibt nur der Weg per Kabel (`c6_flashen.ps1`); das Abbild ist ein
+  unverändert gebautes esp_hosted 3.1.0, das Risiko ist klein.
 
 - **D5 Absturzschutz ohne Speicherschutz (24.11.):** Ohne User-Mode und
   PMP (siehe Antwort zur Isolation) teilen alle Programme einen

@@ -185,6 +185,12 @@ pub fn hw_fehler_abfangen(ursache: u32, pc: u32, adresse: u32) -> bool {
     if f.im_kern.load(Relaxed) != 0 || f.geschuetzt.load(Relaxed) != 0 {
         return false;
     }
+    // Fehler mitten in malloc/free des Programms (Heap gesperrt): das Ende
+    // bräuchte den Heap und stünde für immer (Review 24.11.) – Neustart
+    // SAFETY: Heap des Fadens lebt, solange der Faden lebt.
+    if unsafe { (*f.heap).gesperrt() } {
+        return false;
+    }
     if f.hw_fehler.swap(ursache + 1, Relaxed) != 0 {
         return false;
     }
