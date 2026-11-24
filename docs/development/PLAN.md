@@ -1421,6 +1421,20 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   (Sitzungsnummer). Offen: welcher Code die Kopfzeilen mit dem Systemheap
   kopiert – Kandidaten: QuickJS-Gruppe (ohne ns_programm.h; fetch/XHR
   geben Kopfzeilen an JS), libc-Funktionen in NetSurf (strndup u. a.).
+  Gegenprobe ohne JavaScript (Build `ESP32OS_JS_AUS`, br_ohnejs): 84 → 76
+  → 68 → 52 KB – weniger, aber das Leck bleibt; es hängt an den Abrufen,
+  nicht an QuickJS. Nächster Schritt: Kopfzeilen-Weg vom Transport bis
+  llcache auf Belegungen ausserhalb des Programm-Heaps prüfen.
+  ✔ Ursache gefunden (24.11.): NetSurf nutzt auf dem Board das strndup der
+  newlib (HAVE_STRNDUP) – llcache kopiert damit Name und Wert jeder
+  Kopfzeile in den Systemheap (kleine Blöcke → interner RAM); beim Ende des
+  Browsers blieben sie liegen („X-NS-Base“ aus css_fetcher.c verriet den
+  Weg). Behoben: ns_programm.h leitet strndup auf dem Board in den Heap des
+  Programms um. Lauf br_strndup2: interner RAM nach jeder Seite 88–89 KB
+  (vorher 86 → 73 → 46 → 31). Neu sichtbar, weil Seiten jetzt ganz laden:
+  zwei Abstürze des Browsers unter Speicherdruck (Wikipedia, Heap fast
+  voll): `_dom_html_document_initialise` (libdom html_document.c:184, Zeiger
+  zeigt auf Text) und `_gettimeofday_r` (Schreiben an Adresse 8) → BR2.
 - [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
   Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
   mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.

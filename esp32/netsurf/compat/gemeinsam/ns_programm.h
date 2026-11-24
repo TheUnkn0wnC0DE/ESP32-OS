@@ -43,5 +43,23 @@ static inline char *ns_strdup(const char *s)
 #define free kos_free
 #define exit kos_exit
 #define strdup ns_strdup
+#if defined(__riscv)
+/* BR1: strndup der newlib legte im Systemheap an (kleine Blöcke im knappen
+ * internen RAM). llcache kopiert so jede Kopfzeile jedes Abrufs (Name und
+ * Wert); beim Zwangsbeenden des Browsers blieben sie liegen – über ein paar
+ * Seiten bis 0 KB interner RAM. Jetzt aus dem Heap des Programms. (PC:
+ * NetSurf bringt strndup in utils/utils.c mit, dort über malloc.) */
+static inline char *ns_strndup(const char *s, size_t n)
+{
+	size_t l = strnlen(s, n);
+	char *d = (char *)kos_malloc(l + 1);
+	if (d != NULL) {
+		memcpy(d, s, l);
+		d[l] = '\0';
+	}
+	return d;
+}
+#define strndup ns_strndup
+#endif
 
 #endif

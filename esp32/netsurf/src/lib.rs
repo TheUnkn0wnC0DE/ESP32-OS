@@ -63,6 +63,12 @@ pub fn programm() {
     // SAFETY: NetSurf läuft noch nicht; andere Programme lesen die
     // Umgebung nicht.
     unsafe { std::env::set_var("LANGUAGE", kern::sprache::kuerzel(kern::sprache::aktuell())) };
+    // Entwicklung (BR1-Lecksuche): Build mit ESP32OS_JS_AUS – Browser ohne
+    // JavaScript (c/flaeche_esp32os.c liest NS_JS_AUS)
+    if option_env!("ESP32OS_JS_AUS").is_some() {
+        // SAFETY: wie oben, NetSurf läuft noch nicht.
+        unsafe { std::env::set_var("NS_JS_AUS", "1") };
+    }
     // SAFETY: Aufruf im Programmfaden, einzige Instanz (oben geprüft).
     if unsafe { ns_programm_daten_start() } == 0 {
         kern::sys::debug_text("browser: statische Daten nicht gesichert (Rahmen leer oder kein Speicher)\n");

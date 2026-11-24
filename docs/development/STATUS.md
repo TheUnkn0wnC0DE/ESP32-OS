@@ -19,7 +19,10 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
   Liste begann von vorn. Ursache in Arbeit (geschlossene Verbindungen 120 s
   in TIME_WAIT, Empfangspuffer); Gegenmassnahmen: TIME_WAIT 10 s, neue
   Verbindungen nur mit 32 KB Reserve. Ergebnis: kein Abbruch mehr (6 Seiten
-  am Stück); das Leck je Browser-Sitzung bleibt (Suche läuft, Stand PLAN BR1).
+  am Stück). **Leck gefunden und behoben:** NetSurf kopierte jede
+  Kopfzeile mit dem strndup der C-Laufzeit in den internen RAM; jetzt bleibt
+  der interne RAM nach jeder Seite bei 88–89 KB. Neu sichtbar: zwei Abstürze
+  des Browsers unter Speicherdruck (libdom, gettimeofday) – als Nächstes.
   Arbeitsnotiz: während der Heap-Spur-Läufe steht in
   `esp32/firmware/sdkconfig.defaults` vorübergehend
   CONFIG_HEAP_TRACING_STANDALONE=y – nie so committen (git checkout der

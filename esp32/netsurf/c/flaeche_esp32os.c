@@ -662,6 +662,9 @@ int ns_esp32os_main(const char *url)
 	static char breite[12], hoehe[12];
 	static char *argv[] = { "netsurf", "--enable_javascript=1", "-f", "esp32os", "-b", "16", "-w", breite, "-h", hoehe, NULL, NULL };
 	int b, h;
+	/* Entwicklung (BR1): ohne JavaScript, wenn NS_JS_AUS gesetzt */
+	if (getenv("NS_JS_AUS") != NULL)
+		argv[1] = "--enable_javascript=0";
 	/* Abrufe eines früheren (z. B. zwangsbeendeten) Browsers verwerfen */
 	ns_transport_neue_sitzung();
 	_nsfb_register_surface(NSFB_SURFACE_ABLE, &esp32os_rtns, "esp32os");
