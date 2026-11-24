@@ -9,6 +9,15 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **Board kann abgesteckt werden** (24.11., 06:14). Release v1.0.2
+  veröffentlicht (https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/tag/v1.0.2),
+  Web-Flasher bleibt auf 1.0.1. Auf dem Board: saubere v1.0.2-Abbilder aus
+  dem Release (esp32os, Doom, Quake; ohne Entwicklungsschalter), per Kabel
+  geschrieben, Einstellungen und WLAN erhalten; Start aus esp32os_a,
+  Desktop, WLAN verbunden (geprüft 06:13).
+- Ohne Board weiter: nur PC-Arbeit (Browser-Abstürze BR2 sind behoben und
+  per PC-Test geprüft, Board-Nachweis folgt, wenn das Board zurück ist).
+
 - Erledigt: **A1** Quake „New Game“ (PAK-Grösse falsch, progs.dat las
   Nullen) und **A2** Tastatur-Rückmeldung (Nachweise `docs/nachweise/v102/`).
 - **Teil A fertig** (A1, A2, A3): v1.0.2 vorbereitet, wartet auf dein OK
@@ -35,7 +44,8 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Offene Fragen
 
-- **OK für das Release v1.0.2?** Fertig vorbereitet (`release/v1.0.2/`,
+- ~~OK für das Release v1.0.2?~~ Erledigt: OK erhalten, veröffentlicht 24.11.
+  (alter Text:) Fertig vorbereitet (`release/v1.0.2/`,
   Text `docs/release/v1.0.2.md`, Prüfungen grün): Quake „New Game“,
   Tastatur-Rückmeldung, Browser reisst die Firmware nicht mehr mit.
   Veröffentlichen (Tag, Release, danach Web-Flasher von main) mache ich
