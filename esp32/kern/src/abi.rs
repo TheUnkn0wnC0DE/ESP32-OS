@@ -181,9 +181,14 @@ unsafe fn dispatch(r: &mut Regs) {
                         let mut info = [0u8; 40];
                         if crate::datei::info(&pfad, &mut info) == 0 {
                             let n = u64::from_le_bytes([info[32], info[33], info[34], info[35], info[36], info[37], info[38], info[39]]) as usize;
-                            let mut b = vec![0u8; n];
-                            crate::datei::lesen(&pfad, 0, &mut b);
-                            crate::zeiger::cur_lesen(&b)
+                            // M3: Zeigerdateien sind klein (≤ 64 KB), nur mit Reserve
+                            match (n <= 64 * 1024).then(|| crate::prozess::system_puffer(n)).flatten() {
+                                Some(mut b) => {
+                                    crate::datei::lesen(&pfad, 0, &mut b);
+                                    crate::zeiger::cur_lesen(&b)
+                                }
+                                None => None,
+                            }
                         } else {
                             None
                         }

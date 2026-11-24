@@ -50,6 +50,9 @@ pub struct Plattform {
     /// Belegungen für Programme (Fensterpuffer) prüfen damit vorher, statt
     /// bei vollem Speicher die ganze Firmware abzubrechen.
     pub system_frei: fn() -> usize,
+    /// Freier interner RAM in Bytes (Board: den brauchen WLAN, lwIP und TLS).
+    /// M3: neue Netzverbindungen nur mit Reserve.
+    pub intern_frei: fn() -> usize,
 }
 
 #[cfg(not(target_os = "espidf"))]
@@ -123,6 +126,12 @@ mod pc {
         crate::grafik::TEST_SYSTEM_FREI.load(core::sync::atomic::Ordering::Relaxed)
     }
 
+    /// PC: unbegrenzt, ausser ein Test setzt eine Grenze
+    /// ([`crate::netz::TEST_INTERN_FREI`]).
+    fn intern_frei() -> usize {
+        crate::netz::TEST_INTERN_FREI.load(core::sync::atomic::Ordering::Relaxed)
+    }
+
     fn layout(n: usize) -> Layout {
         Layout::from_size_align(n, 64).expect("Bereichsgrösse")
     }
@@ -147,6 +156,7 @@ mod pc {
         task_weg: weg,
         task_freigeben: freigeben,
         system_frei,
+        intern_frei,
         // Std-Threads lassen sich nicht von aussen anhalten
         task_anhalten: None,
         task_fortsetzen: fortsetzen,

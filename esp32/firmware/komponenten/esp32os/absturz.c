@@ -18,13 +18,49 @@
 
 #define MERKER 0x4F534352u /* "OSCR" */
 
+/* M1: Speicherstand (KB) und Laufzeit (s) – laufend von der Speicherwacht
+ * (speicherwacht.rs, jede Sekunde), beim Absturz in den Merker kopiert */
+typedef struct {
+    uint32_t intern, intern_block, psram, psram_block, sekunden;
+} speicherstand_t;
+
 typedef struct {
     uint32_t merker;
     char name[24];
     char grund[64];
+    uint32_t stand_gueltig;
+    speicherstand_t stand;
 } absturz_t;
 
 RTC_NOINIT_ATTR static absturz_t absturz;
+/* nicht im RTC: nach jedem Start neu (Wert vom letzten Lauf zählt nicht) */
+static volatile speicherstand_t stand;
+static volatile uint32_t stand_da;
+
+void esp32os_speicher_merken(uint32_t intern, uint32_t intern_block, uint32_t psram, uint32_t psram_block, uint32_t sekunden)
+{
+    stand.intern = intern;
+    stand.intern_block = intern_block;
+    stand.psram = psram;
+    stand.psram_block = psram_block;
+    stand.sekunden = sekunden;
+    stand_da = 1;
+}
+
+/* Speicherstand beim letzten Absturz (vor esp32os_absturz_holen lesen).
+ * 1 = vorhanden. */
+int esp32os_absturz_speicher(uint32_t* aus)
+{
+    if (absturz.merker != MERKER || absturz.stand_gueltig != MERKER) {
+        return 0;
+    }
+    aus[0] = absturz.stand.intern;
+    aus[1] = absturz.stand.intern_block;
+    aus[2] = absturz.stand.psram;
+    aus[3] = absturz.stand.psram_block;
+    aus[4] = absturz.stand.sekunden;
+    return 1;
+}
 
 extern void __real_esp_panic_handler(panic_info_t* info);
 
@@ -44,6 +80,16 @@ void __wrap_esp_panic_handler(panic_info_t* info)
     const char* n = pcTaskGetName(NULL);
     kopieren(absturz.name, sizeof absturz.name, n ? n : "?");
     kopieren(absturz.grund, sizeof absturz.grund, info && info->reason ? info->reason : "?");
+    if (stand_da) {
+        absturz.stand.intern = stand.intern;
+        absturz.stand.intern_block = stand.intern_block;
+        absturz.stand.psram = stand.psram;
+        absturz.stand.psram_block = stand.psram_block;
+        absturz.stand.sekunden = stand.sekunden;
+        absturz.stand_gueltig = MERKER;
+    } else {
+        absturz.stand_gueltig = 0;
+    }
     absturz.merker = MERKER;
     __real_esp_panic_handler(info);
 }

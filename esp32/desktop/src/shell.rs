@@ -195,8 +195,17 @@ pub fn spieldaten_hinweis(id: konsole::SpielId, unbrauchbar: bool) -> (&'static 
     (kern::sprache::t("Game data missing", "Spieldaten fehlen"), text)
 }
 
+/// Startknopf bei offenem Menü: das Menü schliesst sich (Umschalten wie in
+/// anderen Systemen; vorher blieb es offen – Autopilot und Nutzer mussten
+/// eine freie Stelle des Desktops treffen).
+static MENUE_ZU: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
 /// Programm starten (wie Funktion 70.7 mit /sys/<name>).
 pub fn starten(programm: &str) {
+    if programm == "@menu" && kern::liste().iter().any(|p| p.name == "@menu") {
+        MENUE_ZU.store(true, core::sync::atomic::Ordering::Relaxed);
+        return;
+    }
     match programm {
         p if p.starts_with("@spiel_") => {
             let id = match &p[7..] {
@@ -754,7 +763,12 @@ pub fn menu() {
     };
     let eigen = kern::eigene_tid();
     let mut gezeigt = false;
+    MENUE_ZU.store(false, core::sync::atomic::Ordering::Relaxed);
     loop {
+        // Startknopf noch einmal gedrückt: zu
+        if MENUE_ZU.swap(false, core::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
         match sys::warte_ereignis_max(10) {
             1 => {
                 zeichnen();

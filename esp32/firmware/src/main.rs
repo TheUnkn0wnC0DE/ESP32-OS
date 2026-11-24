@@ -41,6 +41,14 @@ use pudding_fw::quake_board;
 #[global_allocator]
 static ALLOC: kern::KernAlloc = kern::KernAlloc;
 
+/// Autopilot (eingespielte Berührungen, Entwicklung): aus der Datei
+/// `ESP32OS_AUTOPILOT_DATEI` (lange Abläufe – eine Umgebungsvariable darf
+/// unter Windows höchstens 32767 Zeichen haben) oder `ESP32OS_AUTOPILOT`.
+#[cfg(esp32os_autopilot_datei)]
+const AUTOPILOT: Option<&str> = Some(include_str!(env!("ESP32OS_AUTOPILOT_PFAD")));
+#[cfg(not(esp32os_autopilot_datei))]
+const AUTOPILOT: Option<&str> = option_env!("ESP32OS_AUTOPILOT");
+
 const MESSLAUF: bool = option_env!("KONSOLE_AUTOPILOT").is_some() || option_env!("KONSOLE_RUNDGANG").is_some();
 
 fn main() {
@@ -222,7 +230,7 @@ fn main() {
         }
         // Autopilot-Builds tippen direkt (Touchpad-Modus nur für diesen Lauf
         // aus, die gespeicherte Einstellung bleibt unverändert)
-        if option_env!("ESP32OS_AUTOPILOT").is_some() {
+        if AUTOPILOT.is_some() {
             desktop::konfig::TOUCHPAD_GESPERRT.store(true, core::sync::atomic::Ordering::Relaxed);
             kern::sys::eingabe::touchpad_setzen(false);
             log::warn!("Autopilot: Touchpad-Modus für diesen Lauf aus");
@@ -233,7 +241,11 @@ fn main() {
         // WLAN über den C6 (Block D) im Hintergrund; die Bildpuffer lassen
         // ihm internen RAM übrig (siehe hw::INTERN_RESERVE)
         hw::INTERN_RESERVE.store(pudding_fw::wlan::INTERN_RESERVE, core::sync::atomic::Ordering::Relaxed);
+        // M2: Desktop – Bildstreifen der Anzeige in den PSRAM
+        hw::PIXEL_INTERN.store(false, core::sync::atomic::Ordering::Relaxed);
         pudding_fw::wlan::im_hintergrund_starten();
+        // M1: Speicherwacht (Log alle 30 s, Stand für die Absturzmeldung)
+        pudding_fw::speicherwacht::starten();
         // JPEG über die Hardware-Einheit (P2); progressiv → Software
         kolibri::dekoder::jpeg_hw_setzen(pudding_fw::jpeg::dekodieren);
         #[cfg(esp32os_testbilder)]
@@ -413,7 +425,7 @@ fn main() {
             }
             log::info!("ESP32-OS-Desktop startet ({prog})");
             let mut d = desktop::Desktop::neu(|| hw::now_us() as u64);
-            if let Some(a) = option_env!("ESP32OS_AUTOPILOT") {
+            if let Some(a) = AUTOPILOT {
                 d.autopilot(a);
             }
             (SpielId::Konsole, Box::new(d) as Box<dyn Spiel>)
@@ -555,7 +567,7 @@ fn main() {
                 }
             }
             // Autopilot-Builds: nur die eingespielten Berührungen zählen
-            if option_env!("ESP32OS_AUTOPILOT").is_none() {
+            if AUTOPILOT.is_none() {
                 let mut i = 0;
                 for p in roh.into_iter().flatten() {
                     if let Some(slot) = input.touch.get_mut(i) {

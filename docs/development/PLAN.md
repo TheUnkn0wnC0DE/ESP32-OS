@@ -1344,20 +1344,82 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   nach dem Neustart). Zuerst eine Tabelle: was verbraucht wie viel internen
   RAM (WLAN, lwIP, TLS, Tasks/Stapel, Treiber, Kern, Programme).
   Nachweis: Log-Auszug, Tabelle in PLAN.
+  Gebaut (24.11., ohne Board): Speicherwacht (`firmware/src/
+  speicherwacht.rs`) – jede Sekunde Stand in den Absturzmerker, alle 30 s
+  eine Logzeile `SPEICHER t=… intern frei … (Block, Min) PSRAM frei … |
+  Programm belegt/Heap (Spitze)`; nach einem Absturz nennt die Meldung den
+  Speicherstand der letzten Sekunde (`absturz.c`, `absturz.rs`).
+  Mess-Build für die Tabelle (`werkzeuge/board/m1_lauf.ps1`, schaltet
+  CONFIG_HEAP_TASK_TRACKING und CONFIG_FREERTOS_USE_TRACE_FACILITY nur
+  vorübergehend ein, stellt sdkconfig.defaults byte-genau wieder her):
+  Tasks mit Lage des Stapels (intern/PSRAM) und Rest, Heap je Task,
+  interne Heap-Bereiche – nach 40 s (Ruhe) und unter Last (`speicherbericht.c`).
+  Am PC gebaut (normal und Mess-Build). Tabelle folgt am Board.
+  Statisch (ELF, PC): IRAM-Code 116 KB, IRAM-Daten 12 KB, DRAM-Daten 22 KB,
+  BSS 17 + 33 KB = 199 KB; die 33 KB waren Variablen der C-Programme
+  (Shell-Befehlsgeschichte 22,5 KB u. a.) → per Linker-Fragment
+  (`kolibri/kolibri_c/linker.lf`) in den PSRAM: 166 KB statisch.
+  Board, Messlauf 1 (24.11., Stabilitäts-Autopilot): Start 331 KB intern
+  frei (Block 183); nach dem WLAN-Start 84 KB (Anzeige-Pipeline startet
+  gleichzeitig); unter Last 86 KB frei, grösster Block nur 29 KB, Minimum
+  59 KB; PSRAM 10,4–12,5 MB frei, Minimum 3–4 MB. 15 von 26 Tasks mit
+  internem Stapel (render1 12,7 KB ungenutzt, pthread 11,4, sichern 7,3,
+  touch 5, main 5, esp_timer 3,8, wachhund 3,5, audio 3,3). Interner Bereich
+  256 KB zu 99 % belegt in 382 Blöcken. render1 hält 125 KB (Bildstreifen).
+  Dabei gefunden: (a) Autopilot-Umgebungsvariable zu lang (Windows-Grenze
+  32767 Zeichen) → Autopilot jetzt als Datei (`ESP32OS_AUTOPILOT_DATEI`);
+  (b) der „freie“ Tipp zum Schliessen des Menüs traf am Board ein
+  Desktop-Symbol (Quake, Neustart ins Spiel – kein Absturz) → der
+  Startknopf schliesst das offene Menü jetzt (Umschalten), der Autopilot
+  tippt nicht mehr auf den Desktop; (c) die Ersteinrichtung startet am Board
+  bei jedem Start (Merker „setup“ fehlt). Messlauf 2 (Heap je Task intern/
+  PSRAM): der neue Berichtsteil stürzte im Mess-Build ab (Namen beendeter
+  Tasks gelesen) – dabei am Board bewiesen, dass die Absturzmeldung jetzt
+  den Speicherstand nennt („Absturz von „speicherwacht“: Load access fault
+  – Speicher: intern 84 KB frei (Block 29 KB), PSRAM 11501 KB …“). Behoben
+  (nur lebende Tasks benannt), Messlauf 3 läuft. Nächster Schritt (M2):
+  Bildstreifen der Anzeige im Desktop-Modus in den PSRAM (render1 hält
+  125 KB intern; Spiele starten ohnehin neu in ihren eigenen Modus).
 - [ ] **M2 Interner RAM so leer wie möglich** – alles ins PSRAM, was nicht
   zwingend intern sein muss (WLAN- und lwIP-Puffer, mbedTLS, Stapel wo
   sicher, Kern-Strukturen, Puffer der Programme); grosse Puffer
   (Bildpuffer, Fenster, Schriften) einmal beim Start reservieren. Ziel:
   auch unter Last (Browser + mehrere Programme) dauerhaft ≥ 100 KB intern
   frei. Nachweis: ehrlicher Messwert in PLAN.
+  Tabelle (M1, Messlauf 3, 40 s nach Start, intern belegt je Task):
+  main 223 KB (Anzeige-Pipeline Kern 0, Stapel der von main gestarteten
+  Tasks, Treiber), render1 63 KB (Bildstreifen Kern 1), ipc0 45 KB
+  (Start), pthread 22 KB (WLAN/lwIP, 154 kleine Blöcke), sonst < 5 KB je
+  Task; statisch 166 KB (IRAM-Code 116, Daten/BSS 50).
+  Schritt 1 (24.11.): Bildstreifen der Anzeige im Desktop-Modus in den
+  PSRAM (`hw::PIXEL_INTERN`; Spiele starten neu in ihren Modus und behalten
+  die internen). Board-Messlauf m2a (Stabilitäts-Autopilot, Browser,
+  Programme): **intern frei unter Last 206–208 KB (vorher 86), grösster
+  Block 71 KB (vorher 29), Minimum seit Start 131 KB (vorher 59)**, 0
+  Abstürze, Desktop 32,8 FPS (vorher ~32). PSRAM-Minimum 2,9 MB (Browser) –
+  Thema für M6. Ziel ≥ 100 KB erreicht; Bestätigung im Dauertest M4.
 - [ ] **M3 Feste Speichergrenzen** – jedes Programm ein festes Budget,
   aufgebraucht → nur dieses Programm endet („Speicher voll“); neue
   Netzverbindungen nur mit genug internem RAM; kein Programm lässt das
   System wegen vollem Speicher abstürzen. Nachweis: PC-Tests, Board-Lauf.
+  Gebaut (24.11.): Budgets je Programm gibt es (feste Heaps); neu: ist der
+  Heap voll, bedient das System am Board nur noch kleine Notbelegungen
+  (≤ 64 KB, höchstens 64, nur bei ≥ 512 KB freiem System-Heap) – sonst
+  endet das Programm sofort mit „Speicher voll“ (vorher jede Grösse aus dem
+  System → konnte den System-Heap leeren). Puffer, die Programme anfordern,
+  nur noch mit Reserve und ohne Abbruch: Fenster (neu, Maximieren, Grösse
+  ändern), Bildpunkt-Abfrage, Hintergrundbild (bis 16 MB), Zeigerdatei.
+  Netz: neue TCP-Verbindung eines Programms nur mit ≥ 48 KB internem RAM
+  (sonst ENOMEM; Kern-Test `kern/tests/netz.rs`), der Browser hatte schon
+  32 KB Reserve und begrenzt seine Puffer (Fehlerbericht).
 - [ ] **M4 Dauertest** – Autopilot ≥ 60 min: alle Programme öffnen und
   schliessen, Menü oft auf/zu, Browser mit vielen Seiten nacheinander,
   Startknopf („Home“) aus dem Browser. Freier interner RAM am Ende = am
   Anfang (sonst Leck), 0 Abstürze. Nachweis: Log, Auswertung.
+  Vorbereitet (24.11.): PC-Test `stabil.rs` mit Startknopf aus dem Browser
+  (Menü auf, zu) erzeugt `dauertest_autopilot.txt` (10 Runden à 430 s =
+  71 min); `werkzeuge/board/m4_lauf.ps1` zählt Abstürze und vergleicht den
+  freien internen RAM bei t=20 s mit der letzten Speicherzeile (Leck).
 - [ ] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
 - [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5) –
   intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM

@@ -26,7 +26,8 @@ function Umgebung-Leeren {
 }
 
 Umgebung-Leeren
-$env:ESP32OS_AUTOPILOT = (Get-Content "$PSScriptRoot\stabil_autopilot.txt" -Raw).Trim()
+# als Datei (eine Umgebungsvariable wäre zu lang, max. 32767 Zeichen)
+$env:ESP32OS_AUTOPILOT_DATEI = (Resolve-Path "$PSScriptRoot\stabil_autopilot.txt").Path
 $sek = $Minuten * 60
 $env:KONSOLE_BILDER = ((1..([int]($Minuten / 10))) | ForEach-Object { $_ * 600 }) -join ','
 & powershell -NoProfile -File "$esp32\firmware\bauen_flashen.ps1" -Nur esp32os -Port $Port -Anhalten *> "$Ziel\bau.log"

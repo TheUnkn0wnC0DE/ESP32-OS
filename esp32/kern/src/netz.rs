@@ -222,6 +222,20 @@ fn lauschen_innen(nr: u32, _rueckstau: u32) -> Result<(), u32> {
 }
 
 /// 75.4 Verbinden.
+/// M3: so viel interner RAM muss frei sein, damit ein Programm eine neue
+/// TCP-Verbindung aufbauen darf (lwIP- und WLAN-Puffer kommen von dort).
+pub const NETZ_RESERVE_INTERN: usize = 48 * 1024;
+
+/// PC-Tests: freien internen RAM vortäuschen (Plattform `PC`,
+/// `intern_frei`); Standard unbegrenzt.
+pub static TEST_INTERN_FREI: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(usize::MAX);
+
+fn intern_reicht() -> bool {
+    // Testwert gilt auch ohne kern::init (Netz-Tests)
+    let frei = crate::prozess::intern_frei().min(TEST_INTERN_FREI.load(std::sync::atomic::Ordering::Relaxed));
+    frei >= NETZ_RESERVE_INTERN
+}
+
 fn verbinden_innen(nr: u32, a: SocketAddrV4) -> Result<(), u32> {
     let s = holen(nr)?;
     if s.typ == SOCK_DGRAM {
@@ -234,6 +248,10 @@ fn verbinden_innen(nr: u32, a: SocketAddrV4) -> Result<(), u32> {
     }
     if inhalt(&s).tcp.is_some() {
         return Err(EISCONN);
+    }
+    if !intern_reicht() {
+        crate::sys::debug_text("Netz: zu wenig interner RAM für eine neue Verbindung");
+        return Err(ENOMEM);
     }
     let t = crate::kern_abschnitt(|| TcpStream::connect_timeout(&a.into(), VERBINDEN_MAX).map(Arc::new)).map_err(|e| code(&e))?;
     let _ = t.set_nodelay(true);

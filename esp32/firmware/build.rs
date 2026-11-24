@@ -31,6 +31,16 @@ fn main() {
         println!("cargo:rustc-env=ESP32OS_C6_BILD={bild}");
         println!("cargo:rustc-cfg=esp32os_c6_ota");
     }
+    // Autopilot aus einer Datei (lange Abläufe: Umgebungsvariablen sind unter
+    // Windows auf 32767 Zeichen begrenzt; Stabilitätsrunde 66 KB)
+    println!("cargo:rustc-check-cfg=cfg(esp32os_autopilot_datei)");
+    println!("cargo:rerun-if-env-changed=ESP32OS_AUTOPILOT_DATEI");
+    if let Ok(p) = std::env::var("ESP32OS_AUTOPILOT_DATEI") {
+        assert!(std::path::Path::new(&p).exists(), "Autopilot-Datei {p} fehlt");
+        println!("cargo:rerun-if-changed={p}");
+        println!("cargo:rustc-env=ESP32OS_AUTOPILOT_PFAD={p}");
+        println!("cargo:rustc-cfg=esp32os_autopilot_datei");
+    }
     // Entwicklungs-Build mit Test-PDFs für den PDF-Betrachter (Z1-Nachweis)
     println!("cargo:rustc-check-cfg=cfg(esp32os_pdf_test)");
     println!("cargo:rerun-if-env-changed=ESP32OS_PDF_TEST");

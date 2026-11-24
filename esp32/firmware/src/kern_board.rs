@@ -187,7 +187,13 @@ pub static BOARD: Plattform = Plattform {
     bereich_frei: frei,
     panik_beendet_task: true,
     system_frei,
+    intern_frei,
 };
+
+fn intern_frei() -> usize {
+    // SAFETY: reine Abfrage der Heap-Verwaltung.
+    unsafe { sys::heap_caps_get_free_size(sys::MALLOC_CAP_INTERNAL) }
+}
 
 /// D5: vom Ausnahme-Handler (absturz.c) gefragt – darf der Fehler nur das
 /// Programm beenden? Im Handler: nur Atomics (siehe kern::hw_fehler_abfangen).

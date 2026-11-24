@@ -20,10 +20,10 @@ static A: KernAlloc = KernAlloc;
 
 /// Startknopf der Taskleiste.
 const START: (i32, i32) = (40, 340);
-/// Freie Stelle des Desktops (rechts der Symbole, über der Taskleiste).
-const FREI: (i32, i32) = (560, 200);
 /// Programme ohne eigenes Fenster (Ausgabe nur im Protokoll).
 const OHNE_FENSTER: &[&str] = &["http_tcp_demo", "netz_laden"];
+/// Runden des Dauertests M4 (≥ 60 min, `dauertest_autopilot.txt`).
+const RUNDEN_DAUER: usize = 10;
 /// Runden für den Board-Lauf (je Runde etwa 6½ min → 38 min).
 const RUNDEN: usize = 6;
 /// Beginn am Board: Desktop steht, WLAN verbunden.
@@ -118,8 +118,7 @@ fn programm(l: &mut Lauf, ordner: &str, programm: &str) {
         assert!(OHNE_FENSTER.contains(&programm), "{programm}: kein neues Fenster mit Kreuz (neu {neu:?})");
         let a = abstuerze();
         assert!(a.is_empty(), "{programm}: Abstürze {a:?}");
-        // Menü/Tastatur zu: freie Stelle antippen
-        l.tipp(FREI.0, FREI.1);
+        // das Menü hat sich beim Start geschlossen
         l.warte(1500);
         return;
     };
@@ -134,6 +133,17 @@ fn programm(l: &mut Lauf, ordner: &str, programm: &str) {
         for (fx, fy) in [(1, 3), (1, 2), (2, 3)] {
             l.tipp(rect.0 + rect.2 * fx / 3, rect.1 + rect.3 * fy / 4);
             l.warte(15_000);
+        }
+        // Startknopf („Home“) aus dem Browser (Fehlerbericht 24.11.): Menü
+        // auf, mit einem Tipp in den Browser wieder zu – zwei Mal
+        for _ in 0..2 {
+            let vorher = fenster_slots().len();
+            l.tipp(START.0, START.1);
+            l.warte(1500);
+            assert!(fenster_slots().len() > vorher, "Menü aus dem Browser");
+            l.tipp(rect.0 + rect.2 / 2, rect.1 + rect.3 / 2);
+            l.warte(2000);
+            assert!(!sys::fenster_liste().iter().any(|f| f.titel == "@menu"), "Menü zu");
         }
     }
     let (kreuz, _, _) = kreuz_und_titel(slot).map_or((kreuz, titelpunkt, rect), |k| k);
@@ -166,17 +176,18 @@ fn menue_auf_zu(l: &mut Lauf, n: usize) {
         l.tipp(START.0, START.1);
         l.warte(800);
         assert!(fenster_slots().len() > vorher, "Menü öffnet nicht");
-        // schliessen wie ein Mensch: freie Stelle des Desktops antippen
-        l.tipp(FREI.0, FREI.1);
+        // Startknopf noch einmal: Menü zu (unabhängig von der Lage der
+        // Desktop-Symbole – am Board traf die „freie Stelle“ ein Symbol)
+        l.tipp(START.0, START.1);
         l.warte(800);
         assert_eq!(fenster_slots().len(), vorher, "Menü schliesst nicht");
     }
 }
 
-fn board_autopilot(schritte: &[Schritt]) -> String {
+fn board_autopilot(schritte: &[Schritt], runden: usize) -> String {
     let mut ev = Vec::new();
     let mut t = BEGINN_MS;
-    for _ in 0..RUNDEN {
+    for _ in 0..runden {
         for s in schritte {
             match *s {
                 Schritt::Tipp(x, y) => {
@@ -228,7 +239,7 @@ fn stabilitaetsrunde() {
     }
     programm(&mut l, "system", "taskmanager");
     menue_auf_zu(&mut l, 5);
-    let ap = board_autopilot(&l.schritte);
+    let ap = board_autopilot(&l.schritte, RUNDEN);
     let dauer: u64 = l.schritte.iter().map(|s| match s {
         Schritt::Tipp(..) => 300,
         Schritt::Ziehen(..) => 900,
@@ -236,9 +247,12 @@ fn stabilitaetsrunde() {
     }).sum();
     eprintln!("Runde am Board: {} s, {RUNDEN} Runden = {} min, {} Ereignisse", dauer / 1000, dauer * RUNDEN as u64 / 60_000, ap.split(',').count());
     assert!(dauer * RUNDEN as u64 >= 30 * 60_000, "Board-Lauf unter 30 min");
+    assert!(dauer * RUNDEN_DAUER as u64 >= 60 * 60_000, "Dauertest unter 60 min");
+    eprintln!("Dauertest: {RUNDEN_DAUER} Runden = {} min", dauer * RUNDEN_DAUER as u64 / 60_000);
     if std::env::var_os("STABIL_AUTOPILOT_NEU").is_some() {
-        let ziel = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../werkzeuge/board/stabil_autopilot.txt");
-        std::fs::create_dir_all(ziel.parent().unwrap()).unwrap();
-        std::fs::write(&ziel, &ap).unwrap();
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../werkzeuge/board");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("stabil_autopilot.txt"), &ap).unwrap();
+        std::fs::write(dir.join("dauertest_autopilot.txt"), board_autopilot(&l.schritte, RUNDEN_DAUER)).unwrap();
     }
 }

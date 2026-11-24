@@ -49,6 +49,10 @@ fn region_von(p: *const u8) -> Option<&'static Heap> {
 // dem System bedient (das Programm endet bei der nächsten Systemfunktion).
 // Diese Blöcke werden hier je Programm geführt und beim Aufräumen freigegeben.
 const MAX_NOT: usize = 64;
+/// M3: grösste Notbelegung aus dem System für ein Programm mit vollem Heap.
+const NOT_MAX_BELEGUNG: usize = 64 * 1024;
+/// M3: so viel System-Heap (grösster Block) bleibt bei Notbelegungen frei.
+const NOT_RESERVE: usize = 512 * 1024;
 static NOT_PTR: [AtomicUsize; MAX_NOT] = [const { AtomicUsize::new(0) }; MAX_NOT];
 static NOT_GROESSE: [AtomicUsize; MAX_NOT] = [const { AtomicUsize::new(0) }; MAX_NOT];
 static NOT_ALIGN: [AtomicUsize; MAX_NOT] = [const { AtomicUsize::new(0) }; MAX_NOT];
@@ -141,6 +145,20 @@ unsafe impl GlobalAlloc for KernAlloc {
                 (*f).speicher_voll.set(true);
                 (*f).pid
             };
+            // M3 (feste Grenzen): nur kleine Notbelegungen und nur, solange
+            // der System-Heap Reserve hat – eine grosse Belegung (Bild im
+            // Browser) leerte sonst den System-Heap und das ganze System
+            // stürzte ab. Dann endet das Programm sofort (nur auf
+            // Plattformen ohne Abwickeln: der Faden hält dort einfach an).
+            let pl = PL.load(Ordering::Acquire);
+            // SAFETY: PL zeigt auf eine `'static`-Plattform.
+            if !pl.is_null() && unsafe { (*pl).panik_beendet_task } {
+                // SAFETY: wie oben.
+                let frei = unsafe { ((*pl).system_frei)() };
+                if l.size() > NOT_MAX_BELEGUNG || frei < l.size().saturating_add(NOT_RESERVE) || NOT_ANZ.load(Ordering::Acquire) >= MAX_NOT {
+                    crate::prozess::beende_selbst(crate::prozess::Ende::SpeicherVoll);
+                }
+            }
             // SAFETY: gültiges Layout laut Vertrag.
             let p = unsafe { System.alloc(l) };
             if !p.is_null() {

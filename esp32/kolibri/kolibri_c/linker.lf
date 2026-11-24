@@ -1,0 +1,13 @@
+# M2 (interner RAM so leer wie möglich): Variablen ohne Startwert der
+# KolibriOS-C-Programme (.bss, z. B. die Befehlsgeschichte der Shell mit
+# 22 KB) in den PSRAM statt in den internen RAM. Braucht
+# CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y (wie Doom).
+[scheme:kolibri_extram_bss]
+entries:
+    bss -> extern_ram
+    common -> extern_ram
+
+[mapping:kolibri_c]
+archive: libkolibri_c.a
+entries:
+    * (kolibri_extram_bss)

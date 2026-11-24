@@ -22,6 +22,7 @@ pub mod kern_board;
 pub mod pipeline;
 pub mod slots;
 pub mod speicher;
+pub mod speicherwacht;
 #[cfg(feature = "quake")]
 pub mod quake_board;
 pub mod store;

@@ -11,6 +11,23 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **24.11. abends: Board wieder angeschlossen** – Board-Tests laufen in der
+  Reihenfolge von Vorrang M. Läuft: M1 Messlauf (`m1_lauf.ps1`, Mess-Build
+  mit Stabilitäts-Autopilot, danach normale Firmware). Statisch (aus dem
+  ELF): Variablen der C-Programme jetzt im PSRAM – statischer interner RAM
+  199 → 166 KB. Erste Messung: unter Last nur 86 KB intern frei, grösster
+  Block 29 KB (Ziel ≥ 100 KB); grösster Brocken: Bildstreifen der Anzeige
+  (125 KB) – sie kommen im Desktop-Modus in den PSRAM. Der Startknopf
+  schliesst ein offenes Menü jetzt (der Autopilot traf vorher dein
+  Quake-Symbol). Hinweis: Die Ersteinrichtung startet bei dir bei jedem
+  Einschalten – einmal bis „Fertig“ durchtippen, dann nicht mehr.
+- M1-Tabelle (Messlauf 3, 40 s nach Start, intern belegt): main 223 KB,
+  render1 63 KB, ipc0 45 KB, pthread (WLAN/lwIP) 22 KB, Rest < 5 KB je Task.
+  Läuft (M2 Schritt 1): Bildstreifen im Desktop-Modus in den PSRAM
+  (`hw::PIXEL_INTERN`), Messlauf `m2a`. Nicht committet (Tests stehen aus):
+  Menü-Umschalter, Linker-Fragment der C-Programme, Autopilot als Datei,
+  Bericht je Task, PIXEL_INTERN.
+
 - **VORRANG seit 24.11. abends: Stabilität und Speicher (PLAN, Abschnitt
   M).** Teil C und D pausieren. Reihenfolge M1 Messen → M2 interner RAM
   leer → M3 feste Grenzen → M4 Dauertest 60 min → M5 v1.0.3 (dein OK) →
@@ -60,6 +77,11 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 - Neue Firmware kommt mit v1.0.3 (OK in „Offene Fragen“, sobald SB grün ist).
 
 ## Board-Tests (Reihenfolge, sobald das Board wieder da ist)
+
+**Zuerst (Vorrang M, Stabilität und Speicher):** M1 `m1_lauf.ps1 -Ziel
+…\m1` (Mess-Build, Tabelle der Verbraucher), dann nach den Umzügen ins PSRAM
+(M2) M4 `m4_lauf.ps1 -Ziel …\m4` (71 min, 0 Abstürze, interner RAM am Ende
+= Anfang). Danach v1.0.3 (M5) und erst dann die Liste unten (BR1, C, D).
 
 Jeder Test mit Nachweis in PLAN.md; Skripte im Repo unter
 `esp32/werkzeuge/board/` (`-Ziel` = Ordner für Log, Fotos, Auswertung;

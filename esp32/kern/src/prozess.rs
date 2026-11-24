@@ -155,9 +155,27 @@ fn sperre<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+/// Freier interner RAM (Plattform).
+pub(crate) fn intern_frei() -> usize {
+    KERN.get().map_or(usize::MAX, |k| (k.pl.intern_frei)())
+}
+
 /// Grösster freier Block des System-Heaps (Plattform).
 pub(crate) fn system_frei() -> usize {
     KERN.get().map_or(usize::MAX, |k| (k.pl.system_frei)())
+}
+
+/// M3: Puffer aus dem System-Heap für eine Anforderung eines Programms –
+/// nur, wenn danach noch [`crate::grafik::RESERVE`] frei bleibt, und ohne
+/// Abbruch bei fehlendem Speicher (None).
+pub(crate) fn system_puffer(n: usize) -> Option<Vec<u8>> {
+    if n.checked_add(crate::grafik::RESERVE)? > system_frei() {
+        return None;
+    }
+    let mut v = Vec::new();
+    v.try_reserve_exact(n).ok()?;
+    v.resize(n, 0);
+    Some(v)
 }
 
 /// Der eigene Faden soll mit „Speicher voll“ enden (bei der nächsten

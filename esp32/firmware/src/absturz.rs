@@ -5,15 +5,25 @@ use core::ffi::c_char;
 
 unsafe extern "C" {
     fn esp32os_absturz_holen(name: *mut c_char, nl: i32, grund: *mut c_char, gl: i32) -> i32;
+    fn esp32os_absturz_speicher(aus: *mut u32) -> i32;
 }
 
 /// (Programm/Task, Grund) des Absturzes vor dem letzten Neustart; der Merker
 /// wird dabei gelöscht.
 pub fn holen() -> Option<(String, String)> {
+    // M1: Speicherstand zur Zeit des Absturzes (letzte Sekunde) an den Grund
+    let mut st = [0u32; 5];
+    // SAFETY: Puffer mit 5 Werten.
+    let speicher = (unsafe { esp32os_absturz_speicher(st.as_mut_ptr()) } == 1).then(|| {
+        format!(
+            " – Speicher: intern {} KB frei (Block {} KB), PSRAM {} KB frei (Block {} KB), nach {} s",
+            st[0], st[1], st[2], st[3], st[4]
+        )
+    });
     let mut n = [0u8; 24];
     let mut g = [0u8; 64];
     // SAFETY: Puffer mit angegebener Länge.
     let da = unsafe { esp32os_absturz_holen(n.as_mut_ptr().cast(), 24, g.as_mut_ptr().cast(), 64) } == 1;
     let s = |b: &[u8]| String::from_utf8_lossy(&b[..b.iter().position(|&c| c == 0).unwrap_or(b.len())]).into_owned();
-    da.then(|| (s(&n), s(&g)))
+    da.then(|| (s(&n), format!("{}{}", s(&g), speicher.unwrap_or_default())))
 }

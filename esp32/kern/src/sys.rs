@@ -984,8 +984,18 @@ pub fn hintergrund(sub: u32, ecx: u32, edx: u32, daten: &[u8]) -> (u32, u32) {
                 let n = (ecx as usize).checked_mul(edx as usize).and_then(|p| p.checked_mul(3));
                 match n {
                     Some(n) if ecx <= 4096 && edx <= 4096 && n <= 16 << 20 => {
-                        w.hg_groesse = (ecx, edx);
-                        w.hg_daten = vec![0; n];
+                        // M3: altes Bild zuerst frei, neues nur mit Reserve
+                        w.hg_daten = Vec::new();
+                        match prozess::system_puffer(n) {
+                            Some(v) => {
+                                w.hg_groesse = (ecx, edx);
+                                w.hg_daten = v;
+                            }
+                            None => {
+                                w.hg_groesse = (0, 0);
+                                debug_text("Hintergrund: zu wenig Systemspeicher");
+                            }
+                        }
                     }
                     _ => {}
                 }

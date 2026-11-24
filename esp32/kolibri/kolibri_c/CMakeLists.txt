@@ -5,7 +5,8 @@ file(GLOB PROGS "${Q}/gen/*.c")
 # libcryptal (Brad Conte, gemeinfrei, unverändert) für TinyHashView
 set(CRYPTAL "${Q}/cryptal/md5.c" "${Q}/cryptal/sha1.c" "${Q}/cryptal/sha256.c")
 idf_component_register(SRCS "${Q}/libc_zusatz.c" "${Q}/shell_system.c" ${PROGS} ${CRYPTAL}
-                       INCLUDE_DIRS "../include")
+                       INCLUDE_DIRS "../include"
+                       LDFRAGMENTS "linker.lf")
 target_compile_options(${COMPONENT_LIB} PRIVATE
     -O2 -w -Wno-int-conversion -Wno-incompatible-pointer-types)
 set_source_files_properties("${Q}/libc_zusatz.c" PROPERTIES COMPILE_DEFINITIONS "KOLIBRI_LIBC_INTERN")

@@ -1,0 +1,79 @@
+//! M1 (Messen statt raten): Speicherwacht. Jede Sekunde den Speicherstand
+//! (frei und grösster Block, intern und PSRAM) in den Absturzmerker
+//! (`absturz.c`, nach einem Absturz steht er in der Meldung); alle 30 s eine
+//! Zeile ins Log mit den Tiefstständen seit dem Start und dem Verbrauch
+//! jedes laufenden Programms (dazu einmal bei t=20 s, Ausgangswert für M4). Mess-Build (`ESP32OS_SPEICHERBERICHT=30,600`
+//! Sekunden): zu diesen Zeiten der volle Bericht (`speicherbericht.c`).
+
+use esp_idf_svc::sys;
+use std::time::Duration;
+
+unsafe extern "C" {
+    fn esp32os_speicher_merken(intern: u32, intern_block: u32, psram: u32, psram_block: u32, sekunden: u32);
+    fn esp32os_speicherbericht();
+}
+
+/// Speicherstand in KB: (intern frei, intern Block, PSRAM frei, PSRAM Block).
+pub fn stand() -> (u32, u32, u32, u32) {
+    let kb = |caps: u32, block: bool| {
+        // SAFETY: reine Abfragen der Heap-Verwaltung.
+        (unsafe { if block { sys::heap_caps_get_largest_free_block(caps) } else { sys::heap_caps_get_free_size(caps) } } / 1024) as u32
+    };
+    (
+        kb(sys::MALLOC_CAP_INTERNAL, false),
+        kb(sys::MALLOC_CAP_INTERNAL, true),
+        kb(sys::MALLOC_CAP_SPIRAM, false),
+        kb(sys::MALLOC_CAP_SPIRAM, true),
+    )
+}
+
+/// Logzeile mit dem Stand und den Programmen (auch für Messläufe).
+pub fn zeile(sekunden: u64) -> String {
+    let (i, ib, p, pb) = stand();
+    // SAFETY: reine Abfragen.
+    let (imin, pmin) = unsafe {
+        (
+            sys::heap_caps_get_minimum_free_size(sys::MALLOC_CAP_INTERNAL) / 1024,
+            sys::heap_caps_get_minimum_free_size(sys::MALLOC_CAP_SPIRAM) / 1024,
+        )
+    };
+    let programme: Vec<String> = kern::liste()
+        .into_iter()
+        .map(|p| format!("{} {}/{} KB (Spitze {})", p.name, p.heap_belegt / 1024, p.heap_groesse / 1024, p.heap_spitze / 1024))
+        .collect();
+    format!(
+        "SPEICHER t={sekunden}s intern frei {i} KB (Block {ib}, Min {imin}) PSRAM frei {p} KB (Block {pb}, Min {pmin}) | {}",
+        programme.join(", ")
+    )
+}
+
+/// Speicherwacht starten (Faden mit Stapel im PSRAM).
+pub fn starten() {
+    let berichte: Vec<u64> = option_env!("ESP32OS_SPEICHERBERICHT")
+        .map(|s| s.split(',').filter_map(|t| t.trim().parse().ok()).collect())
+        .unwrap_or_default();
+    let ok = crate::update::psram_faden(c"speicherwacht", 6 * 1024, move || {
+        let beginn = crate::hw::now_us() as u64;
+        let mut n: u64 = 0;
+        loop {
+            let s = (crate::hw::now_us() as u64 - beginn) / 1_000_000;
+            let (i, ib, p, pb) = stand();
+            // SAFETY: speichert fünf Zahlen (absturz.c).
+            unsafe { esp32os_speicher_merken(i, ib, p, pb, s as u32) };
+            // alle 30 s; dazu t=20 s als Ausgangswert für den Dauertest
+            // (Desktop steht, WLAN da, Autopilot noch nicht begonnen)
+            if n % 30 == 0 || s == 20 {
+                log::info!("{}", zeile(s));
+            }
+            if berichte.contains(&s) {
+                // SAFETY: Bericht über Tasks und Heap (speicherbericht.c).
+                unsafe { esp32os_speicherbericht() };
+            }
+            n += 1;
+            std::thread::sleep(Duration::from_secs(1));
+        }
+    });
+    if !ok {
+        log::error!("Speicherwacht nicht gestartet");
+    }
+}

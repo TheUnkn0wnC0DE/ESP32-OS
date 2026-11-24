@@ -30,6 +30,14 @@ fn sockets() {
     assert!(s >= 1);
     netz::verbinden(s, lokal(port)).unwrap();
     assert_eq!(netz::verbinden(s, lokal(port)), Err(fehler::EISCONN));
+
+    // M3: zu wenig interner RAM → keine neue TCP-Verbindung (ENOMEM)
+    use std::sync::atomic::Ordering::Relaxed;
+    netz::TEST_INTERN_FREI.store(netz::NETZ_RESERVE_INTERN - 1, Relaxed);
+    let knapp = netz::oeffnen(netz::AF_INET4, netz::SOCK_STREAM, netz::IPPROTO_TCP).unwrap();
+    assert_eq!(netz::verbinden(knapp, lokal(port)), Err(fehler::ENOMEM));
+    netz::TEST_INTERN_FREI.store(usize::MAX, Relaxed);
+    netz::verbinden(knapp, lokal(port)).unwrap();
     let (mut gegen, _) = server.accept().unwrap();
     assert_eq!(netz::senden(s, b"GET / HTTP/1.0\r\n\r\n", 0), Ok(18));
     let mut b = [0u8; 18];

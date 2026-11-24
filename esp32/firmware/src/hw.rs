@@ -212,10 +212,20 @@ impl log::Log for UartLog {
 /// ganzen internen RAM, und der WLAN-Start blieb hängen (W1).
 pub static INTERN_RESERVE: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
 
+/// M2: Bildstreifen dürfen in den internen RAM (false im Desktop-Modus).
+pub static PIXEL_INTERN: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(true);
+
 /// Pixelpuffer (u16) für immer, 128-Byte-ausgerichtet (Cache-Zeile, DMA).
 /// `internal`: im schnellen internen RAM (nur, wenn danach noch
 /// [`INTERN_RESERVE`] frei bleibt), sonst im PSRAM.
 pub fn alloc_pixels(n: usize, internal: bool) -> Option<&'static mut [u16]> {
+    // M2: im Desktop-Modus keine Bildstreifen im internen RAM (Messung M1:
+    // 126 KB, intern nur noch 86 KB frei) – der Desktop zeichnet wenig neu;
+    // Spiele starten neu in ihren eigenen Modus und behalten die schnellen
+    // internen Streifen
+    if internal && !PIXEL_INTERN.load(core::sync::atomic::Ordering::Relaxed) {
+        return None;
+    }
     if internal {
         let reserve = INTERN_RESERVE.load(core::sync::atomic::Ordering::Relaxed);
         // SAFETY: reine Abfrage.
