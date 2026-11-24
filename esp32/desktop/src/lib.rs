@@ -404,6 +404,9 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
     eintrag!("netz_laden", kolibri::netz_laden, 256),
     eintrag!("passwordgen", kolibri::passwordgen, 256),
     eintrag!("thashview", kolibri::thashview, 512),
+    // C1: KolibriOS-Shell in der Konsole (console.obj nativ) und „Matrix“
+    eintrag!("shell", kolibri::shell, 1024),
+    eintrag!("matrix", kolibri::matrix, 256),
     // Browser (B1): NetSurf + QuickJS; Heap für Seiten, Bilder und die
     // JS-Laufzeit (Grenze 4 MB, netsurf/build.rs), Stapel für Layout und
     // JS (Grenze 192 KB). 10 MB: mehr lässt der PSRAM neben den Diensten
@@ -430,6 +433,8 @@ pub fn anwendungen() -> Vec<shell::Anwendung> {
             a("netz_laden", "Download test", "Download-Test", 50, false),
             a("passwordgen", "Password generator", "Passwort-Generator", 69, false),
             a("thashview", "Checksums", "Prüfsummen", 58, false),
+            a("shell", "Console", "Konsole", 2, false),
+            a("matrix", "Matrix", "Matrix", 70, false),
         ]);
     }
     // Spiele (S0, Auftrag 13.8): je ein Desktop-Symbol, im Startmenü im

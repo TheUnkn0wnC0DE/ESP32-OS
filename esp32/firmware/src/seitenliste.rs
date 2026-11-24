@@ -121,7 +121,7 @@ fn ablaufen(liste: &'static str, sek: u64) {
             log::error!("SEITE {}/{n}: Browser nicht gestartet ({r})", i + 1);
             continue;
         }
-        let ende_us = start_us + (sek - 3) * 1_000_000;
+        let ende_us = start_us + sek.saturating_sub(3) * 1_000_000;
         let jetzt = crate::hw::now_us() as u64;
         if ende_us > jetzt {
             std::thread::sleep(Duration::from_micros(ende_us - jetzt));

@@ -13,7 +13,80 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ksys.h>
+#include <conio.h>
 #include "kolibri_libc.h"
+
+/* ------------------------------------------------------------ Konsole (C1)
+ * console.obj nativ (kolibri::konsole, Rust). Die Zeiger der libc.obj-
+ * Schnittstelle zeigen auf die Rust-Funktionen; jede Konsole gehört dem
+ * Faden, der con_init aufruft. stdout/stderr gehen in die Konsole, sobald
+ * der Faden eine hat (wie libc.obj mit geladener console.obj). */
+int __stdcall kos_con_init(dword, dword, dword, dword, const char*);
+void __stdcall kos_con_exit(int);
+void __stdcall kos_con_set_title(const char*);
+void __stdcall kos_con_write_asciiz(const char*);
+void __stdcall kos_con_write_string(const char*, dword);
+dword __stdcall kos_con_get_flags(void);
+dword __stdcall kos_con_set_flags(dword);
+int __stdcall kos_con_get_font_height(void);
+int __stdcall kos_con_get_cursor_height(void);
+int __stdcall kos_con_set_cursor_height(int);
+int __stdcall kos_con_getch(void);
+word __stdcall kos_con_getch2(void);
+int __stdcall kos_con_kbhit(void);
+char* __stdcall kos_con_gets(char*, int);
+char* __stdcall kos_con_gets2(con_gets2_callback, char*, int);
+void __stdcall kos_con_cls(void);
+void __stdcall kos_con_get_cursor_pos(int*, int*);
+void __stdcall kos_con_set_cursor_pos(int, int);
+int __stdcall kos_con_get_input(char*, int);
+int __stdcall kos_konsole_da(void);
+
+static int __cdecl kos_con_printf(const char* fmt, ...)
+{
+    char buf[2048];
+    va_list ap;
+    va_start(ap, fmt);
+    int n = vsnprintf(buf, sizeof buf, fmt, ap);
+    va_end(ap);
+    if (n > 0) {
+        kos_con_write_string(buf, (dword)(n < (int)sizeof buf ? n : (int)sizeof buf - 1));
+    }
+    return n;
+}
+
+void(__stdcall* con_exit)(int) = kos_con_exit;
+void(__stdcall* con_set_title)(const char*) = kos_con_set_title;
+void(__stdcall* con_write_asciiz)(const char*) = kos_con_write_asciiz;
+void(__stdcall* con_write_string)(const char*, dword) = kos_con_write_string;
+int(__cdecl* con_printf)(const char*, ...) = kos_con_printf;
+dword(__stdcall* con_get_flags)(void) = kos_con_get_flags;
+dword(__stdcall* con_set_flags)(dword) = kos_con_set_flags;
+int(__stdcall* con_get_font_height)(void) = kos_con_get_font_height;
+int(__stdcall* con_get_cursor_height)(void) = kos_con_get_cursor_height;
+int(__stdcall* con_set_cursor_height)(int) = kos_con_set_cursor_height;
+int(__stdcall* con_getch)(void) = kos_con_getch;
+word(__stdcall* con_getch2)(void) = kos_con_getch2;
+int(__stdcall* con_kbhit)(void) = kos_con_kbhit;
+char*(__stdcall* con_gets)(char*, int) = kos_con_gets;
+char*(__stdcall* con_gets2)(con_gets2_callback, char*, int) = kos_con_gets2;
+void(__stdcall* con_cls)(void) = kos_con_cls;
+void(__stdcall* con_get_cursor_pos)(int*, int*) = kos_con_get_cursor_pos;
+void(__stdcall* con_set_cursor_pos)(int, int) = kos_con_set_cursor_pos;
+int(__stdcall* con_get_input)(char*, int) = kos_con_get_input;
+/* libc.obj: 1, sobald console.obj geladen ist – hier immer da */
+int __con_is_load = 1;
+
+int con_init_opt(dword wnd_width, dword wnd_height, dword scr_width, dword scr_height, const char* title)
+{
+    return kos_con_init(wnd_width, wnd_height, scr_width, scr_height, title);
+}
+
+/* libc.obj: Standardgrössen, Titel „Console app“ */
+int con_init(void)
+{
+    return con_init_opt((dword)-1, (dword)-1, (dword)-1, (dword)-1, "Console app");
+}
 
 /* libc.obj: printf auf das Debug-Board (Funktion 63.1). */
 void debug_printf(const char* fmt, ...)
@@ -34,6 +107,10 @@ static int konsole(FILE* f)
 
 static void konsole_schreiben(const char* p, size_t n)
 {
+    if (kos_konsole_da()) {
+        kos_con_write_string(p, (dword)n);
+        return;
+    }
     for (size_t i = 0; i < n; i++) {
         _ksys_debug_putc(p[i]);
     }
@@ -61,13 +138,14 @@ int kos_printf(const char* fmt, ...)
 int kos_puts(const char* s)
 {
     konsole_schreiben(s, strlen(s));
-    _ksys_debug_putc('\n');
+    konsole_schreiben("\n", 1);
     return 0;
 }
 
 int kos_putchar(int c)
 {
-    _ksys_debug_putc((char)c);
+    char z = (char)c;
+    konsole_schreiben(&z, 1);
     return (unsigned char)c;
 }
 
@@ -333,6 +411,10 @@ void kos_clearerr(FILE* f)
 
 int kos_fgetc(FILE* f)
 {
+    if (f == stdin && kos_konsole_da()) {
+        int c = kos_con_getch();
+        return c == 0 ? EOF : c;
+    }
     if (!eigen(f)) {
         return fgetc(f);
     }
@@ -342,6 +424,9 @@ int kos_fgetc(FILE* f)
 
 char* kos_fgets(char* s, int n, FILE* f)
 {
+    if (f == stdin && kos_konsole_da()) {
+        return kos_con_gets(s, n);
+    }
     if (!eigen(f)) {
         return fgets(s, n, f);
     }
@@ -516,4 +601,11 @@ int kos_socketpair(int* s1, int* s2)
     *s2 = (int)r.ebx;
     errno = 0;
     return 0;
+}
+
+/* libc.obj: itoa(Zahl, Puffer) – dezimal, mit Vorzeichen (C1, Shell) */
+char* kos_itoa(int n, char* s)
+{
+    sprintf(s, "%d", n);
+    return s;
 }

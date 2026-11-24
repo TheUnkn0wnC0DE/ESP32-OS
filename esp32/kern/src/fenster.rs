@@ -754,6 +754,7 @@ impl Welt {
         if f.stil == 4 || f.unbeweglich {
             return; // feste Grösse
         }
+        let vorher = f.vor_max;
         let (x, y, w, h) = match f.vor_max.take() {
             Some(v) => v,
             None => {
@@ -761,11 +762,17 @@ impl Welt {
                 (l, o, r - l + 1, u - o + 1)
             }
         };
+        // neuer Puffer nur, wenn der System-Heap reicht – sonst bleibt das
+        // Fenster, wie es ist (Fehlerbericht 24.11., grafik::Puffer::versuche)
+        let Some(buf) = Puffer::versuche(w as usize, h as usize, f.arbeit & 0xFF_FFFF, crate::prozess::system_frei()) else {
+            f.vor_max = vorher;
+            return;
+        };
         f.x = x;
         f.y = y;
         f.w = w;
         f.h = h;
-        f.buf = Puffer::neu(w as usize, h as usize, f.arbeit & 0xFF_FFFF);
+        f.buf = buf;
         fenster_zeichnen(f, &skin, true, titel_farbe);
         fz.redraw = true;
         self.markiere(alt);

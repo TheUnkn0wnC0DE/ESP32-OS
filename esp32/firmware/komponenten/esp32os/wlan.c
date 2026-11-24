@@ -70,6 +70,13 @@ static void ereignis(void *arg, esp_event_base_t basis, int32_t id, void *daten)
     } else if (basis == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *e = daten;
         ESP_LOGI(TAG, "IP " IPSTR, IP2STR(&e->ip_info.ip));
+        // Ersatz-Namensserver (24.11.): liefert das Netz keinen oder einen
+        // stummen DNS-Server, fragt lwIP nach den eigenen Versuchen 1.1.1.1.
+        // DHCP überschreibt nur Haupt- und Zweitserver, nicht diesen.
+        esp_netif_dns_info_t ersatz = {0};
+        ersatz.ip.type = ESP_IPADDR_TYPE_V4;
+        ersatz.ip.u_addr.ip4.addr = ESP_IP4TOADDR(1, 1, 1, 1);
+        esp_netif_set_dns_info(e->esp_netif, ESP_NETIF_DNS_FALLBACK, &ersatz);
         verbunden = 1;
         verbindet = 0;
         letzter_grund = 0;

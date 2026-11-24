@@ -1,48 +1,124 @@
 # STATUS – ESP32-OS
 
-Stand: 23.11.2026 nachts – v1.0.1 veröffentlicht. Neuer Auftrag: Teil A
-(v1.0.2: Quake-Absturz, Tastatur-Rückmeldung), Teil B (Browser messen und
-verbessern), Teil C (v1.1: Konsole, WLAN 6, Standby). Plan: PLAN.md,
-Abschnitte I, J, K.
+Stand: 24.11.2026 – **Gesamtauftrag 24.11.** (ersetzt den vom 23.11.
+nachts): Teil A erledigt (v1.0.2 veröffentlicht), Teil B Browser, Teil C
+v1.1 (Konsole, WLAN 6, Standby), Teil D Vorsprung (Absturzschutz,
+Dateimanager, Shell, Medienplayer, App-Store); nach B, C, D je eine
+Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
+24.11.“ und Abschnitte I–L.
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
-- **Board kann abgesteckt werden** (24.11., 06:14). Release v1.0.2
-  veröffentlicht (https://github.com/TheUnkn0wnC0DE/ESP32-OS/releases/tag/v1.0.2),
-  Web-Flasher bleibt auf 1.0.1. Auf dem Board: saubere v1.0.2-Abbilder aus
-  dem Release (esp32os, Doom, Quake; ohne Entwicklungsschalter), per Kabel
-  geschrieben, Einstellungen und WLAN erhalten; Start aus esp32os_a,
-  Desktop, WLAN verbunden (geprüft 06:13).
-- Ohne Board weiter: nur PC-Arbeit (Browser-Abstürze BR2 sind behoben und
-  per PC-Test geprüft, Board-Nachweis folgt, wenn das Board zurück ist).
+- **Board ist weg** (seit 24.11. 06:20). Kein Zugriff auf COM3, bis du
+  „Board ist wieder da, mach weiter“ schreibst. Bis dahin PC-Arbeit und
+  Vorbereitung der Board-Tests (Liste unten, „Board-Tests“).
+- Läuft: Review des Browser-Diffs (Teil B, Subagent); danach BR3 (lexbor
+  prüfen), Vorbereitung der Stabilitätsrunde, C1 Konsole am PC.
+- 24.11. vormittags: Meldung „Verbindung fehlgeschlagen (-28674)“ bei dir
+  unterwegs = ESP_ERR_HTTP_CONNECT (Server nicht erreichbar, auch im
+  Browser) – vermutlich das WLAN vor Ort (Anmeldeseite/kein Internet). Die
+  Meldung ist jetzt lesbar (Commit „Update: lesbare Meldung …“, kommt mit
+  dem nächsten Update). Geplant: Ersatz-Namensserver und Anzeige von
+  IP/Gateway/DNS in den Einstellungen (siehe „Offene Fragen“).
+- Wochenlimit beim Start des Gesamtauftrags: 72 % (Grenze 90 %).
 
-- Erledigt: **A1** Quake „New Game“ (PAK-Grösse falsch, progs.dat las
-  Nullen) und **A2** Tastatur-Rückmeldung (Nachweise `docs/nachweise/v102/`).
-- **Teil A fertig** (A1, A2, A3): v1.0.2 vorbereitet, wartet auf dein OK
-  (siehe „Offene Fragen“). A2 am Board mit dem Endstand: 59/59 Zeichen.
-- **Teil B begonnen (BR1):** Messlauf mit 30 Seiten (je Seite frischer
-  Browser, 60 s). Erster Lauf brach ab: der Browser trieb den internen RAM
-  über mehrere Seiten auf 0 KB, danach brach die ganze Firmware ab und die
-  Liste begann von vorn. Ursache in Arbeit (geschlossene Verbindungen 120 s
-  in TIME_WAIT, Empfangspuffer); Gegenmassnahmen: TIME_WAIT 10 s, neue
-  Verbindungen nur mit 32 KB Reserve. Ergebnis: kein Abbruch mehr (6 Seiten
-  am Stück). **Leck gefunden und behoben:** NetSurf kopierte jede
-  Kopfzeile mit dem strndup der C-Laufzeit in den internen RAM; jetzt bleibt
-  der interne RAM nach jeder Seite bei 88–89 KB. Neu sichtbar: zwei Abstürze
-  des Browsers unter Speicherdruck (libdom, gettimeofday) – als Nächstes.
-  Arbeitsnotiz: während der Heap-Spur-Läufe steht in
-  `esp32/firmware/sdkconfig.defaults` vorübergehend
-  CONFIG_HEAP_TRACING_STANDALONE=y – nie so committen (git checkout der
-  Datei stellt den richtigen Stand her).
-- Zur Kenntnis: Die A2-Messung hat zwei Testnotizen in
-  `ESP32-OS/Notizen` auf der SD-Karte gespeichert
-  („qasdfghjkl1234567890qwer.txt“ und „… (Kopie).txt“); du kannst sie
-  löschen.
-- Wochenlimit beim Start: 67 % (Grenze 90 %).
+## Dein Fehlerbericht vom 24.11. (Stand)
+
+- **Fall 2 (Home/Startknopf bei offenem Browser → Neustart, „@menu“):** am
+  PC nicht nachstellbar (15 Mal ohne Fehler) – es ist der Speicher am Board.
+  „Illegal instruction“ ist auf dem P4 die Form, in der ein `abort()`
+  erscheint: Das Menü bekam keinen Speicher für sein Fenster, und Rust
+  bricht dann die ganze Firmware ab. Den PSRAM hatte der Browser gefüllt
+  (empfangene Daten ohne Obergrenze). Behoben: Fenster werden nur noch
+  angelegt, wenn der Speicher reicht – sonst endet nur dieses Programm mit
+  „Speicher voll“; der Browser puffert höchstens 512 KB und lässt 1,5 MB
+  PSRAM frei. Am PC getestet; Board-Nachweis folgt.
+- **Fall 1 (Browser lädt nichts):** Statt ESP_ERR_HTTP_CONNECT zeigt der
+  Browser jetzt die Ursache: DNS-Fehler, „keine Verbindung ins Internet –
+  Anmeldeseite oder Router ohne Internet?“ (mit IP, Router, DNS) oder
+  TLS-Fehler. Dazu Ersatz-Namensserver 1.1.1.1 und der DNS-Server in den
+  Einstellungen. Die neue Meldung zeigt am Board, woran es in deinem WLAN
+  liegt – das kann ich ohne Board nicht sehen.
+- **Fall 3 (Browser/Menü oft):** Stabilitätsrunde mit Autopilot ist
+  vorbereitet (38 min) und läuft als Erstes, wenn das Board zurück ist.
+- Neue Firmware kommt mit v1.0.3 (OK in „Offene Fragen“, sobald SB grün ist).
+
+## Board-Tests (Reihenfolge, sobald das Board wieder da ist)
+
+Jeder Test mit Nachweis in PLAN.md; Skripte im Repo unter
+`esp32/werkzeuge/board/` (`-Ziel` = Ordner für Log, Fotos, Auswertung;
+jedes Skript schreibt am Ende wieder die normale Firmware aufs Board).
+
+1. **Grundcheck:** Firmware vom Stand `esp32-os` (Entwicklungsschalter
+   aus) per Kabel schreiben, Einstellungen/WLAN bleiben; Start, WLAN,
+   Update-Prüfung (lesbare Fehlermeldung). **Fehlerbericht 24.11.:** Browser
+   offen + Startknopf 20 Mal (kein Neustart; wenn Speicher knapp: nur
+   „Speicher voll“), Browser in einem WLAN ohne Internet (Meldung prüfen),
+   Log mit freiem PSRAM bei offenem Browser.
+2. **BR1 Messlauf 30 Seiten:** `br_lauf.ps1 -Ziel …\br1` (Seiten in
+   `br_seiten.txt`, je Seite frischer Browser 60 s, Foto `bild_<i>.png`,
+   Tabelle `tabelle.md` aus `br_auswertung.py`); Ergebnis/Grund nach den
+   Fotos ausfüllen → `docs/browser_seiten.md`.
+3. **BR2 Runden:** nach jeder Verbesserung dieselbe Liste
+   (`br_lauf.ps1 -Ziel …\br2_n`), Vorher/Nachher. Erster Kandidat aus den
+   alten Daten: Browser-Heap 10 MB ist auf grossen Seiten voll (Spitze
+   10,4 von 10,6 MB, HTML bei 512 KB abgeschnitten) – am Board den freien
+   PSRAM mit laufendem Browser messen und, wenn Platz ist, den Heap
+   vergrössern.
+4. **SB Stabilitätsrunde:** `stabil_lauf.ps1 -Ziel …\sb1` (38 min,
+   Autopilot aus `stabil_autopilot.txt`, Auswertung `auswertung.txt`);
+   jeden Absturz nachstellen und beheben, dann wiederholen.
+5. **C1 Konsole:** `c1_lauf.ps1 -Ziel …\c1` (Autopilot aus dem PC-Test
+   `konsole_touch.rs`: Konsole über das Menü, `ver`, `touch neu`, `ls`,
+   `rm neu` auf der Bildschirmtastatur, Kreuz; Matrix öffnen und schliessen;
+   Fotos nach 41 s und 66 s).
+6. **C2 WLAN 6:** Messung vorher (Durchsatz, Verbindungsaufbau), W2
+   C6-Firmware vom P4 aus aktualisieren (Rückweg bereit), W5 iTWT,
+   Messung nachher.
+7. **C3 Standby:** Bildschirm aus, Wecken per Touch, WLAN wieder da,
+   Programme laufen weiter (Log + Fotos per Autopilot).
+8. **SC Stabilitätsrunde** (mit Konsole und Standby).
+9. **Teil D:** D5 Absturzschutz (Testprogramm mit absichtlichem Fehler),
+   D4, D1, D2 (Ton), D3; danach **SD Stabilitätsrunde**.
 
 ## Offene Fragen
+
+- **kmatrix (C1) – Lizenz:** kmatrix steht unter GPL-3.0-or-later, unsere
+  Firmware enthält NetSurf unter GPL-2.0-only. Beides zusammen in einer
+  Firmware ist nicht erlaubt (GPLv3 verlangt v3 für das Ganze, NetSurf
+  erlaubt nur v2). Vernünftigste Lösung (umgesetzt): ein eigenes Programm
+  „Matrix“ (GPL-2.0) mit derselben Idee, das die Konsole genauso nutzt
+  (Farben per Esc-Sequenz, Schreibmarke setzen, Taste beendet). kmatrix
+  selbst ginge nur als eigenes Abbild ohne NetSurf (wie Doom/Quake) –
+  sag Bescheid, falls du das willst.
+
+- **BR3 lexbor statt libdom/hubbub (geprüft 24.11., nicht eingebaut):**
+  Empfehlung: **nicht einbauen.** Gründe:
+  1. *Lizenz:* lexbor steht unter Apache-2.0, NetSurf unter GPL **nur
+     Version 2** („version 2 of the License“, ohne „oder später“). Nach
+     Auffassung der FSF ist Apache-2.0 nur mit GPLv3 vereinbar, nicht mit
+     GPLv2 (Patentklausel). Eine Firmware mit NetSurf und lexbor dürften wir
+     so nicht verteilen; NetSurf umlizenzieren können wir nicht.
+  2. *Aufwand:* NetSurf ist eng an die libdom-Schnittstelle gebunden –
+     25 Quelldateien mit 1260 Aufrufen (130 verschiedene `dom_*`-Funktionen),
+     dazu die CSS-Auswahl von libcss (arbeitet auf libdom-Knoten) und unsere
+     QuickJS-Anbindung (4 Dateien, 183 Aufrufe). Ein Ersatz hiesse, den
+     HTML-Inhalt, die CSS-Auswahl und die JS-Anbindung neu zu schreiben –
+     Monate, nicht Tage.
+  3. *Speicher:* lexbor wirbt mit Geschwindigkeit, nicht mit kleinerem
+     Speicherbedarf; eine belastbare Ersparnis gegenüber libdom ist nicht
+     belegt (am Board nicht messbar ohne den Umbau). Unsere Speicherprobleme
+     lagen bisher an Lecks und fehlenden Prüfungen (BR1/BR2), nicht an
+     libdom selbst; die Seiten laden mit 32 MB PSRAM.
+  Wenn du es trotzdem willst, bräuchte es eine Ausnahme der Lizenzfrage
+  (z. B. Rechtsrat) – bis dahin bleibe ich bei libdom/hubbub.
+
+- **Netz unterwegs (24.11.):** Ich baue einen Ersatz-Namensserver (1.1.1.1,
+  falls das WLAN keinen liefert) und zeige IP/Gateway/DNS in den
+  Einstellungen an – vernünftigste Lösung, ohne Rückfrage. Was zeigten bei
+  dir `http://neverssl.com` und `http://1.1.1.1`?
 
 - ~~OK für das Release v1.0.2?~~ Erledigt: OK erhalten, veröffentlicht 24.11.
   (alter Text:) Fertig vorbereitet (`release/v1.0.2/`,

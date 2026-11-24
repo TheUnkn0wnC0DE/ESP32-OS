@@ -76,11 +76,16 @@ fn titel(roh: &[u8]) -> String {
 
 /// Der Systemaufruf. Unbekannte Funktionen liefern eax = −1.
 ///
+/// "C-unwind": Am PC endet ein Programm-Faden durch Abwickeln (Funktion −1,
+/// `exit` eines C-Programms); mit "C" bräche das den ganzen Prozess ab
+/// (Stabilitätsrunde 24.11., Netzwerk-Test). Am Board wird nicht
+/// abgewickelt (panic = abort, der Task endet direkt).
+///
 /// # Safety
 /// `r` zeigt auf gültige Register; Zeiger darin folgen den Verträgen der
 /// jeweiligen KolibriOS-Funktion.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn kos_syscall(r: *mut Regs) {
+pub unsafe extern "C-unwind" fn kos_syscall(r: *mut Regs) {
     // SAFETY: Vertrag des Aufrufers.
     let r = unsafe { &mut *r };
     // SAFETY: alle Zeigerzugriffe folgen sysfuncs.txt.

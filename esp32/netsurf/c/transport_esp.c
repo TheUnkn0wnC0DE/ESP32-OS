@@ -26,6 +26,10 @@
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "esp_netif.h"
+#include "lwip/dns.h"
+#include "lwip/netdb.h"
+#include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -46,6 +50,14 @@
  * (CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL). */
 #define PUFFER_RX 8192
 #define PUFFER_TX 4096
+/* Fehlerbericht 24.11.: Empfangene Daten warten als 4-KB-Blöcke im PSRAM
+ * (System-Heap), bis NetSurf sie abholt – ohne Grenze füllte ein grosser
+ * Abruf den PSRAM, dann scheiterten Belegungen anderer Programme (Startmenü)
+ * und die Firmware brach ab. Jetzt liest der Arbeiter erst weiter, wenn
+ * höchstens WARTEND_MAX Bytes warten und im PSRAM noch PSRAM_RESERVE frei
+ * sind. */
+#define WARTEND_MAX (512 * 1024)
+#define PSRAM_RESERVE (1536 * 1024)
 
 static const char *TAG = "ns_abruf";
 
@@ -56,21 +68,31 @@ struct knoten {
 };
 
 struct ns_transport {
-	SemaphoreHandle_t sperre;
-	StaticSemaphore_t sperre_speicher;
 	struct knoten *erster, *letzter; /* Warteschlange */
 	struct knoten *kopf_erster, *kopf_letzter; /* Kopfzeilen bis zum Status */
 	struct knoten *zuletzt; /* zuletzt abgeholt (gültig bis zum nächsten) */
-	int halter;
+	size_t wartend; /* unter `sperre`: Bytes in NS_T_DATEN, noch nicht abgeholt */
+	int halter; /* unter `sperre`: Besitzer (NetSurf) und Arbeiter */
 	volatile bool abgebrochen;
 	struct ns_transport *weiter; /* Warteschlange der Arbeiter */
 	char *url, *methode, *kopfzeilen, *agent;
 	void *koerper;
 	size_t koerper_n;
-	/* BR1: Browser-Sitzung des Auftraggebers; der Besitzer hat freigegeben */
+	/* BR1: Browser-Sitzung des Auftraggebers; der Besitzer hat freigegeben
+	 * (unter `sperre`) */
 	unsigned sitzung;
-	volatile bool besitzer_weg;
+	bool besitzer_weg;
+	/* Liste aller lebenden Abrufe (unter `sperre`), für den Sitzungswechsel */
+	struct ns_transport *alle_vor, *alle_nach;
 };
+
+/* Eine Sperre für alle Abrufe: kurzer kritischer Abschnitt (Spinlock) statt
+ * Mutex. Der Browser-Faden kann zwangsbeendet (angehalten) werden; hielte
+ * er dabei einen Mutex, blieben die Arbeiter für immer stehen. In einem
+ * kritischen Abschnitt kann eine Aufgabe nicht angehalten werden. In der
+ * Sperre nur Zeiger und Zähler – kein malloc/free, kein Warten. */
+static portMUX_TYPE sperre = portMUX_INITIALIZER_UNLOCKED;
+static struct ns_transport *alle;
 
 /* BR1: Nummer der laufenden Browser-Sitzung (Systemdaten, überlebt das
  * Programmende). Ein Abruf aus einer früheren Sitzung gehört einem Browser,
@@ -79,9 +101,49 @@ struct ns_transport {
  * für die neue Seite auf. */
 static volatile unsigned sitzung;
 
+static void zerstoeren(struct ns_transport *t);
+
+/* Halter abgeben (unter `sperre`); true = der letzte, dann ist `t` schon
+ * aus der Liste genommen und muss ausserhalb der Sperre zerstört werden */
+static bool abgeben_gesperrt(struct ns_transport *t)
+{
+	if (--t->halter > 0)
+		return false;
+	if (t->alle_vor)
+		t->alle_vor->alle_nach = t->alle_nach;
+	else if (alle == t)
+		alle = t->alle_nach;
+	if (t->alle_nach)
+		t->alle_nach->alle_vor = t->alle_vor;
+	t->alle_vor = t->alle_nach = NULL;
+	return true;
+}
+
 void ns_transport_neue_sitzung(void)
 {
+	/* Abrufe früherer Sitzungen: deren Besitzer (ein beendeter Browser)
+	 * gibt nie mehr frei – für ihn abgeben. Laufende beendet der Arbeiter
+	 * danach selbst (verwaist), fertige werden gleich zerstört. */
+	struct ns_transport *weg = NULL, *t, *n;
+	taskENTER_CRITICAL(&sperre);
 	sitzung++;
+	for (t = alle; t != NULL; t = n) {
+		n = t->alle_nach;
+		if (t->sitzung != sitzung && !t->besitzer_weg) {
+			t->besitzer_weg = true;
+			t->abgebrochen = true;
+			if (abgeben_gesperrt(t)) {
+				t->alle_nach = weg;
+				weg = t;
+			}
+		}
+	}
+	taskEXIT_CRITICAL(&sperre);
+	while (weg != NULL) {
+		n = weg->alle_nach;
+		zerstoeren(weg);
+		weg = n;
+	}
 }
 
 static bool verwaist(const struct ns_transport *t)
@@ -89,9 +151,9 @@ static bool verwaist(const struct ns_transport *t)
 	return t->sitzung != sitzung;
 }
 
-/* Warteschlange der noch nicht begonnenen Anfragen */
-static SemaphoreHandle_t arbeit, schlange_sperre;
-static StaticSemaphore_t arbeit_speicher, schlange_speicher;
+/* Warteschlange der noch nicht begonnenen Anfragen (unter `sperre`) */
+static SemaphoreHandle_t arbeit;
+static StaticSemaphore_t arbeit_speicher;
 static struct ns_transport *schlange_erster, *schlange_letzter;
 static int arbeiter_anzahl;
 
@@ -146,13 +208,15 @@ static void einreihen(struct ns_transport *t, struct knoten *k)
 {
 	if (k == NULL)
 		return;
-	xSemaphoreTake(t->sperre, portMAX_DELAY);
+	taskENTER_CRITICAL(&sperre);
 	if (t->letzter)
 		t->letzter->next = k;
 	else
 		t->erster = k;
 	t->letzter = k;
-	xSemaphoreGive(t->sperre);
+	if (k->e.art == NS_T_DATEN)
+		t->wartend += k->e.n;
+	taskEXIT_CRITICAL(&sperre);
 }
 
 static void melden(struct ns_transport *t, enum ns_transport_art art, long status, const char *text, const void *daten,
@@ -161,14 +225,9 @@ static void melden(struct ns_transport *t, enum ns_transport_art art, long statu
 	einreihen(t, knoten_neu(art, status, text, daten, n));
 }
 
-static void loslassen(struct ns_transport *t)
+/* Abruf zerstören (keine Halter mehr, nicht in der Liste) */
+static void zerstoeren(struct ns_transport *t)
 {
-	bool weg;
-	xSemaphoreTake(t->sperre, portMAX_DELAY);
-	weg = --t->halter == 0;
-	xSemaphoreGive(t->sperre);
-	if (!weg)
-		return;
 	while (t->erster) {
 		struct knoten *k = t->erster;
 		t->erster = k->next;
@@ -185,8 +244,18 @@ static void loslassen(struct ns_transport *t)
 	heap_caps_free(t->kopfzeilen);
 	heap_caps_free(t->agent);
 	heap_caps_free(t->koerper);
-	vSemaphoreDelete(t->sperre);
 	heap_caps_free(t);
+}
+
+/* Arbeiter gibt ab */
+static void loslassen(struct ns_transport *t)
+{
+	bool weg;
+	taskENTER_CRITICAL(&sperre);
+	weg = abgeben_gesperrt(t);
+	taskEXIT_CRITICAL(&sperre);
+	if (weg)
+		zerstoeren(t);
 }
 
 /* Kopfzeilen der Antwort sammeln (kommen vor dem Status) */
@@ -237,12 +306,175 @@ static void kopfzeilen_setzen(esp_http_client_handle_t cl, const char *alle)
 	}
 }
 
+/* Warten, bis NetSurf genug abgeholt hat und der PSRAM Luft hat (siehe
+ * WARTEND_MAX). false: abgebrochen bzw. verwaist. */
+static bool platz_abwarten(struct ns_transport *t)
+{
+	for (;;) {
+		size_t w;
+		if (t->abgebrochen || verwaist(t))
+			return false;
+		taskENTER_CRITICAL(&sperre);
+		w = t->wartend;
+		taskEXIT_CRITICAL(&sperre);
+		if (w <= WARTEND_MAX && heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM) >= PSRAM_RESERVE)
+			return true;
+		/* nichts wartet mehr, und doch zu wenig PSRAM: weiterlesen, sonst
+		 * stünde der Abruf für immer (andere geben frei oder NetSurf meldet
+		 * selbst Speichermangel) */
+		if (w == 0)
+			return true;
+		vTaskDelay(pdMS_TO_TICKS(10));
+	}
+}
+
+/* Rechner und Port aus der URL (http[s]://rechner[:port]/…) */
+static bool url_rechner(const char *url, char *rechner, size_t n, int *port)
+{
+	const char *p = strstr(url, "://");
+	size_t l = 0;
+	*port = strncmp(url, "https", 5) == 0 ? 443 : 80;
+	if (p == NULL)
+		return false;
+	p += 3;
+	/* Benutzerangaben (user:pass@) überspringen */
+	{
+		const char *at = strchr(p, '@');
+		const char *sl = strchr(p, '/');
+		if (at != NULL && (sl == NULL || at < sl))
+			p = at + 1;
+	}
+	if (*p == '[')
+		return false; /* IPv6-Literal: keine eigene Diagnose */
+	while (p[l] != '\0' && p[l] != '/' && p[l] != ':' && p[l] != '?' && p[l] != '#')
+		l++;
+	if (l == 0 || l >= n)
+		return false;
+	memcpy(rechner, p, l);
+	rechner[l] = '\0';
+	if (p[l] == ':')
+		*port = atoi(p + l + 1);
+	return *port > 0;
+}
+
+/* Fehlerbericht 24.11.: Statt „ESP_ERR_HTTP_CONNECT“ sagen, woran es liegt.
+ * Nach einer gescheiterten Verbindung der Reihe nach prüfen: Namensauflösung
+ * (DNS), TCP-Verbindung zum Server (5 s), sonst liegt es an TLS. */
+/* Letzte Erklärung je Rechner (30 s): fehlgeschlagene Bilder und Skripte
+ * desselben Rechners prüfen nicht jedes Mal erneut (blockiert sonst die
+ * zwei Arbeiter, Review 24.11.) */
+static struct {
+	char rechner[128];
+	char meldung[384];
+	int64_t zeit;
+} zuletzt_erklaert;
+
+static void verbindung_erklaeren(struct ns_transport *t, char *m, size_t n)
+{
+	const char *url = t->url;
+	char rechner[128];
+	char a1[16], a2[16], ziel_text[16];
+	int port;
+	struct addrinfo hinweis, *ai = NULL;
+	struct sockaddr_in ziel;
+	esp_netif_ip_info_t ip;
+	esp_netif_t *netz = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+	char wlan[96] = "";
+	int s, fehler = 0;
+	if (netz != NULL && esp_netif_get_ip_info(netz, &ip) == ESP_OK) {
+		const ip_addr_t *dns = dns_getserver(0);
+		char d[48] = "-";
+		if (dns != NULL)
+			ipaddr_ntoa_r(dns, d, sizeof d);
+		snprintf(wlan, sizeof wlan, " (eigene IP %s, Router %s, DNS %s)", esp_ip4addr_ntoa(&ip.ip, a1, sizeof a1),
+			 esp_ip4addr_ntoa(&ip.gw, a2, sizeof a2), d);
+	}
+	if (!url_rechner(url, rechner, sizeof rechner, &port)) {
+		snprintf(m, n, "Verbindung gescheitert%s", wlan);
+		return;
+	}
+	taskENTER_CRITICAL(&sperre);
+	if (zuletzt_erklaert.zeit != 0 && esp_timer_get_time() - zuletzt_erklaert.zeit < 30 * 1000 * 1000 &&
+	    strcmp(zuletzt_erklaert.rechner, rechner) == 0) {
+		snprintf(m, n, "%s", zuletzt_erklaert.meldung);
+		taskEXIT_CRITICAL(&sperre);
+		return;
+	}
+	taskEXIT_CRITICAL(&sperre);
+	if (t->abgebrochen || verwaist(t)) {
+		snprintf(m, n, "Abgebrochen");
+		return;
+	}
+	memset(&hinweis, 0, sizeof hinweis);
+	hinweis.ai_family = AF_INET;
+	hinweis.ai_socktype = SOCK_STREAM;
+	if (lwip_getaddrinfo(rechner, NULL, &hinweis, &ai) != 0 || ai == NULL) {
+		snprintf(m, n,
+			 "Adresse %s nicht gefunden (DNS-Fehler): Der Namensserver antwortet nicht oder kennt den Namen nicht%s. "
+			 "Hat dieses WLAN Internet?",
+			 rechner, wlan);
+		return;
+	}
+	memcpy(&ziel, ai->ai_addr, sizeof ziel);
+	lwip_freeaddrinfo(ai);
+	ziel.sin_port = htons((uint16_t)port);
+	inet_ntoa_r(ziel.sin_addr, ziel_text, sizeof ziel_text);
+	if (t->abgebrochen || verwaist(t)) {
+		snprintf(m, n, "Abgebrochen");
+		return;
+	}
+	s = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (s >= 0) {
+		struct timeval z = { 5, 0 };
+		int fl = lwip_fcntl(s, F_GETFL, 0);
+		int rc;
+		lwip_fcntl(s, F_SETFL, fl | O_NONBLOCK);
+		rc = lwip_connect(s, (struct sockaddr *)&ziel, sizeof ziel);
+		if (rc != 0 && errno != EINPROGRESS) {
+			fehler = errno != 0 ? errno : EHOSTUNREACH;
+		} else if (rc != 0) {
+			fd_set w;
+			FD_ZERO(&w);
+			FD_SET(s, &w);
+			if (lwip_select(s + 1, NULL, &w, NULL, &z) == 1) {
+				socklen_t l = sizeof fehler;
+				lwip_getsockopt(s, SOL_SOCKET, SO_ERROR, &fehler, &l);
+			} else {
+				fehler = ETIMEDOUT;
+			}
+		}
+		lwip_close(s);
+	} else {
+		fehler = ENOMEM;
+	}
+	if (fehler == ECONNREFUSED) {
+		snprintf(m, n, "Der Server %s (%s) lehnt die Verbindung auf Port %d ab.", rechner, ziel_text, port);
+	} else if (fehler != 0) {
+		snprintf(m, n,
+			 "Keine Verbindung ins Internet: %s (%s) antwortet nicht. Das WLAN ist verbunden%s, lässt aber "
+			 "nichts durch – Anmeldeseite des WLANs (Hotel, Zug, Café) oder Router ohne Internet?",
+			 rechner, ziel_text, wlan);
+	} else if (port == 443 || strncmp(url, "https", 5) == 0) {
+		snprintf(m, n,
+			 "Sichere Verbindung zu %s gescheitert (TLS): Zertifikat ungültig, abgelaufen oder die Uhrzeit "
+			 "stimmt nicht.",
+			 rechner);
+	} else {
+		snprintf(m, n, "Der Server %s antwortet nicht wie erwartet.", rechner);
+	}
+	taskENTER_CRITICAL(&sperre);
+	snprintf(zuletzt_erklaert.rechner, sizeof zuletzt_erklaert.rechner, "%s", rechner);
+	snprintf(zuletzt_erklaert.meldung, sizeof zuletzt_erklaert.meldung, "%s", m);
+	zuletzt_erklaert.zeit = esp_timer_get_time();
+	taskEXIT_CRITICAL(&sperre);
+}
+
 static void ablauf(struct ns_transport *t)
 {
 	esp_http_client_config_t c;
 	esp_http_client_handle_t cl;
 	esp_err_t r;
-	char meldung[160];
+	char meldung[384];
 	uint8_t *puffer;
 	size_t geschrieben = 0, gesamt = 0;
 	int64_t beginn = esp_timer_get_time();
@@ -278,10 +510,13 @@ static void ablauf(struct ns_transport *t)
 	kopfzeilen_setzen(cl, t->kopfzeilen);
 	r = esp_http_client_open(cl, (int)t->koerper_n);
 	if (r != ESP_OK) {
-		snprintf(meldung, sizeof meldung, "Verbindung gescheitert (%s): Server nicht erreichbar oder Zertifikat ungültig",
-			 esp_err_to_name(r));
-		melden(t, NS_T_FEHLER, 0, meldung, NULL, 0);
+		/* Verbindung erst aufräumen (interner RAM), dann erklären */
 		esp_http_client_cleanup(cl);
+		if (t->abgebrochen || verwaist(t))
+			return;
+		verbindung_erklaeren(t, meldung, sizeof meldung);
+		ESP_LOGW(TAG, "%s: %s", esp_err_to_name(r), meldung);
+		melden(t, NS_T_FEHLER, 0, meldung, NULL, 0);
 		return;
 	}
 	while (geschrieben < t->koerper_n && !t->abgebrochen) {
@@ -298,7 +533,7 @@ static void ablauf(struct ns_transport *t)
 	status = esp_http_client_get_status_code(cl);
 	melden(t, NS_T_STATUS, status, NULL, NULL, 0);
 	/* gesammelte Kopfzeilen in die Warteschlange */
-	xSemaphoreTake(t->sperre, portMAX_DELAY);
+	taskENTER_CRITICAL(&sperre);
 	if (t->kopf_erster) {
 		if (t->letzter)
 			t->letzter->next = t->kopf_erster;
@@ -307,7 +542,7 @@ static void ablauf(struct ns_transport *t)
 		t->letzter = t->kopf_letzter;
 		t->kopf_erster = t->kopf_letzter = NULL;
 	}
-	xSemaphoreGive(t->sperre);
+	taskEXIT_CRITICAL(&sperre);
 	melden(t, NS_T_KOPF_ENDE, 0, NULL, NULL, 0);
 	puffer = neu(BLOCK);
 	if (puffer == NULL) {
@@ -317,7 +552,7 @@ static void ablauf(struct ns_transport *t)
 	}
 	for (;;) {
 		int n;
-		if (t->abgebrochen || verwaist(t))
+		if (!platz_abwarten(t))
 			break;
 		n = esp_http_client_read(cl, (char *)puffer, BLOCK);
 		if (n > 0) {
@@ -352,23 +587,20 @@ static void arbeiter(void *arg)
 	for (;;) {
 		struct ns_transport *t;
 		xSemaphoreTake(arbeit, portMAX_DELAY);
-		xSemaphoreTake(schlange_sperre, portMAX_DELAY);
+		taskENTER_CRITICAL(&sperre);
 		t = schlange_erster;
 		if (t != NULL) {
 			schlange_erster = t->weiter;
 			if (schlange_erster == NULL)
 				schlange_letzter = NULL;
 		}
-		xSemaphoreGive(schlange_sperre);
+		taskEXIT_CRITICAL(&sperre);
 		if (t == NULL)
 			continue;
 		if (!t->abgebrochen && !verwaist(t))
 			ablauf(t);
-		/* Besitzer aus einer früheren Sitzung gibt nie mehr frei: für ihn */
-		if (verwaist(t) && !t->besitzer_weg) {
-			t->besitzer_weg = true;
-			loslassen(t);
-		}
+		/* den Halter des Besitzers aus einer früheren Sitzung gibt
+		 * ns_transport_neue_sitzung ab */
 		loslassen(t);
 	}
 }
@@ -377,10 +609,8 @@ static void arbeiter(void *arg)
  * Browser-Faden, daher ohne weitere Sperre) */
 static bool arbeiter_bereit(void)
 {
-	if (arbeit == NULL) {
+	if (arbeit == NULL)
 		arbeit = xSemaphoreCreateCountingStatic(0x7FFF, 0, &arbeit_speicher);
-		schlange_sperre = xSemaphoreCreateMutexStatic(&schlange_speicher);
-	}
 	while (arbeiter_anzahl < PARALLEL) {
 		if (xTaskCreateWithCaps(arbeiter, "ns_abruf", STAPEL, NULL, 5, NULL, MALLOC_CAP_SPIRAM) != pdPASS) {
 			ESP_LOGE(TAG, "Arbeiter %d nicht angelegt", arbeiter_anzahl);
@@ -400,7 +630,6 @@ struct ns_transport *ns_transport_starten(const char *url, const char *methode, 
 	t = neu(sizeof *t);
 	if (t == NULL)
 		return NULL;
-	t->sperre = xSemaphoreCreateMutexStatic(&t->sperre_speicher);
 	t->halter = 2; /* NetSurf und Arbeiter */
 	t->sitzung = sitzung;
 	t->url = kopie(url);
@@ -415,17 +644,20 @@ struct ns_transport *ns_transport_starten(const char *url, const char *methode, 
 	t->koerper_n = t->koerper ? koerper_n : 0;
 	if (!t->url || !t->methode || !t->kopfzeilen || !t->agent) {
 		ESP_LOGE(TAG, "Abruf %s nicht gestartet (Speicher)", url);
-		t->halter = 1;
-		loslassen(t);
+		zerstoeren(t); /* noch in keiner Liste */
 		return NULL;
 	}
-	xSemaphoreTake(schlange_sperre, portMAX_DELAY);
+	taskENTER_CRITICAL(&sperre);
 	if (schlange_letzter)
 		schlange_letzter->weiter = t;
 	else
 		schlange_erster = t;
 	schlange_letzter = t;
-	xSemaphoreGive(schlange_sperre);
+	t->alle_nach = alle;
+	if (alle)
+		alle->alle_vor = t;
+	alle = t;
+	taskEXIT_CRITICAL(&sperre);
 	xSemaphoreGive(arbeit);
 	return t;
 }
@@ -435,14 +667,16 @@ enum ns_transport_art ns_transport_holen(struct ns_transport *t, struct ns_trans
 	struct knoten *k;
 	knoten_frei(t->zuletzt);
 	t->zuletzt = NULL;
-	xSemaphoreTake(t->sperre, portMAX_DELAY);
+	taskENTER_CRITICAL(&sperre);
 	k = t->erster;
 	if (k != NULL) {
 		t->erster = k->next;
 		if (t->erster == NULL)
 			t->letzter = NULL;
+		if (k->e.art == NS_T_DATEN)
+			t->wartend -= k->e.n;
 	}
-	xSemaphoreGive(t->sperre);
+	taskEXIT_CRITICAL(&sperre);
 	if (k == NULL) {
 		memset(e, 0, sizeof *e);
 		return NS_T_NICHTS;
@@ -454,7 +688,16 @@ enum ns_transport_art ns_transport_holen(struct ns_transport *t, struct ns_trans
 
 void ns_transport_freigeben(struct ns_transport *t)
 {
+	bool weg = false;
 	t->abgebrochen = true;
-	t->besitzer_weg = true;
-	loslassen(t);
+	/* Flag und Zähler zusammen: sonst gäbe der Sitzungswechsel ein zweites
+	 * Mal ab */
+	taskENTER_CRITICAL(&sperre);
+	if (!t->besitzer_weg) {
+		t->besitzer_weg = true;
+		weg = abgeben_gesperrt(t);
+	}
+	taskEXIT_CRITICAL(&sperre);
+	if (weg)
+		zerstoeren(t);
 }

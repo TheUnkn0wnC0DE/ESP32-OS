@@ -40,5 +40,5 @@ pub use plattform::PC;
 pub use plattform::{Lauf, Plattform, ProzessEnde};
 pub use prozess::{
     Ende, Faden, ProgrammEintrag, ProzessInfo, StartFehler, Zwang, aufraeumen, beende, beende_selbst, eigene_pid, geschuetzt, zwangsbeenden,
-    argumente, eigene_tid, ende_von, neue_abstuerze, starte_mit, faden_starten, init, kern_abschnitt, liste, programme, pruefe_ende, starte, starte_name,
+    argumente, bibliothek, bibliothek_setzen, eigene_tid, ende_von, neue_abstuerze, starte_mit, faden_starten, init, kern_abschnitt, liste, programme, pruefe_ende, starte, starte_name,
 };

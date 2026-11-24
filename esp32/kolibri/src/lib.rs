@@ -9,6 +9,7 @@ use kern::ProgrammEintrag;
 pub mod boxlib;
 pub mod dekoder;
 pub mod kodierer;
+pub mod konsole;
 pub mod dialog;
 pub mod libimg;
 pub mod libini;
@@ -58,6 +59,10 @@ programme! {
     passwordgen: 256,
     // Z3: Prüfsummen MD5/SHA-1/SHA-256 (programs/other/TinyHashView)
     thashview: 512,
+    // C1: KolibriOS-Shell (programs/system/shell) in der Konsole
+    shell: 1024,
+    // C1: fallende Zeichen in der Konsole (eigenes Programm statt kmatrix)
+    matrix: 256,
 }
 
 #[cfg(not(target_pointer_width = "32"))]

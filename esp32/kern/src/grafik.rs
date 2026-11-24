@@ -29,7 +29,32 @@ impl Puffer {
     pub fn neu(w: usize, h: usize, farbe: u32) -> Puffer {
         Puffer { w, h, px: vec![zu565(farbe); w * h] }
     }
+
+    /// Wie [`Puffer::neu`] für Puffer, die ein Programm anfordert
+    /// (Fenster): None, wenn der System-Heap dafür nicht reicht – mit
+    /// [`RESERVE`] Luft für WLAN und Kern. Fehlerbericht 24.11.: Mit offenem
+    /// Browser war der PSRAM knapp; das Startmenü forderte seinen
+    /// Fensterpuffer an, die Belegung schlug fehl und brach die ganze
+    /// Firmware ab (Neustart, „@menu“). Jetzt endet nur das Programm.
+    pub fn versuche(w: usize, h: usize, farbe: u32, system_frei: usize) -> Option<Puffer> {
+        let n = w.checked_mul(h)?;
+        if n.checked_mul(2)?.checked_add(RESERVE)? > system_frei {
+            return None;
+        }
+        let mut px = Vec::new();
+        px.try_reserve_exact(n).ok()?;
+        px.resize(n, zu565(farbe));
+        Some(Puffer { w, h, px })
+    }
 }
+
+/// Mindestens so viel System-Heap bleibt frei, wenn ein Programm einen
+/// Puffer anfordert.
+pub const RESERVE: usize = 256 * 1024;
+
+/// PC-Tests: grösster freier Block des System-Heaps vortäuschen
+/// (Plattform `PC`, `system_frei`); Standard unbegrenzt.
+pub static TEST_SYSTEM_FREI: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(usize::MAX);
 
 /// Zeichenbereich in Pufferkoordinaten (Ende exklusiv).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

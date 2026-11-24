@@ -186,7 +186,13 @@ pub static BOARD: Plattform = Plattform {
     bereich_holen: holen,
     bereich_frei: frei,
     panik_beendet_task: true,
+    system_frei,
 };
+
+fn system_frei() -> usize {
+    // SAFETY: reine Abfrage der Heap-Verwaltung.
+    unsafe { sys::heap_caps_get_largest_free_block(sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) }
+}
 
 /// Selbsttest K1 am Board (Build mit `KERN_SELBSTTEST=1`): startet Programme,
 /// die normal enden, abstürzen, beendet werden und den Heap sprengen, und

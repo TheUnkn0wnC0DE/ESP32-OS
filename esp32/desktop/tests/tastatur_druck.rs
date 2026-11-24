@@ -113,6 +113,21 @@ fn gedrueckte_taste_kleiner_und_dunkler() {
     let mut t = 5000u64;
     for (name, (x, y)) in tasten {
         let (x, y) = (x, oben + y);
+        // Ruhe abwarten: unter Last kann das Neuzeichnen der vorigen Taste
+        // (Shift: ganze Tastatur) noch ausstehen – sonst zählt es zu dieser
+        let mut ruhig = 0;
+        for _ in 0..60 {
+            std::thread::sleep(Duration::from_millis(50));
+            if schmutz().iter().any(|r| r.y1 > oben && r.y0 < oben + HOEHE) {
+                ruhig = 0;
+            } else {
+                ruhig += 1;
+                if ruhig >= 4 {
+                    break;
+                }
+            }
+        }
+        assert!(ruhig >= 4, "{name}: Tastatur kommt nicht zur Ruhe");
         let vorher = foto();
         // Finger aufsetzen und liegen lassen (kein Klick bis zum Loslassen);
         // die vom Kern als geändert gemerkten Bereiche mitlesen

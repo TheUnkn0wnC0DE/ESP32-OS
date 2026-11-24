@@ -48,6 +48,8 @@ int kos_fflush(FILE* f);
 int kos_printf(const char* fmt, ...);
 int kos_vprintf(const char* fmt, va_list ap);
 int kos_puts(const char* s);
+/* libc.obj: itoa(Zahl, Puffer) dezimal, zwei Argumente (Shell, C1) */
+char* kos_itoa(int n, char* s);
 int kos_putchar(int c);
 int kos_remove(const char* pfad);
 int kos_rename(const char* alt, const char* neu);
@@ -81,6 +83,7 @@ void kos_free(void* p);
 #define printf kos_printf
 #define vprintf kos_vprintf
 #define puts kos_puts
+#define itoa kos_itoa
 #define putchar kos_putchar
 #define fopen kos_fopen
 #define fclose kos_fclose

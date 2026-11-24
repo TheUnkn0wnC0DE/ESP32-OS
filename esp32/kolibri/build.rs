@@ -4,7 +4,7 @@
 //! (Zeiger in Registern); am Board baut ESP-IDF die Komponente `kolibri_c`.
 
 /// Programme: Name = Präfix in `c/gen/<name>.c`.
-pub const PROGRAMME: &[&str] = &["basic_gui", "boxlib_demo", "libimg_demo", "dialog_demo", "absturz_test", "http_tcp_demo", "netz_laden", "passwordgen", "thashview"];
+pub const PROGRAMME: &[&str] = &["basic_gui", "boxlib_demo", "libimg_demo", "dialog_demo", "absturz_test", "http_tcp_demo", "netz_laden", "passwordgen", "thashview", "shell", "matrix"];
 
 fn main() {
     println!("cargo:rerun-if-changed=c");
@@ -32,5 +32,7 @@ fn main() {
     for n in PROGRAMME {
         p.file(format!("c/gen/{n}.c"));
     }
+    // C1: Systemschicht der Shell (nativ statt Inline-Assembler)
+    p.file("c/shell_system.c");
     p.compile("kolibri_programme");
 }

@@ -63,6 +63,9 @@ pub struct Faden {
     pub ende_flag: AtomicBool,
     /// Zähler für die seltene volle Prüfung in `pruefe_ende`.
     pub pruef_zaehler: Cell<u32>,
+    /// Zeiger für Bibliotheken des Programms (C1: Zustand der Konsole,
+    /// console.obj). Zeigt in den Heap des Programms und endet mit ihm.
+    pub bibliothek: Cell<usize>,
 }
 
 /// Setzt `ende_flag` in allen laufenden Fäden des Prozesses. Nur unter der
@@ -144,6 +147,40 @@ fn kern() -> &'static Kern {
 
 fn sperre<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Grösster freier Block des System-Heaps (Plattform).
+pub(crate) fn system_frei() -> usize {
+    KERN.get().map_or(usize::MAX, |k| (k.pl.system_frei)())
+}
+
+/// Der eigene Faden soll mit „Speicher voll“ enden (bei der nächsten
+/// Systemfunktion, [`pruefe_ende`]).
+pub(crate) fn speicher_voll_melden() {
+    let fd = faden();
+    if !fd.is_null() {
+        // SAFETY: eigener Faden.
+        unsafe { (*fd).speicher_voll.set(true) };
+    }
+}
+
+/// Bibliothekszeiger des eigenen Fadens (0 = keiner oder kein
+/// Programm-Faden), siehe [`Faden::bibliothek`].
+pub fn bibliothek() -> usize {
+    let fd = faden();
+    // SAFETY: eigener Faden, lebt während des Aufrufs.
+    if fd.is_null() { 0 } else { unsafe { (*fd).bibliothek.get() } }
+}
+
+/// Bibliothekszeiger des eigenen Fadens setzen; false ohne Programm-Faden.
+pub fn bibliothek_setzen(z: usize) -> bool {
+    let fd = faden();
+    if fd.is_null() {
+        return false;
+    }
+    // SAFETY: eigener Faden, lebt während des Aufrufs.
+    unsafe { (*fd).bibliothek.set(z) };
+    true
 }
 
 /// Aktueller Faden-Kontext (null = Kern/System-Thread).
@@ -384,6 +421,7 @@ fn starte_faden_fuer(
         panik: RefCell::new(None),
         ende_flag: AtomicBool::new(false),
         pruef_zaehler: Cell::new(0),
+        bibliothek: Cell::new(0),
     })) as usize;
     if let Some(p) = sperre(&k.prozesse).iter_mut().find(|p| p.pid == pid) {
         // Programm soll schon enden: neuer Faden bekommt das Flag gleich mit

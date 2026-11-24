@@ -125,6 +125,14 @@ pub fn glyphe(c: char) -> [u8; 16] {
     g
 }
 
+/// Glyphe der kleinen Systemschrift 6×9 (cp866) – Zeile 0 oben, Bit 0
+/// links (Konsole, C1).
+pub fn glyphe_klein(b: u8) -> [u8; 9] {
+    let mut g = [0u8; 9];
+    g.copy_from_slice(glyph(u32::from(b), Kodierung::Cp866Klein));
+    g
+}
+
 /// Glyph-Zeilen eines Zeichens (nach `zeichen`).
 fn glyph(c: u32, k: Kodierung) -> &'static [u8] {
     match k {

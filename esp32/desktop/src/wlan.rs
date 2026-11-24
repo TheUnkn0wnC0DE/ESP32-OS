@@ -65,13 +65,17 @@ pub fn zustand_text() -> String {
     let z = wlan::zustand();
     if z.verbunden {
         let ip = z.ip;
+        let d = z.dns;
+        // Namensserver mit anzeigen: hilft, wenn Seiten nicht laden (24.11.)
+        let dns = if d == [0; 4] { "–".to_string() } else { format!("{}.{}.{}.{}", d[0], d[1], d[2], d[3]) };
         format!(
-            "{} · {}.{}.{}.{} · {} dBm{}",
+            "{} · {}.{}.{}.{} · DNS {} · {} dBm{}",
             t("Connected", "Verbunden"),
             ip[0],
             ip[1],
             ip[2],
             ip[3],
+            dns,
             z.rssi,
             if z.he { " · Wi-Fi 6" } else { "" }
         )

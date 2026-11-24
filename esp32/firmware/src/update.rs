@@ -35,6 +35,23 @@ pub fn boot_platz() -> String {
     String::from_utf8_lossy(&t).into_owned()
 }
 
+/// Lesbarer Text zu einem negativen Fehler aus `esp32os_https_text`
+/// (negierter esp_err_t von esp_http_client_open bzw. -1/-2 aus update.c).
+fn verbindungsfehler(n: c_int) -> &'static str {
+    use kern::sprache::t;
+    match n {
+        // ESP_ERR_HTTP_CONNECT: Namensauflösung, TCP oder TLS gescheitert
+        -0x7002 => t(
+            "Server not reachable – does this Wi-Fi have internet access (login page)?",
+            "Server nicht erreichbar – hat dieses WLAN Internet (Anmeldeseite)?",
+        ),
+        // ESP_ERR_HTTP_CONNECTING / ESP_ERR_HTTP_EAGAIN
+        -0x7006 | -0x7007 => t("Server not answering (timeout)", "Server antwortet nicht (Zeitüberschreitung)"),
+        -0x7001 | -2 => t("Too many redirects", "Zu viele Weiterleitungen"),
+        _ => t("Connection failed", "Verbindung fehlgeschlagen"),
+    }
+}
+
 /// Text über HTTPS holen: (HTTP-Status, Inhalt).
 pub fn https_text(url: &str, json: bool) -> Result<(i32, String), String> {
     let u = CString::new(url).map_err(|_| "URL".to_string())?;
@@ -44,7 +61,7 @@ pub fn https_text(url: &str, json: bool) -> Result<(i32, String), String> {
     // SAFETY: Puffer und Länge passen, Zeichenkette gültig.
     let n = unsafe { esp32os_https_text(u.as_ptr(), c_int::from(json), puffer.as_mut_ptr().cast(), puffer.len() as c_int, &mut status) };
     if n < 0 {
-        return Err(format!("Verbindung fehlgeschlagen ({n})"));
+        return Err(format!("{} ({n})", verbindungsfehler(n)));
     }
     puffer.truncate(n as usize);
     Ok((status, String::from_utf8_lossy(&puffer).into_owned()))

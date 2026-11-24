@@ -97,6 +97,8 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
     if (5..=15).contains(&stil) {
         return;
     }
+    let system_frei = prozess::system_frei();
+    let mut kein_speicher = false;
     mit_faden(|w, s| {
         let (sw, sh) = (w.w, w.h);
         let skin = w.skin.clone();
@@ -119,6 +121,10 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
             }
             let fw = fw.max(1);
             let fh = fh.max(1);
+            let Some(buf) = Puffer::versuche(fw as usize, fh as usize, edx & 0xFF_FFFF, system_frei) else {
+                kein_speicher = true;
+                return;
+            };
             let fz = w.slots[s].as_mut().unwrap_or_else(|| unreachable!());
             fz.fenster = Some(Fenster {
                 x,
@@ -130,7 +136,7 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
                 arbeit: edx & 0x80FF_FFFF,
                 kopf: esi,
                 titel: titel.unwrap_or("").into(),
-                buf: Puffer::neu(fw as usize, fh as usize, edx & 0xFF_FFFF),
+                buf,
                 knoepfe: Vec::new(),
                 minimiert: false,
                 vor_max: None,
@@ -166,6 +172,12 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
         }
         w.markiere_fenster(s);
     });
+    if kein_speicher {
+        // kein Fenster ohne Puffer: Programm endet mit „Speicher voll“ (bei
+        // der nächsten Systemfunktion), das System läuft weiter
+        debug_text("Fenster: zu wenig Systemspeicher – Programm wird beendet");
+        prozess::speicher_voll_melden();
+    }
 }
 
 /// Funktion 71.1: Fenstertitel setzen.
@@ -181,6 +193,7 @@ pub fn titel(t: &str) {
 
 /// Funktion 67: Fenster verschieben/Grösse ändern (−1 = unverändert).
 pub fn fenster_bewegen(x: i32, y: i32, bw: i32, bh: i32) {
+    let system_frei = prozess::system_frei();
     mit_faden(|w, s| {
         let skin = w.skin.clone();
         let titel_farbe = w.farben[4];
@@ -195,12 +208,15 @@ pub fn fenster_bewegen(x: i32, y: i32, bw: i32, bh: i32) {
         let nw = if bw == -1 { f.w } else { (bw + 1).clamp(1, sw) };
         let nh = if bh == -1 { f.h } else { (bh + 1).clamp(1, sh) };
         let groesse = nw != f.w || nh != f.h;
+        // neue Grösse nur mit Puffer (System-Heap knapp: Grösse bleibt,
+        // Fehlerbericht 24.11.)
+        let buf = if groesse { Puffer::versuche(nw as usize, nh as usize, f.arbeit & 0xFF_FFFF, system_frei) } else { None };
         f.x = nx;
         f.y = ny;
-        if groesse {
+        if let Some(buf) = buf {
             f.w = nw;
             f.h = nh;
-            f.buf = Puffer::neu(nw as usize, nh as usize, f.arbeit & 0xFF_FFFF);
+            f.buf = buf;
             fenster_zeichnen(f, &skin, aktiv, titel_farbe);
             fz.redraw = true;
         }
@@ -743,7 +759,8 @@ pub fn bildpunkt(versatz: u32) -> u32 {
     pruefe_ende();
     kern_abschnitt(|| {
         fenster::mit_welt(|w| {
-            let mut p = Puffer::neu(w.w as usize, w.h as usize, 0);
+            // ganzer Bildschirm als Puffer – nur wenn der System-Heap reicht
+            let Some(mut p) = Puffer::versuche(w.w as usize, w.h as usize, 0, prozess::system_frei()) else { return 0 };
             w.komponieren(&mut p);
             p.px.get(versatz as usize).map_or(0, |&c| crate::grafik::von565(c))
         })

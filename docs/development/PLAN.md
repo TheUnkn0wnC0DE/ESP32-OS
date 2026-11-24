@@ -1332,7 +1332,24 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   Details zur Lücke im Repo, in PLAN/STATUS oder Commit-Nachrichten.
   Nachweis: Commit mit dem Patch auf `main`, Release-Text angepasst.
 
-## I. v1.0.2 (Auftrag 23.11. nachts, Vorrang)
+## Gesamtauftrag 24.11. (ersetzt den vom 23.11. nachts)
+
+Ziel: mit dem Konkurrenzprojekt BMDS (github.com/jthwho/bmds) in jedem
+Bereich mindestens gleichziehen, in möglichst vielen vorne sein – mehr
+Funktionen und stabiler. Aufbau: Teil A (= I, erledigt), Teil B (= J,
+Browser), Teil C (= K, v1.1), Teil D (= L, Vorsprung). Nach jedem der Teile
+B, C, D eine **Stabilitätsrunde** (SB, SC, SD): per Autopilot alle Programme
+öffnen, bedienen, schliessen, das Menü oft öffnen und schliessen, Browser
+mit mehreren Seiten; mindestens 30 min ohne Absturz; jeden Absturz
+nachstellen, Ursache beheben, bevor der nächste Teil beginnt. Nach jeder
+Stabilitätsrunde ein Release vorbereiten (v1.0.3, v1.1, v1.2: README,
+CHANGELOG, Paket, Release-Check), OK in STATUS erbitten, weitermachen.
+Web-Flasher bleibt auf 1.0.1, bis der Nutzer anders entscheidet. Board ab
+24.11. 06:20 weg: bis „Board ist wieder da, mach weiter“ kein Zugriff auf
+COM3; alles vorbereiten, Board-Tests als Liste in STATUS („Board-Tests“).
+Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
+
+## I. Teil A: v1.0.2 (Auftrag 23.11. nachts, Vorrang) – erledigt
 
 - [x] **A1 Quake stürzt bei „New Game“ ab** – per Autopilot nachstellen
   (Quake öffnen, „New Game“ tippen), Absturz seriell mitschneiden (Panic,
@@ -1381,7 +1398,7 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
   `docs/nachweise/v102/release_paket_v1.0.2.txt`). OK in STATUS erbeten;
   veröffentlicht wird erst danach.
 
-## J. Browser (Auftrag 23.11. nachts)
+## J. Teil B: Browser (Auftrag 23.11. nachts, Gesamtauftrag 24.11.)
 
 - [ ] **BR1 Messen** – ~30 bekannte Seiten am Board (Wikipedia, Google,
   DuckDuckGo, GitHub, SRF, 20 Minuten, Blick, Digitec, Galaxus, SBB,
@@ -1445,15 +1462,117 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 - [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
   Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
   mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.
-  Kein Fernmodus, der Browser bleibt eigenständig.
+  Kein Fernmodus, der Browser bleibt eigenständig. Laufende Arbeit an
+  Speicherleck und libdom-Absturz zuerst sauber abschliessen (Review des
+  Diffs, Board-Nachweis über alle 30 Seiten).
+  Review Teil B (Subagent, 24.11.): 3 echte Befunde behoben – (1) Abrufe,
+  die vor dem Zwangsbeenden schon fertig waren, blieben liegen (die
+  Sitzungsnummer half nur laufenden): jetzt Liste aller Abrufe, der
+  Sitzungswechsel gibt für den toten Besitzer ab; (2) „Besitzer weg“ und
+  Zähler nicht gemeinsam gesperrt (doppeltes Freigeben möglich): jetzt in
+  einem Schritt; (3) ein beim Zwangsbeenden gehaltener Mutex hätte die
+  Arbeiter für immer blockiert: alle Sperren im Transport sind jetzt kurze
+  kritische Abschnitte (Spinlock), in denen eine Aufgabe nicht angehalten
+  werden kann. Dazu Überlauf bei ESP32OS_SEITENLISTE_S < 3 (nur
+  Entwicklung). Board-Nachweis folgt mit BR1 (Liste „Board-Tests“).
+- [x] **BR3 lexbor prüfen (nur prüfen, nicht einbauen)** – lexbor
+  (github.com/lexbor/lexbor) als Ersatz für libdom/hubbub: Lizenz
+  (Apache-2.0 gegen unser GPL-2.0), Speicherersparnis, Aufwand. Nachweis:
+  Ergebnis in STATUS unter „Offene Fragen“.
+  ✔ 24.11.: geprüft, Empfehlung „nicht einbauen“ (STATUS, Offene Fragen):
+  Apache-2.0 ist mit NetSurfs GPL-2.0-only nicht vereinbar; NetSurf
+  nutzt libdom in 25 Dateien mit 1260 Aufrufen, dazu libcss-Auswahl und
+  QuickJS-Anbindung (183 Aufrufe) – Umbau Monate; Speicherersparnis nicht
+  belegt.
+- [ ] **SB Stabilitätsrunde nach Teil B** – Autopilot ≥ 30 min (alle
+  Programme, Menü oft auf/zu, Browser mit mehreren Seiten), 0 Abstürze;
+  Browser und Menü besonders (Nutzer: stürzen am Board oft ab). Nachweis:
+  Log mit Dauer und Abstürzen, Fotos.
+  Vorbereitet (24.11., ohne Board): PC-Test `desktop/tests/stabil.rs`
+  (i686, in `alle_tests.sh`) – alle Programme über das Startmenü öffnen,
+  Titelleiste ziehen, im Browser Inhalt antippen, über das Kreuz schliessen
+  (auch Folgefenster), Menü oft auf/zu; jeder Schritt geprüft, kein
+  Absturz. Er erzeugt den Board-Autopilot
+  (`werkzeuge/board/stabil_autopilot.txt`, 6 Runden à 382 s = 38 min,
+  3528 Ereignisse); Lauf und Auswertung `werkzeuge/board/stabil_lauf.ps1`
+  (zählt Guru Meditation, abort, Panik, Absturz, Speicher voll, Neustarts;
+  schreibt danach die normale Firmware zurück). Am PC gefunden und behoben:
+  „Bild-Demo“ (libimg_demo) endete sofort, weil logo.png in /sys fehlte –
+  auch am Board; die Firmware legt sie jetzt beim Start in /daten an.
+  Am PC brach das Ende eines C-Programms (exit) den Testprozess ab
+  (Abwickeln durch `extern "C"`); kos_syscall ist jetzt "C-unwind" (am
+  Board ohne Wirkung). Menü am PC: 40 Mal auf/zu ohne Fehler – der
+  Absturz am Board ist am PC nicht nachstellbar, Board-Lauf nötig.
+  **Fehlerbericht des Nutzers 24.11. (Board unterwegs, v1.0.2), Vorrang:**
+  (1) Browser lädt nichts (auch http://1.1.1.1), Meldung
+  ESP_ERR_HTTP_CONNECT; (2) Browser offen, Startknopf („Home“) → ganzes
+  System startet neu, Meldung „@menu: Illegal instruction“; (3) Browser und
+  Menü stürzen oft ab.
+  Fall 2 am PC (`desktop/tests/browser_menue.rs`): 15 Mal Menü bei offenem
+  Browser ohne Absturz – am PC nicht nachstellbar, also Speicher am Board.
+  Ursache (Befund aus dem Code): `abort()` erscheint auf dem RISC-V-Kern als
+  „Illegal instruction“; das Menü legt beim Öffnen seinen Fensterpuffer im
+  System-Heap an (`Puffer::neu`, `vec!`) – schlägt das fehl, bricht Rust die
+  ganze Firmware ab. Den PSRAM füllte der Browser: empfangene Daten warten
+  als 4-KB-Blöcke ohne Grenze, bis NetSurf sie abholt. Behoben: (a)
+  Fensterpuffer (neues Fenster, Maximieren) nur noch, wenn der grösste freie
+  Block des System-Heaps reicht (+256 KB Reserve, `Puffer::versuche`,
+  Plattform `system_frei`), sonst endet nur dieses Programm mit „Speicher
+  voll“; (b) der Abrufer liest erst weiter, wenn höchstens 512 KB warten und
+  1,5 MB PSRAM frei sind. PC-Test: Menü bei vorgetäuscht vollem System-Heap
+  endet mit „Speicher voll“, Browser und Desktop laufen weiter, danach geht
+  das Menü wieder. Board-Nachweis folgt (Liste „Board-Tests“).
+  Fall 1: Die Meldung erklärt jetzt die Ursache – nach einer gescheiterten
+  Verbindung prüft der Abrufer Namensauflösung, TCP (5 s) und sonst TLS und
+  zeigt „Adresse … nicht gefunden (DNS-Fehler)“, „Keine Verbindung ins
+  Internet … Anmeldeseite des WLANs oder Router ohne Internet?“ (mit
+  eigener IP, Router, DNS) bzw. „Sichere Verbindung gescheitert (TLS)“. Dazu
+  Ersatz-Namensserver 1.1.1.1 und DNS in den Einstellungen (Commit b9c0a9a).
+  Warum TCP in diesem WLAN scheitert, zeigt erst die neue Meldung am Board.
+  Review (Subagent, 24.11., Fehlerbericht und Konsole): behoben – lsmod
+  hing in einer Endlosschleife (unbekannte 68.x lassen ebx stehen; jetzt
+  geprüft, Test tippt lsmod); die Konsole verlor Tasten, die während einer
+  Ausgabe kamen (jetzt Vorrat); Funktion 67 (Grösse ändern) und 35
+  (Bildpunkt) legten Puffer noch ohne Prüfung an (jetzt `versuche`); die
+  Fehlerdiagnose blockierte die Arbeiter bei jedem gescheiterten Bild (jetzt
+  30 s je Rechner gemerkt, Abbruch wird beachtet), sofortige
+  Verbindungsfehler wurden als TLS gemeldet, Adresstexte nicht
+  fadensicher, user@ in URLs; Zeileneingabe in der letzten Zeile rollte bei
+  jeder Taste; Rückruf von con_gets2 ohne Abwickeln. con_exit(0) kehrt
+  nicht zurück: unter Abweichungen.
+- [ ] **R103 v1.0.3 vorbereiten** – README, CHANGELOG, Release-Paket,
+  Release-Check; OK in STATUS erbitten, nicht warten.
 
-## K. v1.1 (Auftrag 23.11. nachts; vorher „Später (v1.1)“)
+## K. Teil C: v1.1 (Auftrag 23.11. nachts, Gesamtauftrag 24.11.)
 
 - [ ] **C1 Konsole** (vorher Z4) – console.obj nativ nachbauen (gleiche
   Schnittstelle wie KolibriOS), KolibriOS-Shell unverändert (wenn C), dazu
   kmatrix; bedienbar per Touch und Bildschirmtastatur. Vorher prüfen, ob es
   in Flash-Platz und Programm-Heap passt. Nachweis: PC-Test der
   Schnittstelle, Shell und kmatrix am Board per Touch, Foto.
+  Stand 24.11. (am PC, läuft): console.obj nativ (`kolibri/src/konsole.rs`,
+  `include/conio.h`, Zeiger in `c/libc_zusatz.c`): 80×25 Zeichen mit der
+  kleinen Systemschrift 6×9, Farben und Esc-Sequenzen (Farben,
+  Cursorbewegung, Löschen, Zeilen einfügen/löschen, Rollbereich, zweiter
+  Puffer, Titel), getch/getch2/kbhit/gets/gets2/get_input mit
+  Zeilenbearbeitung, printf/puts/fgets(stdin) der libc in die Konsole;
+  Bildschirmtastatur hält die Zeile mit der Schreibmarke frei. Konsole je
+  Faden (Kern `Faden::bibliothek`, Speicher im Heap des Programms).
+  KolibriOS-Shell 0.8.4 unverändert in `kolibri/c/shell/` (zwei Dateien
+  angepasst, siehe Abweichungen), Systemschicht nativ
+  (`c/shell_system.c`). PC-Test `kolibri/tests/konsole.rs`: echo, ver, ls,
+  Zeilenbearbeitung, touch/rm, Schliessen über das Kreuz (Fotos
+  `kolibri/tests/erwartet/c1_*`). Passt: Firmware 5,76 MB von 16 MB.
+  kmatrix: GPL-3.0-or-later, darf nicht mit NetSurf (GPL-2.0-only) in eine
+  Firmware (Abweichung, Frage in STATUS) – Ersatz: eigenes Programm
+  „Matrix“ (`kolibri/c/matrix.c`, Foto `c1_matrix.png`). Konsole und Matrix
+  stehen im Startmenü unter „Mehr Programme“; die Stabilitätsrunde
+  (`stabil.rs`) öffnet und schliesst beide. Touch am PC
+  (`desktop/tests/konsole_touch.rs`): Konsole über das Menü, „ver“, „touch
+  neu“, „ls“, „rm neu“ auf der Bildschirmtastatur getippt (Datei entsteht
+  und verschwindet), Kreuz; Matrix öffnen/schliessen – erzeugt den
+  Board-Autopilot (`werkzeuge/board/c1_autopilot.txt`, `c1_lauf.ps1`).
+  Offen: Board per Touch (Liste „Board-Tests“, Punkt 5).
 - [ ] **C2 WLAN 6** (vorher W2 und W5) – eigene C6-Firmware (Host/Slave
   versionsgleich, Update vom P4 aus), iTWT. Vorher/Nachher: Durchsatz,
   Verbindungsaufbau, Stromverbrauch soweit messbar. Nachweis: Log mit
@@ -1461,9 +1580,11 @@ der Knopf „Spiele“ öffnet ihn nicht mehr.
 - [ ] **C3 Standby** (vorher P5 ohne Akku) – Bildschirm aus, Aufwachen per
   Touch, danach WLAN-Verbindung wieder da und offene Programme laufen
   weiter. Nachweis: Log und Fotos vor/nach dem Standby per Autopilot.
+- [ ] **SC Stabilitätsrunde nach Teil C** – wie SB, dazu Konsole und
+  Standby. Nachweis: Log ≥ 30 min, 0 Abstürze.
 - [ ] **C4 v1.1 vorbereiten** – README, CHANGELOG, Release-Paket,
-  Release-Check, Web-Flasher; OK des Nutzers in STATUS erbitten, Liste
-  aller Punkte mit Nachweis.
+  Release-Check (Web-Flasher bleibt auf 1.0.1, Nutzer 24.11.); OK des
+  Nutzers in STATUS erbitten, nicht warten.
 
 Stand der früheren Punkte (bis 23.11.):
 
@@ -1500,12 +1621,70 @@ blockiert v1.0 nicht mehr (Stand und Nachweise der Punkte unverändert).
   Abbilds, Programm-Heap). Nachweis: PC-Test der Schnittstelle, Shell und
   kmatrix am Board per Touch/Bildschirmtastatur, Foto.
 
+## L. Teil D: Vorsprung ausbauen (Gesamtauftrag 24.11.)
+
+Reihenfolge nach Nutzen und Aufwand (Begründung): **D5** zuerst – der
+Nutzer erlebt Abstürze von Browser und Menü; ein Hardware-Fehler in einem
+Programm soll nicht mehr das ganze Board neu starten (grösster Nutzen für
+„stabiler“, mittlerer Aufwand, baut auf absturz.c auf). Dann **D4**
+(Dateimanager besteht, Kopieren/Verschieben/Papierkorb sind überschaubar,
+täglich gebraucht), dann **D1** (baut direkt auf der Shell aus C1 auf),
+dann **D2** (braucht Dekoder MP3/Ogg/MIDI und den ES8311-Weg, mittlerer
+bis grosser Aufwand), zuletzt **D3** (grösster Aufwand: Programme zur
+Laufzeit laden braucht den ELF-Lader, siehe Abweichung O2, dazu Signatur
+und Verzeichnis auf GitHub).
+
+- [ ] **D5 Absturzschutz** – Hardware-Fehler (Load/Store access fault,
+  illegal instruction) in einem Programm abfangen und nur dieses Programm
+  beenden statt das Board neu zu starten, soweit ohne User-Mode möglich.
+  Grenzen ehrlich unter „Abweichungen“. Nachweis: PC-/Board-Test mit
+  absichtlichem Fehler in einem Testprogramm – Programm endet, Desktop
+  läuft weiter, Foto.
+- [ ] **D4 Dateimanager** – Kopieren, Verschieben, Löschen mit
+  Papierkorb, per Touch (lange drücken = Menü). Nachweis: PC-Test per
+  Autopilot, Board-Foto.
+- [ ] **D1 Shell ausbauen** – Pipes, Umleitungen, Skripte, möglichst viele
+  Standardbefehle. Nachweis: PC-Tests je Funktion, Board-Foto.
+- [ ] **D2 Medienplayer** – MP3, Ogg, WAV, MIDI über den
+  ES8311-Lautsprecher, per Touch; vorhandenen KolibriOS-Player nehmen, wenn
+  passend. Nachweis: PC-Test der Dekoder, Board: Ton (Log), Foto.
+- [ ] **D3 App-Store** – Programme per WLAN aus einem signierten
+  Verzeichnis auf GitHub laden, installieren, entfernen, per Touch; gleiche
+  Signaturprüfung wie beim OTA. Nachweis: PC-Test Signatur, Board:
+  Installieren/Entfernen per Autopilot, Foto.
+- [ ] **SD Stabilitätsrunde nach Teil D** – wie SB mit allen neuen
+  Programmen. Nachweis: Log ≥ 30 min, 0 Abstürze.
+- [ ] **R12 v1.2 vorbereiten** – README, CHANGELOG, Paket, Release-Check;
+  OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
+
 ## Abweichungen
 
-- **Batterieanzeige gestrichen (Nutzer 23.11. nachts):** Akkuanzeige in
+- **C1 Shell, zwei Dateien angepasst (24.11.):** `cmd/cmd_lsmod.c` fragte
+  die Treiberliste mit Inline-Assembler ab (`int $0x40`, 68.31) – jetzt
+  über kos_syscall; ESP32-OS hat keine ladbaren Treiber, lsmod meldet das.
+  `cmd/cmd_ver.c` las die CPU-Kennung mit x86-`cpuid` – auf dem RISC-V des
+  P4 gibt es das nicht, jetzt fester Text „ESP32-P4 RV“. `shell_api.h`
+  (libc.obj): eine Grösse ohne Verweis auf den eigenen, noch
+  unvollständigen Typ (gcc/clang lehnen das ab, tcc nicht). Alles andere
+  unverändert.
+- **C1 kmatrix nicht übernommen (24.11.):** kmatrix steht unter
+  GPL-3.0-or-later; die Firmware enthält NetSurf (GPL-2.0-only) – beides in
+  einem Abbild verletzt eine der Lizenzen. Ersatz: eigenes Programm
+  „Matrix“ (GPL-2.0), das die Konsole genauso nutzt. Frage an den Nutzer in
+  STATUS (eigenes Abbild wie Doom/Quake wäre möglich).
+- **C1 Konsole ohne Zurückblättern (24.11.):** console.obj hat einen
+  Bildschirmpuffer mit Zurückblättern (Standard 300 Zeilen); hier ist der
+  Puffer so gross wie der sichtbare Bereich (80×25). Grund: Touch-Bedienung
+  ohne Bildlaufleiste, Speicher. Schliessen des Fensters beendet das
+  Programm sofort (im Original meldet console.obj „Fenster zu“ und das
+  Programm entscheidet) – sonst bliebe am Touch ein Programm ohne Fenster.
+  Ebenso kehrt con_exit(0) (Fenster bleibt mit „[Finished]“) nicht zurück:
+  Code danach läuft nicht mehr, das Kreuz beendet das Programm.
+
+- **Batterieanzeige gestrichen (Nutzer 23.11. nachts, bestätigt 24.11.: von mir entschieden):** Akkuanzeige in
   der Taskleiste und Strommessung des Akkus (Teil von P5) entfallen; Standby
   bleibt als C3.
-- **Z2 Kamera-App gestrichen (Nutzer 23.11. nachts):** kein Kameramodul am
+- **Z2 Kamera-App gestrichen (Nutzer 23.11. nachts, bestätigt 24.11.: von mir entschieden):** kein Kameramodul am
   Board; nichts begonnen.
 
 - **O2, ELF-Lader nicht umgesetzt (23.11.):** `espressif/elf_loader` kann

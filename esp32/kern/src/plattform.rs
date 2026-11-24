@@ -46,6 +46,10 @@ pub struct Plattform {
     /// true: eine Panik in einem Programm-Faden beendet nur diesen Faden über
     /// `task_beenden` (Plattformen ohne Abwickeln, z. B. das Board).
     pub panik_beendet_task: bool,
+    /// Grösster freier Block des System-Heaps in Bytes (Board: PSRAM). Grosse
+    /// Belegungen für Programme (Fensterpuffer) prüfen damit vorher, statt
+    /// bei vollem Speicher die ganze Firmware abzubrechen.
+    pub system_frei: fn() -> usize,
 }
 
 #[cfg(not(target_os = "espidf"))]
@@ -113,6 +117,12 @@ mod pc {
 
     fn fortsetzen(_g: usize) {}
 
+    /// PC: unbegrenzt, ausser ein Test setzt eine Grenze
+    /// ([`crate::grafik::TEST_SYSTEM_FREI`]).
+    fn system_frei() -> usize {
+        crate::grafik::TEST_SYSTEM_FREI.load(core::sync::atomic::Ordering::Relaxed)
+    }
+
     fn layout(n: usize) -> Layout {
         Layout::from_size_align(n, 64).expect("Bereichsgrösse")
     }
@@ -136,6 +146,7 @@ mod pc {
         task_beenden: beenden,
         task_weg: weg,
         task_freigeben: freigeben,
+        system_frei,
         // Std-Threads lassen sich nicht von aussen anhalten
         task_anhalten: None,
         task_fortsetzen: fortsetzen,

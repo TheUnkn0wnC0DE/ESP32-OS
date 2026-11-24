@@ -47,11 +47,30 @@ pub fn sd_einbinden() -> i32 {
     r
 }
 
+/// Dateien, die übernommene KolibriOS-Programme in /sys erwarten (einmal
+/// anlegen bzw. erneuern, wenn die Grösse nicht stimmt): „Bild-Demo“
+/// (libimg_demo) liest logo.png – ohne sie endete das Programm sofort
+/// (Stabilitätsrunde 24.11.).
+fn sys_dateien_ablegen() {
+    const DATEIEN: &[(&str, &[u8])] = &[("logo.png", include_bytes!("../../kolibri/daten/logo.png"))];
+    for (n, d) in DATEIEN {
+        let p = format!("/daten/{n}");
+        if std::fs::metadata(&p).is_ok_and(|m| m.len() == d.len() as u64) {
+            continue;
+        }
+        match std::fs::write(&p, d) {
+            Ok(()) => log::info!("/sys/{n} angelegt ({} Byte)", d.len()),
+            Err(e) => log::warn!("/sys/{n} nicht angelegt: {e}"),
+        }
+    }
+}
+
 pub fn einhaengen() {
     kern::datei::speicher_info_setzen(speicherplatz);
     if crate::daten::einbinden() {
         kern::datei::einhaengen("/sys", "/daten");
         kern::datei::einhaengen("/rd/1", "/daten");
+        sys_dateien_ablegen();
     }
     let r = sd_einbinden();
     if r == 0 {
