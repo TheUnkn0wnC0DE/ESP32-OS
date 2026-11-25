@@ -903,6 +903,37 @@ fetch('/setzen').then(r => r.text()).then(() => {{
         c(javascript_masse_innen);
     }
 
+    /// Q3: `<script type="module">` (und Import-Maps) überspringen wie ein
+    /// Browser ohne ES-Module – vorher „SyntaxError: Unexpected token '{'“
+    /// bei `import`; `nomodule`-Skripte laufen.
+    #[test]
+    fn module_skripte_uebersprungen() {
+        c(module_skripte_innen);
+    }
+
+    fn module_skripte_innen() {
+        if im_eigenen_prozess("module_skripte_uebersprungen") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        let html = r#"<html><body><p>m</p>
+<script type="importmap">{"imports":{"a":"./a.js"}}</script>
+<script type="module">import{b}from"./b.js";export const x=1;console.log('modul lief');</script>
+<script type="MODULE">import x from"./c.js";</script>
+<script nomodule>console.log('nomodule lief');</script>
+<script>console.log('klassisch lief');</script>
+</body></html>"#;
+        let (r, _bild) = lauf_mit(&data_url(html), 320, 200, 1500, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        println!("{k}");
+        assert!(k.contains("log: nomodule lief") && k.contains("log: klassisch lief"), "{k}");
+        assert!(!k.contains("log: modul lief"), "Modul lief: {k}");
+        assert!(!k.contains("SyntaxError"), "kein Syntaxfehler mehr: {k}");
+    }
+
+
     fn javascript_masse_innen() {
         if im_eigenen_prozess("javascript_masse") {
             return;

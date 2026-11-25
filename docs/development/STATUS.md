@@ -11,6 +11,21 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **25.11., 20:20 – Übergabe:** Q3 Schritt 1 (ES-Module überspringen) am
+  Board gemessen: JS-Fehler 61 → 10. Neuer Stabilitätsfund: Browser nach
+  Seite 20 „Verwaist“ (Faden nicht anhaltbar), Bereich bleibt im Pool →
+  weitere Browserstarts „kein Speicher“. Nächstes: Grund je Faden loggen
+  (kern/src/prozess.rs `zwangsbeenden`, Rückgabe Verwaist), br_lauf
+  wiederholen, beheben. Danach Q3 weiter (Eigenschaften undefined, out of
+  memory → mehr Heap), Q1-Rest, Q4. Board an COM3.
+
+- **25.11., 19:30:** Q2 Wetter abgehakt (Board-Foto Zürich mit echten
+  Daten), S1 abgehakt (Board: Median 26 ms, max 82 ms), Q1-Fotos nachher.
+  Q3 Schritt 1: ES-Module überspringen (40 von 61 JS-Fehlern der 30
+  Testseiten) – Test grün; BR-Lauf am Board für Nachher läuft. Nächste
+  Schritte Q3: fehlende `Image`, `performance.timing`, `hasFeature`,
+  Webpack-Worker-Chunks; dann Q1-Rest (Tastatur-fps, Randfälle), Q4.
+
 - **25.11., 18:40 – Übergabe (Q-Auftrag):** Gepusht main 2a70783 (Wetter-App
   Q2 am PC fertig, Q1-Funde 1–4, 6, 8 behoben, WAV), Autopiloten neu
   (d003bc6, Menü jetzt drei Spalten). Board wieder an COM3. Läuft:

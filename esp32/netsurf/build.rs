@@ -214,6 +214,11 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     g.d("NETSURF_BUILTIN_VERBOSE_FILTER", Some("\"(level:VERBOSE || cat:jserrors)\""));
     for (dir, dateien) in KERN {
         for f in dateien.split_whitespace() {
+            // Q3: script.c als geprüfte Kopie (ES-Module überspringen)
+            if *dir == "content/handlers/html" && f == "script.c" {
+                g.f(script_kopie(q, aus));
+                continue;
+            }
             g.f(ns.join(dir).join(f));
         }
     }
@@ -963,6 +968,52 @@ fn kopie_mit(q: &Path, ziel: &Path, rel: &str, name: &str, ersetzungen: &[(&str,
         std::fs::write(&datei, t).expect(name);
     }
     datei
+}
+
+/// `content/handlers/html/script.c` als geprüfte Kopie (Q3): NetSurf
+/// führte `<script type="module">` als klassisches Skript aus – am Board 40
+/// der 61 JS-Fehler der 30 Testseiten („Unexpected token '{'“ bei `import`,
+/// „unsupported keyword: export“). Ein Browser ohne ES-Module überspringt
+/// solche Skripte (und Import-Maps) und führt `nomodule`-Skripte aus, wie es
+/// NetSurf ohnehin tut.
+fn script_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "content/handlers/html/script.c",
+        "html_script.c",
+        &[(
+            "	exc = dom_element_get_attribute(node, corestring_dom_type, &mimetype);
+	if (exc != DOM_NO_ERR || mimetype == NULL) {
+		mimetype = dom_string_ref(corestring_dom_text_javascript);
+	}
+",
+            "	exc = dom_element_get_attribute(node, corestring_dom_type, &mimetype);
+	if (exc != DOM_NO_ERR || mimetype == NULL) {
+		mimetype = dom_string_ref(corestring_dom_text_javascript);
+	}
+
+\
+             	/* ESP32-OS Q3: ES-Module und Import-Maps nicht ausführen */
+\
+             	if ((dom_string_byte_length(mimetype) == 6 &&
+\
+             	     strncasecmp(dom_string_data(mimetype), \"module\", 6) == 0) ||
+\
+             	    (dom_string_byte_length(mimetype) == 9 &&
+\
+             	     strncasecmp(dom_string_data(mimetype), \"importmap\", 9) == 0)) {
+\
+             		NSLOG(jserrors, WARNING, \"Modul-Skript übersprungen\");
+\
+             		dom_string_unref(mimetype);
+\
+             		return DOM_HUBBUB_OK;
+\
+             	}
+",
+        )],
+    )
 }
 
 /// `frontends/framebuffer/schedule.c` als geprüfte Kopie (BR2): Bei vollem

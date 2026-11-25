@@ -1723,6 +1723,30 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   30 Seiten, Vorher/Nachher hier; frei gewordenen Speicher für den Browser
   nutzen (JS-Limit, Heap), soweit stabil; was grundsätzlich nicht geht, unter
   „Abweichungen“. (EFFORT: xhigh empfohlen – NetSurf/QuickJS)
+  Messung vorher (BR1-Lauf 25.11., 30 Seiten, Log `ns_js: Fehler`), 61
+  JS-Fehler nach Häufigkeit: 34 „SyntaxError: Unexpected token '{'“ (alle bei
+  Zeile 1, Spalte 7: `import{…}` in `<script type="module">`), 6
+  „unsupported keyword: export“ (ebenfalls Module), 6 „chunk path empty but
+  not in a worker“ (Webpack-Chunks), 3 „InternalError: out of memory“, 2
+  „invalid assignment left-hand side“, je 1: `Image` fehlt,
+  `performance.timing.responseStart`, `document.implementation.hasFeature`,
+  `…prototype`/`parentElement`/`document` von undefined, `consent` von null,
+  „redeclaration of prefersDark“, „not a function“.
+  Schritt 1 (25.11.): NetSurf führte `type="module"` als klassisches Skript
+  aus → jetzt übersprungen (auch Import-Maps), `nomodule` läuft – wie ein
+  Browser ohne ES-Module (`build.rs` → `script_kopie`). Test
+  `module_skripte_uebersprungen` (64 Bit und i686).
+  Nachher (Board 25.11. abends, dieselben 30 Seiten): **JS-Fehler 61 → 10**
+  (alle Modul-/export-Fehler, Webpack-Worker-Chunks und `Image` weg; übrig 3×
+  out of memory, 1× redeclaration, 4× Eigenschaft von undefined/null).
+  Seiten 1–20: 13 geladen, 7 abgeschnitten (HTML > 512 KB) – wie vorher.
+  **Neuer Fund (Stabilität):** nach Seite 20 (NZZ) liess sich der Browser
+  nicht ganz beenden (`zwangsbeenden` → „Verwaist“ nach 5 s: ein Faden
+  im Kern, geschützt oder unter der Heap-Sperre); sein Bereich (10 628 KB)
+  blieb im Pool, Pool frei nur noch 990 KB – Seiten 21–30 „Browser nicht
+  gestartet (-30)“. Nächster Schritt: beim Ergebnis „Verwaist“ je Faden den
+  Grund loggen (im_kern, geschützt, Heap-Sperre, Task-Zustand), Lauf
+  wiederholen, Ursache beheben; dann Seiten 21–30 erneut messen.
 - [ ] **Q4 Abschluss** – Review-Subagent prüft das ganze Qualitäts-Update
   gegen diesen Auftrag; 60-min-Dauertest per Autopilot, 0 Abstürze, kein
   Speicherleck; nächste Version vorbereiten (README, CHANGELOG,
