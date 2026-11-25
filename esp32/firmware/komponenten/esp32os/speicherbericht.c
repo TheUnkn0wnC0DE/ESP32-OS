@@ -4,6 +4,7 @@
  * Mess-Build vollständig (werkzeuge/board/m1_lauf.ps1 schaltet die beiden
  * Optionen vorübergehend ein – Task-Verfolgung ist im normalen Betrieb zu
  * riskant: sie stürzt ab, wenn der Planer angehalten ist). */
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "esp_heap_caps.h"
@@ -52,6 +53,9 @@ void esp32os_speicherbericht(void)
      * Task 0 = vor dem Planer bzw. ohne Task */
     static heap_task_totals_t summen[48];
     size_t anzahl = 0;
+    /* heap_caps_get_per_task_info addiert in totals – vor jedem Bericht
+     * leeren (sonst wuchsen die Werte von Bericht zu Bericht) */
+    memset(summen, 0, sizeof summen);
     heap_task_info_params_t q = { 0 };
     q.caps[0] = MALLOC_CAP_INTERNAL;
     q.mask[0] = MALLOC_CAP_INTERNAL;
@@ -90,6 +94,7 @@ void esp32os_speicherbericht(void)
         static heap_task_block_t bloecke[700];
         static heap_task_totals_t summe_main[2];
         size_t n_main = 0;
+        memset(summe_main, 0, sizeof summe_main);
         heap_task_info_params_t b = { 0 };
         b.caps[0] = MALLOC_CAP_INTERNAL;
         b.mask[0] = MALLOC_CAP_INTERNAL;

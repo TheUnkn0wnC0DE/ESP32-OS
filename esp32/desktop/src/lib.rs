@@ -368,7 +368,7 @@ const SHELL: [kern::ProgrammEintrag; 22] = [
     // vorher 4 MB – die fehlten im Programm-Pool (M4)
     eintrag!("@icon", shell::icon, 2560),
     eintrag!("@taskbar", shell::taskbar, 256),
-    eintrag!("@menu", shell::menu, 384),
+    eintrag!("@menu", shell::menu, 256),
     eintrag!("info", shell::info, 256),
     eintrag!("dateimanager", dateimanager::programm, 1024),
     // 8 MB: startet neben Dateimanager und Diensten (O4; mit 12 MB blieb

@@ -1,0 +1,8 @@
+rst:0x1 (POWERON),boot:0x30f (SPI_FAST_FLASH_BOOT)
+I (2904) pudding_p4: [debug] absturz_test: schreibe auf Adresse 0
+E (2904) pudding_fw::kern_board: Hardware-Fehler in Programm Some(3) – nur dieses Programm wird beendet
+I (3204) pudding_p4: [debug] absturz_test: lese von Adresse 4
+E (3204) pudding_fw::kern_board: Hardware-Fehler in Programm Some(6) – nur dieses Programm wird beendet
+I (3507) pudding_p4: [debug] absturz_test: unerlaubter Befehl
+E (3507) pudding_fw::kern_board: Hardware-Fehler in Programm Some(8) – nur dieses Programm wird beendet
+I (3806) pudding_p4: ESP32-OS-Desktop startet (absturz_test;absturz_test lesen;absturz_test befehl)

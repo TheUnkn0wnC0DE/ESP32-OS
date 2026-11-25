@@ -12,7 +12,11 @@
 param(
     [Parameter(Mandatory)][string]$Ziel,
     [string]$Port = 'COM3',
-    [switch]$NurBauen
+    [switch]$NurBauen,
+    # Zeitpunkte der Speicherberichte (s) und Laufzeit (s); M4-Lecksuche:
+    # Ende der Runden 1–4 (alle Programme zu) – Heap je Task vergleichen
+    [string]$Berichte = '40,200,430',
+    [int]$Sekunden = 460
 )
 $env:PYTHONIOENCODING = 'utf-8'
 $esp32 = Resolve-Path "$PSScriptRoot\..\.."
@@ -32,7 +36,7 @@ try {
         '', '# M1 Mess-Build (vorübergehend, m1_lauf.ps1)',
         'CONFIG_HEAP_TASK_TRACKING=y', 'CONFIG_FREERTOS_USE_TRACE_FACILITY=y')
     Umgebung-Leeren
-    $env:ESP32OS_SPEICHERBERICHT = '40,200,430'
+    $env:ESP32OS_SPEICHERBERICHT = $Berichte
     if (-not $NurBauen) {
         # als Datei (eine Umgebungsvariable wäre zu lang, max. 32767 Zeichen)
 $env:ESP32OS_AUTOPILOT_DATEI = (Resolve-Path "$PSScriptRoot\stabil_autopilot.txt").Path
@@ -48,7 +52,7 @@ $env:ESP32OS_AUTOPILOT_DATEI = (Resolve-Path "$PSScriptRoot\stabil_autopilot.txt
 if ($rc -ne 0) { "BAU FEHLER $rc (siehe $Ziel\bau.log)"; exit 1 }
 if ($NurBauen) { "MESS-BUILD GEBAUT (sdkconfig.defaults wiederhergestellt)"; exit 0 }
 
-cmd /c "python `"$esp32\firmware\bildschirmfoto.py`" 460 `"$Ziel`" $Port --reset > `"$Ziel\board_log.txt`" 2>&1"
+cmd /c "python `"$esp32\firmware\bildschirmfoto.py`" $Sekunden `"$Ziel`" $Port --reset > `"$Ziel\board_log.txt`" 2>&1"
 & python "$esp32\firmware\werkzeuge\log_schwaerzen.py" "$Ziel\board_log.txt"
 Select-String -Path "$Ziel\board_log.txt" -Pattern 'BERICHT|TASK|TASKS:|HEAPTASK|MAINBLOCK|SPEICHER t=|Heap|heap|WLAN: Transport|Start: intern|Programm-Pool' -Encoding UTF8 |
     ForEach-Object { $_.Line } | Set-Content "$Ziel\bericht.txt" -Encoding UTF8

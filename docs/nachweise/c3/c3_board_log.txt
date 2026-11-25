@@ -1,0 +1,2 @@
+I (36886) pudding_p4: Ruhezustand: Panel schläft (0/0), aus dem Menü
+I (126642) pudding_p4: Ruhezustand: aufgeweckt (Panel 0/0) nach 89 s, WLAN verbunden

@@ -1475,6 +1475,22 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   zugeordnet. Nächster Schritt: Heap-Spur mit Aufrufstapel
   (CONFIG_HEAP_TRACING_STACK_DEPTH) über mehr Runden, die 16-B-Knoten
   zuordnen. M4 bleibt offen.
+  **Lauf 6 (25.11., 75 min, m4g, mit Browser-Korrektur): 0 Abstürze, 0
+  Neustarts**; intern 220 → 213 KB (−7 KB). 8 Startfehler des Browsers:
+  das Startmenü (436 KB) ist beim Start noch belegt, am Board des Nutzers
+  war dazu die Uhr offen (der Autopilot trifft dort andere Menüeinträge) –
+  grösstes Pool-Stück 10 618 KB, Browser braucht 10 628 KB. Behoben: @menu
+  256 KB (Spitze 56 KB). Zuordnung des Lecks: Mess-Build mit Heap je Task
+  (`m1_lauf.ps1 -Berichte 450,880,1310,1740`, Ende der Runden 1–4).
+  Ergebnis (25.11., Werte aus den Differenzen – der Bericht addierte
+  wegen nicht geleerter Felder, behoben in `speicherbericht.c`): kein Task
+  wächst von Runde zu Runde; main konstant 160 812 B, ipc0 45 464 B,
+  pthread/lwIP 492 B. Intern frei am Rundenende 196/195/195/192 KB – die
+  Unterschiede sind kurzlebige Belegungen (Menü und Tastatur beim letzten
+  Bericht offen, Speicherwacht). Die −7/−8 KB in 72 min lassen sich so
+  keinem Task zuordnen (Grössenordnung ~100 B je Minute, unter der
+  Streuung einzelner Berichte). M4 bleibt offen: Kriterium „intern am
+  Ende = am Anfang“ nicht erfüllt; 0 Abstürze in drei 75-min-Läufen erfüllt.
 - [ ] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
 - [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5) –
   intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM
@@ -1898,7 +1914,7 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   vorherige Firmware je nach laufendem Platz (ota_1 → ota_0, ota_0 →
   factory); Rückgabewerte geprüft; „activate“-Fehler bei C6-Firmware ab 2.6
   gilt als Fehlschlag.
-- [ ] **C3 Standby** (vorher P5 ohne Akku) – Bildschirm aus, Aufwachen per
+- [x] **C3 Standby** (vorher P5 ohne Akku) – Bildschirm aus, Aufwachen per
   Touch, danach WLAN-Verbindung wieder da und offene Programme laufen
   weiter. Nachweis: Log und Fotos vor/nach dem Standby per Autopilot.
   Vorbereitet (24.11.): Ruhezustand gibt es seit P5 (Startmenü →
@@ -1911,6 +1927,11 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   und schob sie mit der Schreibmarke – bei Matrix lag sie über der
   Taskleiste, der Startknopf war nicht erreichbar. Jetzt erst, wenn das
   Programm auf eine Taste wartet.
+  Nachweis Board (25.11., `c3_lauf.ps1`): Matrix läuft, Startmenü →
+  Ruhezustand: Log „Ruhezustand: Panel schläft (0/0), aus dem Menü“, nach
+  90 s Antippen: „aufgeweckt (Panel 0/0) nach 89 s, WLAN verbunden“; Fotos
+  direkt danach und 15 s später – Matrix läuft weiter
+  (`docs/nachweise/c3/`); 0 Abstürze, 0 Neustarts.
 - [ ] **SC Stabilitätsrunde nach Teil C** – wie SB, dazu Konsole und
   Standby. Nachweis: Log ≥ 30 min, 0 Abstürze.
 - [ ] **C4 v1.1 vorbereiten** – README, CHANGELOG, Release-Paket,
@@ -1965,7 +1986,7 @@ bis grosser Aufwand), zuletzt **D3** (grösster Aufwand: Programme zur
 Laufzeit laden braucht den ELF-Lader, siehe Abweichung O2, dazu Signatur
 und Verzeichnis auf GitHub).
 
-- [ ] **D5 Absturzschutz** – Hardware-Fehler (Load/Store access fault,
+- [x] **D5 Absturzschutz** – Hardware-Fehler (Load/Store access fault,
   illegal instruction) in einem Programm abfangen und nur dieses Programm
   beenden statt das Board neu zu starten, soweit ohne User-Mode möglich.
   Grenzen ehrlich unter „Abweichungen“. Nachweis: PC-/Board-Test mit
@@ -1990,6 +2011,17 @@ und Verzeichnis auf GitHub).
   (kritischer Abschnitt, Schwelle erhöht) → Neustart; Fehler im Handler
   selbst → kein zweites Abfangen (Wiedereintritt je Kern gesperrt); Meldung
   im Kern-Abschnitt.
+  Board 25.11., Lauf 1 (`d5_lauf.ps1`): **nicht bestanden** – Schreiben
+  auf Adresse 0 startete das Board neu. Ursache: die Prüfung „Unterbrechungen
+  frei“ verglich die CLIC-Schwelle mit RVHAL_INTR_ENABLE_THRESH_CLIC; im
+  Ausnahmepfad des P4 stimmte das nie, D5 lehnte jeden Fehler ab. Ersetzt
+  durch den Zähler der kritischen Abschnitte von FreeRTOS
+  (`port_uxCriticalNesting` des Kerns): in einem kritischen Abschnitt
+  weiterhin Neustart, sonst nur das Programm beenden.
+  Nachweis Board, Lauf 2: Schreiben auf 0, Lesen von 4, unerlaubter Befehl
+  – „Hardware-Fehler in Programm … nur dieses Programm wird beendet“ (3 von
+  3 abgefangen), 0 Neustarts, Desktop startet danach normal
+  (`docs/nachweise/d5/`).
 - [ ] **D4 Dateimanager** – Kopieren, Verschieben, Löschen mit
   Papierkorb, per Touch (lange drücken = Menü). Nachweis: PC-Test per
   Autopilot, Board-Foto.

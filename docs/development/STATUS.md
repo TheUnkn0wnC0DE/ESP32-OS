@@ -11,6 +11,12 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **25.11., 2 Uhr:** S5 abgehakt (Board-Fotos aller 18 Programme vorher/
+  nachher, `docs/nachweise/s5/`). Browser-Absturz behoben, Lecksuche lief
+  danach ohne Absturz durch (3,6 KB in zwei Runden, Zuordnung offen).
+  Gepusht: main dcf62e4. Läuft: M4 Lauf 6 (bis ~3:25). Danach: C3/D5
+  Board-Nachweise. Wochenlimit 81 %.
+
 - **25.11., 1 Uhr:** M4 Lauf 5: 0 Abstürze in 75 min, intern aber −8 KB.
   Lecksuche zweimal durch denselben Browser-Absturz (nach 629 s) beendet –
   Ursache gefunden und behoben (statische Sperre im Heap des Browsers,

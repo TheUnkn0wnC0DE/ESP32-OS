@@ -114,16 +114,21 @@ static volatile bool im_handler[SOC_CPU_CORES_NUM];
 /* Waren Unterbrechungen beim Fehler frei? (MPIE, Schwelle auf Grundwert.)
  * Sonst lief das Programm in einem kritischen Abschnitt oder unter einer
  * Sperre – das Ende würde hängen bleiben (Review 24.11.). */
-static bool IRAM_ATTR unterbrechungen_frei(const RvExcFrame* f)
+/* Zähler der kritischen Abschnitte von FreeRTOS (port.c, je Kern) */
+extern volatile UBaseType_t port_uxCriticalNesting[portNUM_PROCESSORS];
+
+static bool IRAM_ATTR unterbrechungen_frei(const RvExcFrame* f, int kern)
 {
     if ((f->mstatus & (1u << 7)) == 0) { /* MPIE */
         return false;
     }
-#if SOC_INT_CLIC_SUPPORTED
-    if (rv_utils_get_interrupt_threshold() != RVHAL_INTR_ENABLE_THRESH_CLIC) {
+    /* Board 25.11.: die Interrupt-Schwelle (CLIC) stimmte im Ausnahmepfad nie
+     * mit RVHAL_INTR_ENABLE_THRESH_CLIC überein – D5 fing so nichts ab.
+     * Kritischer Abschnitt (portENTER_CRITICAL, Spinlock) erkennt der Zähler
+     * der Verschachtelung zuverlässig. */
+    if (port_uxCriticalNesting[kern] != 0) {
         return false;
     }
-#endif
     return true;
 }
 
@@ -135,7 +140,7 @@ void IRAM_ATTR __wrap_xt_unhandled_exception(void* frame)
     /* Adress-/Zugriffsfehler und unerlaubter Befehl; nicht ecall/ebreak */
     bool art = c == 0 || c == 1 || c == 2 || c == 4 || c == 5 || c == 6 || c == 7;
     if (art && !im_handler[kern] && !g_panic_abort && spi_flash_cache_enabled() && !xPortInterruptedFromISRContext()
-        && unterbrechungen_frei(f)) {
+        && unterbrechungen_frei(f, kern)) {
         im_handler[kern] = true;
         bool abgefangen = esp32os_programm_fehler_abfangen(c, f->mepc, f->mtval);
         im_handler[kern] = false;
