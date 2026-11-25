@@ -1385,7 +1385,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   (Block 2816, Min 2887) Pool 11106/14848 KB …“), Absturzmeldung mit
   Speicherstand am Board (Messlauf 2, oben), Tabelle des internen RAM je
   Task bei M2 (Messlauf 3).
-- [ ] **M2 Interner RAM so leer wie möglich** – alles ins PSRAM, was nicht
+- [x] **M2 Interner RAM so leer wie möglich** – alles ins PSRAM, was nicht
   zwingend intern sein muss (WLAN- und lwIP-Puffer, mbedTLS, Stapel wo
   sicher, Kern-Strukturen, Puffer der Programme); grosse Puffer
   (Bildpuffer, Fenster, Schriften) einmal beim Start reservieren. Ziel:
@@ -1403,7 +1403,10 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Block 71 KB (vorher 29), Minimum seit Start 131 KB (vorher 59)**, 0
   Abstürze, Desktop 32,8 FPS (vorher ~32). PSRAM-Minimum 2,9 MB (Browser) –
   Thema für M6. Ziel ≥ 100 KB erreicht; Bestätigung im Dauertest M4.
-- [ ] **M3 Feste Speichergrenzen** – jedes Programm ein festes Budget,
+  Nachweis (Dauertests 25.11., je 75 min, Browser, alle Programme):
+  intern frei nie unter 210 KB (Lauf 5) bzw. 211 KB (Lauf 6), grösster
+  Block 84 KB, Minimum seit Start 144 KB – Ziel ≥ 100 KB erfüllt.
+- [x] **M3 Feste Speichergrenzen** – jedes Programm ein festes Budget,
   aufgebraucht → nur dieses Programm endet („Speicher voll“); neue
   Netzverbindungen nur mit genug internem RAM; kein Programm lässt das
   System wegen vollem Speicher abstürzen. Nachweis: PC-Tests, Board-Lauf.
@@ -1417,6 +1420,12 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Netz: neue TCP-Verbindung eines Programms nur mit ≥ 48 KB internem RAM
   (sonst ENOMEM; Kern-Test `kern/tests/netz.rs`), der Browser hatte schon
   32 KB Reserve und begrenzt seine Puffer (Fehlerbericht).
+  Nachweis Board: Dauertest Lauf 3 (System-PSRAM bis 0,4 KB knapp) und
+  Läufe 5/6 (Pool voll: Browser-Start 2× bzw. 8× mit „Fehler 30“
+  abgelehnt) – jeweils 0 Abstürze, 0 Neustarts, 0 „Speicher voll“ des
+  Systems; Kern-Test `kern/tests/netz.rs` (Verbindung nur mit 48 KB
+  intern), PC-Tests der Notbelegungen. Seit 25.11. dazu: Rückfall am Pool
+  vorbei nur mit 2 MB Reserve.
 - [ ] **M4 Dauertest** – Autopilot ≥ 60 min: alle Programme öffnen und
   schliessen, Menü oft auf/zu, Browser mit vielen Seiten nacheinander,
   Startknopf („Home“) aus dem Browser. Freier interner RAM am Ende = am
@@ -1491,7 +1500,14 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   keinem Task zuordnen (Grössenordnung ~100 B je Minute, unter der
   Streuung einzelner Berichte). M4 bleibt offen: Kriterium „intern am
   Ende = am Anfang“ nicht erfüllt; 0 Abstürze in drei 75-min-Läufen erfüllt.
-- [ ] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
+- [x] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
+  Nachweis (25.11.): Version 1.0.3, CHANGELOG, Release-Text
+  `docs/release/v1.0.3.md`, Paket `release_paket.ps1 -Version 1.0.3` (keine
+  WLAN-Daten, keine lokalen Pfade; private Suchbegriffe nur falsch-positiv –
+  `docs/nachweise/v103/release_paket_v1.0.3.txt`). OK des Nutzers 25.11.
+  („Ok veröffentliche“), veröffentlicht als Release v1.0.3 auf GitHub
+  (main); Web-Flasher bleibt auf 1.0.1. M4 ist dabei offen (Leck −7 KB/h,
+  im Release-Text unter „Known issues“).
 - [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5) –
   intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM
   aufräumen (was belegt ausser dem Browser wie viel: Kern, Fenster,
@@ -1699,7 +1715,7 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
 
 ## J. Teil B: Browser (Auftrag 23.11. nachts, Gesamtauftrag 24.11.)
 
-- [ ] **BR1 Messen** – ~30 bekannte Seiten am Board (Wikipedia, Google,
+- [x] **BR1 Messen** – ~30 bekannte Seiten am Board (Wikipedia, Google,
   DuckDuckGo, GitHub, SRF, 20 Minuten, Blick, Digitec, Galaxus, SBB,
   MeteoSchweiz, Reddit, Hacker News, BBC, Stack Overflow, Amazon, Spiegel,
   Heise …): lädt / kaputt / gar nicht, Grund (TLS/Zertifikat, Weiterleitung,
@@ -1758,6 +1774,16 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   Abrufe), interner RAM nach jeder Seite 86–91 KB
   (`docs/nachweise/br/br_stabil.txt`). Offen für BR1: der Messlauf über
   alle 30 Seiten mit Tabelle – braucht das Board (ab 24.11. 06:20 weg).
+  Nachweis Board (25.11., `br_lauf.ps1`, 30 Seiten, je 60 s, frischer
+  Browser): **21 geladen, 7 abgeschnitten (HTML > 512 KB: Wikipedia
+  Schweiz, GitHub, 20min, MeteoSchweiz, heise, NZZ, YouTube), 2 Browser
+  beendet (Heap 10,6 MB voll: Tages-Anzeiger, tutti)**; 0 Abstürze, 0
+  Neustarts, intern danach 210–217 KB. Häufigste Ursache: Speicher
+  (Heap-Spitze 10 372 von 10 628 KB auf allen abgeschnittenen Seiten);
+  Tracker-/Werbe-Hosts teils nicht erreichbar (ohne Folgen). Grund-Spalte
+  aus dem Log (Fotos nur der ersten 6 Seiten). Tabelle
+  `docs/nachweise/br/br1_tabelle.md`. Folge: BR2/M6 – mehr Heap für den
+  Browser, höhere HTML-Grenze.
 - [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
   Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
   mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.
@@ -1783,7 +1809,7 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   nutzt libdom in 25 Dateien mit 1260 Aufrufen, dazu libcss-Auswahl und
   QuickJS-Anbindung (183 Aufrufe) – Umbau Monate; Speicherersparnis nicht
   belegt.
-- [ ] **SB Stabilitätsrunde nach Teil B** – Autopilot ≥ 30 min (alle
+- [x] **SB Stabilitätsrunde nach Teil B** – Autopilot ≥ 30 min (alle
   Programme, Menü oft auf/zu, Browser mit mehreren Seiten), 0 Abstürze;
   Browser und Menü besonders (Nutzer: stürzen am Board oft ab). Nachweis:
   Log mit Dauer und Abstürzen, Fotos.
@@ -1839,8 +1865,14 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   fadensicher, user@ in URLs; Zeileneingabe in der letzten Zeile rollte bei
   jeder Taste; Rückruf von con_gets2 ohne Abwickeln. con_exit(0) kehrt
   nicht zurück: unter Abweichungen.
-- [ ] **R103 v1.0.3 vorbereiten** – README, CHANGELOG, Release-Paket,
+  Nachweis Board (25.11., `stabil_lauf.ps1`, 40 min, alle Programme über
+  das Menü, Menü oft auf/zu, Browser mit Seiten und Startknopf aus dem
+  Browser): 0 Guru Meditation, 0 abort, 0 Panik, 0 Programmabstürze, 0
+  Speicher voll, 0 Neustarts; Fotos nach 10/20/30 min
+  (`docs/nachweise/sb/`). Dazu M4 Läufe 5/6 (je 75 min, 0 Abstürze).
+- [x] **R103 v1.0.3 vorbereiten** – README, CHANGELOG, Release-Paket,
   Release-Check; OK in STATUS erbitten, nicht warten.
+  Erledigt mit M5 (siehe dort): Release v1.0.3 am 25.11. veröffentlicht.
 
 ## K. Teil C: v1.1 (Auftrag 23.11. nachts, Gesamtauftrag 24.11.)
 
@@ -2022,7 +2054,7 @@ und Verzeichnis auf GitHub).
   – „Hardware-Fehler in Programm … nur dieses Programm wird beendet“ (3 von
   3 abgefangen), 0 Neustarts, Desktop startet danach normal
   (`docs/nachweise/d5/`).
-- [ ] **D4 Dateimanager** – Kopieren, Verschieben, Löschen mit
+- [x] **D4 Dateimanager** – Kopieren, Verschieben, Löschen mit
   Papierkorb, per Touch (lange drücken = Menü). Nachweis: PC-Test per
   Autopilot, Board-Foto.
   Stand 24.11. (am PC fertig): Kopieren, Ausschneiden/Einfügen, Umbenennen
@@ -2035,6 +2067,11 @@ und Verzeichnis auf GitHub).
   wie bisher. PC-Test `desktop/tests/dateimanager.rs` per Touch: in den
   Papierkorb, wiederherstellen, erneut löschen, endgültig löschen, Leeren
   (Foto `d4_papierkorb.png`). Offen: Board-Foto.
+  Nachweis Board (25.11., `d4_lauf.ps1`, nur ansehen): Dateimanager über
+  das Startmenü, links „Papierkorb“ → `/sd0/1/ESP32-OS/Papierkorb` mit
+  „Leeren“, 0 Objekte; Foto `docs/nachweise/d4/d4_board_papierkorb.png`;
+  0 Abstürze. Kopieren/Verschieben/Löschen auf der SD des Nutzers nicht am
+  Board ausgeführt (fremde Daten) – Ablauf per Touch im PC-Test.
 - [x] **D1 Shell ausbauen** – Pipes, Umleitungen, Skripte, möglichst viele
   Standardbefehle. Nachweis: PC-Tests je Funktion, Board-Foto.
   Stand 24.11. (PC): `kolibri/c/shell_zusatz.c` (eingebunden in

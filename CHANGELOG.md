@@ -1,13 +1,15 @@
 # Changelog
 
-## 1.0.3 (not yet released)
+## 1.0.3 (2026-11-25)
 
 - Browser: tapping the Start button while the browser is open no longer crashes the system. A page that cannot load shows a readable reason (name not found, no connection, timeout) instead of an error code; DNS falls back to 1.1.1.1 when the router's server does not answer.
 - Firmware update: connection errors are shown as readable text instead of codes like -28674.
 - Stability: a program that uses up its own memory ends with "memory full" instead of taking the system down; windows and buffers are only created when the system keeps a reserve; new network connections need 48 KB of internal RAM.
 - Internal RAM under load: about 206 KB free instead of 86 KB (display strips of the desktop and variables of the C programs moved to PSRAM).
 - Large programs (browser, PDF viewer, image viewer) start reliably after long use: their memory comes from a pool reserved at start-up, so PSRAM no longer breaks into small pieces.
-- A hardware fault in a program (for example a load or store access fault) ends only that program.
+- A hardware fault in a program (for example a load or store access fault) ends only that program. On the board this protection never triggered before; it now uses the FreeRTOS critical-section counter instead of the interrupt threshold.
+- Browser: starting the browser a second time no longer crashes the board (a static lock lived in the heap of the first browser).
+- Windows of original KolibriOS programs (PasswordGen, TinyHashView, example GUI) no longer draw into the taller touch title bar; title bars and borders of all windows are complete.
 - After a crash and restart, the message names the reason and the memory state at the time.
 - File manager: recycle bin with restore; scrolling redraws only the list.
 - Taskbar: a window's entry appears together with the window.

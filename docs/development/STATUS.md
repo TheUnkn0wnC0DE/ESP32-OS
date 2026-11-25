@@ -11,6 +11,11 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **25.11., ~5:30 – OK des Nutzers für v1.0.3 („Ok veröffentliche“).**
+  Vorgehen: Stabilitätsrunde SB abwarten (0 Abstürze Bedingung), Paket
+  `release_paket.ps1 -Version 1.0.3`, Release-Check, `gh release create
+  v1.0.3` auf main. Web-Flasher bleibt auf 1.0.1.
+
 - **25.11., 2 Uhr:** S5 abgehakt (Board-Fotos aller 18 Programme vorher/
   nachher, `docs/nachweise/s5/`). Browser-Absturz behoben, Lecksuche lief
   danach ohne Absturz durch (3,6 KB in zwei Runden, Zuordnung offen).

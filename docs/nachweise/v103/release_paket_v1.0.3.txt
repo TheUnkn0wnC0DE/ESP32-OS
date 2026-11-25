@@ -1,0 +1,17 @@
+Release-Paket v1.0.3 (release_paket.ps1 -Version 1.0.3, 25.11.2026)
+Release-Pruefung esp32os.elf: keine WLAN-Zugangsdaten
+Release-Pruefung esp32os.bin: keine WLAN-Zugangsdaten
+Release-Pruefung esp32os.bin: keine lokalen Pfade
+Release-Pruefung doomapp.elf: keine WLAN-Zugangsdaten
+Release-Pruefung doomapp.bin: keine WLAN-Zugangsdaten
+Release-Pruefung doomapp.bin: keine lokalen Pfade
+Release-Pruefung quakeapp.elf: keine WLAN-Zugangsdaten
+Release-Pruefung quakeapp.bin: keine WLAN-Zugangsdaten
+Release-Pruefung quakeapp.bin: keine lokalen Pfade
+2f2fc9f130c53df0f4eeaee63c5218d7326d26b6cbf829951479692e32be31bb  bootloader.bin
+3a4da79e4425a86269afa95e88ccd0b3e134975345d21bd5bbc70bb863c3a6e2  doomapp.bin
+ffd27d9eeb322d6b669cf5b8a97114d1cfff1698b207e5d2c77dd3de28568b00  esp32os.bin
+7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f  otadata-leer.bin
+caac202b70ef8688d9b8536a5fe7d0c97b6ee698ba9b4f649155ca200f9b9c1e  partition-table.bin
+1706957ecc372169d8d845bfc50c555d757b57d6069172ed27315778e99d4635  quakeapp.bin
+Private Suchbegriffe: 2 Treffer, beide falsch-positiv (Cookie-Attribut in NetSurf, Wortteil in Quake), wie in 1.0.2.

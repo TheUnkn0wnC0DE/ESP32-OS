@@ -17,17 +17,17 @@ Measured on the board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, chip revision v1.x,
 
 | | Value | Evidence |
 |---|---|---|
-| OS image | 5.4 MiB (5,699,072 bytes), 91.5 % of its 5.9 MiB flash slot | [o8_release_paket_v1.0.1.txt](docs/nachweise/o8/o8_release_paket_v1.0.1.txt) |
+| OS image | 5.6 MiB (5,825,632 bytes), 93.6 % of its 5.9 MiB flash slot | [release_paket_v1.0.3.txt](docs/nachweise/v103/release_paket_v1.0.3.txt) |
 | Power-on to desktop | 3.5 s | [o4_1_apps_log.txt](docs/nachweise/o4/o4_1_apps_log.txt) |
 | Browser scrolling | 32 frames/s (Wikipedia article) | [o1_scroll_log.txt](docs/nachweise/o1/o1_scroll_log.txt) |
 | PDF page (A4 with photo, text, shapes) | 0.24 s | [z1_board_log.txt](docs/nachweise/z1/z1_board_log.txt) |
 | Games | Pudding-Panik 55, Doom 55, Würfelwelt 27.6, Quake 27.5 frames/s | [o4/](docs/nachweise/o4/) |
 | Wi-Fi throughput (TCP) | 11.6 Mbit/s to the board, 9.8 Mbit/s from the board | [w8_durchsatz.txt](docs/nachweise/w8_durchsatz.txt) |
-| Endurance | 1 h with browser and Wi-Fi, no reset | [o5_auswertung.txt](docs/nachweise/o5/o5_auswertung.txt) |
+| Endurance | 40 min stability round and 2 × 75 min endurance runs (all programs, menu, browser), 0 crashes, 0 resets | [sb_auswertung.txt](docs/nachweise/sb/sb_auswertung.txt) |
 
 ## Quick start
 
-Install the latest release (1.0.1, chip revision v1.x).
+Install the latest release (1.0.3, chip revision v1.x). The web flasher still installs 1.0.1; update afterwards in *Settings → System → Check for updates*.
 
 **Web flasher** (Chrome or Edge on a desktop computer): open the [ESP32-OS web flasher](https://theunkn0wnc0de.github.io/ESP32-OS/), connect the board's USB TO UART port, click *Connect*, choose the board's serial port and click *Install*. Without *Erase device*, settings and saved Wi-Fi networks are kept ([o8_webflasher.txt](docs/nachweise/o8/o8_webflasher.txt)).
 
@@ -55,7 +55,7 @@ Boards with chip revision v3.x and changes to the code: build from source, see [
 | Kernel | KolibriOS system functions in Rust, one heap per program, crash isolation with error dialog, compositor with dirty rectangles, two firmware slots with automatic rollback |
 | KolibriOS programs | Original C programs, unchanged: PasswordGen, TinyHashView and the clayer samples; native box_lib, libimg, proc_lib, libini, network |
 | Desktop | Icons, taskbar with Wi-Fi signal and clock, start menu, tap, long press, swipe and pinch, on-screen keyboard (Swiss German, US), English and German interface, first-run wizard |
-| Programs | File manager (microSD and internal flash), image viewer (JPEG in hardware, PNG, GIF, BMP; phone photos up to 48 megapixels), PDF viewer, settings, notes, calculator, clock with alarm and timer, calendar, MP3 player, task manager, screenshot tool |
+| Programs | File manager (microSD and internal flash), image viewer (JPEG in hardware, PNG, GIF, BMP; phone photos up to 48 megapixels), PDF viewer, settings, notes, calculator, clock with alarm and timer, calendar, MP3 player, task manager, screenshot tool, console with the KolibriOS shell (pipes, redirection) |
 | Wi-Fi 6 | Via the ESP32-C6: scan and connect by touch, remembered networks, time via NTP |
 | Browser | NetSurf 3.11, HTTPS with certificate check, tabs, bookmarks, history, downloads, zoom, forms, JavaScript (QuickJS-ng: DOM, events, timers, fetch, cookies, localStorage) |
 | Games | Pudding-Panik, Würfelwelt, Doom, Quake, started from the desktop |

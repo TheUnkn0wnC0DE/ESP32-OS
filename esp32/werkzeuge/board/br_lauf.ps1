@@ -8,7 +8,7 @@
 param(
     [Parameter(Mandatory)][string]$Ziel,
     [int]$Sek = 60,
-    [string]$Liste = "$PSScriptRoot\br_seiten.txt",
+    [string]$Liste = '',
     [int]$Anzahl = 0,
     [string]$Port = 'COM3',
     # Entwicklung: Heap-Spur bzw. Browser ohne JavaScript
@@ -17,6 +17,8 @@ param(
 )
 # Logs als UTF-8 (PowerShell 5 schriebe mit *> UTF-16)
 $env:PYTHONIOENCODING = 'utf-8'
+# $PSScriptRoot ist in Standardwerten von param() leer (25.11.: 0 Seiten)
+if (-not $Liste) { $Liste = "$PSScriptRoot\br_seiten.txt" }
 $esp32 = Resolve-Path "$PSScriptRoot\..\.."
 New-Item -ItemType Directory -Force $Ziel | Out-Null
 $alle = @(Get-Content $Liste | Where-Object { $_ -and -not $_.StartsWith('#') })
