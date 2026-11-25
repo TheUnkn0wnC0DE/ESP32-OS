@@ -911,6 +911,35 @@ fetch('/setzen').then(r => r.text()).then(() => {{
         c(module_skripte_innen);
     }
 
+    /// Q3 Schritt 2: häufig fehlende APIs der Testseiten – `new Image()`,
+    /// `performance.timing`, `document.implementation.hasFeature`.
+    #[test]
+    fn fehlende_apis_schritt2() {
+        c(fehlende_apis_innen);
+    }
+
+    fn fehlende_apis_innen() {
+        if im_eigenen_prozess("fehlende_apis_schritt2") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        let html = r#"<html><body><p>a</p><script>
+const i = new Image(10, 20);
+console.log('bild', i.tagName, i.getAttribute('width'), i.getAttribute('height'));
+console.log('timing', typeof performance.timing.responseStart, performance.timing.responseStart > 0, performance.navigation.type);
+console.log('feature', document.implementation.hasFeature('HTML', '1.0'));
+</script></body></html>"#;
+        let (r, _bild) = lauf_mit(&data_url(html), 320, 200, 1500, true).expect("Bild");
+        assert_eq!(r, 0, "Frontend endet normal");
+        let k = js_konsole(true);
+        println!("{k}");
+        for z in ["log: bild IMG 10 20", "log: timing number true 0", "log: feature true"] {
+            assert!(k.contains(z), "{z} fehlt in {k}");
+        }
+        assert!(!k.contains("Error"), "keine Fehler: {k}");
+    }
+
     fn module_skripte_innen() {
         if im_eigenen_prozess("module_skripte_uebersprungen") {
             return;

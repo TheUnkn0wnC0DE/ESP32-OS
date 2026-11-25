@@ -1747,6 +1747,21 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   gestartet (-30)“. Nächster Schritt: beim Ergebnis „Verwaist“ je Faden den
   Grund loggen (im_kern, geschützt, Heap-Sperre, Task-Zustand), Lauf
   wiederholen, Ursache beheben; dann Seiten 21–30 erneut messen.
+  Lauf 3 (25.11. 20:30, mit Diagnose „Zwangsbeenden … verwaist – Grund je
+  Faden“): kein verwaister Browser (27× normal beendet) – tritt nur
+  zeitweise auf, Diagnose bleibt drin. Alle 30 Seiten: **21 geladen, 6
+  abgeschnitten, 1 Browser beendet (Speicher); JS-Fehler 18 statt 61**
+  (übrig: 6× out of memory, je 1× Image, performance.timing,
+  implementation.hasFeature, prototype/parentElement/document von
+  undefined, redeclaration, invalid assignment, not a function).
+  Schritt 2: `new Image()`, `performance.timing`/`navigation`,
+  `document.implementation.hasFeature` im JS-Vorspann (`js/vorspann.js`);
+  Test `fehlende_apis_schritt2`. Board danach (25.11. 21 Uhr, 30 Seiten):
+  **JS-Fehler 18 → 14** (Image, timing, hasFeature weg; übrig 3× out of
+  memory, je 1× not a function, prototype/parentElement/document von
+  undefined, consent von null, redeclaration, invalid assignment); 22
+  geladen, 7 abgeschnitten, 1 Browser beendet; kein verwaister Browser.
+  Verlauf JS-Fehler: 61 → 10 (Seiten 1–20) / 18 (alle) → 14.
 - [ ] **Q4 Abschluss** – Review-Subagent prüft das ganze Qualitäts-Update
   gegen diesen Auftrag; 60-min-Dauertest per Autopilot, 0 Abstürze, kein
   Speicherleck; nächste Version vorbereiten (README, CHANGELOG,

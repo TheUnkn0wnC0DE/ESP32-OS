@@ -798,6 +798,28 @@ pub fn zwangsbeenden(pid: u32, warte_ms: u32) -> Zwang {
         }
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
+    // Q3-Fund (Board 25.11.): Browser blieb verwaist, sein Bereich im Pool –
+    // je Faden festhalten, warum er sich nicht anhalten liess
+    let grund = kern_abschnitt(|| {
+        let l = sperre(&k.prozesse);
+        let Some(p) = l.iter().find(|p| p.pid == pid) else { return String::new() };
+        // SAFETY: Heap lebt mit dem Prozess.
+        let heap_zu = unsafe { &*p.heap }.gesperrt();
+        p.faeden_liste
+            .iter()
+            .filter(|e| !e.beendet)
+            .map(|e| {
+                if e.kontext == 0 {
+                    return format!("tid {} ohne Kontext (startet)", e.tid);
+                }
+                // SAFETY: nicht beendet → Kontext lebt.
+                let f = unsafe { &*(e.kontext as *const Faden) };
+                format!("tid {} im_kern {} geschuetzt {} heap_gesperrt {}", e.tid, f.im_kern.load(Ordering::Acquire), f.geschuetzt.load(Ordering::Acquire), heap_zu)
+            })
+            .collect::<Vec<_>>()
+            .join("; ")
+    });
+    crate::sys::debug_text(&format!("Zwangsbeenden pid {pid}: verwaist – {grund}"));
     Zwang::Verwaist
 }
 

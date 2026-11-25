@@ -867,6 +867,8 @@
     get charset() { return 'UTF-8'; }
     get contentType() { return 'text/html'; }
     get compatMode() { return 'CSS1Compat'; }
+    // Q3: document.implementation (häufige Abfrage alter Skripte)
+    get implementation() { return { hasFeature: () => true, createHTMLDocument: () => null }; }
     get visibilityState() { return 'visible'; }
     get hidden() { return false; }
     get activeElement() { return N.aktivesFeld() || this.body; }
@@ -1035,6 +1037,18 @@
     getEntriesByName: (n, t) => eintraege.filter(e => e.name === n && (t === undefined || e.entryType === t)),
     clearMarks: (n) => { for (let i = eintraege.length - 1; i >= 0; i--) if (eintraege[i].entryType === 'mark' && (n === undefined || eintraege[i].name === n)) eintraege.splice(i, 1); },
     clearMeasures: (n) => { for (let i = eintraege.length - 1; i >= 0; i--) if (eintraege[i].entryType === 'measure' && (n === undefined || eintraege[i].name === n)) eintraege.splice(i, 1); },
+    // Q3: Navigation Timing (Level 1) – viele Statistik-Skripte lesen
+    // timing.responseStart; Zeiten ab Seitenbeginn
+    timing: { navigationStart: start, fetchStart: start, domainLookupStart: start, domainLookupEnd: start, connectStart: start, connectEnd: start, requestStart: start, responseStart: start, responseEnd: start, domLoading: start, domInteractive: start, domContentLoadedEventStart: start, domContentLoadedEventEnd: start, domComplete: start, loadEventStart: start, loadEventEnd: start },
+    navigation: { type: 0, redirectCount: 0, TYPE_NAVIGATE: 0, TYPE_RELOAD: 1, TYPE_BACK_FORWARD: 2 },
+  };
+  // Q3: new Image(w, h) – ein <img>-Element (am Board 25.11.: „Image is not
+  // defined“)
+  G.Image = function Image(w, h) {
+    const i = document.createElement('img');
+    if (w !== undefined) i.setAttribute('width', String(w));
+    if (h !== undefined) i.setAttribute('height', String(h));
+    return i;
   };
 
   // URL und URLSearchParams (QuickJS hat keine)
