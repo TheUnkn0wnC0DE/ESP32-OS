@@ -56,10 +56,12 @@ pub enum Seite {
     Energie,
     Wlan,
     System,
+    /// Q2: Ort der Wetter-App (startet die Ortssuche im Programm „wetter“)
+    Wetter,
 }
 
 /// Kacheln der Startseite: (Seite, englisch, deutsch, Symbol in icons32).
-pub const KACHELN: [(Seite, &str, &str, usize); 11] = [
+pub const KACHELN: [(Seite, &str, &str, usize); 12] = [
     (Seite::Anzeige, "Display", "Anzeige", 7),
     (Seite::Ton, "Sound", "Ton", 64),
     (Seite::Akku, "Battery", "Akku", 121),
@@ -71,6 +73,7 @@ pub const KACHELN: [(Seite, &str, &str, usize); 11] = [
     (Seite::Energie, "Power", "Energie", 119),
     (Seite::Wlan, "Wi-Fi", "WLAN", 33),
     (Seite::System, "System", "System", 113),
+    (Seite::Wetter, "Weather place", "Wetter-Ort", 128),
 ];
 
 /// Kachelgrösse und -lage (Arbeitsbereich 630×259, 6 × 2).
@@ -323,6 +326,9 @@ fn zeichnen(z: &Zustand) {
             text(20, 220, t("Touch wakes the device.", "Berühren weckt das Gerät."), 0x606060);
         }
         Seite::Wlan => crate::wlan::zeichnen(&z.wlan, 6, 58, WLAN_ZEILEN, WLAN),
+        // Q2: keine eigene Seite – die Kachel startet die Ortssuche der
+        // Wetter-App (die Seite bleibt die Startseite)
+        Seite::Wetter => {}
         Seite::System => {
             text(20, 64, &format!("{} {}", crate::shell::NAME, crate::shell::VERSION), 0x202020);
             text(20, 88, t("Updates come from the GitHub release (HTTPS, checksum checked).", "Updates kommen vom GitHub-Release (HTTPS, Prüfsumme geprüft)."), 0x606060);
@@ -428,6 +434,11 @@ pub fn programm() {
                     ZURUECK => z.seite = Seite::Start,
                     id if (KACHEL..KACHEL + KACHELN.len() as u32).contains(&id) => {
                         z.seite = KACHELN[(id - KACHEL) as usize].0;
+                        if z.seite == Seite::Wetter {
+                            // Ortssuche der Wetter-App (Touch, Bildschirmtastatur)
+                            z.seite = Seite::Start;
+                            let _ = kern::datei::starten("/sys/wetter", "ort");
+                        }
                         if z.seite == Seite::Zeit {
                             z.zeit = ortszeit_felder();
                         }

@@ -1624,6 +1624,93 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   `docs/nachweise/s5/board_vorher_*.png`, `board_nachher_*.png`, dazu
   PC-Fotos `pc_vorher_*`/`pc_nachher_*`.
 
+## Q. Qualität (Nutzer 25.11.; vor Teil C und D, die offen bleiben)
+
+Ziel: keine neuen grossen Funktionen (ausser Wetter-App und Browser), alles
+von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
+
+- [ ] **Q1 Rundgang durch jedes Programm** (Desktop, Taskleiste, Menü,
+  Tastatur, Ersteinrichtung, alle Programme, Spiele-Start) – per Autopilot
+  öffnen, bedienen, Bildschirmfotos, kritisch prüfen: Aussehen (Ränder,
+  Titelleisten, Abstände, Schriften, Farben, Symbole einheitlich, nichts
+  abgeschnitten/verrutscht); Bedienung (Touch-Flächen gross genug,
+  sofortige sichtbare Rückmeldung, Zurück und Schliessen überall gleich);
+  Texte (Deutsch/Englisch vollständig und korrekt, keine Platzhalter,
+  verständliche Meldungen statt Fehlernummern); Randfälle (leere Listen,
+  sehr lange Dateinamen, keine SD-Karte, kein WLAN, voller Speicher); Tempo
+  (keine sichtbaren Verzögerungen beim Öffnen/Schliessen, Tastatur von 15
+  auf ≥ 25 fps). Alle Funde als Liste hier, nach Schwere sortiert, der Reihe
+  nach beheben. Nachweis: Fotos vorher/nachher je Programm.
+  Funde (Stand 25.11., aus den Board-Fotos aller 18 Programme vom S5-Lauf
+  und Durchsicht des Codes; nach Schwere):
+  1. hoch – Programm startet aus dem Menü nicht (z. B. Speicher voll): man
+     sah nichts, die Meldung stand nur im Log. **Behoben:** Meldung
+     „Programm nicht gestartet“ mit Grund in Worten (zu wenig Speicher – andere
+     Programme schliessen / fehlt / zu viele Programme); PC-Test in
+     `desktop/tests/shell.rs`.
+  2. mittel – Konsole: bei jedem Start „File '/sys/settings/.shell' not
+     found“. **Behoben:** ohne Startskript keine Meldung (shell.c).
+  3. mittel – Musik: leere Liste sagte „No MP3 files“, spielt jetzt auch
+     WAV. **Behoben:** „Keine Musikdateien (MP3, WAV) in …“.
+  4. niedrig – Taskleiste: zu lange Titel hart abgeschnitten („Notes -
+     Einkau“). **Behoben:** mit „..“ am Ende.
+  5. mittel – Notizen am Board zeigen drei Test-Notizen
+     („qasdfghjkl1234567“) aus früheren Board-Tests im Ordner von ESP32-OS
+     auf der SD-Karte. Offen: Frage in STATUS (löschen?).
+  6. niedrig – Dateimanager: im Papierkorb sind „SD-Karte“ und
+     „Papierkorb“ gleichzeitig hervorgehoben. **Behoben:** im Papierkorb
+     nur „Papierkorb“ (Foto `d4_papierkorb` im PC-Test).
+  7. Tempo – Tastatur „15 fps“: gezählt werden nur geänderte Bilder bei
+     2,5 Tipps/s; die Anzeige läuft beim Tippen mit 24–29 Bildern/s (Log
+     „FPS“ im S3-Lauf). Offen: Messung mit schnellem Tippen, Ziel ≥ 25 bei
+     jedem Tastendruck.
+  8. mittel – Startknopf schloss ein gerade (durch Tipp daneben)
+     geschlossenes Menü, das noch in der Prozessliste stand, statt ein neues
+     zu öffnen. **Behoben:** umgeschaltet wird nur, wenn das Menü noch ein
+     Fenster hat (`shell::starten`).
+  9. Hinweis – mit „Wetter“ hat das Hauptmenü 11 Einträge und drei Spalten
+     über die ganze Breite (y = 29 bis Taskleiste). Folge: die Board-
+     Autopiloten (stabil, dauertest, s3, s5, c1) neu erzeugen, bevor sie am
+     Board laufen; Test `browser_menue` tippt zum Schliessen jetzt auf die
+     Titelleiste des Browsers.
+  Nicht geprüft (Board war am 25.11. nicht erreichbar, nur COM1): Fotos
+  nachher je Programm, Randfälle am Board (keine SD, kein WLAN).
+- [ ] **Q2 Wetter-App** (ersetzt T2) – Lizenz der ColibriOS-Weather prüfen;
+  passt sie nicht: eigene App mit Open-Meteo (frei, kein API-Schlüssel).
+  Aktuelles Wetter und Vorschau für mehrere Tage, Standort in den
+  Einstellungen (Ortssuche per Touch), Deutsch/Englisch, verständliche
+  Meldung ohne WLAN, Symbol auf dem Desktop.
+  Lizenz (25.11.): ColibriOS `programs/other/Weather/weather.c` ist GPLv2
+  (Kopf „Copyright (C) 2019-2021 Logaev Maxim (turbocat2001), GPLv2“) – die
+  Lizenz passt, aber die App nutzt OpenWeatherMap mit API-Schlüssel
+  (appid aus der Konfiguration; im Beispiel der Schlüssel des Autors) → passt
+  nicht zur Vorgabe „ohne API-Schlüssel“. Deshalb eigene App
+  (`desktop/src/wetter.rs`): Open-Meteo (Vorhersage + Geocoding, ohne
+  Schlüssel), aktuelles Wetter (Temperatur, Art, Wind, Feuchte, gezeichnetes
+  Symbol) und 5 Tage (Wochentag, Symbol, Max/Min); Ortssuche über die
+  Bildschirmtastatur, Treffer antippen, Ort in der Konfiguration
+  (`konfig::wetter_ort`), in den Einstellungen Kachel „Wetter-Ort“ (startet
+  die Suche); Deutsch/Englisch; ohne WLAN „Kein WLAN - in Einstellungen >
+  WLAN verbinden“; Symbol auf dem Desktop. Abruf über `kern::abruf`
+  (Firmware: HTTPS wie das Update, nur mit WLAN und 48 KB internem RAM).
+  PC-Test `desktop/tests/wetter.rs` (Suche „zuerich“ Taste für Taste, Treffer
+  antippen, Wetter und Vorschau, Ort gespeichert, Neustart ohne Netz →
+  Meldung; Fotos `q2_treffer`, `q2_wetter`, `q2_ohne_wlan`), Unit-Test
+  `wetter::tests`. Offen: Board-Foto mit echten Daten (Board nicht
+  erreichbar).
+- [ ] **Q3 Browser: so viel JavaScript und Web wie möglich** – mit den 30
+  Testseiten loggen, welche JS-Funktionen, DOM- und Web-APIs fehlen oder
+  Fehler werfen und welche CSS-Funktionen nicht unterstützt sind (Liste nach
+  Häufigkeit); die häufigsten zuerst nachrüsten, nach jedem Schritt dieselben
+  30 Seiten, Vorher/Nachher hier; frei gewordenen Speicher für den Browser
+  nutzen (JS-Limit, Heap), soweit stabil; was grundsätzlich nicht geht, unter
+  „Abweichungen“. (EFFORT: xhigh empfohlen – NetSurf/QuickJS)
+- [ ] **Q4 Abschluss** – Review-Subagent prüft das ganze Qualitäts-Update
+  gegen diesen Auftrag; 60-min-Dauertest per Autopilot, 0 Abstürze, kein
+  Speicherleck; nächste Version vorbereiten (README, CHANGELOG,
+  Release-Paket, Release-Check, Bildschirmfotos im README aktualisieren), OK
+  in STATUS erbitten; Web-Flasher erst nach dem OK aktualisieren.
+
 ## T. Nach Teil S (Nutzer 24.11. abends)
 
 - [x] **T1 ColibriOS prüfen** – KolibriOS heisst jetzt ColibriOS
@@ -1638,7 +1725,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   programs/other und programs/games, Ports (SDL/C++) passen nicht; Frage zum
   Übernehmen einzelner C-Programme an den Nutzer. Vorgezogen, während das
   Board den Dauertest M4 lief (S braucht das Board).
-- [ ] **T2 Wetter-App** (Nutzer 24.11. spät; **nach Teil D**) – nur die
+- [ ] **T2 Wetter-App** (→ jetzt Q2, Auftrag 25.11.) (Nutzer 24.11. spät; **nach Teil D**) – nur die
   Wetter-App „Weather“ aus ColibriOS übernehmen, die anderen Programme
   nicht. Vorher die Lizenz prüfen. Per Touch bedienbar, Standort in den
   Einstellungen festlegbar, Daten über WLAN. Passt die ColibriOS-Version
@@ -2105,6 +2192,13 @@ und Verzeichnis auf GitHub).
 - [ ] **D2 Medienplayer** – MP3, Ogg, WAV, MIDI über den
   ES8311-Lautsprecher, per Touch; vorhandenen KolibriOS-Player nehmen, wenn
   passend. Nachweis: PC-Test der Dekoder, Board: Ton (Log), Foto.
+  Stand 25.11. (PC, Board ist unterwegs): MP3 gab es (nanomp3). Neu WAV
+  (`musik::WavLeser`: RIFF/PCM 8 und 16 Bit, mono/stereo, jede Rate,
+  andere Blöcke wie LIST übersprungen; gleiche Umrechnung auf die
+  Ausgaberate), Liste zeigt .mp3 und .wav, Dateimanager öffnet .wav im
+  Musikplayer. Unit-Test `musik::tests::wav_lesen` (16 Bit stereo mit LIST,
+  8 Bit mono wertgleich; keine WAV und 24 Bit abgelehnt). Offen: Ogg
+  (Vorbis-Dekoder), MIDI (Synthesizer), Board-Nachweis (Ton im Log, Foto).
 - [ ] **D3 App-Store** – Programme per WLAN aus einem signierten
   Verzeichnis auf GitHub laden, installieren, entfernen, per Touch; gleiche
   Signaturprüfung wie beim OTA. Nachweis: PC-Test Signatur, Board:

@@ -145,6 +145,10 @@ int main(int argc, char **argv)
         strcat(CMD, ".shell");
         if ( !file_check(CMD) )
             strcpy(CMD, "/sys/settings/.shell");
+        /* ESP32-OS Q1: ohne Startskript keine Meldung „not found“ bei
+         * jedem Start der Konsole */
+        if ( !file_check(CMD) )
+            CMD[0] = 0;
     }
     else {
         if (cmdline[0] == '/')

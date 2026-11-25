@@ -246,6 +246,11 @@ pub struct Welt {
     pub pfeil: crate::zeiger::Zeigerbild,
 }
 
+/// S1: Zeitpunkt der letzten Änderung der Fensterliste (ms seit Start,
+/// ungerade = gesetzt); die Taskleiste misst damit, wie spät ihr Eintrag
+/// kommt. 32 Bit (RISC-V-32 ohne 64-Bit-Atomics).
+pub static LISTE_GEAENDERT_MS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+
 static WELT: Mutex<Option<Welt>> = Mutex::new(None);
 static WECKER: Condvar = Condvar::new();
 
@@ -319,6 +324,8 @@ impl Welt {
     /// S1: Fensterliste geändert (Fenster neu, zu, aktiv, minimiert, Titel):
     /// den Beobachter (Taskleiste) sofort neu zeichnen lassen.
     pub fn liste_geaendert(&mut self) {
+        // S1-Messung: Zeitpunkt (ms) für die Taskleiste
+        LISTE_GEAENDERT_MS.store((crate::zeit::nanos() / 1_000_000) as u32 | 1, core::sync::atomic::Ordering::Relaxed);
         if let Some(t) = self.listen_beobachter
             && let Some(fz) = self.faden(t)
         {

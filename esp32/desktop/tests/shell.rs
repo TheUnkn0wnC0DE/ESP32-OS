@@ -92,4 +92,12 @@ fn desktop_startet_mit_taskleiste_menue_und_info() {
         assert!(t.elapsed() < Duration::from_secs(5), "Info-Dialog schliesst nicht");
         std::thread::sleep(Duration::from_millis(20));
     }
+    // Q1: Programm aus dem Menü startet nicht → sichtbare Meldung (vorher
+    // nur im Log)
+    desktop::shell::starten("gibt_es_nicht");
+    let t = Instant::now();
+    while !titel_da("Program not started") {
+        assert!(t.elapsed() < Duration::from_secs(5), "keine Meldung bei Startfehler");
+        std::thread::sleep(Duration::from_millis(20));
+    }
 }

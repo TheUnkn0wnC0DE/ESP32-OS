@@ -85,6 +85,19 @@ fn speichern(schluessel: &str, wert: &str) -> bool {
     libini::schreiben(DATEI, SEKTION, schluessel, wert)
 }
 
+/// Q2: Ort der Wetter-App (Name, Breite, Länge), `None` ohne Auswahl.
+pub fn wetter_ort() -> Option<crate::wetter::Ort> {
+    let name = lesen("wetter_ort")?;
+    let lat = lesen("wetter_lat")?.trim().parse().ok()?;
+    let lon = lesen("wetter_lon")?.trim().parse().ok()?;
+    Some(crate::wetter::Ort { name, lat, lon })
+}
+
+/// Q2: Ort der Wetter-App speichern.
+pub fn wetter_ort_setzen(o: &crate::wetter::Ort) -> bool {
+    speichern("wetter_ort", &o.name) && speichern("wetter_lat", &format!("{:.4}", o.lat)) && speichern("wetter_lon", &format!("{:.4}", o.lon))
+}
+
 /// Gespeicherte Einstellungen übernehmen (Standard: Englisch, Layout CH,
 /// Helligkeit 8, Lautstärke 6, Touchpad aus, blauer Verlauf).
 pub fn laden() {

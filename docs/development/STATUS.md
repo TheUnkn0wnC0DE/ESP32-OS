@@ -11,6 +11,21 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **25.11. nachmittags – Auftrag „Q: Qualität“ eingetragen** (PLAN,
+  Abschnitt Q vor C/D). **Board nicht erreichbar:** am PC ist nur COM1 zu
+  sehen, kein USB-TO-UART-Port (sonst COM3) – Board-Läufe (S1-Messung,
+  Q1-Fotos) schlugen beim Aufspielen fehl. Bitte das Board an „USB TO
+  UART“ anschliessen. Am PC erledigt: Q1-Funde 1–4 behoben (Startfehler
+  sichtbar, Konsole ohne Fehlermeldung, Musiktext, Taskleisten-Titel), WAV
+  im Musikplayer (D2). Wochenlimit 85 %.
+  Nutzer 25.11.: „ignoriere die 90 % Grenze“ – Arbeit geht über 90 % weiter.
+
+- **25.11., 6:10 – v1.0.3 veröffentlicht** (GitHub Release v1.0.3, main
+  baa6f42, 9 Dateien; Web-Flasher bleibt 1.0.1). Vorher: SB am Board 40 min
+  0 Abstürze, Paket geprüft. Board um 6:00 freigegeben (normale Firmware
+  1.0.3), kein COM3-Zugriff mehr. Offen: M4 (Leck −7 KB/h), M6, S1-Board,
+  S3 (≥ 30 fps), BR2, C2, SC/C4, D2, D3, SD/R12, T2, N1.
+
 - **25.11., ~5:30 – OK des Nutzers für v1.0.3 („Ok veröffentliche“).**
   Vorgehen: Stabilitätsrunde SB abwarten (0 Abstürze Bedingung), Paket
   `release_paket.ps1 -Version 1.0.3`, Release-Check, `gh release create
@@ -190,6 +205,25 @@ jedes Skript schreibt am Ende wieder die normale Firmware aufs Board).
    D2 (Ton), D3; danach **SD Stabilitätsrunde**.
 
 ## Offene Fragen
+
+- **Test-Notizen auf deiner SD-Karte:** In den Notizen stehen drei
+  Notizen „qasdfghjkl1234567“ aus früheren Board-Tests (Ordner von
+  ESP32-OS). Soll ich sie beim nächsten Board-Lauf löschen? Ohne dein OK
+  lasse ich sie.
+
+- **D3 App-Store – was soll installiert werden?** Alle Programme sind fest
+  in die Firmware gelinkt; einen Lader für nachträglich installierte
+  Programme gibt es nicht (KolibriOS-Programme sind x86, unsere C-Programme
+  werden mit der Firmware gebaut). Möglich wären: (a) Pakete aus Daten –
+  Shell-Skripte (#SHS), Hintergrundbilder, Skins, Lesezeichen,
+  Spieldaten-Erweiterungen; (b) ein Lader für RISC-V-Module
+  (positionsunabhängig, eigene Schnittstelle) – grosser Umbau mit
+  Sicherheitsrisiko; (c) „Installieren“ = Firmware mit anderem
+  Programmumfang über das bestehende OTA. Signatur: heute prüft das Update
+  nur SHA-256 aus dem Release; eine echte Signatur (Ed25519) braucht einen
+  privaten Schlüssel, den nur du verwahrst (öffentlicher Schlüssel in der
+  Firmware). **Vorschlag:** (a) mit Ed25519-Signatur des Verzeichnisses,
+  Schlüssel erzeugst du selbst. Bis zu deiner Antwort bleibt D3 offen.
 
 - **S5 „Editor-Fenster“:** Gefunden und behoben ist der abgehackte obere
   Rand bei PasswordGen, TinyHashView und Beispiel-GUI (alte

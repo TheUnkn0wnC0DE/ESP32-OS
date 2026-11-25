@@ -320,7 +320,7 @@ pub fn programm_fuer(name: &str) -> Option<&'static str> {
     match e.as_str() {
         "png" | "jpg" | "jpeg" | "gif" | "bmp" => Some("bildbetrachter"),
         "txt" | "ini" | "log" | "md" | "cfg" => Some("notizen"),
-        "mp3" => Some("musik"),
+        "mp3" | "wav" => Some("musik"),
         "pdf" => Some("pdfbetrachter"),
         _ => None,
     }
@@ -662,7 +662,10 @@ fn zeichnen(z: &mut Zustand) {
     sys::titel(&titel);
     // Geräte
     sys::rechteck((SEITE_W - 2) as u32, h as u32, 0xE2E6EC);
-    let geraete: Vec<(bool, usize, &'static str)> = z.geraete.iter().map(|g| (liegt_in(&z.pfad, &g.pfad), g.symbol, t(g.titel.0, g.titel.1))).collect();
+    // Q1: im Papierkorb ist nur „Papierkorb“ hervorgehoben (vorher auch
+    // das Gerät, auf dem er liegt)
+    let im_korb = ist_korb(&z.pfad);
+    let geraete: Vec<(bool, usize, &'static str)> = z.geraete.iter().map(|g| (!im_korb && liegt_in(&z.pfad, &g.pfad), g.symbol, t(g.titel.0, g.titel.1))).collect();
     for (i, (aktiv, sym, titel)) in geraete.into_iter().enumerate() {
         let y = 4 + i as i32 * 48;
         let farbe = if aktiv { WAHL } else { 0xE2E6EC };
@@ -673,7 +676,6 @@ fn zeichnen(z: &mut Zustand) {
         text(46, y + 14, titel, 0x202020);
     }
     // D4: Papierkorb unter den Geräten
-    let im_korb = ist_korb(&z.pfad);
     let y = 4 + z.geraete.len() as i32 * 48;
     let farbe = if im_korb { WAHL } else { 0xE2E6EC };
     sys::knopf(2 << 16 | (SEITE_W - 9) as u32, (y as u32) << 16 | 43, K_KORB | 0x4000_0000, farbe);
@@ -755,7 +757,7 @@ fn liste_blaettern(z: &mut Zustand) {
 }
 
 /// Meldung, wenn ein Programm nicht startet (Rückgabe von `datei::starten`).
-fn startfehler(prog: &str, r: i32) -> String {
+pub(crate) fn startfehler(prog: &str, r: i32) -> String {
     match r {
         -30 => format!("{prog}: {}", t("not enough memory – close other programs", "zu wenig Speicher – andere Programme schliessen")),
         -32 => format!("{prog}: {}", t("too many programs", "zu viele Programme")),

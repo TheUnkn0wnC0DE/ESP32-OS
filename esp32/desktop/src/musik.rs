@@ -139,9 +139,130 @@ pub fn laenge_geschaetzt(kopf: &[u8], groesse: u64) -> Option<u32> {
 
 type Leser = nanomp3::Reader<KDatei, i16>;
 
+/// D2: WAV (RIFF, PCM 8 oder 16 Bit, mono/stereo, beliebige Rate).
+pub struct WavLeser<R: Read> {
+    d: R,
+    pub rate: u32,
+    pub kanaele: usize,
+    bits: u16,
+    /// noch zu lesende Bytes des data-Blocks
+    rest: u64,
+    roh: Vec<u8>,
+}
+
+impl<R: Read> WavLeser<R> {
+    /// Kopf lesen bis zum Anfang der Daten (Blöcke „fmt “ und „data“).
+    pub fn neu(mut d: R) -> Result<WavLeser<R>, String> {
+        let mut k = [0u8; 12];
+        d.read_exact(&mut k).map_err(|_| "zu kurz".to_string())?;
+        if &k[0..4] != b"RIFF" || &k[8..12] != b"WAVE" {
+            return Err("keine WAV-Datei".into());
+        }
+        let (mut rate, mut kanaele, mut bits, mut format) = (0u32, 0usize, 0u16, 0u16);
+        loop {
+            let mut b = [0u8; 8];
+            d.read_exact(&mut b).map_err(|_| "kein data-Block".to_string())?;
+            let laenge = u32::from_le_bytes([b[4], b[5], b[6], b[7]]) as u64;
+            match &b[0..4] {
+                b"fmt " => {
+                    let mut f = vec![0u8; laenge as usize];
+                    d.read_exact(&mut f).map_err(|_| "fmt zu kurz".to_string())?;
+                    if f.len() < 16 {
+                        return Err("fmt zu kurz".into());
+                    }
+                    format = u16::from_le_bytes([f[0], f[1]]);
+                    kanaele = usize::from(u16::from_le_bytes([f[2], f[3]]));
+                    rate = u32::from_le_bytes([f[4], f[5], f[6], f[7]]);
+                    bits = u16::from_le_bytes([f[14], f[15]]);
+                    if laenge % 2 == 1 {
+                        let _ = d.read_exact(&mut [0u8; 1]);
+                    }
+                }
+                b"data" => {
+                    // 1 = PCM, 0xFFFE = WAVE_FORMAT_EXTENSIBLE (PCM-Untertyp)
+                    if !matches!(format, 1 | 0xFFFE) || !matches!(bits, 8 | 16) || !(1..=2).contains(&kanaele) || rate == 0 {
+                        return Err(format!("nicht unterstützt (Format {format}, {bits} Bit, {kanaele} Kanäle)"));
+                    }
+                    return Ok(WavLeser { d, rate, kanaele, bits, rest: laenge, roh: Vec::new() });
+                }
+                _ => {
+                    // anderer Block (LIST, fact …) überspringen
+                    let n = laenge + laenge % 2;
+                    std::io::copy(&mut (&mut d).take(n), &mut std::io::sink()).map_err(|_| "Block zu kurz".to_string())?;
+                }
+            }
+        }
+    }
+
+    /// Abtastwerte (verschachtelt, i16) nach `pcm`; 0 = Ende.
+    pub fn lesen(&mut self, pcm: &mut [i16]) -> usize {
+        let breite = usize::from(self.bits / 8);
+        let n = (pcm.len() / self.kanaele * self.kanaele * breite).min(self.rest as usize);
+        let n = n - n % (breite * self.kanaele);
+        if n == 0 {
+            return 0;
+        }
+        self.roh.resize(n, 0);
+        let mut gelesen = 0;
+        while gelesen < n {
+            match self.d.read(&mut self.roh[gelesen..n]) {
+                Ok(0) | Err(_) => break,
+                Ok(k) => gelesen += k,
+            }
+        }
+        let gelesen = gelesen - gelesen % (breite * self.kanaele);
+        self.rest -= gelesen as u64;
+        if gelesen == 0 {
+            self.rest = 0;
+            return 0;
+        }
+        if breite == 2 {
+            for (z, b) in pcm.iter_mut().zip(self.roh[..gelesen].chunks_exact(2)) {
+                *z = i16::from_le_bytes([b[0], b[1]]);
+            }
+        } else {
+            for (z, &b) in pcm.iter_mut().zip(&self.roh[..gelesen]) {
+                *z = (i16::from(b) - 128) << 8;
+            }
+        }
+        gelesen / breite
+    }
+
+    /// Länge in Sekunden (aus der Grösse des data-Blocks beim Öffnen).
+    fn sekunden(&self) -> u32 {
+        (self.rest / (u64::from(self.bits / 8) * self.kanaele as u64) / u64::from(self.rate)) as u32
+    }
+}
+
+/// Quelle einer Wiedergabe: MP3 oder WAV.
+enum Quelle {
+    Mp3(Leser),
+    Wav(WavLeser<KDatei>),
+}
+
+impl Quelle {
+    fn lesen(&mut self, pcm: &mut [i16]) -> usize {
+        match self {
+            Quelle::Mp3(l) => l.read(pcm).unwrap_or(0),
+            Quelle::Wav(w) => w.lesen(pcm),
+        }
+    }
+}
+
+/// Spielbare Endungen (D2).
+pub fn spielbar(name: &str) -> bool {
+    let n = name.to_lowercase();
+    n.ends_with(".mp3") || n.ends_with(".wav")
+}
+
+/// Titel ohne Endung.
+fn ohne_endung(name: &str) -> &str {
+    if spielbar(name) { &name[..name.len() - 4] } else { name }
+}
+
 /// Eine laufende Datei: Decoder und Umrechnung auf [`kern::ton::RATE`].
 struct Wiedergabe {
-    leser: Leser,
+    quelle: Quelle,
     rate: u32,
     kanaele: usize,
     /// Quell-Frames je Ausgabe-Frame
@@ -167,6 +288,23 @@ impl Wiedergabe {
     #[inline(never)]
     fn oeffnen(pfad: &str) -> Result<Box<Wiedergabe>, String> {
         let mut d = KDatei::oeffnen(pfad).ok_or_else(|| "nicht gefunden".to_string())?;
+        if pfad.to_lowercase().ends_with(".wav") {
+            let w = WavLeser::neu(d)?;
+            let (rate, kanaele, gesamt_s) = (w.rate, w.kanaele, Some(w.sekunden()));
+            return Ok(Box::new(Wiedergabe {
+                quelle: Quelle::Wav(w),
+                rate,
+                kanaele,
+                schritt: f64::from(rate) / f64::from(kern::ton::RATE),
+                vorrat: Vec::new(),
+                t: 0.0,
+                geschrieben: 0,
+                rest: Vec::new(),
+                ende: false,
+                gesamt_s,
+                pcm: vec![0; nanomp3::MAX_SAMPLES_PER_FRAME],
+            }));
+        }
         // Kopf für die Längenschätzung (ID3-Kopf bis 64 KB überspringen)
         let mut kopf = vec![0u8; 64 * 1024 + 16];
         let n = d.read(&mut kopf).unwrap_or(0);
@@ -183,7 +321,7 @@ impl Wiedergabe {
         }
         let gesamt_s = leser.total_samples().map(|n| (n / u64::from(rate)) as u32).or_else(|| laenge_geschaetzt(&kopf, groesse));
         Ok(Box::new(Wiedergabe {
-            leser,
+            quelle: Quelle::Mp3(leser),
             rate,
             kanaele,
             schritt: f64::from(rate) / f64::from(kern::ton::RATE),
@@ -206,9 +344,9 @@ impl Wiedergabe {
                 if self.ende {
                     break;
                 }
-                match self.leser.read(&mut self.pcm) {
-                    Ok(0) | Err(_) => self.ende = true,
-                    Ok(n) => {
+                match self.quelle.lesen(&mut self.pcm) {
+                    0 => self.ende = true,
+                    n => {
                         let k = self.kanaele.max(1);
                         for f in self.pcm[..n].chunks_exact(k) {
                             let l = i32::from(f[0]);
@@ -324,7 +462,7 @@ fn pfad(ordner: &str, name: &str) -> String {
 /// MP3-Dateien des Ordners (nach Namen).
 fn titel_lesen(ordner: &str) -> Vec<String> {
     dateimanager::lesen(ordner)
-        .map(|v| v.into_iter().filter(|e| !e.ordner && e.name.to_lowercase().ends_with(".mp3")).map(|e| e.name).collect())
+        .map(|v| v.into_iter().filter(|e| !e.ordner && spielbar(&e.name)).map(|e| e.name).collect())
         .unwrap_or_default()
 }
 
@@ -340,7 +478,7 @@ fn zeichnen(z: &mut Zustand) {
         let y = LISTE_Y + zeile as i32 * ZEILE_H;
         let gewaehlt = z.aktuell == Some(i);
         sys::knopf((LISTE_X as u32) << 16 | (LISTE_W - 1) as u32, (y as u32) << 16 | (ZEILE_H - 3) as u32, K_TITEL + i as u32, if gewaehlt { 0xCFE0F5 } else { 0xFFFFFF });
-        let name = z.titel[i].strip_suffix(".mp3").or_else(|| z.titel[i].strip_suffix(".MP3")).unwrap_or(&z.titel[i]);
+        let name = ohne_endung(&z.titel[i]);
         text(LISTE_X + 6, y + (ZEILE_H - 3 - 16) / 2, &kurz(name, 23), 0x101010, 1);
     }
     let knopf = |k: u32, s: &str, farbe: u32, schrift: u32| {
@@ -369,7 +507,7 @@ fn anzeige_zeichnen(z: &mut Zustand) {
     let titel = z.aktuell.map(|i| z.titel[i].clone()).unwrap_or_default();
     TITEL.setzen(&titel);
     SPIELT.store(z.spielt, Relaxed);
-    let name = titel.strip_suffix(".mp3").or_else(|| titel.strip_suffix(".MP3")).unwrap_or(&titel);
+    let name = ohne_endung(&titel);
     if name.is_empty() {
         text(RX, 14, &kurz(kern::sprache::t("Choose a title", "Titel wählen"), 18), 0x606060, 2);
     } else {
@@ -391,7 +529,7 @@ fn anzeige_zeichnen(z: &mut Zustand) {
     if let Some(m) = &z.meldung {
         text(RX, 200, &kurz(m, 36), 0xB03020, 1);
     } else if z.titel.is_empty() {
-        text(RX, 200, &kurz(&format!("{} {}", kern::sprache::t("No MP3 files in", "Keine MP3-Dateien in"), z.ordner), 36), 0x606060, 1);
+        text(RX, 200, &kurz(&format!("{} {}", kern::sprache::t("No music files (MP3, WAV) in", "Keine Musikdateien (MP3, WAV) in"), z.ordner), 36), 0x606060, 1);
     }
 }
 
@@ -581,5 +719,64 @@ mod tests {
             assert_eq!(r.channels(), Some(nanomp3::Channels::Mono), "{n}");
             assert_eq!(n_ges, werte, "{n}");
         }
+    }
+
+    /// D2: WAV – erzeugte Dateien (16 Bit stereo 22 050 Hz, 8 Bit mono
+    /// 8 000 Hz, mit LIST-Block vor „data“) vollständig und wertgleich lesen;
+    /// keine WAV bzw. 24 Bit wird abgelehnt.
+    #[test]
+    fn wav_lesen() {
+        fn wav(rate: u32, kanaele: u16, bits: u16, daten: &[u8], mit_list: bool) -> Vec<u8> {
+            let mut fmt = Vec::new();
+            fmt.extend(1u16.to_le_bytes());
+            fmt.extend(kanaele.to_le_bytes());
+            fmt.extend(rate.to_le_bytes());
+            fmt.extend((rate * u32::from(kanaele) * u32::from(bits / 8)).to_le_bytes());
+            fmt.extend((kanaele * bits / 8).to_le_bytes());
+            fmt.extend(bits.to_le_bytes());
+            let mut d = b"WAVE".to_vec();
+            d.extend(b"fmt ");
+            d.extend(16u32.to_le_bytes());
+            d.extend(fmt);
+            if mit_list {
+                d.extend(b"LIST");
+                d.extend(5u32.to_le_bytes());
+                d.extend(b"INFO\0\0"); // 5 Byte + Füllbyte
+            }
+            d.extend(b"data");
+            d.extend((daten.len() as u32).to_le_bytes());
+            d.extend(daten);
+            let mut v = b"RIFF".to_vec();
+            v.extend((d.len() as u32).to_le_bytes());
+            v.extend(d);
+            v
+        }
+        // 16 Bit stereo: 2205 Frames (0,1 s) Sägezahn
+        let werte: Vec<i16> = (0..2205 * 2).map(|i| (i as i16).wrapping_mul(7)).collect();
+        let roh: Vec<u8> = werte.iter().flat_map(|w| w.to_le_bytes()).collect();
+        let mut w = super::WavLeser::neu(std::io::Cursor::new(wav(22_050, 2, 16, &roh, true))).unwrap();
+        assert_eq!((w.rate, w.kanaele), (22_050, 2));
+        let mut pcm = vec![0i16; 1152];
+        let mut alle = Vec::new();
+        loop {
+            let n = w.lesen(&mut pcm);
+            if n == 0 {
+                break;
+            }
+            alle.extend_from_slice(&pcm[..n]);
+        }
+        assert_eq!(alle, werte);
+        // 8 Bit mono
+        let roh8: Vec<u8> = (0..800).map(|i| (i % 256) as u8).collect();
+        let mut w = super::WavLeser::neu(std::io::Cursor::new(wav(8_000, 1, 8, &roh8, false))).unwrap();
+        let n = w.lesen(&mut pcm);
+        assert_eq!(n, 800);
+        assert_eq!(pcm[0], -128 << 8);
+        assert_eq!(pcm[128], 0);
+        assert_eq!(w.lesen(&mut pcm), 0);
+        // abgelehnt
+        assert!(super::WavLeser::neu(std::io::Cursor::new(b"RIFF\0\0\0\0WAVX".to_vec())).is_err());
+        assert!(super::WavLeser::neu(std::io::Cursor::new(wav(44_100, 2, 24, &[0; 12], false))).is_err());
+        assert!(super::spielbar("Lied.WAV") && super::spielbar("a.mp3") && !super::spielbar("a.ogg"));
     }
 }

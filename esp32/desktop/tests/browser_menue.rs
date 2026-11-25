@@ -11,7 +11,9 @@ use std::time::Duration;
 static A: KernAlloc = KernAlloc;
 
 const START: (i32, i32) = (40, 340);
-const FREI: (i32, i32) = (560, 200);
+// Titelleiste des Browsers: das Hauptmenü (seit „Wetter“ drei Spalten)
+// reicht von y = 29 bis zur Taskleiste über die ganze Breite
+const FREI: (i32, i32) = (300, 15);
 
 fn titel() -> Vec<String> {
     sys::fenster_liste().into_iter().map(|f| f.titel).collect()
@@ -49,7 +51,7 @@ fn startmenue_bei_offenem_browser() {
     for runde in 0..15 {
         tippen(START.0, START.1);
         std::thread::sleep(Duration::from_millis(400));
-        assert!(kern::liste().iter().any(|p| p.name == "@menu"), "Runde {runde}: Menü offen");
+        assert!(kern::liste().iter().any(|p| p.name == "@menu"), "Runde {runde}: Menü offen; Fenster {:?}, Abstürze {:?}", titel(), kern::neue_abstuerze());
         if runde % 3 == 2 {
             // Ordner „Mehr Programme“ öffnen (zweites Menü)
             let (x, y) = desktop::shell::menue_eintrag_mitte("@mehr").expect("Mehr");

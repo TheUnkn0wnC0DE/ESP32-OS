@@ -202,7 +202,11 @@ static MENUE_ZU: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool
 
 /// Programm starten (wie Funktion 70.7 mit /sys/<name>).
 pub fn starten(programm: &str) {
-    if programm == "@menu" && kern::liste().iter().any(|p| p.name == "@menu") {
+    // Umschalten nur, wenn das Menü noch ein Fenster hat: ein gerade
+    // geschlossenes Menü steht kurz noch in der Prozessliste (vorher schloss
+    // der nächste Tipp dann ein Menü, das gar nicht mehr offen war)
+    let menue_offen = kern::liste().iter().filter(|p| p.name == "@menu").any(|p| sys::fenster_liste().iter().any(|f| f.pid == p.pid));
+    if programm == "@menu" && menue_offen {
         MENUE_ZU.store(true, core::sync::atomic::Ordering::Relaxed);
         return;
     }
@@ -257,6 +261,10 @@ pub fn starten(programm: &str) {
             let r = kern::datei::starten(&format!("/sys/{p}"), "");
             if r < 0 {
                 sys::debug_text(&format!("Start {p}: Fehler {}", -r));
+                // Q1: sichtbare, verständliche Meldung statt nur im Log
+                // (vorher geschah beim Antippen scheinbar nichts)
+                let name = anwendungen().into_iter().find(|a| a.programm == p).map_or(p.to_string(), |a| kern::sprache::t(a.titel, a.titel_de).to_string());
+                melden(kern::sprache::t("Program not started", "Programm nicht gestartet"), &crate::dateimanager::startfehler(&name, r));
             }
         }
     }
@@ -562,7 +570,9 @@ fn leiste_zeichnen(w: i32, y0: i32, eigen: u32) -> Vec<kern::fenster::FensterInf
         let x = START_W + 4 + i as i32 * FENSTER_W;
         let c = if f.aktiv { 0x7887A6 } else if f.minimiert { 0x3E4A63 } else { 0x4E5A75 };
         sys::knopf((x as u32) << 16 | (FENSTER_W - 6) as u32, 3 << 16 | (LEISTE_H - 7) as u32, KNOPF_FENSTER + i as u32, c);
-        let t: String = f.titel.chars().take(((FENSTER_W - 14) / 8) as usize).collect();
+        // Q1: zu lange Titel mit „..“ statt hart abgeschnitten
+        let max = ((FENSTER_W - 14) / 8) as usize;
+        let t: String = if f.titel.chars().count() <= max { f.titel.clone() } else { f.titel.chars().take(max - 2).collect::<String>() + ".." };
         text(x + 6, (LEISTE_H - 16) / 2, &t, tf);
     }
     if wlan != 0 {
@@ -637,6 +647,13 @@ pub fn taskbar() {
         match e {
             1 => {
                 liste = leiste_zeichnen(w, y0, eigen);
+                // S1-Messung: Eintrag gezeichnet – wie lange nach der
+                // Änderung der Fensterliste (Log, am Board ausgewertet)
+                let m = kern::fenster::LISTE_GEAENDERT_MS.swap(0, core::sync::atomic::Ordering::Relaxed);
+                if m != 0 && !erst {
+                    let jetzt = (sys::zeit_ns() / 1_000_000) as u32 | 1;
+                    sys::debug_text(&format!("Taskleiste: Eintrag {} ms nach der Fensteränderung\n", jetzt.wrapping_sub(m)));
+                }
                 if erst {
                     sys::fensterebene(2, u32::MAX, 1);
                     erst = false;

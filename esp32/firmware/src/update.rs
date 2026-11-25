@@ -75,6 +75,19 @@ unsafe extern "C" fn fortschritt_c(p: c_int, kontext: *mut c_void) {
 
 pub struct GitHub;
 
+/// Q2: HTTPS-Abruf für Programme (Wetter-App), gleiche Zertifikatsprüfung
+/// wie das Update; ohne WLAN-Verbindung sofort ein Fehler in Worten.
+pub struct Https;
+
+impl kern::abruf::Abrufer for Https {
+    fn text(&self, url: &str) -> Result<(i32, String), String> {
+        if !kern::wlan::zustand().verbunden {
+            return Err(kern::sprache::t("No Wi-Fi connection", "Keine WLAN-Verbindung").into());
+        }
+        https_text(url, true)
+    }
+}
+
 impl kern::aktualisierung::Quelle for GitHub {
     fn neueste(&self) -> Result<kern::aktualisierung::Freigabe, String> {
         if !kern::wlan::zustand().verbunden {
