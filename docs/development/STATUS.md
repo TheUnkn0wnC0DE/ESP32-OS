@@ -11,6 +11,18 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **25.11., 18:40 – Übergabe (Q-Auftrag):** Gepusht main 2a70783 (Wetter-App
+  Q2 am PC fertig, Q1-Funde 1–4, 6, 8 behoben, WAV), Autopiloten neu
+  (d003bc6, Menü jetzt drei Spalten). Board wieder an COM3. Läuft:
+  `s5_lauf.ps1` → `scratchpad/q1_nachher` (19 Programme inkl. Wetter;
+  liefert Q1-Nachher-Fotos und S1-Zeiten „Taskleiste: Eintrag N ms“).
+  Nächste Schritte: (1) Auswertung: S1 abhaken, wenn alle Zeiten < 1 Bild
+  (~35 ms); Fotos nach docs/nachweise/q1/; (2) Wetter am Board: Foto mit
+  echten Daten (Autopilot: Wetter öffnen, Ort suchen) → Q2 abhaken;
+  (3) Q1 Rest: Tastatur-fps mit schnellem Tippen messen, Randfälle;
+  (4) Q3 Browser (JS/CSS-Lücken loggen, br_lauf); (5) Q4. Offene Fragen:
+  Test-Notizen löschen?, D3 App-Store. Nutzer: 90-%-Grenze ignorieren.
+
 - **25.11. nachmittags – Auftrag „Q: Qualität“ eingetragen** (PLAN,
   Abschnitt Q vor C/D). **Board nicht erreichbar:** am PC ist nur COM1 zu
   sehen, kein USB-TO-UART-Port (sonst COM3) – Board-Läufe (S1-Messung,

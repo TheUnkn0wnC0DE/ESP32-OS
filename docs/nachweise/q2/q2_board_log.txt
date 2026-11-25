@@ -1,0 +1,2 @@
+[debug] Wetter: Suche 0 "zuerich" ohne Treffer
+[debug] Wetter: Zurich, Canton of Zurich, Switzerland – Some((3.4, 61, 5))

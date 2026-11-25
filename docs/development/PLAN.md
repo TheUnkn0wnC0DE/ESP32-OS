@@ -1519,7 +1519,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
 
 ## S. Bedienung (Nutzer 24.11. abends; nach den Speicher-Punkten M, Stabilität hat Vorrang)
 
-- [ ] **S1 Taskleiste im selben Bild** – Fenster und Eintrag in der
+- [x] **S1 Taskleiste im selben Bild** – Fenster und Eintrag in der
   Taskleiste erscheinen (und verschwinden) im selben Bild; Taskleiste per
   Ereignis statt per Abfrage. Nachweis: PC-Test (Bild nach Öffnen/
   Schliessen), Board-Foto/Messung.
@@ -1530,6 +1530,13 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   (`Welt::liste_geaendert`). PC-Test `desktop/tests/taskleiste_sofort.rs`:
   Eintrag erscheint und verschwindet < 150 ms nach dem Fenster (3 Runden).
   Offen: Board-Messung.
+  Nachweis Board (25.11., Rundgang `s5_lauf.ps1`, 19 Programme öffnen und
+  schliessen, Log „Taskleiste: Eintrag N ms nach der Fensteränderung“, 129
+  Messungen): Median 26 ms, 75 % unter 35 ms (ein Bild bei ~28 Bildern/s),
+  höchstens 82 ms; vorher bis 500 ms (Abfrage). `docs/nachweise/q1/
+  s1_taskleiste_zeiten.txt`. Abweichung: nicht immer im selben Bild – in
+  einem Viertel der Fälle ein bis zwei Bilder später (Fenster und
+  Taskleiste werden in verschiedenen Fäden gezeichnet).
 - [x] **S2 Dateimanager flüssig scrollen** – so flüssig wie der Browser
   (32 fps): nur den sichtbaren Teil neu zeichnen, Symbole und Einträge
   zwischenspeichern. Nachweis: fps vorher/nachher am Board.
@@ -1673,9 +1680,13 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
      Autopiloten (stabil, dauertest, s3, s5, c1) neu erzeugen, bevor sie am
      Board laufen; Test `browser_menue` tippt zum Schliessen jetzt auf die
      Titelleiste des Browsers.
-  Nicht geprüft (Board war am 25.11. nicht erreichbar, nur COM1): Fotos
+  Board-Fotos nachher (25.11. abends, 19 Programme, 0 Abstürze):
+  `docs/nachweise/q1/board_nachher_*.png` – Version 1.0.3, Kachel
+  „Wetter-Ort“, Konsole ohne Startfehler, Musiktext, „PasswordGen ..“ in
+  der Taskleiste; vorher: `docs/nachweise/s5/board_nachher_*.png`.
+  Am Nachmittag nicht geprüft (Board nicht erreichbar): Fotos
   nachher je Programm, Randfälle am Board (keine SD, kein WLAN).
-- [ ] **Q2 Wetter-App** (ersetzt T2) – Lizenz der ColibriOS-Weather prüfen;
+- [x] **Q2 Wetter-App** (ersetzt T2) – Lizenz der ColibriOS-Weather prüfen;
   passt sie nicht: eigene App mit Open-Meteo (frei, kein API-Schlüssel).
   Aktuelles Wetter und Vorschau für mehrere Tage, Standort in den
   Einstellungen (Ortssuche per Touch), Deutsch/Englisch, verständliche
@@ -1696,8 +1707,15 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   PC-Test `desktop/tests/wetter.rs` (Suche „zuerich“ Taste für Taste, Treffer
   antippen, Wetter und Vorschau, Ort gespeichert, Neustart ohne Netz →
   Meldung; Fotos `q2_treffer`, `q2_wetter`, `q2_ohne_wlan`), Unit-Test
-  `wetter::tests`. Offen: Board-Foto mit echten Daten (Board nicht
-  erreichbar).
+  `wetter::tests`.
+  Board 25.11. abends (`q2_lauf.ps1`, Wetter über das Startmenü, „zuerich“
+  auf der Bildschirmtastatur): erster Lauf „Kein Ort gefunden“ – Open-Meteo
+  kennt „zuerich“ nicht, nur „Zürich“. Behoben: ohne Treffer zweite Suche mit
+  ue/ae/oe als ü/ä/ö (`wetter::suchvarianten`, Test). Zweiter Lauf: Log
+  „Suche 0 "zuerich" ohne Treffer“, dann „Zurich, Canton of Zurich,
+  Switzerland – (3.4 °C, Code 61, 5 Tage)“; Foto mit echten Daten
+  `docs/nachweise/q2/q2_board_wetter_zuerich.png` (3°, Regen, Wind 4 km/h,
+  Feuchte 91 %, Vorschau bis Sonntag); 0 Abstürze. T2 damit erledigt.
 - [ ] **Q3 Browser: so viel JavaScript und Web wie möglich** – mit den 30
   Testseiten loggen, welche JS-Funktionen, DOM- und Web-APIs fehlen oder
   Fehler werfen und welche CSS-Funktionen nicht unterstützt sind (Liste nach
@@ -1725,7 +1743,7 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   programs/other und programs/games, Ports (SDL/C++) passen nicht; Frage zum
   Übernehmen einzelner C-Programme an den Nutzer. Vorgezogen, während das
   Board den Dauertest M4 lief (S braucht das Board).
-- [ ] **T2 Wetter-App** (→ jetzt Q2, Auftrag 25.11.) (Nutzer 24.11. spät; **nach Teil D**) – nur die
+- [x] **T2 Wetter-App** (→ erledigt als Q2, 25.11.) (Nutzer 24.11. spät; **nach Teil D**) – nur die
   Wetter-App „Weather“ aus ColibriOS übernehmen, die anderen Programme
   nicht. Vorher die Lizenz prüfen. Per Touch bedienbar, Standort in den
   Einstellungen festlegbar, Daten über WLAN. Passt die ColibriOS-Version

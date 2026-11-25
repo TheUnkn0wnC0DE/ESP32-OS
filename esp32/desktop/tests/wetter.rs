@@ -21,7 +21,11 @@ impl kern::abruf::Abrufer for Fest {
             return Err("ESP_ERR_HTTP_CONNECT".into());
         }
         if url.contains("geocoding-api.open-meteo.com") {
-            assert!(url.contains("name=zuerich"), "Suche: {url}");
+            // wie Open-Meteo: „zuerich“ ohne Treffer, „zürich“ mit
+            if url.contains("name=zuerich") {
+                return Ok((200, r#"{"generationtime_ms":0.4}"#.into()));
+            }
+            assert!(url.contains("name=z%C3%BCrich"), "Suche: {url}");
             return Ok((200, r#"{"results":[{"name":"Zürich","latitude":47.36667,"longitude":8.55,"country":"Schweiz","admin1":"Zürich"},{"name":"Zurich","latitude":43.42,"longitude":-81.62,"country":"Kanada","admin1":"Ontario"}]}"#.into()));
         }
         if url.contains("api.open-meteo.com/v1/forecast") {
@@ -40,7 +44,17 @@ fn bis(mut f: impl FnMut() -> bool, was: &str) {
     }
 }
 
+/// Board-Zeitleiste (ms, x, y) für `Q2_AUTOPILOT_NEU=1`.
+static BOARD: std::sync::Mutex<Vec<(u64, i32, i32)>> = std::sync::Mutex::new(Vec::new());
+static BOARD_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(25_000);
+
+fn board_tipp(x: i32, y: i32, warte: u64) {
+    let t = BOARD_MS.fetch_add(warte, Ordering::SeqCst);
+    BOARD.lock().unwrap().push((t, x, y));
+}
+
 fn tipp(g: &mut Gesten, t: &mut u64, x: i32, y: i32) {
+    board_tipp(x, y, 400);
     g.schritt(*t, [Some((x, y)), None]);
     *t += 100;
     g.schritt(*t, [None, None]);
@@ -85,7 +99,11 @@ fn wetter_per_touch() {
     let mut g = Gesten::default();
     let mut t = 1000u64;
 
-    // ohne gespeicherten Ort: gleich die Ortssuche
+    // ohne gespeicherten Ort: gleich die Ortssuche (am Board über das
+    // Startmenü: Startknopf, Eintrag „Wetter“)
+    board_tipp(40, 340, 1500);
+    let (mx, my) = desktop::shell::menue_eintrag_mitte("wetter").expect("Wetter im Menü");
+    board_tipp(mx, my, 4000);
     let pid = kern::starte_name("wetter").unwrap();
     bis(|| sys::tastatur_soll().0, "Suchfeld mit Tastatur");
     std::thread::sleep(Duration::from_millis(300));
@@ -99,6 +117,7 @@ fn wetter_per_touch() {
     }
     let (x, y) = sondertaste("enter", 640);
     tipp(&mut g, &mut t, x, oben + y);
+    BOARD_MS.fetch_add(10_000, Ordering::SeqCst); // Suche über WLAN (bis zwei Anfragen)
     bis(|| titel_da("Weather") && !sys::tastatur_soll().0, "Trefferliste");
     std::thread::sleep(Duration::from_millis(400));
     foto("q2_treffer");
@@ -106,6 +125,14 @@ fn wetter_per_touch() {
     tipp(&mut g, &mut t, 20 + 5 + 200, 8 + 48 + 32 + 20);
     std::thread::sleep(Duration::from_millis(600));
     foto("q2_wetter");
+    if std::env::var_os("Q2_AUTOPILOT_NEU").is_some() {
+        // Board: 8 s auf die Vorhersage warten, dann Foto
+        let foto_s = (BOARD_MS.fetch_add(20_000, Ordering::SeqCst) + 8000) / 1000;
+        let ap: Vec<String> = BOARD.lock().unwrap().iter().flat_map(|&(t, x, y)| [format!("{t}:{x}:{y}:1"), format!("{}:{x}:{y}:0", t + 120)]).collect();
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../werkzeuge/board");
+        std::fs::write(dir.join("q2_autopilot.txt"), ap.join(",")).unwrap();
+        std::fs::write(dir.join("q2_fotos.txt"), format!("{foto_s}")).unwrap();
+    }
     let ort = desktop::konfig::wetter_ort().expect("Ort gespeichert");
     assert_eq!(ort.name, "Zürich, Schweiz");
     kern::zwangsbeenden(pid, 2000);

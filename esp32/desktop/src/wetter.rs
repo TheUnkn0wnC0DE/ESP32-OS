@@ -480,17 +480,39 @@ fn suchen(z: &mut Zustand) {
     let Some(q) = crate::dateimanager::name_dialog(t("Search place", "Ort suchen"), "") else { return };
     z.meldung = Some(t("Searching ...", "Suche ...").to_string());
     zeichnen(z);
-    match kern::abruf::text(&such_url(&q)) {
-        Ok((200, s)) => match orte_lesen(&s) {
-            Some(v) if !v.is_empty() => {
-                z.treffer = v;
-                z.meldung = None;
+    // Board 25.11.: „zuerich“ findet Open-Meteo nicht (nur „Zürich“) – ohne
+    // Treffer noch einmal mit ue/ae/oe als ü/ä/ö
+    for (i, frage) in suchvarianten(&q).iter().enumerate() {
+        match kern::abruf::text(&such_url(frage)) {
+            Ok((200, s)) => match orte_lesen(&s) {
+                Some(v) if !v.is_empty() => {
+                    z.treffer = v;
+                    z.meldung = None;
+                    return;
+                }
+                _ => z.meldung = Some(format!("{} \"{q}\"", t("No place found for", "Kein Ort gefunden für"))),
+            },
+            Ok((st, _)) => {
+                z.meldung = Some(format!("{} (HTTP {st})", t("Search not available", "Suche nicht erreichbar")));
+                return;
             }
-            _ => z.meldung = Some(format!("{} \"{q}\"", t("No place found for", "Kein Ort gefunden für"))),
-        },
-        Ok((st, _)) => z.meldung = Some(format!("{} (HTTP {st})", t("Search not available", "Suche nicht erreichbar"))),
-        Err(e) => z.meldung = Some(abruf_fehler(&e)),
+            Err(e) => {
+                z.meldung = Some(abruf_fehler(&e));
+                return;
+            }
+        }
+        sys::debug_text(&format!("Wetter: Suche {i} \"{frage}\" ohne Treffer"));
     }
+}
+
+/// Suchtexte: wie getippt, dann ue/ae/oe als Umlaut (falls anders).
+pub fn suchvarianten(q: &str) -> Vec<String> {
+    let mut v = vec![q.to_string()];
+    let u = q.replace("ue", "ü").replace("ae", "ä").replace("oe", "ö").replace("Ue", "Ü").replace("Ae", "Ä").replace("Oe", "Ö");
+    if u != q {
+        v.push(u);
+    }
+    v
 }
 
 /// Programm „wetter“ (Argument „ort“: gleich die Ortssuche, aus den
@@ -559,5 +581,7 @@ mod tests {
         assert_eq!(wochentag("2026-11-25"), Some(2)); // Mittwoch
         assert_eq!(wochentag("2024-02-29"), Some(3)); // Donnerstag
         assert!(such_url("St. Gallen").contains("name=St.%20Gallen"));
+        assert_eq!(suchvarianten("zuerich"), vec!["zuerich".to_string(), "zürich".to_string()]);
+        assert_eq!(suchvarianten("Bern"), vec!["Bern".to_string()]);
     }
 }

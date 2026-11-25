@@ -6,6 +6,7 @@ rechner
 uhr
 kalender
 musik
+wetter
 browser
 pdfbetrachter
 basic_gui
