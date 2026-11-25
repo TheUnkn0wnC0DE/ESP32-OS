@@ -11,6 +11,18 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **25.11., 1 Uhr:** M4 Lauf 5: 0 Abstürze in 75 min, intern aber −8 KB.
+  Lecksuche zweimal durch denselben Browser-Absturz (nach 629 s) beendet –
+  Ursache gefunden und behoben (statische Sperre im Heap des Browsers,
+  PLAN M4). Läuft: Tests + Build; danach Lecksuche erneut, S5-Board-Fotos,
+  M4 Lauf 6.
+
+- **24.11., 23:40:** Gepusht (main aae6bec): D1 Shell (Board-Foto), S5
+  Fensterränder (PC-Test 21 Programme), Review-Befunde behoben, kleinere
+  Dienst-Heaps. Läuft: M4 Lauf 5 (bis ~0:10; Browser startet jetzt, 2
+  Startfehler nur wenn Einstellungen/Musik noch offen – Pool voll). Danach:
+  S5 Board-Fotos vorher/nachher, M4-Auswertung.
+
 - **24.11., 23 Uhr – Nutzer schläft, ich arbeite allein weiter.** Stand:
   C1 und D1 am Board nachgewiesen (Fotos `docs/nachweise/c1/`), S2
   abgehakt (17,8 → 25,2 Bilder/s), S3 gemessen (Grenze 55-Hz-Takt,

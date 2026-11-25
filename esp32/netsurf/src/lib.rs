@@ -103,13 +103,39 @@ pub extern "C" fn ns_tastatur_fokus(an: i32, x: i32, y: i32, hoehe: i32) {
             kern::sys::textfeld_lage(x, y, 2, hoehe.max(1));
         }
     }
-    TASTATUR.lock().unwrap_or_else(|e| e.into_inner()).push((an != 0, x, y, hoehe));
+    // Nur für die Tests (am Board fragt niemand ab – die Liste wuchs dort bei
+    // jedem Fokuswechsel). Im Kern-Abschnitt: Sperre und Liste im
+    // System-Heap. Vorher lagen beide im Heap des Browsers; nach seinem Ende
+    // zeigte die statische Sperre in freigegebenen Speicher und der nächste
+    // Browser stürzte beim Sperren ab (Board 25.11., Load access fault in
+    // pthread_mutex_lock aus ns_tastatur_fokus).
+    #[cfg(not(target_os = "espidf"))]
+    im_system(|| TASTATUR.lock().unwrap_or_else(|e| e.into_inner()).push((an != 0, x, y, hoehe)));
+    #[cfg(target_os = "espidf")]
+    let _ = (x, y, hoehe);
+}
+
+/// Im Kern-Abschnitt (Belegungen im System-Heap); 64 Bit ohne Kern: direkt.
+fn im_system<R>(f: impl FnOnce() -> R) -> R {
+    #[cfg(target_pointer_width = "32")]
+    {
+        kern::kern_abschnitt(f)
+    }
+    #[cfg(not(target_pointer_width = "32"))]
+    {
+        f()
+    }
 }
 
 /// Fokus-Meldungen an die Bildschirmtastatur seit dem letzten Abholen
 /// (an, x, y, Höhe) – für die Tests.
 pub fn tastatur_meldungen() -> Vec<(bool, i32, i32, i32)> {
-    std::mem::take(&mut *TASTATUR.lock().unwrap_or_else(|e| e.into_inner()))
+    // Liste im System-Heap (siehe ns_tastatur_fokus): Kopie im Heap des
+    // Aufrufers, geleert im Kern-Abschnitt
+    let v = im_system(|| std::mem::take(&mut *TASTATUR.lock().unwrap_or_else(|e| e.into_inner())));
+    let kopie = v.clone();
+    im_system(|| drop(v));
+    kopie
 }
 
 static TASTATUR: std::sync::Mutex<Vec<(bool, i32, i32, i32)>> = std::sync::Mutex::new(Vec::new());

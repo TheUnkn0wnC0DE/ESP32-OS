@@ -1446,6 +1446,35 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   (b) Fragmentierung: Programmbereiche aus einem beim Start reservierten
   Pool statt aus dem System-Heap; Heap des Desktop-Programms @icon 4 MB
   (Spitze 948 KB) verkleinern (Übergang zu M6).
+  Lauf 3 (Pool, 4 MB Systemreserve) und Lauf 4 abgebrochen: System hatte
+  nur 0,4–1,3 MB PSRAM bzw. der Browser (10,6 MB) fand kein Stück im Pool →
+  Reserve 6 MB, @icon 2,5 MB, Dienste 256/256/384 KB.
+  **Lauf 5 (25.11., 75 min, m4f): 0 Abstürze, 0 Neustarts**, Browser
+  läuft (Heap-Spitze 2,9 MB); 2 Startfehler des Browsers, als die
+  Einstellungen (6 MB) bzw. die Musik noch offen waren (Pool voll – Meldung
+  statt Absturz, M3). Interner RAM: Anfang 220 KB, Ende 212 KB, tiefster
+  Wert 210 KB → wieder −8 KB → Leck-Kriterium nicht erfüllt; Lecksuche mit
+  Heap-Spur (`leck_lauf.ps1`) läuft.
+  Lecksuche Lauf 1 (25.11.): nach 629 s Neustart – Absturz des Browsers
+  (Load access fault in `pthread_mutex_lock` aus `ns_tastatur_fokus`,
+  netsurf/src/lib.rs; per addr2line mit der ELF des Mess-Builds). Ursache:
+  die statische Sperre `TASTATUR` legte ihren pthread-Mutex beim ersten
+  Sperren im Heap des Browsers an; nach dem Ende des Browsers zeigte sie in
+  freigegebenen Speicher (dort stand schon „Done“), der nächste Browser
+  stürzte ab. D5 fing es nicht ab (Fehler im Sperrcode). Behoben: die Liste
+  dient nur den Tests – am Board nicht mehr geführt, am PC im
+  Kern-Abschnitt (System-Heap). Alle anderen Statics in Kern, Desktop,
+  Kolibri und NetSurf geprüft: sperren schon im Kern-Abschnitt.
+  Lecksuche Lauf 3 (25.11., korrigierte Firmware, 0 Abstürze): nach zwei
+  Runden (60–885 s) noch 3589 Byte intern belegt in 149 Einträgen (60
+  Gruppen) – passt zu −8 KB in 72 min. Grösste Gruppen: 428/384/3×356 B
+  (Task-Strukturen noch laufender Programme), 4×84 B, 12×8 B und ~17
+  Knoten à 16 B gleicher Bauart (zwei PSRAM- und zwei interne Zeiger),
+  Einzelwerte (Umgebung „LANGUAGE=en“ einmalig, Teile einer WLAN-SSID).
+  Ohne Aufrufstapel (Heap-Spur ohne Rücksprungadressen) noch nicht
+  zugeordnet. Nächster Schritt: Heap-Spur mit Aufrufstapel
+  (CONFIG_HEAP_TRACING_STACK_DEPTH) über mehr Runden, die 16-B-Knoten
+  zuordnen. M4 bleibt offen.
 - [ ] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
 - [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5) –
   intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM
@@ -1525,7 +1554,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   normaler Firmware Log „Ersteinrichtung: schon erledigt“ (M4-Lauf 24.11.,
   I (3583)).
 
-- [ ] **S5 Fensterränder einheitlich** (Nutzer 24.11. spät, nach dem
+- [x] **S5 Fensterränder einheitlich** (Nutzer 24.11. spät, nach dem
   aktuellen Schritt) – beim Editor-Fenster und beim Passwort-Generator
   wirkt der obere Rand abgehackt. (1) Ursache finden (Titelleiste,
   Rahmen, Position oder Höhe falsch berechnet?); (2) jedes Programm per
@@ -1556,6 +1585,12 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   nachher. Hinweis: Notizen, Dateimanager, Einstellungen und Boxlib liegen
   bei y = 0 (bündig oben) – Titelleiste vollständig; ob „Editor“ eines
   dieser Fenster meint, steht in STATUS (Frage).
+  Nachweis Board (25.11., `s5_lauf.ps1`, 18 Programme über das
+  Startmenü, je ein Foto mit bildschirmfoto.py, 0 Abstürze): vorher (Kern
+  vor S5) überdeckt der Inhalt von PasswordGen und Beispiel-GUI die
+  Titelleiste, nachher sind alle 18 Titelleisten und Ränder vollständig –
+  `docs/nachweise/s5/board_vorher_*.png`, `board_nachher_*.png`, dazu
+  PC-Fotos `pc_vorher_*`/`pc_nachher_*`.
 
 ## T. Nach Teil S (Nutzer 24.11. abends)
 
