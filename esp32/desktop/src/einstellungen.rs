@@ -522,7 +522,7 @@ pub fn programm() {
                             });
                             let ok = r.is_ok();
                             z.update_text = match r {
-                                Ok(()) => t("Installed – restarting…", "Installiert – Neustart…").to_string(),
+                                Ok(()) => t("Installed - restarting...", "Installiert - Neustart...").to_string(),
                                 Err(e) => e,
                             };
                             sys::debug_text(&format!("Update: {}\n", z.update_text));

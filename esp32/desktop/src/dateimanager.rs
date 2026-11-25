@@ -759,7 +759,7 @@ fn liste_blaettern(z: &mut Zustand) {
 /// Meldung, wenn ein Programm nicht startet (Rückgabe von `datei::starten`).
 pub(crate) fn startfehler(prog: &str, r: i32) -> String {
     match r {
-        -30 => format!("{prog}: {}", t("not enough memory – close other programs", "zu wenig Speicher – andere Programme schliessen")),
+        -30 => format!("{prog}: {}", t("not enough memory - close other programs", "zu wenig Speicher - andere Programme schliessen")),
         -32 => format!("{prog}: {}", t("too many programs", "zu viele Programme")),
         r if r == -(datei::NICHT_GEFUNDEN as i32) => format!("{prog} {}", t("missing", "fehlt")),
         r => format!("{prog}: {} ({})", t("start failed", "Start fehlgeschlagen"), -r),

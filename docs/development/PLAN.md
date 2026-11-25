@@ -1671,6 +1671,24 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
      2,5 Tipps/s; die Anzeige läuft beim Tippen mit 24–29 Bildern/s (Log
      „FPS“ im S3-Lauf). Offen: Messung mit schnellem Tippen, Ziel ≥ 25 bei
      jedem Tastendruck.
+     Board 25.11. 21:30 (S3-Lauf mit neuer Phase „tastatur_schnell“, 58
+     Tasten mit 6–7 Tasten/s in den Notizen): **15,9 Bilder/s, Fläche
+     174 725 px je Bild (≈ 640 × 273), Compositor 9,9 ms** – ein Tastendruck
+     zeichnet fast den ganzen Bildschirm neu, nicht nur Taste und Textzeile.
+     Nächster Schritt: am PC je Tastendruck die Dirty-Fläche messen
+     (`sys::Schirm::letzte_flaeche`), Ursache finden (Notizen zeichnen das
+     ganze Fenster? Tastatur wandert mit der Schreibmarke
+     `notizen::feld_melden` → `textfeld_lage`?), beheben, PC-Test mit
+     Grenze je Tastendruck, Board erneut messen (Ziel ≥ 25).
+     **Behoben (25.11. 22 Uhr):** Ursache – jeder Tastendruck in den
+     Notizen zeichnete das ganze Fenster (Rahmen, Knöpfe, Liste, Text);
+     jetzt nur der Textbereich (`notizen::text_zeichnen`), das ganze Fenster
+     nur, wenn sich Titel/Speichern/Meldung ändern. Board, gleiche Phase:
+     Fläche je Bild 174 725 → 74 804 px, Compositor 9,9 → 0,84 ms, Anzeige
+     (Pipeline-FPS) **vorher 24–30, nachher 31–33,5 Bilder/s**, Ausgabe je
+     Bild 50–57 → 24–41 ms. „Bilder/s neu“ (14,4) zählt nur geänderte
+     Bilder und ist durch die Tipprate begrenzt (~2 Bilder je Taste bei 6–7
+     Tasten/s).
   8. mittel – Startknopf schloss ein gerade (durch Tipp daneben)
      geschlossenes Menü, das noch in der Prozessliste stand, statt ein neues
      zu öffnen. **Behoben:** umgeschaltet wird nur, wenn das Menü noch ein
@@ -1680,6 +1698,15 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
      Autopiloten (stabil, dauertest, s3, s5, c1) neu erzeugen, bevor sie am
      Board laufen; Test `browser_menue` tippt zum Schliessen jetzt auf die
      Titelleiste des Browsers.
+  10. mittel – Randfälle (PC-Test `desktop/tests/randfaelle.rs`): ohne
+     SD-Karte und ohne Netz öffnen Dateimanager (nur „Intern“ und
+     Papierkorb), Notizen („keine Notizen“), Musik, Wetter (Ortssuche),
+     Einstellungen ein Fenster, kein Absturz; sehr lange Dateinamen werden
+     mit „..“ gekürzt; leerer Ordner. Fotos `q1_rand_*.png`. Dabei gefunden:
+  11. mittel – sichtbare Texte mit „…“ und „–“ (die Systemschrift kennt sie
+     nicht → Kästchen): Musik (gekürzter Pfad), „Lädt…“ (Bild-/PDF-
+     Betrachter), Startfehler „zu wenig Speicher – …“, „Installiert –
+     Neustart…“. **Behoben:** „..“, „...“ und „-“.
   Board-Fotos nachher (25.11. abends, 19 Programme, 0 Abstürze):
   `docs/nachweise/q1/board_nachher_*.png` – Version 1.0.3, Kachel
   „Wetter-Ort“, Konsole ohne Startfehler, Musiktext, „PasswordGen ..“ in

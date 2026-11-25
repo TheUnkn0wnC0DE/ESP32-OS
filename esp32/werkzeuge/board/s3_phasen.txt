@@ -3,4 +3,5 @@ menue 31000 43000
 fenster 43000 64300
 dateimanager 69100 78244
 tastatur 87644 99244
-browser 125344 134488
+tastatur_schnell 99244 108094
+browser 134194 143338

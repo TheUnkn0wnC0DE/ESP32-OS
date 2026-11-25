@@ -26,6 +26,8 @@ const TAKT_MS: u64 = 16;
 #[derive(Clone, Debug)]
 enum Schritt {
     Tipp(i32, i32),
+    /// Q1: schneller Tipp (80 ms gedrückt, alle 150 ms) – Tastatur-Bildrate
+    TippSchnell(i32, i32),
     /// Senkrecht wischen bei x von y0 nach y1 in `ms`.
     Wischen(i32, i32, i32, u64),
     Warte(u64),
@@ -45,6 +47,14 @@ impl Lauf {
         self.t += ms;
         std::thread::sleep(Duration::from_millis(ms.min(30)));
     }
+    fn tipp_schnell(&mut self, x: i32, y: i32) {
+        self.schritte.push(Schritt::TippSchnell(x, y));
+        self.takt([Some((x, y)), None], 80);
+        for _ in 0..4 {
+            self.takt([None, None], 20);
+        }
+    }
+
     fn tipp(&mut self, x: i32, y: i32) {
         self.schritte.push(Schritt::Tipp(x, y));
         self.takt([Some((x, y)), None], 120);
@@ -125,6 +135,11 @@ fn board_autopilot(schritte: &[Schritt]) -> (String, Vec<(String, u64, u64)>) {
                 ev.push(format!("{t}:{x}:{y}:1"));
                 ev.push(format!("{}:{x}:{y}:0", t + 120));
                 t += 300;
+            }
+            Schritt::TippSchnell(x, y) => {
+                ev.push(format!("{t}:{x}:{y}:1"));
+                ev.push(format!("{}:{x}:{y}:0", t + 80));
+                t += 150;
             }
             Schritt::Wischen(x, y0, y1, ms) => {
                 let n = (ms / TAKT_MS).max(1);
@@ -232,6 +247,13 @@ fn bildrate_ablauf() {
         assert_eq!(ebene, "normal");
         l.tipp(x, oben + y);
         l.warte(100);
+    }
+    l.phase_ende();
+    // Q1: schnelles Tippen (6–7 Tasten/s) – Bildrate der Tastatur selbst
+    l.phase("tastatur_schnell");
+    for c in "das ist ein test der tastatur das ist ein test der tastatur".chars() {
+        let (_, x, y) = desktop::tastatur::tastenmitte(c, 640).unwrap_or_else(|| panic!("keine Taste für {c}"));
+        l.tipp_schnell(x, oben + y);
     }
     l.phase_ende();
     schliessen(&mut l, s, "notizen");

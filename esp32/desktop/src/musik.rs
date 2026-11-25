@@ -444,7 +444,9 @@ fn text(x: i32, y: i32, s: &str, farbe: u32, mal: u32) {
 
 /// Text auf `max` Zeichen kürzen („…“).
 fn kurz(s: &str, max: usize) -> String {
-    if s.chars().count() <= max { s.to_string() } else { format!("{}…", s.chars().take(max - 1).collect::<String>()) }
+    // Q1: „..“ statt „…“ (die Systemschrift hat kein Auslassungszeichen –
+    // am Ende stand ein Kästchen)
+    if s.chars().count() <= max { s.to_string() } else { format!("{}..", s.chars().take(max.saturating_sub(2)).collect::<String>()) }
 }
 
 fn zeit(s: u32) -> String {

@@ -211,6 +211,18 @@ fn zeichnen(z: &Zustand) {
     }
     // Textbereich (als Knopf: Antippen öffnet die Tastatur)
     knopf(K_TEXT | 0x4000_0000, TEXT_X, TEXT_Y, TEXT_W, TEXT_H, 0xFFFFFF);
+    text_zeichnen(z);
+    if let Some((s, f)) = &z.status {
+        let s: String = s.chars().take(70).collect();
+        text(TEXT_X, TEXT_Y + TEXT_H + 8, &s, *f);
+    }
+    sys::neuzeichnen(2);
+}
+
+/// Q1: nur der Textbereich (beim Tippen – vorher zeichnete jeder
+/// Tastendruck das ganze Fenster neu: am Board 174 725 px je Bild, 15,9
+/// Bilder/s bei schnellem Tippen).
+fn text_zeichnen(z: &Zustand) {
     sys::rechteck((TEXT_X as u32) << 16 | TEXT_W as u32, (TEXT_Y as u32) << 16 | TEXT_H as u32, 0xFFFFFF);
     let z_anfang = zeilen(&z.text);
     // Zeile der Schreibmarke sichtbar halten
@@ -226,11 +238,6 @@ fn zeichnen(z: &Zustand) {
             sys::rechteck(((TEXT_X + 6 + spalte * ZEICHEN_B) as u32) << 16 | 2, (y as u32) << 16 | 16, 0xC03020);
         }
     }
-    if let Some((s, f)) = &z.status {
-        let s: String = s.chars().take(70).collect();
-        text(TEXT_X, TEXT_Y + TEXT_H + 8, &s, *f);
-    }
-    sys::neuzeichnen(2);
 }
 
 fn oeffnen(z: &mut Zustand, name: &str) {
@@ -350,6 +357,10 @@ pub fn programm() {
             1 => zeichnen(&z),
             2 => {
                 let mut neu = false;
+                // Titel (*), Speichern-Knopf und Meldung ändern sich nur
+                // beim ersten Tastendruck bzw. selten: dann ganzes Fenster,
+                // sonst nur der Text (Q1)
+                let vorher = (z.geaendert, z.status.clone());
                 loop {
                     let c = sys::taste();
                     if c & 0xFF == 1 {
@@ -358,7 +369,11 @@ pub fn programm() {
                     neu |= taste(&mut z, c);
                 }
                 if neu {
-                    zeichnen(&z);
+                    if vorher == (z.geaendert, z.status.clone()) {
+                        text_zeichnen(&z);
+                    } else {
+                        zeichnen(&z);
+                    }
                     feld_melden(&z);
                 }
             }

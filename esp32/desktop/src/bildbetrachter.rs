@@ -321,7 +321,7 @@ fn bild_zeichnen(z: &Zustand) {
         }
         None => {
             sys::rechteck(aw as u32, ah as u32, HG);
-            let f = if z.fehler.is_empty() { t("Loading…", "Lädt…") } else { z.fehler.as_str() };
+            let f = if z.fehler.is_empty() { t("Loading...", "Lädt...") } else { z.fehler.as_str() };
             let n = f.chars().count() as i32 * 8;
             text(((aw - n) / 2).max(4), ah / 2 - 8, f, 0xE0E0E0);
         }

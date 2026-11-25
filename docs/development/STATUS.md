@@ -11,6 +11,13 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **25.11., 21:40 – Übergabe:** Q3 Schritt 2 gepusht (JS-Fehler 61 → 14).
+  Q1 Tastatur: schnelles Tippen am Board 15,9 Bilder/s, 174 725 px je Bild
+  → nächster Schritt: Ursache der grossen Neuzeichnung je Tastendruck in den
+  Notizen finden (PLAN Q1 Fund 7). fps_lauf hat die Phase
+  „tastatur_schnell“ (noch nicht committet). Danach Q1-Randfälle, Q3
+  Speicher für JS, Q4. Board an COM3.
+
 - **25.11., 20:20 – Übergabe:** Q3 Schritt 1 (ES-Module überspringen) am
   Board gemessen: JS-Fehler 61 → 10. Neuer Stabilitätsfund: Browser nach
   Seite 20 „Verwaist“ (Faden nicht anhaltbar), Bereich bleibt im Pool →
