@@ -120,6 +120,10 @@ PC tests (Git Bash): `bash esp32/werkzeuge/alle_tests.sh`. A release package is 
 
 ESP32-OS is licensed under the GNU General Public License v2.0 ([`LICENSE`](LICENSE)). The `spatz` crate is MIT OR Apache-2.0; built into the firmware it is part of the GPL-2.0 work. Third-party components and their licenses are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). Doom and Quake game data are not included.
 
+## Press
+
+- [XDA Developers](https://www.xda-developers.com/someone-used-claude-code-to-make-a-kolibrios-compatible-os-that-runs-off-an-esp32-p4/), 25 November 2026
+
 ## Credits
 
 - [KolibriOS](https://kolibrios.org): system function interface, C programs, libraries, skin, fonts and icons

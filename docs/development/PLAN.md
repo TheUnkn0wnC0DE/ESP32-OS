@@ -2549,6 +2549,26 @@ und Verzeichnis auf GitHub).
   zweiten Fenster (Dialog „Open file“). Nächster Board-Versuch: Spur mit
   `heap_trace` und Aufrufstelle (CONFIG_HEAP_TRACING_STACK_DEPTH) statt nur
   Inhalt.
+  Engster Kandidat (26.11. spät): die Reste „thashview“ (9 B) und „Open
+  file“ (9 B) passen genau zu **einem Eintrag der Fenstertabelle**
+  (`fenster::FadenZ`: `name` = Programmname als String, `fenster.titel` =
+  Dialogtitel aus `kolibri::dialog::dialog_lauf`) für den Dialog-Faden von
+  TinyHashView, der nach dem Programmende stehen bleibt. `Welt::faden_weg`
+  entfernt den Eintrag vollständig – also prüfen, ob es für Nebenfäden
+  (Funktion 51, `prozess::faden_starten`) in jedem Ende-Pfad aufgerufen
+  wird (normales Ende, Ende des Hauptfadens mit laufendem Nebenfaden,
+  Zwangsbeenden). PC-Test: TinyHashView mit offenem Dialog schliessen und
+  danach `sys::fenster_liste()`/Slots auf Reste prüfen.
+  Geprüft (26.11. spät): alle Ende-Pfade eines Fadens (normal, Fehlstart,
+  Zwangsbeenden) entfernen den Eintrag der Fenstertabelle. Versuch „Spur mit
+  Aufrufstellen“ am Board nicht möglich: Frame-Pointer (nötig auf RISC-V)
+  machen den Bootloader zu gross (0x6570 > 0x6000) und – nach Abschalten
+  seiner Logs – das App-Abbild zu gross für den 6-MB-Platz; Frame-Pointer
+  nur für einzelne Rust-Crates bräuchte eine unfertige Cargo-Funktion.
+  Versuch zurückgenommen. Nächster Weg: im Kern einen Zähler je Kopie, die
+  beim Fadenende noch lebt (z. B. Titel/Name je Slot zählen und beim
+  Aufräumen vergleichen), oder die PC-Tests so laufen lassen, dass ein
+  Programm ohne Abwickeln endet (wie am Board).
 
 - **Q3 Speicher (26.11.)** – 6–9 der 30 Testseiten brechen ihr JavaScript
   mit „out of memory“ ab und laden ohne JS neu; 8 werden nach 512 KB HTML
