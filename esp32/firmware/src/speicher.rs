@@ -48,18 +48,30 @@ pub fn sd_einbinden() -> i32 {
 }
 
 /// Dateien, die übernommene KolibriOS-Programme in /sys erwarten (einmal
-/// anlegen bzw. erneuern, wenn die Grösse nicht stimmt): „Bild-Demo“
+/// anlegen bzw. erneuern, wenn der Inhalt nicht stimmt): „Bild-Demo“
 /// (libimg_demo) liest logo.png – ohne sie endete das Programm sofort
-/// (Stabilitätsrunde 24.11.).
+/// (Stabilitätsrunde 24.11.). Verglichen wird der ganze Inhalt, nicht nur
+/// die Grösse: am Board (27.11.) hatte die Datei die richtige Grösse, liess
+/// sich aber nur bis 4096 Byte lesen (ein Cluster) – die Bild-Demo stürzte
+/// bei jedem Start ab.
 fn sys_dateien_ablegen() {
     const DATEIEN: &[(&str, &[u8])] = &[("logo.png", include_bytes!("../../kolibri/daten/logo.png"))];
     for (n, d) in DATEIEN {
         let p = format!("/daten/{n}");
-        if std::fs::metadata(&p).is_ok_and(|m| m.len() == d.len() as u64) {
+        let ist = std::fs::read(&p);
+        if ist.as_deref().is_ok_and(|i| i == *d) {
             continue;
         }
+        match &ist {
+            Ok(i) => log::warn!("/sys/{n}: Inhalt weicht ab ({} von {} Byte lesbar) – neu geschrieben", i.len(), d.len()),
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => log::warn!("/sys/{n} nicht lesbar ({e}) – neu geschrieben"),
+            Err(_) => {}
+        }
+        // erst löschen: eine beschädigte Clusterkette wird so freigegeben
+        let _ = std::fs::remove_file(&p);
         match std::fs::write(&p, d) {
-            Ok(()) => log::info!("/sys/{n} angelegt ({} Byte)", d.len()),
+            Ok(()) if std::fs::read(&p).is_ok_and(|i| i == *d) => log::info!("/sys/{n} angelegt ({} Byte)", d.len()),
+            Ok(()) => log::warn!("/sys/{n} geschrieben, aber beim Nachlesen falsch"),
             Err(e) => log::warn!("/sys/{n} nicht angelegt: {e}"),
         }
     }

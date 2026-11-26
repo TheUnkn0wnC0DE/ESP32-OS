@@ -131,6 +131,15 @@ pub fn fenster(ebx: u32, ecx: u32, edx: u32, esi: u32, titel: Option<&str>) {
                     fh = sh;
                 }
             }
+            // Rundgang 1.0.4: Programmfenster nicht hinter die Taskleiste
+            // legen (Bild-Demo, PasswordGen: untere Knöpfe verdeckt) – nach
+            // oben schieben, soweit die Arbeitsfläche reicht
+            if matches!(stil, 3 | 4) {
+                let (_, o, _, u) = w.arbeitsflaeche;
+                if y + fh > u + 1 {
+                    y = (u + 1 - fh).max(o).max(0);
+                }
+            }
             let fw = fw.max(1);
             let fh = fh.max(1);
             let Some(buf) = Puffer::versuche(fw as usize, fh as usize, edx & 0xFF_FFFF, system_frei) else {

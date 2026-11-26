@@ -185,7 +185,17 @@ pub mod c {
         }
         // SAFETY: `size` Bytes vom Programm.
         let d = unsafe { core::slice::from_raw_parts(data, size as usize) };
-        let Ok((f, frames)) = dekoder::dekodieren(d) else { return core::ptr::null_mut() };
+        let (f, frames) = match dekoder::dekodieren(d) {
+            Ok(x) => x,
+            Err(e) => {
+                // ins Protokoll: übernommene C-Programme prüfen das Ergebnis
+                // oft nicht (libimg_demo)
+                let kopf: Vec<u8> = d.iter().take(8).copied().collect();
+                kern::sys::debug_text(&format!("libimg: img_decode {size} Byte, Anfang {kopf:02x?}: {e:?}
+"));
+                return core::ptr::null_mut();
+            }
+        };
         let deckend = matches!(f, dekoder::Format::Jpeg | dekoder::Format::Bmp) && frames.iter().all(|b| b.px.iter().all(|&p| p >> 24 == 255));
         let mut erstes: *mut Image = core::ptr::null_mut();
         let mut letztes: *mut Image = core::ptr::null_mut();

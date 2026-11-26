@@ -1995,6 +1995,41 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
      Menüstart kein zweiter.
   7. niedrig – Wetter: Trefferliste ohne Zurück. **Behoben:** Knopf
      „Zurück“, PC-Test (Bild danach gleich der Wetteranzeige).
+  Politur vor 1.0.4 (Auftrag des Nutzers 26.11. spät: noch kein Release;
+  Leck-Fix mitnehmen und am Board bestätigen, Rundgang wie Q1, letzter
+  Dauertest auf dem finalen Stand, dann Release-Text/Tag neu und OK):
+  - Leck-Fix am Board (Spur `leck_lauf.ps1`, 2 Runden, Stand 516459e): die
+    Reste „Open file“ sind weg; dafür stürzte die **Bild-Demo** in beiden
+    Runden ab (abgefangen, System lief weiter) – unabhängig vom Leck-Fix:
+    `libimg.c:67` (`image->Type`, unveränderte KolibriOS-Quelle prüft
+    `img_decode` nicht), weil `img_decode` NULL lieferte: `fread` las von
+    `/sys/logo.png` nur 4096 von 49 762 Byte – die Datei im internen
+    Flash-Dateisystem war beschädigt (richtige Grösse, Lesen ab dem zweiten
+    Cluster „I/O error“). Die Ablage prüfte nur die Grösse.
+    **Behoben:** `speicher::sys_dateien_ablegen` vergleicht den ganzen
+    Inhalt, löscht und schreibt neu, liest nach; `img_decode` schreibt den
+    Grund eines Fehlschlags ins Protokoll. Board: „/sys/logo.png nicht
+    lesbar (I/O error) – neu geschrieben“, Bild-Demo zeigt das Bild
+    (`docs/nachweise/v104/rundgang/vorher_bilddemo_absturz.png`,
+    `nachher_bilddemo_direkt.png`, `logo_png_neu_geschrieben.txt`).
+  - Rundgang (27.11., `s5_lauf.ps1`, alle 19 Programmfenster über das
+    Startmenü, Board-Fotos, 0 Abstürze), kritisch durchgesehen. Funde:
+    1. mittel – PasswordGen und Bild-Demo lagen mit dem unteren Teil hinter
+       der Taskleiste, bei PasswordGen waren „Generate!“ und „Copy“
+       verdeckt. **Behoben:** neue Programmfenster (Stil 3/4), die über die
+       Arbeitsfläche hinausragen, rückt der Kern nach oben (`sys::fenster`);
+       Board-Autopiloten (Rundgang, Stabilität, Dauertest) neu erzeugt.
+    2. niedrig – Musik: „Keine Musikdateien (MP3, WAV, MIDI..“ – der Ordner
+       war abgeschnitten. **Behoben:** zwei Zeilen.
+    Geprüft und belassen: Bildschirmtastatur deckt Konsole/Boxlib-Demo beim
+    Start (Fokus im Textfeld, gewollt seit B6, siehe Abweichungen);
+    Beschriftung „Einstellungen“ des Desktopsymbols ragt links unter
+    Fenstern hervor (liegt dahinter, richtig gezeichnet); Ordner
+    `netsurf_test` im internen Speicher nur am Entwicklungsboard (Daten der
+    Seitenliste `br_lauf`, nicht im Release-Abbild).
+    Nachweis: Fotos vorher/nachher `docs/nachweise/v104/rundgang/`
+    (Musik, Bild-Demo, PasswordGen); alle Tests grün (FEHLER=0), Firmware
+    5 894 976 B (94,7 %).
 
 ## T. Nach Teil S (Nutzer 24.11. abends)
 

@@ -1,0 +1,2 @@
+W (2284) pudding_fw::speicher: /sys/logo.png nicht lesbar (I/O error (os error 5)) – neu geschrieben
+I (3212) pudding_fw::speicher: /sys/logo.png angelegt (49762 Byte)

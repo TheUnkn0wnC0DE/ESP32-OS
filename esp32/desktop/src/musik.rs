@@ -571,7 +571,9 @@ fn anzeige_zeichnen(z: &mut Zustand) {
     if let Some(m) = &z.meldung {
         text(RX, 200, &kurz(m, 36), 0xB03020, 1);
     } else if z.titel.is_empty() {
-        text(RX, 200, &kurz(&format!("{} {}", kern::sprache::t("No music files (MP3, WAV, MIDI) in", "Keine Musikdateien (MP3, WAV, MIDI) in"), z.ordner), 36), 0x606060, 1);
+        // zwei Zeilen: in einer war der Ordner abgeschnitten (Rundgang 1.0.4)
+        text(RX, 200, kern::sprache::t("No music files (MP3, WAV, MIDI)", "Keine Musikdateien (MP3, WAV, MIDI)"), 0x606060, 1);
+        text(RX, 218, &kurz(&format!("{} {}", kern::sprache::t("in", "in"), z.ordner), 36), 0x606060, 1);
     }
 }
 
