@@ -1,5 +1,9 @@
 # Changelog
 
+## Guition JC4880P443C_I_W port (this fork)
+
+- Runs on the Guition JC4880P443C_I_W (4.3" 480×800 ST7701, 16 MB flash) instead of the Waveshare board; the 640×360 desktop is shown scaled ×1.25 with black bars. Log and flashing over the USB Serial/JTAG port. No updates over Wi-Fi unless built with `ESP32OS_UPDATE_REPO`. New build script for macOS/Linux: `esp32/firmware/bauen_flashen.sh`.
+
 ## 1.0.4 (not released yet)
 
 - Weather: new app with current weather and a 5-day forecast from Open-Meteo (no API key). Choose the place by touch in the app or in *Settings → Weather place*; without Wi-Fi it says so. Icon on the desktop and in the Start menu.

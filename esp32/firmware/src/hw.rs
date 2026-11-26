@@ -112,17 +112,20 @@ pub fn spawn_pinned(
     handle
 }
 
-/// Logausgabe einrichten: eigener Logger, der jede Zeile über den
-/// UART-Treiber in einen Ringpuffer schreibt (ein Interrupt sendet sie).
-/// Der Weg über stdout schrieb blockierend mit 115200 Baud – ~9 ms je
-/// Zeile; die Statistik alle 2 s hielt die Spielschleife so ~70 ms an, ein
-/// sichtbarer Hänger. Ohne Treiber bleibt es beim Logger von ESP-IDF.
+/// Logausgabe einrichten: eigener Logger, der jede Zeile über den Treiber
+/// des USB-Serial/JTAG in einen Ringpuffer schreibt (ein Interrupt sendet
+/// sie), ohne die Spielschleife anzuhalten. Ohne Treiber bleibt es beim
+/// Logger von ESP-IDF.
 pub fn log_einrichten() {
-    // SAFETY: einmal beim Start; UART0 ist die Konsole (COM3).
-    let ok = unsafe { esp!(sys::uart_driver_install(0, 256, 8192, 0, core::ptr::null_mut(), 0)) };
+    let mut cfg = sys::usb_serial_jtag_driver_config_t { tx_buffer_size: 8192, rx_buffer_size: 256 };
+    // SAFETY: einmal beim Start; gültige Konfiguration.
+    let ok = unsafe { esp!(sys::usb_serial_jtag_driver_install(&mut cfg)) };
     match ok {
         Ok(()) => {
-            static LOGGER: UartLog = UartLog;
+            // ESP_LOG und printf über denselben Treiber.
+            // SAFETY: Treiber ist installiert.
+            unsafe { sys::usb_serial_jtag_vfs_use_driver() };
+            static LOGGER: UsbLog = UsbLog;
             if log::set_logger(&LOGGER).is_ok() {
                 log::set_max_level(log::LevelFilter::Info);
             }
@@ -130,9 +133,16 @@ pub fn log_einrichten() {
         }
         Err(e) => {
             esp_idf_svc::log::EspLogger::initialize_default();
-            log::error!("UART-Treiber: {e} – Logausgabe blockiert");
+            log::error!("USB-Treiber: {e} – Logausgabe blockiert");
         }
     }
+}
+
+/// In den Ringpuffer der Konsole schreiben, ohne zu warten: Ist er voll (kein
+/// PC liest mit), geht die Zeile verloren, statt das System anzuhalten.
+fn konsole_schreiben(buf: *const core::ffi::c_void, n: usize) {
+    // SAFETY: `buf` gilt für `n` Bytes; der Treiber kopiert sie.
+    unsafe { sys::usb_serial_jtag_write_bytes(buf, n as _, 0) };
 }
 
 /// C-Ausgabe (printf von Doom, Quake und ESP-IDF) ebenfalls über den
@@ -143,8 +153,7 @@ pub fn log_einrichten() {
 fn stdout_umleiten() {
     unsafe extern "C" fn schreiben(_k: *mut core::ffi::c_void, buf: *const core::ffi::c_char, n: core::ffi::c_int) -> core::ffi::c_int {
         if n > 0 && !LOG_STUMM.load(core::sync::atomic::Ordering::Acquire) {
-            // SAFETY: `buf` gilt für `n` Bytes (newlib); kopiert in den Ringpuffer.
-            unsafe { sys::uart_write_bytes(0, buf.cast(), n as usize) };
+            konsole_schreiben(buf.cast(), n as usize);
         }
         n
     }
@@ -169,9 +178,9 @@ fn stdout_umleiten() {
 pub static LOG_STUMM: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
 
 /// Zeilen wie der ESP-IDF-Logger: `I (Millisekunden) Ziel: Text`.
-struct UartLog;
+struct UsbLog;
 
-impl log::Log for UartLog {
+impl log::Log for UsbLog {
     fn enabled(&self, m: &log::Metadata) -> bool {
         m.level() <= log::max_level()
     }
@@ -192,14 +201,11 @@ impl log::Log for UartLog {
         // SAFETY: reine Abfrage der Laufzeit.
         let ms = unsafe { sys::esp_log_timestamp() };
         let _ = writeln!(z, "{k} ({ms}) {}: {}", r.target(), r.args());
-        // SAFETY: Puffer gültig während des Aufrufs; kopiert in den Ringpuffer
-        // (wartet nur, wenn er voll ist).
-        unsafe {
-            sys::uart_write_bytes(0, z.as_ptr().cast(), z.len());
-            // Fehler (auch Panik) sofort hinaus – danach kann ein Neustart folgen.
-            if r.level() == log::Level::Error {
-                sys::uart_wait_tx_done(0, 100);
-            }
+        konsole_schreiben(z.as_ptr().cast(), z.len());
+        // Fehler (auch Panik) sofort hinaus – danach kann ein Neustart folgen.
+        if r.level() == log::Level::Error {
+            // SAFETY: Treiber ist installiert (sonst ist dieser Logger nicht aktiv).
+            unsafe { sys::usb_serial_jtag_wait_tx_done(10) };
         }
     }
 

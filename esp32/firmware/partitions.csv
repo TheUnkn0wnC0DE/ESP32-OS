@@ -1,19 +1,15 @@
 # Name,     Type, SubType,   Offset,     Size
-# Aufteilung seit B0 (22.11.2026, 32 MB Flash):
-# * ESP32-OS in zwei OTA-Plätzen (Updates über WLAN, Rollback auf die alte
-#   Version, wenn die neue nicht startet – Bootloader mit
-#   CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE).
+# Guition JC4880P443C_I_W, 16 MB Flash:
+# * ein Platz für ESP32-OS. Updates über WLAN sind aus (die Releases sind für
+#   das Waveshare-Board gebaut), ein zweiter Platz wird darum nicht gebraucht.
 # * Doom und Quake je eigenes Programm (kein interner RAM in den anderen);
-#   alle Programme unter 16 MB, otadata ebenfalls (24-Bit-Adressen).
-# * nvs unverändert (Spielstände bleiben beim Umbau erhalten).
-# * daten: FAT mit Verschleißausgleich, 16 MB: Einstellungen, DOOM1.WAD,
-#   Doom-/Quake-Konfiguration, Würfelwelt. Die Quake-PAK (18,7 MB) liegt
-#   auf der SD-Karte (ESP32-OS/quake/pak0.pak).
+#   die OTA-Untertypen müssen lückenlos ab ota_0 zählen.
+# * daten: FAT mit Verschleißausgleich, ~5,9 MB: Einstellungen, Würfelwelt,
+#   Doom-/Quake-Konfiguration. Spieldaten besser auf die SD-Karte.
 nvs,        data, nvs,       0x9000,     0x6000
 phy_init,   data, phy,       0xf000,     0x1000
 otadata,    data, ota,       0x10000,    0x2000
 esp32os_a,  app,  ota_0,     0x20000,    0x5F0000
-esp32os_b,  app,  ota_1,     0x610000,   0x5F0000
-doomapp,    app,  ota_2,     0xC00000,   0x200000
-quakeapp,   app,  ota_3,     0xE00000,   0x200000
-daten,      data, fat,       0x1000000,  0x1000000
+doomapp,    app,  ota_1,     0x610000,   0x200000
+quakeapp,   app,  ota_2,     0x810000,   0x200000
+daten,      data, fat,       0xA10000,   0x5F0000

@@ -304,8 +304,10 @@ pub fn im_hintergrund_starten() {
             }
         });
         kern::wlan::treiber_setzen(Box::new(C6));
-        // Updates von GitHub (U1)
-        kern::aktualisierung::quelle_setzen(Box::new(crate::update::GitHub));
+        // Updates von GitHub (U1), nur mit eigenem Repository (update.rs)
+        if crate::update::REPO.is_some() {
+            kern::aktualisierung::quelle_setzen(Box::new(crate::update::GitHub));
+        }
         // Q2: HTTPS-Abrufe der Programme (Wetter-App)
         kern::abruf::abrufer_setzen(Box::new(crate::update::Https));
         // Entwicklung (W8): Durchsatz-Messung mit werkzeuge/durchsatz.py,

@@ -1,6 +1,6 @@
 [package]
 name = "pudding-p4"
-description = "Pudding-Panik: Firmware für das Waveshare ESP32-P4-WIFI6-Touch-LCD-5"
+description = "Pudding-Panik: Firmware für das Guition JC4880P443C_I_W"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
@@ -75,11 +75,10 @@ debug = true
 # "sdkconfig.defaults.rev3_x" eintragen und `cargo clean`.
 esp_idf_sdkconfig_defaults = ["sdkconfig.defaults", "sdkconfig.defaults.rev1_3"]
 
-# Panel-Treiber des Herstellers (Initialisierungsfolge des HX8394) und der
-# Touch-Treiber von Espressif – beides lädt der erste Build automatisch, in den
-# Versionen, die auch das Board-Support-Paket von Waveshare benutzt.
+# Touch-Treiber von Espressif – lädt der erste Build automatisch. Der
+# Panel-Treiber (ST7701 mit der Initialisierungsfolge von Guition) liegt in
+# komponenten/esp_lcd_st7701.
 [[package.metadata.esp-idf-sys.extra_components]]
-remote_component = { name = "waveshare/esp_lcd_hx8394", version = "^2.1.0" }
 bindings_header = "bindings.h"
 
 [[package.metadata.esp-idf-sys.extra_components]]
@@ -91,4 +90,4 @@ remote_component = { name = "espressif/esp_lcd_touch_gt911", version = "^1.2.1" 
 
 # Doom (doomgeneric, GPL-2): C-Code als Komponente, Anbindung in der Crate `doom`.
 [[package.metadata.esp-idf-sys.extra_components]]
-component_dirs = ["../doom/doomgeneric", "../quake/quakegeneric", "komponenten/esp32os", "../kolibri/kolibri_c", "komponenten/netsurf"]
+component_dirs = ["../doom/doomgeneric", "../quake/quakegeneric", "komponenten/esp32os", "komponenten/esp_lcd_st7701", "../kolibri/kolibri_c", "komponenten/netsurf"]

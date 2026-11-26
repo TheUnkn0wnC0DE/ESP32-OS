@@ -67,7 +67,13 @@ def empfangen(s, w, h, baud, gedreht, nr):
     print(f"BILD {nr} gespeichert: {pfad}")
 
 
-with serial.Serial(port, 115200, timeout=0.2) as s:
+s = serial.Serial(None, 115200, timeout=0.2)
+s.port = port
+# Beim USB-Serial/JTAG setzt DTR aus mit RTS an das Board zurück
+s.rts = False
+s.dtr = True
+s.open()
+with s:
     if "--reset" in sys.argv:
         s.dtr = False
         s.rts = True

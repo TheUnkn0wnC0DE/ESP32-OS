@@ -40,7 +40,9 @@ QJS_SHA = "6c05066a6b62b483e2ba0f83d7a16688c6958182b214bfd693529434cef84a9e"
 ZLIB_URL = "https://zlib.net/fossils/zlib-1.4.tar.gz"
 # veröffentlicht auf https://zlib.net (zlib 1.4, tar.gz)
 ZLIB_SHA = "02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584"
-WURZEL = r"C:\ns"
+# Windows: C:\\ns; sonst im Benutzerordner (dann NETSURF_QUELLEN beim Bauen
+# auf <WURZEL>/3.11 setzen).
+WURZEL = r"C:\ns" if os.name == "nt" else os.path.expanduser("~/.cache/esp32os/ns")
 ZIEL = os.path.join(WURZEL, "3.11")
 ARCHIV = os.path.join(WURZEL, "dl", "netsurf-all-3.11.tar.gz")
 ZLIB_ARCHIV = os.path.join(WURZEL, "dl", "zlib-1.4.tar.gz")
@@ -324,10 +326,12 @@ def fb_schrift():
     Ersatz c/getopt.c, POSIX-Header aus compat und compat/gemeinsam)."""
     os.makedirs(ERZEUGT, exist_ok=True)
     werkzeug = os.path.join(WURZEL, "convert_font.exe")
-    subprocess.run([CLANG, "-O1", "-w", "-D_CRT_SECURE_NO_WARNINGS", "-I", os.path.join(HIER, "..", "compat"),
-                    "-I", os.path.join(HIER, "..", "compat", "gemeinsam"),
-                    "-o", werkzeug, os.path.join(ZIEL, "netsurf", "tools", "convert_font.c"),
-                    os.path.join(HIER, "..", "c", "getopt.c")], check=True)
+    befehl = [CLANG, "-O1", "-w", "-o", werkzeug, os.path.join(ZIEL, "netsurf", "tools", "convert_font.c")]
+    if os.name == "nt":
+        # POSIX-Ersatz nur für Windows; sonst bringt das System alles mit
+        befehl += ["-D_CRT_SECURE_NO_WARNINGS", "-I", os.path.join(HIER, "..", "compat"),
+                   "-I", os.path.join(HIER, "..", "compat", "gemeinsam"), os.path.join(HIER, "..", "c", "getopt.c")]
+    subprocess.run(befehl, check=True)
     glyphen = os.path.join(ZIEL, "netsurf", "frontends", "framebuffer", "res", "fonts", "glyph_data")
     subprocess.run([werkzeug, "-q", "-H", os.path.join(ERZEUGT, "font-ns-sans.h"), glyphen,
                     os.path.join(ERZEUGT, "font-ns-sans.c")], check=True)

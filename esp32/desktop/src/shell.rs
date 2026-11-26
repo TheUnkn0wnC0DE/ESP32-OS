@@ -959,7 +959,7 @@ pub fn info() {
         format!("Version {VERSION}"),
         kern::sprache::t("KolibriOS system functions native,", "KolibriOS-Systemfunktionen nativ,").to_string(),
         kern::sprache::t("without emulator", "ohne Emulator").to_string(),
-        "Waveshare ESP32-P4-WIFI6-Touch-LCD-5".to_string(),
+        "Guition JC4880P443C_I_W".to_string(),
         format!("{} {programme}", kern::sprache::t("Running programs:", "Laufende Programme:")),
         kern::sprache::t("KolibriOS parts: GPL-2.0 (LICENSE)", "KolibriOS-Teile: GPL-2.0 (LICENSE)").to_string(),
     ];

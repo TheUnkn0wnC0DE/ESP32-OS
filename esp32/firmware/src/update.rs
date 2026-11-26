@@ -6,12 +6,11 @@
 use core::ffi::{c_char, c_int, c_void};
 use std::ffi::CString;
 
-/// Repository der Releases (O8); beim Bauen änderbar mit
-/// `ESP32OS_UPDATE_REPO=besitzer/name`.
-pub const REPO: &str = match option_env!("ESP32OS_UPDATE_REPO") {
-    Some(r) => r,
-    None => "TheUnkn0wnC0DE/ESP32-OS",
-};
+/// Repository der Releases (O8), beim Bauen mit
+/// `ESP32OS_UPDATE_REPO=besitzer/name` gesetzt. Ohne Angabe gibt es keine
+/// Updates über WLAN: Die Releases von ESP32-OS sind für das
+/// Waveshare-Board gebaut und liefen auf dem Guition nicht.
+pub const REPO: Option<&str> = option_env!("ESP32OS_UPDATE_REPO");
 
 unsafe extern "C" {
     fn esp32os_https_text(url: *const c_char, json: c_int, puffer: *mut c_char, max: c_int, status: *mut c_int) -> c_int;
@@ -93,7 +92,8 @@ impl kern::aktualisierung::Quelle for GitHub {
         if !kern::wlan::zustand().verbunden {
             return Err(kern::sprache::t("No Wi-Fi connection", "Keine WLAN-Verbindung").into());
         }
-        let url = format!("https://api.github.com/repos/{REPO}/releases/latest");
+        let repo = REPO.ok_or("ESP32OS_UPDATE_REPO")?;
+        let url = format!("https://api.github.com/repos/{repo}/releases/latest");
         let (status, json) = https_text(&url, true)?;
         log::info!("UPDATE: Abfrage {url}: HTTP {status}, {} Byte", json.len());
         match status {
