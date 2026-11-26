@@ -192,6 +192,10 @@ fn main() {
         if option_env!("ESP32OS_SD_AUFRAEUMEN").is_some() {
             pudding_fw::speicher::sd_testreste_loeschen();
         }
+        // Entwicklungs-Build (Q1 Fund 5): Test-Notizen früherer Board-Läufe
+        if option_env!("ESP32OS_TESTNOTIZEN_LOESCHEN").is_some() {
+            pudding_fw::speicher::testnotizen_loeschen();
+        }
         // Test-Build (A5): Testtöne für den Musikplayer auf die SD-Karte
         #[cfg(esp32os_musik_test)]
         pudding_fw::speicher::musik_testdaten();

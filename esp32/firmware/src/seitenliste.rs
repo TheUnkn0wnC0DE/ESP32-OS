@@ -141,7 +141,8 @@ fn ablaufen(liste: &'static str, sek: u64) {
                 let intern = unsafe { esp_idf_svc::sys::heap_caps_get_free_size(esp_idf_svc::sys::MALLOC_CAP_INTERNAL) } / 1024;
                 log::info!("SEITE {}/{n}: Browser beendet ({z:?}), danach {intern} KB interner RAM frei", i + 1);
             }
-            None => log::warn!("SEITE {}/{n} Ende: Browser läuft nicht mehr (beendet oder abgestürzt)", i + 1),
+            // Grund aus dem Protokoll des Kerns (Speicher voll, Absturz …)
+            None => log::warn!("SEITE {}/{n} Ende: Browser läuft nicht mehr – {:?}", i + 1, kern::ende_von(r as u32)),
         }
     }
     #[cfg(esp32os_heap_trace)]

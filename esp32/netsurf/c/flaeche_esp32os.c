@@ -371,6 +371,12 @@ static unsigned takt_runden, takt_bilder;
 static bool takt_bild;
 static int64_t takt_bild_zeit; /* letztes Bild (e_update) */
 void ns_heap_stand_kb(uint32_t *belegt, uint32_t *spitze);
+/* Q3 (c/css_luecken.c): nicht verstandene CSS-Deklarationen */
+unsigned ns_css_luecken_stand(void);
+unsigned ns_css_luecken_text(char *aus, size_t max, unsigned anzahl);
+void ns_css_vorbereitung_stand(unsigned *variablen, unsigned *ersetzt, unsigned *unbekannt, unsigned *calc,
+			       unsigned *farben, unsigned *logisch);
+static unsigned css_stand_gemeldet;
 void ns_llcache_stand(uint32_t *groesse, uint32_t *grenze, uint32_t *frei);
 
 /* B5: Bilder je Wischbewegung – vom ersten Scrollschritt bis zum letzten
@@ -499,6 +505,18 @@ static void takt(int64_t warten_us)
 			 takt_bilder, (unsigned)(takt_bilder * 1000 / dauer_ms), (unsigned)(takt_bilder * 10000 / dauer_ms % 10),
 			 takt_scroll, (unsigned)belegt, (unsigned)spitze, (unsigned)(cache / 1024), (unsigned)(frei / 1024),
 			 (unsigned)(grenze / 1024));
+		if (ns_css_luecken_stand() != css_stand_gemeldet) {
+			static char css_text[640];
+			unsigned arten = ns_css_luecken_text(css_text, sizeof css_text, 25);
+			css_stand_gemeldet = ns_css_luecken_stand();
+			ESP_LOGI("ns_css", "Lücken (%u Arten, %u Meldungen): %s", arten, css_stand_gemeldet, css_text);
+			{
+				unsigned v, e, u, c, f, l;
+				ns_css_vorbereitung_stand(&v, &e, &u, &c, &f, &l);
+				ESP_LOGI("ns_css", "Vorbereitet: %u Variablen, var() %u ersetzt / %u unbekannt, calc() %u, Farben %u, logisch %u",
+					 v, e, u, c, f, l);
+			}
+		}
 		takt_start = jetzt;
 		takt_warten = 0;
 		takt_runden = 0;

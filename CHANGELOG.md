@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.4 (not released yet)
+
+- Weather: new app with current weather and a 5-day forecast from Open-Meteo (no API key). Choose the place by touch in the app or in *Settings → Weather place*; without Wi-Fi it says so. Icon on the desktop and in the Start menu.
+- On-screen keyboard: typing in Notes redraws only the text area, about 31 to 33 frames per second instead of 24 to 30.
+- A program that cannot start (for example not enough memory) now shows a message with the reason instead of doing nothing.
+- Music player: also plays WAV files (8 and 16 bit PCM, mono and stereo); an empty folder says "No music files (MP3, WAV)".
+- Console: no more "File '/sys/settings/.shell' not found" at every start.
+- Taskbar: long titles end with "..". File manager: in the recycle bin only "Recycle bin" is highlighted.
+- Texts no longer contain characters the system font cannot show (boxes instead of "..." and "-").
+- Stability: a program that is force-closed while it holds its own memory lock is now really ended; before, its memory stayed reserved and large programs (browser) could no longer start.
 ## 1.0.3 (2026-11-25)
 
 - Browser: tapping the Start button while the browser is open no longer crashes the system. A page that cannot load shows a readable reason (name not found, no connection, timeout) instead of an error code; DNS falls back to 1.1.1.1 when the router's server does not answer.

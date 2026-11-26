@@ -437,7 +437,11 @@ pub fn programm() {
                         if z.seite == Seite::Wetter {
                             // Ortssuche der Wetter-App (Touch, Bildschirmtastatur)
                             z.seite = Seite::Start;
-                            let _ = kern::datei::starten("/sys/wetter", "ort");
+                            let r = kern::datei::starten("/sys/wetter", "ort");
+                            if r <= 0 {
+                                // Start gescheitert (z. B. Speicher): sichtbar melden (Q1 Fund 1)
+                                z.meldung = crate::dateimanager::startfehler(t("Weather", "Wetter"), r);
+                            }
                         }
                         if z.seite == Seite::Zeit {
                             z.zeit = ortszeit_felder();
@@ -517,7 +521,7 @@ pub fn programm() {
                         if let Some(f) = z.update.clone() {
                             let laden = t("Downloading", "Lade");
                             let r = kern::aktualisierung::installieren(&f, &mut |p| {
-                                z.update_text = format!("{laden} {} … {p} %", f.version);
+                                z.update_text = format!("{laden} {} ... {p} %", f.version);
                                 zeichnen(&z);
                             });
                             let ok = r.is_ok();

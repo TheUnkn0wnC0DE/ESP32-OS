@@ -194,6 +194,17 @@ pub extern "C" fn ns_kern_zeichnen_messung(warten: *mut u32, arbeit: *mut u32, a
     }
 }
 
+/// Q3 (c/js_quickjs.c): freier Platz im Heap des laufenden Programms in
+/// Byte – JavaScript darf ihn nur bis auf eine Reserve für die Seite
+/// verbrauchen. Ausserhalb eines Programms (64-Bit-Tests): unbegrenzt.
+#[unsafe(no_mangle)]
+pub extern "C" fn ns_programm_frei() -> usize {
+    #[cfg(target_pointer_width = "32")]
+    return kern::sys::programm_speicher_frei().unwrap_or(usize::MAX);
+    #[cfg(not(target_pointer_width = "32"))]
+    usize::MAX
+}
+
 /// Board, Messung (c/flaeche_esp32os.c, Zeile „ns_takt“): belegter Heap
 /// des Browsers und Höchststand in KB.
 #[cfg(target_os = "espidf")]
@@ -413,6 +424,7 @@ unsafe extern "C" {
     fn ns_js_konsole_leeren();
     fn ns_neu_layout_anzahl() -> u32;
     fn ns_ohne_js_rueckfaelle() -> u32;
+    fn ns_css_luecken_text(aus: *mut u8, max: usize, anzahl: u32) -> u32;
     fn ns_llcache_stand(groesse: *mut u32, grenze: *mut u32, frei: *mut u32);
     fn ns_ohne_js_test_setzen(adresse: *const core::ffi::c_char) -> bool;
     fn ns_eingabe_art(text: *const core::ffi::c_char, aus: *mut u8, max: usize) -> i32;
@@ -546,6 +558,17 @@ pub fn zwischenspeicher() -> (u32, u32, u32) {
 pub fn ohne_js_rueckfaelle() -> u32 {
     // SAFETY: liest nur einen Zähler.
     unsafe { ns_ohne_js_rueckfaelle() }
+}
+
+/// Q3 (c/css_luecken.c): die häufigsten nicht verstandenen CSS-
+/// Deklarationen dieses Laufs als „name n, …“ und die Anzahl der Arten.
+#[cfg(not(target_os = "espidf"))]
+pub fn css_luecken(anzahl: u32) -> (u32, String) {
+    let mut buf = vec![0u8; 2048];
+    // SAFETY: Puffer mit Länge; die C-Seite schreibt nullterminiert.
+    let n = unsafe { ns_css_luecken_text(buf.as_mut_ptr(), buf.len(), anzahl) };
+    let ende = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
+    (n, String::from_utf8_lossy(&buf[..ende]).into_owned())
 }
 
 /// Anzahl abgeschlossener Neu-Layouts nach DOM-Änderungen (B7).
@@ -938,6 +961,43 @@ console.log('feature', document.implementation.hasFeature('HTML', '1.0'));
             assert!(k.contains(z), "{z} fehlt in {k}");
         }
         assert!(!k.contains("Error"), "keine Fehler: {k}");
+    }
+
+    /// Q3 Schritt 5: `document.currentScript` – im externen Skript sein
+    /// `<script>`-Element (Bundler bestimmen damit ihren Pfad, sonst
+    /// „chunk path empty but not in a worker“), im Inline-Skript null.
+    #[test]
+    fn current_script() {
+        c(current_script_innen);
+    }
+
+    fn current_script_innen() {
+        if im_eigenen_prozess("current_script") {
+            return;
+        }
+        ressourcen();
+        js_konsole(true);
+        let port = pruefserver(|pfad| match pfad {
+            "/teil.js" => (
+                200,
+                "Content-Type: application/javascript
+",
+                "const s = document.currentScript; console.log('extern', s && s.tagName, s && s.getAttribute('id'), s && s.getAttribute('src'));".into(),
+            ),
+            _ => (
+                200,
+                "Content-Type: text/html
+",
+                "<html><body><script id=\"t\" src=\"/teil.js\"></script><script>console.log('inline', document.currentScript);</script></body></html>".into(),
+            ),
+        });
+        let (r, _bild) = lauf_mit(&format!("http://127.0.0.1:{port}/"), 320, 200, 2500, true).expect("Bild");
+        assert_eq!(r, 0);
+        let k = js_konsole(true);
+        println!("{k}");
+        for z in ["log: extern SCRIPT t /teil.js", "log: inline null"] {
+            assert!(k.contains(z), "{z} fehlt in {k}");
+        }
     }
 
     fn module_skripte_innen() {
@@ -1780,6 +1840,135 @@ document.getElementById('r').innerHTML = '<div style="width:200px;height:100px;b
         let blau = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_00FF).count();
         let rot = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0xFF_0000).count();
         assert!(blau >= 200 * 100 * 9 / 10 && rot == 0, "blau {blau}, rot {rot}");
+    }
+
+    /// Q3: JavaScript darf den Heap des Programms nur bis auf eine Reserve
+    /// füllen (NS_JS_RESERVE, am Board 3 MB), statt einer festen kleinen
+    /// Grenze. Ein Skript mit etwa 2,4 MB (über der alten festen Grenze von
+    /// 2 MB) läuft, wenn über der Reserve 8 MB frei sind; ist dort nur 1 MB
+    /// frei, bricht es ab und die Seite kommt ohne JavaScript (Rückfall).
+    /// Die Grenze der Laufzeit (16 MB am PC) greift dabei nicht.
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn js_reserve_im_heap() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        static SPIELRAUM: AtomicUsize = AtomicUsize::new(0);
+        static ERGEBNIS: Mutex<Vec<(usize, u32, String)>> = Mutex::new(Vec::new());
+        unsafe extern "C" {
+            fn ns_js_reserve_setzen(r: usize);
+        }
+        fn einmal() {
+            ressourcen();
+            js_konsole(true);
+            let html = r#"<html><body style="margin:0;background:white"><div id="r"></div>
+<script>
+const a = new Array(300000).fill(1.5);
+document.getElementById('r').innerHTML = '<div style="width:200px;height:100px;background:#00ff00"></div>';
+</script></body></html>"#;
+            let frei = super::ns_programm_frei();
+            assert!(frei < usize::MAX, "im Programm");
+            // SAFETY: setzt nur die Reserve in c/js_quickjs.c (dieses Programm).
+            unsafe { ns_js_reserve_setzen(frei - SPIELRAUM.load(Ordering::Relaxed)) };
+            let (r, bild) = lauf_mit(&data_url(html), 480, 320, 3000, true).expect("Bild");
+            assert_eq!(r, 0);
+            let gruen = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_FF00).count();
+            ERGEBNIS.lock().unwrap().push((gruen, ohne_js_rueckfaelle(), js_konsole(true)));
+        }
+        ERGEBNIS.lock().unwrap().clear();
+        SPIELRAUM.store(8 << 20, Ordering::Relaxed);
+        c(einmal);
+        SPIELRAUM.store(1 << 20, Ordering::Relaxed);
+        c(einmal);
+        let e = ERGEBNIS.lock().unwrap();
+        let (gruen, rueck, k) = &e[0];
+        assert!(*gruen >= 200 * 100 * 9 / 10 && *rueck == 0, "8 MB Spielraum: grün {gruen}, Rückfälle {rueck}, Konsole {k}");
+        let (gruen, rueck, k) = &e[1];
+        assert!(*gruen == 0 && *rueck == 1, "1 MB Spielraum: grün {gruen}, Rückfälle {rueck}, Konsole {k}");
+        assert!(k.contains("out of memory") || k.contains("Fehler: null"), "{k}");
+    }
+
+    /// Q3: nicht verstandene CSS-Deklarationen werden nach Art gezählt –
+    /// unbekannte Eigenschaft, unbekannte Funktion im Wert, ungültiger Wert;
+    /// Präfixe zusammengefasst.
+    #[test]
+    fn css_luecken_gezaehlt() {
+        c(css_luecken_innen);
+    }
+
+    fn css_luecken_innen() {
+        if im_eigenen_prozess("css_luecken_gezaehlt") {
+            return;
+        }
+        ressourcen();
+        let html = r#"<html><head><style>
+:root { --farbe: red; --abstand: 4px; }
+.a { color: var(--farbe); width: calc(100% - 10px); gap: 8px; -webkit-box-flex: 1; -webkit-line-clamp: 2; }
+.b { margin: var(--abstand); color: blue; width: 50%; display: grid; }
+</style></head><body style="margin:0"><div class="a b">x</div></body></html>"#;
+        let (r, _bild) = lauf(&data_url(html), 320, 200, 1500).expect("Bild");
+        assert_eq!(r, 0);
+        let (arten, text) = css_luecken(30);
+        println!("CSS-Lücken ({arten}): {text}");
+        for erwartet in ["-webkit-* 2", "calc() 1", "gap 1"] {
+            assert!(text.contains(erwartet), "{erwartet:?} fehlt in {text:?}");
+        }
+        // gültige Deklarationen werden nicht gezählt
+        assert!(!text.contains("wert:color") && !text.contains("wert:width"), "{text}");
+        assert!(text.starts_with("-webkit-* 2"), "häufigste zuerst: {text}");
+        // var() löst c/css_vorbereitung.c auf (Q3)
+        assert!(!text.contains("var()"), "{text}");
+        assert_eq!(arten, 3, "{text}");
+    }
+
+    /// Q3: c/css_vorbereitung.c – eigene Eigenschaften und `var()`,
+    /// `calc()` mit gleichen Einheiten, `rgb()` in Leerzeichen-Schreibweise
+    /// (auch im style-Attribut) und logische Eigenschaften wirken im Bild.
+    #[test]
+    fn css_vorbereitung_wirkt() {
+        c(css_vorbereitung_innen);
+    }
+
+    fn css_vorbereitung_innen() {
+        if im_eigenen_prozess("css_vorbereitung_wirkt") {
+            return;
+        }
+        ressourcen();
+        let html = r#"<html><head><style>
+:root { --gruen: #00ff00; --breite: calc(2 * 50px); --rand: 20px; }
+@media (prefers-color-scheme: dark) { :root { --gruen: #000000; } }
+.a { background: var(--gruen); width: var(--breite); height: 40px; margin-inline-start: var(--rand, 5px); }
+.b { background: var(--fehlt, #0000ff); width: 60px; height: 30px; }
+[data-theme=dark] { --gruen: #000000; }
+.theme-dark { --hg: #000000; }
+.theme-light { --hg: #00ff00; }
+.c { background: var(--hg); width: 50px; height: 10px; }
+</style></head><body style="margin:0;background:white">
+<div class="a"></div><div class="b"></div>
+<div style="background: rgb(255 0 0 / 100%); width: calc(10px + 30px); height: 20px"></div>
+<div class="c"></div>
+</body></html>"#;
+        let (r, bild) = lauf(&data_url(html), 320, 200, 1500).expect("Bild");
+        assert_eq!(r, 0);
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/erwartet");
+        std::fs::write(dir.join("q3_css_vorbereitung.png"), spatz::image::encode_png(bild.breite, bild.hoehe, &bild.px)).unwrap();
+        let px = |x: usize, y: usize| bild.px[y * bild.breite as usize + x] & 0xFF_FFFF;
+        // Seite beginnt unter der Werkzeugleiste: erste grüne Zeile bei x = 25
+        let o = (0..bild.hoehe as usize).find(|&y| px(25, y) == 0x00_FF00).expect("grüner Block (var(), margin-inline-start)");
+        // .a: grün 100 × 40 ab x = 20 (margin-inline-start → margin-left)
+        assert_eq!(px(25, o + 39), 0x00_FF00, "Höhe 40");
+        assert_eq!(px(115, o + 20), 0x00_FF00, "calc(2 * 50px) = 100px");
+        assert_eq!(px(125, o + 20), 0xFF_FFFF, "Breite endet bei 120");
+        assert_eq!(px(10, o + 20), 0xFF_FFFF, "links vom Rand weiss");
+        // .b: Ersatzwert blau (60 × 30)
+        assert_eq!(px(30, o + 55), 0x00_00FF, "var() mit Ersatz");
+        // style-Attribut: rgb(255 0 0 / 100%), calc(10px + 30px)
+        assert_eq!(px(20, o + 80), 0xFF_0000, "rgb() im style-Attribut");
+        assert_eq!(px(45, o + 80), 0xFF_FFFF, "calc(10px + 30px) = 40px");
+        // dunkles Design verdrängt nichts: .theme-light gilt, [data-theme=dark]
+        // überschreibt :root nicht (Grün oben bleibt)
+        assert_eq!(px(20, o + 95), 0x00_FF00, "helles statt dunkles Design");
+        let (arten, text) = css_luecken(30);
+        assert!(!text.contains("var()") && !text.contains("rgb()") && !text.contains("margin-inline-start"), "{arten}: {text}");
     }
 
     /// Rückfallebene, Zeitgrenze: erscheint eine Seite nicht rechtzeitig

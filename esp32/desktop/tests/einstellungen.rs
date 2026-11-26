@@ -174,6 +174,18 @@ fn einstellungen_per_touch_und_nach_neustart() {
     bis(|| sys::fenster_liste().iter().any(|f| f.titel == "Einstellungen"), "Titel deutsch");
     foto("p3_sprache_de");
 
+    // Q2: Kachel „Wetter-Ort“ startet die Ortssuche der Wetter-App
+    f.tippen(ZURUECK.0, ZURUECK.1);
+    let (x, y) = kachel(11);
+    f.tippen(x, y);
+    bis(|| sys::fenster_liste().iter().any(|f| f.titel == "Ort suchen"), "Ortssuche der Wetter-App");
+    foto("q2_einstellungen_wetter_ort");
+    let wetter: Vec<u32> = kern::liste().iter().filter(|p| p.name == "wetter").map(|p| p.pid).collect();
+    assert_eq!(wetter.len(), 1, "eine Wetter-App");
+    kern::zwangsbeenden(wetter[0], 2000);
+    bis(|| !sys::fenster_liste().iter().any(|f| f.titel == "Ort suchen"), "Ortssuche zu");
+    assert!(sys::fenster_liste().iter().any(|f| f.titel == "Einstellungen"), "Einstellungen offen");
+
     // Einstellungen schliessen → Desktop mit Bild-Hintergrund (deutsch)
     f.tippen(640 - 5 - 30, 24);
     bis(|| !sys::fenster_liste().iter().any(|f| f.titel == "Einstellungen"), "geschlossen");

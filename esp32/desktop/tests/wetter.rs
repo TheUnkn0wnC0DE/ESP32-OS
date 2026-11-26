@@ -135,6 +135,35 @@ fn wetter_per_touch() {
     }
     let ort = desktop::konfig::wetter_ort().expect("Ort gespeichert");
     assert_eq!(ort.name, "Zürich, Schweiz");
+
+    // Trefferliste verlassen mit „Zurück“ (Review Q4): Knopf „Ort“
+    // (Arbeitsbereich 354..464 × 4..36), suchen, Zurück (470..580 × 0..28)
+    // → wieder die Wetteranzeige wie vorher, Ort unverändert
+    let fenster = |px: &[u32]| -> Vec<u32> { (8..308).flat_map(|y| px[y * 640 + 20..y * 640 + 620].to_vec()).collect() };
+    std::thread::sleep(Duration::from_millis(300));
+    let vorher = fenster(&sys::foto().2);
+    tipp(&mut g, &mut t, 25 + 354 + 55, 56 + 4 + 16);
+    bis(|| sys::tastatur_soll().0, "Suchfeld mit Tastatur (2)");
+    std::thread::sleep(Duration::from_millis(300));
+    let oben = match sys::tastatur_soll().1 {
+        Some(c) if c.y1 > 360 - desktop::shell::LEISTE_H - HOEHE => (c.y1 + 2).min(360 - HOEHE),
+        _ => 360 - desktop::shell::LEISTE_H - HOEHE,
+    };
+    for c in "zuerich".chars() {
+        let (_, x, y) = tastenmitte(c, 640).unwrap();
+        tipp(&mut g, &mut t, x, oben + y);
+    }
+    let (x, y) = sondertaste("enter", 640);
+    tipp(&mut g, &mut t, x, oben + y);
+    bis(|| titel_da("Weather") && !sys::tastatur_soll().0, "Trefferliste (2)");
+    std::thread::sleep(Duration::from_millis(400));
+    let liste = fenster(&sys::foto().2);
+    assert_ne!(liste, vorher, "Trefferliste sichtbar");
+    foto("q2_treffer_zurueck");
+    tipp(&mut g, &mut t, 25 + 470 + 55, 56 + 14);
+    std::thread::sleep(Duration::from_millis(400));
+    assert!(fenster(&sys::foto().2) == vorher, "nach Zurück wieder die Wetteranzeige");
+    assert_eq!(desktop::konfig::wetter_ort().map(|o| o.name), Some("Zürich, Schweiz".to_string()));
     kern::zwangsbeenden(pid, 2000);
     bis(|| !titel_da("Weather"), "Wetter zu");
 

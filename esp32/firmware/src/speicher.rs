@@ -141,6 +141,38 @@ pub fn netsurf_testreste_loeschen() {
     log::warn!("NetSurf-Testreste – nachher {} Dateien, Ordner vorhanden: {}", nachher.len(), std::fs::metadata(wurzel).is_ok());
 }
 
+/// Entwicklungs-Build `ESP32OS_TESTNOTIZEN_LOESCHEN` (Q1 Fund 5, OK des
+/// Nutzers 25.11.): die Test-Notizen früherer Board-Läufe in
+/// `ESP32-OS/Notizen` löschen. Gelöscht wird nur eine Datei, deren Inhalt
+/// nicht leer ist, „qasdfghjkl“ enthält und sonst nur aus den Zeichen
+/// „qasdfghjkl1234567“ und Leerraum besteht (vom Autopiloten getippt).
+/// Alle anderen Notizen bleiben; von ihnen steht nur Name und Grösse im Log.
+pub fn testnotizen_loeschen() {
+    const ORDNER: &str = "/sdcard/ESP32-OS/Notizen";
+    const ZEICHEN: &str = "qasdfghjkl1234567";
+    fn testnotiz(t: &str) -> bool {
+        t.contains("qasdfghjkl") && t.chars().all(|c| c.is_whitespace() || ZEICHEN.contains(c))
+    }
+    let Ok(d) = std::fs::read_dir(ORDNER) else {
+        log::warn!("Test-Notizen: Ordner {ORDNER} fehlt");
+        return;
+    };
+    let mut namen: Vec<(String, u64)> = d.flatten().filter_map(|e| Some((e.file_name().to_string_lossy().into_owned(), e.metadata().ok().filter(|m| m.is_file())?.len()))).collect();
+    namen.sort();
+    log::warn!("Test-Notizen – vorher {} Dateien in {ORDNER}", namen.len());
+    for (n, laenge) in &namen {
+        let p = format!("{ORDNER}/{n}");
+        let inhalt = if *laenge <= 4096 { std::fs::read_to_string(&p).unwrap_or_default() } else { String::new() };
+        if testnotiz(&inhalt) {
+            log::warn!("  {n} ({laenge} Byte, Inhalt {:?}): gelöscht {:?}", inhalt.trim(), std::fs::remove_file(&p).map_err(|e| e.to_string()));
+        } else {
+            log::warn!("  {n} ({laenge} Byte): bleibt");
+        }
+    }
+    let nachher = std::fs::read_dir(ORDNER).map(|d| d.count()).unwrap_or(0);
+    log::warn!("Test-Notizen – nachher {nachher} Dateien");
+}
+
 /// Entwicklungs-Builds: eigene Testdateien in einen Testordner
 /// `ESP32-OS/<ordner>` der SD-Karte legen – nur in den eigenen Ordner von
 /// ESP32-OS, vorhandene gleich grosse Dateien bleiben.

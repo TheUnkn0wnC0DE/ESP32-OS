@@ -16,6 +16,7 @@ const FH: i32 = 300;
 const HG: u32 = 0xEEF2F7;
 const K_ORT: u32 = 2;
 const K_NEU: u32 = 3;
+const K_ZURUECK: u32 = 4;
 const K_TREFFER: u32 = 10;
 
 // ------------------------------------------------------------ JSON (klein)
@@ -406,6 +407,8 @@ fn zeichnen(z: &Zustand) {
     let (w, _) = (FW - 10, FH);
     if !z.treffer.is_empty() {
         text(12, 8, t("Choose a place:", "Ort wählen:"), 0x202020, false);
+        // Zurück zur Wetteranzeige ohne Auswahl (wie in den anderen Programmen)
+        knopf(K_ZURUECK, w - 120, 0, 110, 28, t("Back", "Zurück"));
         for (i, o) in z.treffer.iter().enumerate() {
             let y = 32 + i as i32 * 44;
             sys::knopf(12 << 16 | (w - 25) as u32, (y as u32) << 16 | 39, K_TREFFER + i as u32, 0xFFFFFF);
@@ -541,6 +544,10 @@ pub fn programm() {
                     }
                     K_NEU => {
                         laden(&mut z);
+                        zeichnen(&z);
+                    }
+                    K_ZURUECK => {
+                        z.treffer.clear();
                         zeichnen(&z);
                     }
                     i if i >= K_TREFFER && ((i - K_TREFFER) as usize) < z.treffer.len() => {

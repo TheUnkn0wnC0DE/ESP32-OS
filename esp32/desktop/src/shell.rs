@@ -16,7 +16,7 @@ pub const MODUS_SCHLUESSEL: &str = "esp32os_modus";
 pub const LEISTE_H: i32 = 48;
 /// Name des Systems (Startbild, Info, Taskleiste).
 pub const NAME: &str = "ESP32-OS";
-pub const VERSION: &str = "1.0.3";
+pub const VERSION: &str = "1.0.4";
 
 /// Eintrag im Startmenü und auf dem Desktop.
 #[derive(Clone, Copy, Debug)]
@@ -199,16 +199,29 @@ pub fn spieldaten_hinweis(id: konsole::SpielId, unbrauchbar: bool) -> (&'static 
 /// anderen Systemen; vorher blieb es offen – Autopilot und Nutzer mussten
 /// eine freie Stelle des Desktops treffen).
 static MENUE_ZU: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+/// Zeitpunkt (ms) des letzten Menüstarts (Review Q4: Doppelstart verhindern).
+static MENUE_START_MS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 
 /// Programm starten (wie Funktion 70.7 mit /sys/<name>).
 pub fn starten(programm: &str) {
     // Umschalten nur, wenn das Menü noch ein Fenster hat: ein gerade
     // geschlossenes Menü steht kurz noch in der Prozessliste (vorher schloss
     // der nächste Tipp dann ein Menü, das gar nicht mehr offen war)
-    let menue_offen = kern::liste().iter().filter(|p| p.name == "@menu").any(|p| sys::fenster_liste().iter().any(|f| f.pid == p.pid));
+    let liste = kern::liste();
+    let menue_offen = liste.iter().filter(|p| p.name == "@menu").any(|p| sys::fenster_liste().iter().any(|f| f.pid == p.pid));
+    let menue_startet = liste.iter().any(|p| p.name == "@menu" && !p.endet);
+    let jetzt_ms = (kern::zeit::nanos() / 1_000_000) as u32;
     if programm == "@menu" && menue_offen {
         MENUE_ZU.store(true, core::sync::atomic::Ordering::Relaxed);
         return;
+    }
+    // Menü gestartet, aber noch ohne Fenster (am Board 100-300 ms):
+    // ein zweiter Tipp startet kein zweites Menü
+    if programm == "@menu" && menue_startet && jetzt_ms.wrapping_sub(MENUE_START_MS.load(core::sync::atomic::Ordering::Relaxed)) < 700 {
+        return;
+    }
+    if programm == "@menu" {
+        MENUE_START_MS.store(jetzt_ms, core::sync::atomic::Ordering::Relaxed);
     }
     match programm {
         p if p.starts_with("@spiel_") && crate::konfig::AUTOPILOT_AKTIV.load(core::sync::atomic::Ordering::Relaxed) => {

@@ -42,8 +42,8 @@ fn verbindungsfehler(n: c_int) -> &'static str {
     match n {
         // ESP_ERR_HTTP_CONNECT: Namensauflösung, TCP oder TLS gescheitert
         -0x7002 => t(
-            "Server not reachable – does this Wi-Fi have internet access (login page)?",
-            "Server nicht erreichbar – hat dieses WLAN Internet (Anmeldeseite)?",
+            "Server not reachable - does this Wi-Fi have internet access (login page)?",
+            "Server nicht erreichbar - hat dieses WLAN Internet (Anmeldeseite)?",
         ),
         // ESP_ERR_HTTP_CONNECTING / ESP_ERR_HTTP_EAGAIN
         -0x7006 | -0x7007 => t("Server not answering (timeout)", "Server antwortet nicht (Zeitüberschreitung)"),
@@ -200,7 +200,7 @@ fn installieren_mit_sha(f: &kern::aktualisierung::Freigabe, sha: &[u8; 32], fort
     let r = unsafe { esp32os_ota_von_url(url.as_ptr(), ziel.as_ptr(), sha.as_ptr(), Some(fortschritt_c), (&mut f_ref as *mut &mut dyn FnMut(u32)).cast()) };
     match r {
         0 => Ok(()),
-        -4 => Err(kern::sprache::t("Checksum mismatch – not installed", "Prüfsumme falsch – nicht installiert").into()),
+        -4 => Err(kern::sprache::t("Checksum mismatch - not installed", "Prüfsumme falsch - nicht installiert").into()),
         -3 => Err(kern::sprache::t("Download incomplete", "Download unvollständig").into()),
         -2 => Err(kern::sprache::t("Connection failed", "Verbindung fehlgeschlagen").into()),
         -1 => Err(kern::sprache::t("No update slot", "Kein Update-Platz").into()),

@@ -869,6 +869,24 @@
     get compatMode() { return 'CSS1Compat'; }
     // Q3: document.implementation (häufige Abfrage alter Skripte)
     get implementation() { return { hasFeature: () => true, createHTMLDocument: () => null }; }
+    // Q3: document.currentScript – das <script>-Element des laufenden
+    // externen Skripts (js_quickjs.c setzt __ns_skript während js_exec).
+    // Bundler (webpack/rspack) bestimmen damit ihren Pfad für Nachlade-
+    // Teile („chunk path empty but not in a worker“, DuckDuckGo). Inline-
+    // Skripte: null (Name ohne http).
+    get currentScript() {
+      const n = G.__ns_skript;
+      if (typeof n !== 'string' || !/^https?:/.test(n)) return null;
+      const l = this.getElementsByTagName('script');
+      for (let i = l.length - 1; i >= 0; i--) {
+        const a = l[i].getAttribute('src');
+        if (!a) continue;
+        let ganz = a;
+        try { ganz = new URL(a, N.adresse()).href; } catch (e) { }
+        if (ganz === n || a === n) return l[i];
+      }
+      return { tagName: 'SCRIPT', nodeName: 'SCRIPT', nodeType: 1, src: n, dataset: {}, getAttribute: (k) => (k === 'src' ? n : null), hasAttribute: (k) => k === 'src' };
+    }
     get visibilityState() { return 'visible'; }
     get hidden() { return false; }
     get activeElement() { return N.aktivesFeld() || this.body; }

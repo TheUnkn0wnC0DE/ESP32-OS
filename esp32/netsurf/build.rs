@@ -145,8 +145,13 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
         .collect();
     autogen.sort();
     for f in dir_sources(&bib("libcss")).into_iter().chain(autogen) {
+        // Q3: language.c als geprüfte Kopie (meldet verworfene Deklarationen)
+        if f.ends_with("src/parse/language.c") {
+            continue;
+        }
         g.f(f);
     }
+    g.f(css_sprache_kopie(&bib("libcss"), &aus.join("css"))).f(c("css_luecken.c"));
     v.push(g);
 
     // libnsutils, libnsbmp, libnsgif (je eigene Bibliothek)
@@ -219,6 +224,15 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
                 g.f(script_kopie(q, aus));
                 continue;
             }
+            // Q3: CSS-Text vorbereiten (c/css_vorbereitung.c)
+            if *dir == "content/handlers/css" && f == "css.c" {
+                g.f(css_inhalt_kopie(q, aus));
+                continue;
+            }
+            if *dir == "content/handlers/css" && f == "select.c" {
+                g.f(css_select_kopie(q, aus));
+                continue;
+            }
             g.f(ns.join(dir).join(f));
         }
     }
@@ -227,15 +241,21 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
     println!("cargo:rerun-if-env-changed=NS_JS_WIE_BOARD");
     if board || std::env::var("NS_JS_WIE_BOARD").is_ok_and(|v| v == "1") {
         // Board: JS-Laufzeit im 10-MB-Heap des Programms, Stapel 384 KB.
-        // 2 MB: ein JS-lastiger erster Versuch (Wikipedia/MediaWiki) darf den
-        // Heap nicht so füllen, dass die Seite danach ohne JS nicht mehr
-        // passt (gemessen 22.11.: 4 MB → Heap voll beim Neuladen)
-        g.d("NS_JS_SPEICHER", Some("(2u*1024u*1024u)")).d("NS_JS_STAPEL", Some("(192u*1024u)"));
+        // Vorher feste 2 MB: ein JS-lastiger erster Versuch (Wikipedia/
+        // MediaWiki) durfte den Heap nicht so füllen, dass die Seite danach
+        // ohne JS nicht mehr passt (gemessen 22.11.: feste 4 MB → Heap voll
+        // beim Neuladen). Q3 (25.11.): JS bis 6 MB, aber nie in die letzten
+        // 3 MB des Heaps (NS_JS_RESERVE, c/js_quickjs.c) – eine kleine Seite
+        // mit grossem Skript (OpenStreetMap: 1,5 MB Quelltext bei 2,7 MB
+        // Heap) bekommt mehr, eine volle Seite nicht mehr als vorher.
+        g.d("NS_JS_SPEICHER", Some("(6u*1024u*1024u)"))
+            .d("NS_JS_RESERVE", Some("(3u*1024u*1024u)"))
+            .d("NS_JS_STAPEL", Some("(192u*1024u)"));
         // B8: Bitmaps liegen im Heap des Browsers – je Bild höchstens 1 MB
         // (256 K Bildpunkte), grössere werden verkleinert
         g.d("NS_BILD_MAX_BITMAP", Some("(256u*1024u)"));
     }
-    g.f(c("iconv.c")).f(c("js_quickjs.c")).f(c("neu_layout.c")).f(c("eingabe.c")).f(c("ohne_js.c")).f(c("lesezeichen.c")).f(c("touch.c")).f(c("bild.c")).f(c("ablage.c"));
+    g.f(c("iconv.c")).f(c("css_vorbereitung.c")).f(c("js_quickjs.c")).f(c("neu_layout.c")).f(c("eingabe.c")).f(c("ohne_js.c")).f(c("lesezeichen.c")).f(c("touch.c")).f(c("bild.c")).f(c("ablage.c"));
     // html.c als geprüfte Kopie: Seiten auf der Liste „ohne JavaScript“
     // (c/ohne_js.c) laden ohne Skripte
     g.f(html_kopie(q, aus));
@@ -954,7 +974,12 @@ fn fbtk_kopie(q: &Path, ziel: &Path) -> PathBuf {
 /// Upstream-Datei `rel` (unter `netsurf/`) mit geprüften Ersetzungen nach
 /// `ziel/name` – jeder Originaltext muss genau einmal vorkommen.
 fn kopie_mit(q: &Path, ziel: &Path, rel: &str, name: &str, ersetzungen: &[(&str, &str)]) -> PathBuf {
-    let quelle = q.join("netsurf").join(rel);
+    kopie_aus(&q.join("netsurf"), ziel, rel, name, ersetzungen)
+}
+
+/// Wie `kopie_mit`, Datei `rel` unter dem Ordner `wurzel` (z. B. libcss).
+fn kopie_aus(wurzel: &Path, ziel: &Path, rel: &str, name: &str, ersetzungen: &[(&str, &str)]) -> PathBuf {
+    let quelle = wurzel.join(rel);
     println!("cargo:rerun-if-changed={}", quelle.display());
     let mut t = std::fs::read_to_string(&quelle).unwrap_or_else(|_| panic!("{rel}")).replace("\r\n", "\n");
     for (alt, neu) in ersetzungen {
@@ -968,6 +993,141 @@ fn kopie_mit(q: &Path, ziel: &Path, rel: &str, name: &str, ersetzungen: &[(&str,
         std::fs::write(&datei, t).expect(name);
     }
     datei
+}
+
+/// `libcss/src/parse/language.c` als geprüfte Kopie (Q3): jede verworfene
+/// Deklaration an c/css_luecken.c melden – unbekannte Eigenschaft (Art 0),
+/// Wert mit unbekannter Funktion wie `var()`/`calc()` (Art 1) oder sonst
+/// ungültiger Wert (Art 2). So entsteht je Seite die Liste der fehlenden
+/// CSS-Funktionen nach Häufigkeit.
+fn css_sprache_kopie(libcss: &Path, ziel: &Path) -> PathBuf {
+    kopie_aus(
+        libcss,
+        ziel,
+        "src/parse/language.c",
+        "css_language.c",
+        &[
+            (
+                "#include \"utils/utils.h\"
+",
+                "#include \"utils/utils.h\"
+
+void ns_css_luecke(int art, const char *name, size_t len);
+
+/* ESP32-OS Q3: verworfenen Wert melden – erste Funktion im Wert, sonst
+ * die Eigenschaft */
+static void luecke_wert(const css_token *property, const parserutils_vector *vector, int32_t anfang)
+{
+	int32_t i = anfang;
+	const css_token *t;
+	while ((t = parserutils_vector_iterate(vector, &i)) != NULL) {
+		if (t->type == CSS_TOKEN_FUNCTION && t->idata != NULL) {
+			ns_css_luecke(1, lwc_string_data(t->idata), lwc_string_length(t->idata));
+			return;
+		}
+	}
+	ns_css_luecke(2, lwc_string_data(property->idata), lwc_string_length(property->idata));
+}
+",
+            ),
+            (
+                "	if (i == LAST_PROP + 1)
+		return CSS_INVALID;
+",
+                "	if (i == LAST_PROP + 1) {
+		ns_css_luecke(0, lwc_string_data(property->idata), lwc_string_length(property->idata));
+		return CSS_INVALID;
+	}
+",
+            ),
+            (
+                "	/* Call the handler */
+	error = handler(c, vector, ctx, style);
+	if (error != CSS_OK) {
+",
+                "	/* Call the handler */
+	anfang = *ctx;
+	error = handler(c, vector, ctx, style);
+	if (error != CSS_OK) {
+		if (error == CSS_INVALID)
+			luecke_wert(property, vector, anfang);
+",
+            ),
+            (
+                "	uint8_t flags = 0;
+	css_style *style = NULL;
+	const css_token *token;
+",
+                "	uint8_t flags = 0;
+	css_style *style = NULL;
+	const css_token *token;
+	int32_t anfang;
+",
+            ),
+            (
+                "	if (token != NULL) {
+		/* Trailing junk, so discard declaration */
+",
+                "	if (token != NULL) {
+		/* Trailing junk, so discard declaration */
+		luecke_wert(property, vector, anfang);
+",
+            ),
+        ],
+    )
+}
+
+/// `content/handlers/css/css.c` als geprüfte Kopie (Q3): jedes Stylesheet
+/// (Datei und `<style>`) geht durch c/css_vorbereitung.c – eigene
+/// Eigenschaften, `var()`, `calc()`, `rgb()`-Schreibweise, logische
+/// Eigenschaften. Teilstücke bis zur letzten vollständigen Regel, der Rest
+/// beim Abschluss; verworfene Stylesheets geben ihren Rest frei.
+fn css_inhalt_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "content/handlers/css/css.c",
+        "css_inhalt.c",
+        &[
+            (
+                "#include \"css/internal.h\"\n",
+                "#include \"css/internal.h\"\n\n/* ESP32-OS Q3: c/css_vorbereitung.c */\n#include <stdlib.h>\nchar *ns_css_stueck(const void *k, const char *s, size_t n, size_t *aus_n);\nchar *ns_css_ende(const void *k, size_t *aus_n);\nvoid ns_css_vergessen(const void *k);\n",
+            ),
+            (
+                "\treturn css_stylesheet_append_data(c->sheet,\n\t\t\t(const uint8_t *) data, size);\n}\n",
+                "\tsize_t n;\n\tcss_error e;\n\tchar *t = ns_css_stueck(c, data, size, &n);\n\tif (t == NULL)\n\t\treturn n == 0 ? CSS_NEEDDATA : css_stylesheet_append_data(c->sheet, (const uint8_t *) data, size);\n\te = n > 0 ? css_stylesheet_append_data(c->sheet, (const uint8_t *) t, n) : CSS_NEEDDATA;\n\tfree(t);\n\treturn e;\n}\n",
+            ),
+            (
+                "\terror = css_stylesheet_data_done(c->sheet);\n",
+                "\t{\n\t\t/* ESP32-OS Q3: vorbereiteter Rest des letzten Stücks */\n\t\tsize_t n;\n\t\tchar *t = ns_css_ende(c, &n);\n\t\tif (t != NULL) {\n\t\t\tif (n > 0)\n\t\t\t\t(void) css_stylesheet_append_data(c->sheet, (const uint8_t *) t, n);\n\t\t\tfree(t);\n\t\t}\n\t}\n\terror = css_stylesheet_data_done(c->sheet);\n",
+            ),
+            (
+                "static void nscss_destroy_css_data(struct content_css_data *c)\n{\n\tuint32_t i;\n",
+                "static void nscss_destroy_css_data(struct content_css_data *c)\n{\n\tuint32_t i;\n\n\tns_css_vergessen(c);\n",
+            ),
+        ],
+    )
+}
+
+/// `content/handlers/css/select.c` als geprüfte Kopie (Q3): style-Attribute
+/// gehen durch c/css_vorbereitung.c wie die Stylesheets.
+fn css_select_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "content/handlers/css/select.c",
+        "css_select.c",
+        &[
+            (
+                "\terror = css_stylesheet_append_data(sheet, data, len);\n",
+                "\t{\n\t\t/* ESP32-OS Q3: var(), calc() … im style-Attribut */\n\t\tsize_t vn = 0;\n\t\tchar *v = ns_css_inline((const char *) data, len, &vn);\n\t\tif (v == NULL)\n\t\t\terror = css_stylesheet_append_data(sheet, data, len);\n\t\telse\n\t\t\terror = vn > 0 ? css_stylesheet_append_data(sheet, (const uint8_t *) v, vn) : CSS_OK;\n\t\tfree(v);\n\t}\n",
+            ),
+            (
+                "#include \"css/select.h\"\n",
+                "#include \"css/select.h\"\n\n/* ESP32-OS Q3: c/css_vorbereitung.c */\n#include <stdlib.h>\nchar *ns_css_inline(const char *s, size_t n, size_t *aus_n);\n",
+            ),
+        ],
+    )
 }
 
 /// `content/handlers/html/script.c` als geprüfte Kopie (Q3): NetSurf

@@ -1636,7 +1636,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
 Ziel: keine neuen grossen Funktionen (ausser Wetter-App und Browser), alles
 von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
 
-- [ ] **Q1 Rundgang durch jedes Programm** (Desktop, Taskleiste, Menü,
+- [x] **Q1 Rundgang durch jedes Programm** (Desktop, Taskleiste, Menü,
   Tastatur, Ersteinrichtung, alle Programme, Spiele-Start) – per Autopilot
   öffnen, bedienen, Bildschirmfotos, kritisch prüfen: Aussehen (Ränder,
   Titelleisten, Abstände, Schriften, Farben, Symbole einheitlich, nichts
@@ -1713,6 +1713,14 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   der Taskleiste; vorher: `docs/nachweise/s5/board_nachher_*.png`.
   Am Nachmittag nicht geprüft (Board nicht erreichbar): Fotos
   nachher je Programm, Randfälle am Board (keine SD, kein WLAN).
+  Abschluss (25.11. 22:30): Ersteinrichtung (Fotos `p4_sprache` … `p4_fertig`,
+  DE/EN, 5 Schritte) und Spiele-Start (Ordner „Spiele“ mit Pudding Panic,
+  Cube World, Doom, Quake – `s0_ordner_spiele`) per PC-Autopilot geprüft,
+  ohne Fund. Nachweis: Board-Fotos `docs/nachweise/q1/board_nachher_*.png`
+  (19 Programme, 0 Abstürze), Tastatur 31–33,5 Bilder/s (S3-Lauf q1b),
+  Randfälle-Test grün (`randfaelle.rs`, Fotos `q1_rand_*`), alle Tests
+  FEHLER=0. Fund 5 (Test-Notizen auf der SD des Nutzers) wartet auf die
+  Antwort in STATUS – siehe Abweichungen.
 - [x] **Q2 Wetter-App** (ersetzt T2) – Lizenz der ColibriOS-Weather prüfen;
   passt sie nicht: eigene App mit Open-Meteo (frei, kein API-Schlüssel).
   Aktuelles Wetter und Vorschau für mehrere Tage, Standort in den
@@ -1789,11 +1797,80 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   undefined, consent von null, redeclaration, invalid assignment); 22
   geladen, 7 abgeschnitten, 1 Browser beendet; kein verwaister Browser.
   Verlauf JS-Fehler: 61 → 10 (Seiten 1–20) / 18 (alle) → 14.
+  Schritt 3 (25.11. nachts): (a) JS-Speicher – statt fester 2 MB bis 6 MB,
+  aber nie in die letzten 3 MB des Browser-Heaps (`NS_JS_RESERVE`,
+  `js_quickjs.c`, Test `js_reserve_im_heap`); (b) CSS-Lücken zählen
+  (Kopie von libcss `language.c` → `c/css_luecken.c`, Zeile `ns_css`,
+  Test `css_luecken_gezaehlt`). Board br5 (`docs/nachweise/br/
+  q3_schritt3_tabelle.md`): (a) war falsch – gezählt wurde je Fenster,
+  vorher galten 2 MB je Laufzeit (je Dokument): **out of memory 3 → 8**
+  (Google, SRF, Stack Overflow, heise, Apple neu). Behoben: Zählung je
+  Laufzeit, bis 2 MB ohne Reserve (nie weniger als vorher). (b) CSS-Lücken
+  nach Häufigkeit (117 Arten, 30 Seiten): `var()` 8677 Deklarationen auf
+  18 Seiten, `-webkit-*` 1267, `calc()` 1055, `border-radius` 889,
+  `transition` 610, `transform` 547, `box-shadow` 527, `gap` 468, `rgb()`
+  468, `fill` 296, `display`-Wert 258, `pointer-events` 250, Grid 232/193,
+  logische Eigenschaften (`margin-block-start` 109, `margin-inline-start`
+  93, `inline-size` 78 …).
+  Schritt 4: CSS-Text vor libcss vorbereiten (`c/css_vorbereitung.c`,
+  Kopien von `content/handlers/css/css.c` und `select.c`): eigene
+  Eigenschaften sammeln und `var()` ersetzen (Vorrang `:root` auf oberster
+  Ebene), `calc()` mit gleichen Einheiten ausrechnen, `rgb()`/`hsl()` in
+  Leerzeichen-Schreibweise umschreiben, logische Eigenschaften auf
+  links/rechts/oben/unten. Test `css_vorbereitung_wirkt` (Bild
+  `q3_css_vorbereitung.png`: Grün über var() mit calc()-Breite und
+  margin-inline-start, Blau über var()-Ersatz, Rot über rgb(255 0 0 / 100%)
+  im style-Attribut). Nicht nachgerüstet, weil NetSurf sie nicht zeichnet
+  (Abweichungen): border-radius, transition, transform, box-shadow,
+  animation, filter, mask, Grid/gap.
+  Board br7 (26.11., Kern mit verworfenem Heap, CSS vorbereitet): alle 30
+  Seiten gestartet (kein verwaister Browser); Fotos
+  `docs/nachweise/br/q3_vorher_nachher_br4_br7.png` (links Schritt 2,
+  rechts nachher): Google zeigt die Startseite statt der Zustimmungsseite,
+  DuckDuckGo lädt die volle Seite statt html.duckduckgo – aber **schwarz**
+  (Variablen des dunklen Designs gewannen). Behoben: Vorrang neu (`:root`
+  oben 3, in @media 2, andere Regeln 1 – erste gilt, alles mit „dark“ 0 –
+  erste gilt, jede andere schlägt sie); Test erweitert.
+  Board br8 (`docs/nachweise/br/q3_schritt4_tabelle.md`): 22 geladen, 8
+  abgeschnitten (HTML > 512 KB), 0 Browser vorzeitig beendet (Schritt 2:
+  1); ohne JS neu geladen 14 (Schritt 2: 18); JS-Fehler 19 (6× chunk path,
+  6× out of memory, je 1× Rest); CSS nicht verstanden: `var()` 8677 → 577,
+  `calc()` 1055 → 395, `rgb()` 468 → nicht mehr unter den häufigsten,
+  logische Eigenschaften → 0; DuckDuckGo hell (weiss/grün), aber nur mit
+  „Suche“-Knopf (die App lädt ihre Teile nicht: chunk path).
+  Schritt 5: `document.currentScript` (Element des laufenden externen
+  Skripts; `js_quickjs.c` setzt `__ns_skript` während `js_exec`) – Bundler
+  bestimmen damit ihren Pfad („chunk path empty but not in a worker“, 6×
+  DuckDuckGo). Test `current_script` (64 Bit und i686). Dazu: Endgrund des
+  Browsers im Log der Seitenliste (`kern::ende_von`).
 - [ ] **Q4 Abschluss** – Review-Subagent prüft das ganze Qualitäts-Update
   gegen diesen Auftrag; 60-min-Dauertest per Autopilot, 0 Abstürze, kein
   Speicherleck; nächste Version vorbereiten (README, CHANGELOG,
   Release-Paket, Release-Check, Bildschirmfotos im README aktualisieren), OK
   in STATUS erbitten; Web-Flasher erst nach dem OK aktualisieren.
+  Review (25.11. nachts, Subagent über `git diff ae665ed` plus Arbeitsbaum,
+  gegen Abschnitt Q und Auftrag Abschnitt 9) – 7 Befunde, alle behoben:
+  1. hoch – `kern::abruf::text` (Wetter) lief nicht in `geschuetzt`: ein
+     Zwangsbeenden während TLS konnte den Faden in esp_http_client/lwIP
+     anhalten. **Behoben:** Abruf in `crate::geschuetzt` wie Update/Sockets.
+  2. mittel – JS-Reserve (Q3) galt auch fürs Anlegen der Laufzeit: Seiten mit
+     wenig freiem Heap hätten weniger als die alten 2 MB bekommen.
+     **Behoben:** Bytes je Fenster gezählt (Opaque der Laufzeit), bis 2 MB
+     (`NS_JS_GRUND`) ohne Reserve, darüber nur mit 3 MB Rest im Heap.
+  3. mittel – noch sichtbare „…“/„–“ (Update-Fortschritt, Update-Meldungen,
+     die jetzt auch die Wetter-App zeigt, WLAN-DNS, Taste „…“ der
+     Sonderebene). **Behoben** („...“, „-“, Taste „¾“); „€“ siehe
+     Abweichungen.
+  4. mittel – Kachel „Wetter-Ort“: Startfehler unsichtbar, kein Touch-Test.
+     **Behoben:** Meldung mit Grund (`startfehler`), Test in
+     `einstellungen.rs` tippt die Kachel (Foto `q2_einstellungen_wetter_ort`).
+  5. niedrig – Musik: WAV-Fehler nur deutsch, fmt-Länge aus der Datei
+     ungeprüft. **Behoben:** DE/EN, höchstens 40 Byte lesen, Rest überspringen.
+  6. niedrig – Startknopf: zweiter Tipp, solange das Menü noch ohne Fenster
+     startet, startete ein zweites Menü. **Behoben:** 700 ms nach einem
+     Menüstart kein zweiter.
+  7. niedrig – Wetter: Trefferliste ohne Zurück. **Behoben:** Knopf
+     „Zurück“, PC-Test (Bild danach gleich der Wetteranzeige).
 
 ## T. Nach Teil S (Nutzer 24.11. abends)
 
@@ -2293,6 +2370,30 @@ und Verzeichnis auf GitHub).
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **Q3 CSS, nicht nachgerüstet (26.11.)** – `border-radius`, `box-shadow`,
+  `transition`, `transform`, `animation`, `filter`, `mask`, CSS Grid
+  (`grid-*`, `gap`), `-webkit-*`/`-moz-*`: libcss verwirft sie, und die
+  Darstellung von NetSurf 3.11 kennt sie nicht (keine runden Ecken,
+  Schatten, Übergänge, kein Grid-Layout). Sie zu parsen änderte nichts am
+  Bild; ein Grid-Layout wäre ein eigener Layout-Teil in NetSurf. Ersatz:
+  die Seiten fallen auf Blöcke untereinander zurück (wie vorher).
+  `var()`, `calc()`, `rgb()`-Schreibweise und logische Eigenschaften
+  werden vorbereitet (PLAN Q3 Schritt 4) – je Element unterschiedliche
+  Werte derselben Variable gibt es dabei nicht (eine Tabelle je Browser).
+
+- **Q4 „€“ auf der Bildschirmtastatur (25.11.)** – die Systemschrift
+  (KolibriOS `charUni.mt`) hat nur Zeichen bis U+058A; „€“ (U+20AC) zeigt
+  sie als Kästchen, auf der Taste der Sonderebene und im Text. Die Taste
+  bleibt, weil „€“ in Dateien und Formularen gebraucht wird (UTF-8 richtig
+  gespeichert). Ersatz: keiner – eine eigene Glyphe hiesse die Schrift
+  ändern; „…“ auf der Taste ist durch „¾“ ersetzt.
+
+- **Q1 Fund 5 (25.11.)** – drei Test-Notizen „qasdfghjkl1234567“ aus
+  früheren Board-Tests liegen im Notizen-Ordner von ESP32-OS auf der SD-Karte
+  des Nutzers. Nicht ohne OK gelöscht (Nutzerdaten-Regel); Frage steht in
+  STATUS. Neue entstehen nicht: der Tipp-Teil des S3-Laufs schliesst die
+  Notizen mit dem X, das nichts speichert (`fps_lauf.rs`).
 
 - **S3, ≥ 30 fps beim Scrollen noch nicht erreicht (24.11.):** Programme
   zeichnen schnell genug (Dateimanager nach S2 4,4 ms Compositor je Bild),

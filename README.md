@@ -8,6 +8,7 @@ A KolibriOS-compatible OS running natively on an ESP32-P4 touch console.
 |---|---|
 | ![Web browser](docs/images/browser.png) | ![PDF viewer](docs/images/pdf-viewer.png) |
 | ![Notes with on-screen keyboard](docs/images/notes-keyboard.png) | ![Würfelwelt](docs/images/wuerfelwelt.png) |
+| ![Weather](docs/images/weather.png) | |
 
 ESP32-OS re-implements the KolibriOS system functions in Rust instead of emulating x86. Original KolibriOS C programs are compiled for the RISC-V CPU and run unchanged. On top of that run a touch desktop, system programs, the NetSurf web browser and four games.
 
@@ -55,7 +56,7 @@ Boards with chip revision v3.x and changes to the code: build from source, see [
 | Kernel | KolibriOS system functions in Rust, one heap per program, crash isolation with error dialog, compositor with dirty rectangles, two firmware slots with automatic rollback |
 | KolibriOS programs | Original C programs, unchanged: PasswordGen, TinyHashView and the clayer samples; native box_lib, libimg, proc_lib, libini, network |
 | Desktop | Icons, taskbar with Wi-Fi signal and clock, start menu, tap, long press, swipe and pinch, on-screen keyboard (Swiss German, US), English and German interface, first-run wizard |
-| Programs | File manager (microSD and internal flash), image viewer (JPEG in hardware, PNG, GIF, BMP; phone photos up to 48 megapixels), PDF viewer, settings, notes, calculator, clock with alarm and timer, calendar, MP3 player, task manager, screenshot tool, console with the KolibriOS shell (pipes, redirection) |
+| Programs | File manager (microSD and internal flash), image viewer (JPEG in hardware, PNG, GIF, BMP; phone photos up to 48 megapixels), PDF viewer, settings, notes, calculator, clock with alarm and timer, calendar, weather (Open-Meteo, 5-day forecast, no API key), music player (MP3, WAV), task manager, screenshot tool, console with the KolibriOS shell (pipes, redirection) |
 | Wi-Fi 6 | Via the ESP32-C6: scan and connect by touch, remembered networks, time via NTP |
 | Browser | NetSurf 3.11, HTTPS with certificate check, tabs, bookmarks, history, downloads, zoom, forms, JavaScript (QuickJS-ng: DOM, events, timers, fetch, cookies, localStorage) |
 | Games | Pudding-Panik, Würfelwelt, Doom, Quake, started from the desktop |
@@ -68,7 +69,7 @@ Boards with chip revision v3.x and changes to the code: build from source, see [
 - The PDF viewer shows text in the system font, opens files up to 4 MB and does not decode CCITT, JBIG2 or JPEG 2000 images.
 - The image viewer scales large JPEG and PNG photos down while decoding (JPEG by 1/2, 1/4 or 1/8). A 12-megapixel phone photo opens in 5.9 s, a 48-megapixel image in 11.4 s; 39 to 45 % of that is reading the microSD card ([p2g_messung.txt](docs/nachweise/p2_gross/p2g_messung.txt)). Progressive JPEGs need more memory: 12 megapixels open, 48 megapixels are refused. GIF and BMP open up to about 0.85 megapixels.
 - All programs share one address space. A faulty program is stopped and reported, but can still disturb the system.
-- No standby, no battery gauge, no camera support yet (planned for 1.1).
+- No battery gauge and no camera support yet (planned for 1.1).
 - Release images combine GPL-2.0 code (NetSurf, KolibriOS) with Apache-2.0 code (ESP-IDF). Whether they may be distributed in this form is being clarified; the source code is not affected.
 - The build runs on Windows only.
 

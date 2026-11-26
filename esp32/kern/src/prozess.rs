@@ -684,27 +684,30 @@ pub enum Zwang {
 }
 
 /// Darf der angehaltene bzw. laufende Faden ausgetragen werden? Nicht, wenn
-/// er Kern-Code oder einen geschützten Abschnitt ausführt oder die Sperre
-/// seines Programm-Heaps gesetzt ist (der Aufräumer gibt dort seinen Stapel
-/// frei).
+/// er Kern-Code oder einen geschützten Abschnitt ausführt. Die Sperre seines
+/// Programm-Heaps hindert nicht mehr (Q3, Board 26.11.: der Browser blieb mit
+/// gesetzter Sperre 5 s lang unanhaltbar, sein Bereich blockierte den Pool):
+/// steht er mit gesetzter Sperre, wird der Heap verworfen
+/// ([`Heap::verwerfen`]) – der Aufräumer gibt den Stapel dann nicht mehr
+/// einzeln frei, der Bereich geht als Ganzes zurück.
 ///
 /// # Safety
-/// `kontext` ist 0 oder ein lebender `Faden`, `heap` lebt.
-unsafe fn frei_anhaltbar(kontext: usize, heap: *const Heap) -> bool {
+/// `kontext` ist 0 oder ein lebender `Faden`.
+unsafe fn frei_anhaltbar(kontext: usize) -> bool {
     if kontext == 0 {
         return false;
     }
     // SAFETY: Vertrag des Aufrufers.
     let f = unsafe { &*(kontext as *const Faden) };
-    // SAFETY: Vertrag des Aufrufers.
-    f.im_kern.load(Ordering::Acquire) == 0 && f.geschuetzt.load(Ordering::Acquire) == 0 && !unsafe { &*heap }.gesperrt()
+    f.im_kern.load(Ordering::Acquire) == 0 && f.geschuetzt.load(Ordering::Acquire) == 0
 }
 
 /// Beendet ein Programm auch dann, wenn es keine Systemfunktion mehr ruft
 /// (Endlosschleife; Taskmanager, A6). Erst kooperativ (bis `warte_ms`),
 /// dann wird jeder noch laufende Faden angehalten – aber nur, wenn er
 /// gerade keinen Kern-Code und keinen [`geschuetzt`]en Abschnitt ausführt
-/// und die Sperre seines Heaps nicht gesetzt ist: Alles, was ein Programm
+/// (ist danach die Sperre seines Heaps gesetzt, wird der Heap verworfen,
+/// siehe [`frei_anhaltbar`]): Alles, was ein Programm
 /// mit dem System teilt (Kern-Tabellen, Sperren, Treiber, Ausgabe), wird
 /// nur dort angefasst (stdout/stderr der C-Programme gehen deshalb über das
 /// Debug-Board). Geprüft wird vor dem Anhalten (dann wird ein Faden, der im
@@ -761,8 +764,8 @@ pub fn zwangsbeenden(pid: u32, warte_ms: u32) -> Zwang {
                     verwaist = true;
                     continue;
                 };
-                // SAFETY: nicht beendet → Kontext lebt; Heap lebt mit dem Prozess.
-                if !unsafe { frei_anhaltbar(e.kontext, heap) } {
+                // SAFETY: nicht beendet → Kontext lebt.
+                if !unsafe { frei_anhaltbar(e.kontext) } {
                     offen = true; // im Kern / geschützt: nicht anfassen
                     continue;
                 }
@@ -771,10 +774,24 @@ pub fn zwangsbeenden(pid: u32, warte_ms: u32) -> Zwang {
                     continue;
                 }
                 // SAFETY: wie oben; Faden steht.
-                if !unsafe { frei_anhaltbar(e.kontext, heap) } {
+                if !unsafe { frei_anhaltbar(e.kontext) } {
                     (k.pl.task_fortsetzen)(g);
                     offen = true;
                     continue;
+                }
+                // Sperre des Heaps gesetzt (vom angehaltenen Faden oder
+                // einem, der gleich angehalten wird): Heap verwerfen, damit
+                // niemand mehr auf sie wartet (Aufräumer, TLS-Rückrufe)
+                // SAFETY: Heap lebt mit dem Prozess.
+                let h = unsafe { &*heap };
+                if h.gesperrt() && !h.ist_verworfen() {
+                    h.verwerfen();
+                    let halter = h.sperre_halter();
+                    crate::sys::debug_text(&format!(
+                        "Zwangsbeenden pid {pid}: tid {} stand mit gesetzter Heap-Sperre (zuletzt genommen von {}) – Heap verworfen",
+                        e.tid,
+                        if halter == e.kontext { "diesem Faden" } else if halter == 0 { "unbekannt" } else { "einem anderen Faden" }
+                    ));
                 }
                 // Steht für immer: `task_weg` meldet ihn ab jetzt als weg
                 e.beendet = true;

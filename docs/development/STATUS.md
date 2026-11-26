@@ -11,6 +11,48 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **26.11., 07:30 – Q3 weiter:** CSS-Vorbereitung eingebaut (var(),
+  calc(), rgb(), logische Eigenschaften), committet 6567ee0. Board br6:
+  CSS-Lücken var() 8677 → 597, calc() 1055 → 348, rgb() 468 → 90; JS-Fehler
+  22 → 16 (out of memory 8 → 5). Fund: nach Seite 20 blieb der Browser
+  wieder verwaist (Faden stand 30 s mit gesetzter Heap-Sperre), Seiten 21–30
+  starteten nicht. Behoben im Kern: Anhalten trotz gesetzter Sperre, Heap
+  wird verworfen (Belegen null, Freigeben nichts), Halter der Sperre im Log;
+  Test `verworfener_heap_wartet_nicht`. Läuft: alle Tests, Board br7.
+
+- **25.11., 23:10 – Halt (5-Stunden-Limit erreicht), NICHTS COMMITTET:**
+  Arbeitsbaum enthält: Review-Korrekturen 1–7 (PLAN Q4), JS-Reserve jetzt
+  je Laufzeit (js_quickjs.c; i686-Tests js_reserve_im_heap und
+  ohne_js_rueckfall_speicher grün), CSS-Zählung (css_luecken.c, Kopie von
+  libcss language.c, Test css_luecken_gezaehlt grün), Schalter
+  ESP32OS_TESTNOTIZEN_LOESCHEN (noch nicht am Board gelaufen), README
+  (Wetter-Foto, Standby-Zeile). Board-Lauf br5 (JS-Reserve je Fenster –
+  war falsch: 8× out of memory statt 3) und CSS-Liste: var() 8677, -webkit
+  1267, calc() 1055, border-radius 889 … (scratchpad br5/tabelle.md, noch
+  nach docs/nachweise/br kopieren). Neu und NOCH NICHT eingebunden/übersetzt:
+  `esp32/netsurf/c/css_vorbereitung.c` (var()/calc()/rgb()/logische
+  Eigenschaften); geplante Feinkorrektur an `letzte_regel` (Tiefe 0) noch
+  offen. Nächste Schritte: css_vorbereitung.c prüfen und über Kopien von
+  content/handlers/css/css.c (process/convert/destroy) und select.c
+  (inline) einbinden, Test, alle Tests, Firmware bauen, committen, Board-
+  Lauf br6; dann Test-Notizen löschen (Dev-Build), m4-Dauertest, 1.0.4.
+
+- **25.11., 21:45 – Nachtauftrag:** Q3 und Q4 fertig, 1.0.4 vorbereiten
+  (nicht veröffentlichen), dann S, C, D. Kein Release, kein Web-Flasher,
+  kein C6-Flash. Test-Notizen auf der SD löschen erlaubt. Läuft: Board-Lauf
+  30 Seiten (JS-Reserve, CSS-Zählung), alle Tests nach den 7 Review-
+  Korrekturen.
+
+- **25.11., 22 Uhr – Übergabe:** gepusht main cedfbfa. Q1: Funde 1–4,
+  6–8, 10, 11 behoben (Tastatur 31–33 Bilder/s, Randfälle-Test), offen nur
+  Fund 5 (Test-Notizen, Frage) → Q1 kann abgehakt werden (Ersteinrichtung/
+  Spiele-Start per PC-Tests, Board-Fotos `docs/nachweise/q1/`). Q2 erledigt.
+  Q3: JS-Fehler 61 → 14; nächster Schritt: „out of memory“ (JS-Grenze 2 MB,
+  `NS_JS_SPEICHER` in netsurf/build.rs) vorsichtig erhöhen und mit
+  br_lauf messen; Diagnose „Zwangsbeenden … verwaist“ im Log beobachten.
+  Dann Q4: Review-Subagent, 60-min-Dauertest (m4_lauf), Release-Vorbereitung
+  1.0.4, OK erbitten. Board an COM3.
+
 - **25.11., 21:40 – Übergabe:** Q3 Schritt 2 gepusht (JS-Fehler 61 → 14).
   Q1 Tastatur: schnelles Tippen am Board 15,9 Bilder/s, 174 725 px je Bild
   → nächster Schritt: Ursache der grossen Neuzeichnung je Tastendruck in den
@@ -239,11 +281,6 @@ jedes Skript schreibt am Ende wieder die normale Firmware aufs Board).
    D2 (Ton), D3; danach **SD Stabilitätsrunde**.
 
 ## Offene Fragen
-
-- **Test-Notizen auf deiner SD-Karte:** In den Notizen stehen drei
-  Notizen „qasdfghjkl1234567“ aus früheren Board-Tests (Ordner von
-  ESP32-OS). Soll ich sie beim nächsten Board-Lauf löschen? Ohne dein OK
-  lasse ich sie.
 
 - **D3 App-Store – was soll installiert werden?** Alle Programme sind fest
   in die Firmware gelinkt; einen Lader für nachträglich installierte

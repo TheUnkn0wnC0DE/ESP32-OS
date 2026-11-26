@@ -68,6 +68,7 @@ struct jsheap {
 	unsigned threads;
 	unsigned tiefe; /* verschachtelte Eintritte (dispatchEvent → Hörer) */
 	bool weg; /* js_destroyheap gerufen, letzter Thread gibt frei */
+	size_t belegt; /* Bytes der Laufzeit `rt` des Fensters (Q3) */
 };
 
 struct eintrag {
@@ -91,6 +92,7 @@ struct jsthread {
 	 * die Grundumgebung (window, document) der nächsten liess sich nicht
 	 * mehr anlegen („Fehler: null“) */
 	JSRuntime *rt;
+	size_t belegt; /* Bytes dieser Laufzeit (Q3, Opaque von `rt`) */
 	JSContext *cx;
 	struct browser_window *bw;
 	html_content *htmlc;
@@ -2173,14 +2175,54 @@ void js_finalise(void)
  * Blocks: sie steht in einem Kopf vor dem Block. */
 #define KOPF (sizeof(size_t) > 4 ? 16u : 8u)
 
+/* Q3: Reserve im Heap des Programms, die JavaScript nicht verbrauchen darf
+ * (Seite, Layout, Bilder und das Neuladen ohne JS nach einem Abbruch).
+ * Bis NS_JS_GRUND je Laufzeit (eine je Dokument, auch iframes) gilt sie
+ * nicht – so viel wie die frühere feste Grenze je Laufzeit: keine Seite
+ * bekommt weniger als vorher, auch das Anlegen einer Laufzeit scheitert
+ * nicht an ihr; darüber darf JS so viel nehmen, wie die Seite übrig lässt –
+ * bis NS_JS_SPEICHER. 0 = keine Reserve. Gezählt wird je Laufzeit über ihr
+ * Opaque (Zeiger auf `belegt` im jsthread bzw. jsheap). */
+#ifndef NS_JS_RESERVE
+#define NS_JS_RESERVE 0u
+#endif
+#ifndef NS_JS_GRUND
+#define NS_JS_GRUND (2u * 1024u * 1024u)
+#endif
+size_t ns_programm_frei(void);
+static size_t js_reserve = NS_JS_RESERVE;
+
+/* Tests (32 Bit, Programm im Kern): Reserve setzen */
+void ns_js_reserve_setzen(size_t r)
+{
+	js_reserve = r;
+}
+
+/* Darf die Laufzeit mit dem Zähler `z` `n` weitere Bytes belegen? Bis
+ * NS_JS_GRUND immer, darüber nur, wenn danach die Reserve frei bleibt. */
+static bool js_platz(const size_t *z, size_t n)
+{
+	size_t frei;
+	if (js_reserve == 0)
+		return true;
+	if (z != NULL && *z <= NS_JS_GRUND && n <= NS_JS_GRUND - *z)
+		return true;
+	frei = ns_programm_frei();
+	return frei >= js_reserve && frei - js_reserve >= n + KOPF;
+}
+
 static void *js_m(void *o, size_t n)
 {
 	size_t *p;
-	(void)o;
+	size_t *z = o;
+	if (!js_platz(z, n))
+		return NULL;
 	p = malloc(n + KOPF);
 	if (p == NULL)
 		return NULL;
 	p[0] = n;
+	if (z != NULL)
+		*z += n;
 	return (char *)p + KOPF;
 }
 
@@ -2199,24 +2241,32 @@ static void *js_c(void *o, size_t anzahl, size_t g)
 
 static void js_f(void *o, void *p)
 {
-	(void)o;
-	if (p != NULL)
-		free((char *)p - KOPF);
+	size_t *z = o;
+	if (p == NULL)
+		return;
+	if (z != NULL)
+		*z -= *(const size_t *)((const char *)p - KOPF);
+	free((char *)p - KOPF);
 }
 
 static void *js_r(void *o, void *p, size_t n)
 {
-	size_t *q;
+	size_t *q, alt;
 	if (p == NULL)
 		return js_m(o, n);
 	if (n == 0) {
 		js_f(o, p);
 		return NULL;
 	}
+	alt = *(const size_t *)((const char *)p - KOPF);
+	if (n > alt && !js_platz(o, n - alt))
+		return NULL;
 	q = realloc((char *)p - KOPF, n + KOPF);
 	if (q == NULL)
 		return NULL;
 	q[0] = n;
+	if (o != NULL)
+		*(size_t *)o = *(size_t *)o - alt + n;
 	return (char *)q + KOPF;
 }
 
@@ -2231,9 +2281,11 @@ static const JSClassDef knoten_def = { .class_name = "Node", .finalizer = knoten
 static const JSClassDef ereignis_def = { .class_name = "Event", .finalizer = ereignis_endet };
 
 /* Laufzeit eines Dokuments: Grenzen und Zeitgrenze wie das Fenster */
-static JSRuntime *laufzeit_neu(jsheap *h)
+static JSRuntime *laufzeit_neu(jsheap *h, size_t *zaehler)
 {
-	JSRuntime *rt = JS_NewRuntime2(&js_speicher, NULL);
+	/* Opaque = Zähler der Laufzeit (Q3, im jsthread): die Laufzeit wird
+	 * vor dem jsthread freigegeben (js_destroythread) */
+	JSRuntime *rt = JS_NewRuntime2(&js_speicher, zaehler);
 	if (rt == NULL)
 		return NULL;
 	JS_SetRuntimeOpaque(rt, h);
@@ -2253,7 +2305,7 @@ nserror js_newheap(int timeout, jsheap **heap)
 	jsheap *h = calloc(1, sizeof *h);
 	if (h == NULL)
 		return NSERROR_NOMEM;
-	h->rt = JS_NewRuntime2(&js_speicher, NULL);
+	h->rt = JS_NewRuntime2(&js_speicher, &h->belegt);
 	if (h->rt == NULL) {
 		free(h);
 		return NSERROR_NOMEM;
@@ -2301,7 +2353,7 @@ nserror js_newthread(jsheap *heap, void *win_priv, void *doc_priv, jsthread **th
 	t->bw = win_priv;
 	t->htmlc = doc_priv;
 	t->doc = t->htmlc ? t->htmlc->document : NULL;
-	t->rt = laufzeit_neu(heap);
+	t->rt = laufzeit_neu(heap, &t->belegt);
 	t->cx = t->rt != NULL ? JS_NewContext(t->rt) : NULL;
 	if (t->cx == NULL || dom_event_listener_create(hoerer_ruft, t, &t->hoerer) != DOM_NO_ERR) {
 		if (t->cx)
@@ -2394,7 +2446,14 @@ bool js_exec(jsthread *thread, const uint8_t *txt, size_t txtlen, const char *na
 #ifdef ESP_PLATFORM
 	int64_t beginn = esp_timer_get_time();
 #endif
-	r = JS_Eval(thread->cx, quelle, txtlen, name ? name : "<skript>", JS_EVAL_TYPE_GLOBAL);
+	{
+		/* Q3: Adresse des laufenden Skripts für document.currentScript */
+		JSValue g = JS_GetGlobalObject(thread->cx);
+		JS_SetPropertyStr(thread->cx, g, "__ns_skript", name ? JS_NewString(thread->cx, name) : JS_UNDEFINED);
+		r = JS_Eval(thread->cx, quelle, txtlen, name ? name : "<skript>", JS_EVAL_TYPE_GLOBAL);
+		JS_SetPropertyStr(thread->cx, g, "__ns_skript", JS_UNDEFINED);
+		JS_FreeValue(thread->cx, g);
+	}
 #ifdef ESP_PLATFORM
 	ESP_LOGI("ns_js", "Skript %u Byte, %lld ms: %.80s", (unsigned)txtlen, (long long)((esp_timer_get_time() - beginn) / 1000),
 		 name ? name : "<skript>");

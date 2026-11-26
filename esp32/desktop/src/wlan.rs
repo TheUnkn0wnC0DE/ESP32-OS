@@ -67,7 +67,7 @@ pub fn zustand_text() -> String {
         let ip = z.ip;
         let d = z.dns;
         // Namensserver mit anzeigen: hilft, wenn Seiten nicht laden (24.11.)
-        let dns = if d == [0; 4] { "–".to_string() } else { format!("{}.{}.{}.{}", d[0], d[1], d[2], d[3]) };
+        let dns = if d == [0; 4] { "-".to_string() } else { format!("{}.{}.{}.{}", d[0], d[1], d[2], d[3]) };
         format!(
             "{} · {}.{}.{}.{} · DNS {} · {} dBm{}",
             t("Connected", "Verbunden"),

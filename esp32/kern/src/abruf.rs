@@ -27,5 +27,8 @@ pub fn text(url: &str) -> Result<(i32, String), String> {
     if frei < crate::netz::NETZ_RESERVE_INTERN {
         return Err(crate::sprache::t("Not enough memory for a connection", "Zu wenig Speicher für eine Verbindung").into());
     }
-    a.text(url)
+    // Geschützt wie Update und Sockets: ein Zwangsbeenden während TLS darf
+    // den Faden nicht in esp_http_client/mbedTLS/lwIP anhalten (Sperren,
+    // Socket, Puffer im Heap des Programms) – er endet nach dem Abruf
+    crate::geschuetzt(|| a.text(url))
 }

@@ -15,6 +15,7 @@
 
 use crate::dateimanager;
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering::Relaxed};
+use kern::sprache::t;
 use kern::{datei, sys};
 use std::io::{Read, Seek, SeekFrom};
 
@@ -154,22 +155,25 @@ impl<R: Read> WavLeser<R> {
     /// Kopf lesen bis zum Anfang der Daten (Blöcke „fmt “ und „data“).
     pub fn neu(mut d: R) -> Result<WavLeser<R>, String> {
         let mut k = [0u8; 12];
-        d.read_exact(&mut k).map_err(|_| "zu kurz".to_string())?;
+        d.read_exact(&mut k).map_err(|_| t("too short", "zu kurz").to_string())?;
         if &k[0..4] != b"RIFF" || &k[8..12] != b"WAVE" {
-            return Err("keine WAV-Datei".into());
+            return Err(t("not a WAV file", "keine WAV-Datei").into());
         }
         let (mut rate, mut kanaele, mut bits, mut format) = (0u32, 0usize, 0u16, 0u16);
         loop {
             let mut b = [0u8; 8];
-            d.read_exact(&mut b).map_err(|_| "kein data-Block".to_string())?;
+            d.read_exact(&mut b).map_err(|_| t("no data block", "kein data-Block").to_string())?;
             let laenge = u32::from_le_bytes([b[4], b[5], b[6], b[7]]) as u64;
             match &b[0..4] {
                 b"fmt " => {
-                    let mut f = vec![0u8; laenge as usize];
-                    d.read_exact(&mut f).map_err(|_| "fmt zu kurz".to_string())?;
-                    if f.len() < 16 {
-                        return Err("fmt zu kurz".into());
+                    // nur die ersten 40 Byte lesen (alle bekannten Felder), den
+                    // Rest überspringen: die Länge kommt aus der Datei
+                    if laenge < 16 {
+                        return Err(t("fmt block too short", "fmt zu kurz").into());
                     }
+                    let mut f = vec![0u8; laenge.min(40) as usize];
+                    d.read_exact(&mut f).map_err(|_| t("fmt block too short", "fmt zu kurz").to_string())?;
+                    std::io::copy(&mut (&mut d).take(laenge - f.len() as u64), &mut std::io::sink()).map_err(|_| t("fmt block too short", "fmt zu kurz").to_string())?;
                     format = u16::from_le_bytes([f[0], f[1]]);
                     kanaele = usize::from(u16::from_le_bytes([f[2], f[3]]));
                     rate = u32::from_le_bytes([f[4], f[5], f[6], f[7]]);
@@ -181,14 +185,14 @@ impl<R: Read> WavLeser<R> {
                 b"data" => {
                     // 1 = PCM, 0xFFFE = WAVE_FORMAT_EXTENSIBLE (PCM-Untertyp)
                     if !matches!(format, 1 | 0xFFFE) || !matches!(bits, 8 | 16) || !(1..=2).contains(&kanaele) || rate == 0 {
-                        return Err(format!("nicht unterstützt (Format {format}, {bits} Bit, {kanaele} Kanäle)"));
+                        return Err(format!("{} ({format}, {bits} bit, {kanaele} {})", t("not supported", "nicht unterstützt"), t("channels", "Kanäle")));
                     }
                     return Ok(WavLeser { d, rate, kanaele, bits, rest: laenge, roh: Vec::new() });
                 }
                 _ => {
                     // anderer Block (LIST, fact …) überspringen
                     let n = laenge + laenge % 2;
-                    std::io::copy(&mut (&mut d).take(n), &mut std::io::sink()).map_err(|_| "Block zu kurz".to_string())?;
+                    std::io::copy(&mut (&mut d).take(n), &mut std::io::sink()).map_err(|_| t("block too short", "Block zu kurz").to_string())?;
                 }
             }
         }

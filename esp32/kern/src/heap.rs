@@ -57,6 +57,12 @@ pub struct Heap {
     belegt: AtomicUsize,
     spitze: AtomicUsize,
     sperre: AtomicBool,
+    /// Q3: verworfen (Zwangsbeenden, während die Sperre gesetzt war): Belegen
+    /// liefert null, Freigeben tut nichts – der Bereich geht als Ganzes an
+    /// den Pool zurück, niemand wartet mehr auf die Sperre.
+    verworfen: AtomicBool,
+    /// Faden (Kontext-Zeiger), der die Sperre zuletzt nahm (Diagnose).
+    halter: AtomicUsize,
 }
 
 // SAFETY: Zugriff auf `frei` und `klassen` nur unter `sperre`.
@@ -162,18 +168,24 @@ impl Heap {
                 belegt: AtomicUsize::new(0),
                 spitze: AtomicUsize::new(0),
                 sperre: AtomicBool::new(false),
+                verworfen: AtomicBool::new(false),
+                halter: AtomicUsize::new(0),
             });
             h
         }
     }
 
-    fn sperren(&self) {
+    /// Sperre nehmen; false = Heap verworfen (dann ohne Sperre zurück).
+    fn sperren(&self) -> bool {
         let mut runden = 0u32;
         while self
             .sperre
             .compare_exchange_weak(false, true, Ordering::Acquire, Ordering::Relaxed)
             .is_err()
         {
+            if self.verworfen.load(Ordering::Acquire) {
+                return false;
+            }
             runden += 1;
             if runden < 64 {
                 core::hint::spin_loop();
@@ -184,6 +196,28 @@ impl Heap {
                 std::thread::yield_now();
             }
         }
+        if self.verworfen.load(Ordering::Acquire) {
+            self.entsperren();
+            return false;
+        }
+        self.halter.store(crate::prozess::faden() as usize, Ordering::Relaxed);
+        true
+    }
+
+    /// Heap verwerfen (Zwangsbeenden: ein angehaltener Faden kann die
+    /// Sperre halten). Danach liefert `alloc` null und `free` tut nichts.
+    pub fn verwerfen(&self) {
+        self.verworfen.store(true, Ordering::Release);
+    }
+
+    /// Wurde der Heap verworfen?
+    pub fn ist_verworfen(&self) -> bool {
+        self.verworfen.load(Ordering::Acquire)
+    }
+
+    /// Kontext des Fadens, der die Sperre zuletzt nahm (0 = keiner).
+    pub fn sperre_halter(&self) -> usize {
+        self.halter.load(Ordering::Relaxed)
     }
 
     fn entsperren(&self) {
@@ -199,7 +233,9 @@ impl Heap {
     pub fn alloc(&self, groesse: usize, align: usize) -> *mut u8 {
         let align = align.max(GRAN);
         let groesse = groesse.max(1);
-        self.sperren();
+        if !self.sperren() {
+            return ptr::null_mut();
+        }
         // SAFETY: Freilisten nur unter Sperre, Knoten liegen in der Arena.
         let p = unsafe {
             // kleiner Block ohne besondere Ausrichtung: aus seiner Klasse
@@ -371,7 +407,9 @@ impl Heap {
             let b = *((p as usize - W) as *const usize);
             (b, *(b as *const usize))
         };
-        self.sperren();
+        if !self.sperren() {
+            return;
+        }
         // SAFETY: Freilisten nur unter Sperre.
         unsafe {
             self.belegt.fetch_sub(s, Ordering::Relaxed);
@@ -430,7 +468,9 @@ impl Heap {
     /// Anzahl freier Blöcke nach dem Zusammenführen der kleinen Blöcke
     /// (Prüfung des Verschmelzens).
     pub fn freie_bloecke(&self) -> usize {
-        self.sperren();
+        if !self.sperren() {
+            return 0;
+        }
         let mut n = 0;
         // SAFETY: unter Sperre.
         unsafe {
@@ -450,7 +490,9 @@ impl Heap {
     /// Browser bei zerstückeltem Heap – vorher zählte nur der freie Platz
     /// insgesamt, die Belegung scheiterte und beendete das Programm.)
     pub fn groesster_freier_block(&self) -> usize {
-        self.sperren();
+        if !self.sperren() {
+            return 0;
+        }
         let mut g = 0;
         // SAFETY: unter Sperre.
         unsafe {
@@ -506,6 +548,30 @@ mod tests {
         assert_eq!(h.belegt(), 0);
         assert_eq!(h.freie_bloecke(), 1);
         assert!(h.spitze() > 0);
+    }
+
+    /// Q3: Ein Heap, dessen Sperre ein (zwangsweise angehaltener) Faden hält,
+    /// wird verworfen: wer auf die Sperre wartet, kommt zurück (Belegen null),
+    /// Freigeben tut nichts, der Halter wird gemeldet.
+    #[test]
+    fn verworfener_heap_wartet_nicht() {
+        let (_v, h) = bereich(64 * 1024);
+        let h: &'static Heap = unsafe { &*h };
+        let p = h.alloc(100, 8);
+        assert!(!p.is_null());
+        // Sperre „hält ein angehaltener Faden“: setzen und nie lösen
+        assert!(h.sperren());
+        assert!(h.gesperrt());
+        let wartet = std::thread::spawn(move || h.alloc(64, 8) as usize);
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        assert!(!wartet.is_finished(), "wartet auf die Sperre");
+        h.verwerfen();
+        assert_eq!(wartet.join().unwrap(), 0, "nach dem Verwerfen: null statt warten");
+        assert!(h.alloc(8, 8).is_null());
+        unsafe { h.free(p) }; // kehrt zurück, ohne zu warten
+        assert_eq!(h.freie_bloecke(), 0);
+        assert_eq!(h.groesster_freier_block(), 0);
+        assert!(h.ist_verworfen());
     }
 
     /// O1: Zerstückelt ist viel frei, aber kein grosser Block am Stück –

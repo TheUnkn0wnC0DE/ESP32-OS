@@ -418,7 +418,7 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
     eintrag!("shell", kolibri::shell, 1024),
     eintrag!("matrix", kolibri::matrix, 256),
     // Browser (B1): NetSurf + QuickJS; Heap für Seiten, Bilder und die
-    // JS-Laufzeit (Grenze 4 MB, netsurf/build.rs), Stapel für Layout und
+    // JS-Laufzeit (bis 6 MB, 3 MB Reserve für die Seite, netsurf/build.rs), Stapel für Layout und
     // JS (Grenze 192 KB). 10 MB: mehr lässt der PSRAM neben den Diensten
     // des Desktops nicht zu (STATUS B1 „Speicher“)
     kern::ProgrammEintrag { name: "browser", heap_kb: 10 * 1024, stapel_kb: 384, start: netsurf::programm },

@@ -84,7 +84,7 @@ const NORMAL: [&str; 4] = ["1234567890'^", "qwertzuiopü¨", "asdfghjklöä$", "
 const GROSS: [&str; 4] = ["+\"*ç%&/()=?`", "QWERTZUIOPè!", "ASDFGHJKLéà£", ">YXCVBNM;:_"];
 const NORMAL_US: [&str; 4] = ["1234567890-=", "qwertyuiop[]", "asdfghjkl;'\\", "`zxcvbnm,./"];
 const GROSS_US: [&str; 4] = ["!@#$%^&*()_+", "QWERTYUIOP{}", "ASDFGHJKL:\"|", "~ZXCVBNM<>?"];
-const SONDER: [&str; 4] = ["¦@#°§¬|¢´~{}", "[]€\\<>=+*/«»", "&%!?;:\"'`^-_", "…·µ²³½¼¿¡ß"];
+const SONDER: [&str; 4] = ["¦@#°§¬|¢´~{}", "[]€\\<>=+*/«»", "&%!?;:\"'`^-_", "¾·µ²³½¼¿¡ß"];
 
 /// Tasten einer Ebene: (Aktion, Beschriftung, Breite in Einheiten).
 fn tasten(e: Ebene) -> Vec<Vec<(Aktion, String, i32)>> {
