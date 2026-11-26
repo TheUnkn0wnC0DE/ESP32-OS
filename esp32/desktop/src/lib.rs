@@ -113,6 +113,11 @@ pub fn messung_holen() -> Messung {
 pub struct Desktop {
     /// Eingespielte Finger: (ms seit Start, Finger), absteigend sortiert.
     autopilot: Vec<(u64, [Option<(i32, i32)>; 2])>,
+    /// Q4 (Dauertest): Zeitpunkte (ms, absteigend), an denen der Autopilot
+    /// alle noch offenen Programme beendet (Ereignis `t:0:0:9`, Anfang jeder
+    /// Runde) – ein daneben gegangener Tipp hinterlässt sonst offene
+    /// Fenster, die sich über die Runden summieren.
+    ap_aufraeumen: Vec<u64>,
     ap_finger: [Option<(i32, i32)>; 2],
     /// Die Firmware rückt den Autopiloten selbst vor (`fremde_eingabe`).
     ap_extern: bool,
@@ -138,6 +143,7 @@ impl Desktop {
     pub fn neu(uhr: fn() -> u64) -> Desktop {
         Desktop {
             autopilot: Vec::new(),
+            ap_aufraeumen: Vec::new(),
             ap_finger: [None, None],
             ap_extern: false,
             gesperrt: false,
@@ -172,10 +178,22 @@ impl Desktop {
     /// Eintrag und geht durch die Gestenerkennung wie echte Berührungen.
     pub fn autopilot(&mut self, skript: &str) {
         konfig::AUTOPILOT_AKTIV.store(true, Relaxed);
+        self.ap_aufraeumen = skript
+            .split(',')
+            .filter_map(|t| {
+                let v: Vec<i64> = t.split(':').filter_map(|z| z.trim().parse().ok()).collect();
+                (v.len() == 4 && v[3] == 9).then_some(v[0] as u64)
+            })
+            .collect();
+        self.ap_aufraeumen.sort_unstable();
+        self.ap_aufraeumen.reverse();
         self.autopilot = skript
             .split(',')
             .filter_map(|t| {
                 let v: Vec<i64> = t.split(':').filter_map(|z| z.trim().parse().ok()).collect();
+                if v.len() == 4 && v[3] == 9 {
+                    return None;
+                }
                 let f = match v.len() {
                     4 if v[3] != 0 => [Some((v[1] as i32, v[2] as i32)), None],
                     4 => [None, None],
@@ -195,6 +213,14 @@ impl Spiel for Desktop {
         let ms = ((self.uhr)() - self.start_us) / 1000;
         if !self.ap_extern {
             self.ap_vorruecken();
+        }
+        if self.ap_aufraeumen.last().is_some_and(|&t| ms >= t) {
+            self.ap_aufraeumen.pop();
+            let offen: Vec<(u32, &str)> = kern::liste().iter().filter(|p| !p.name.starts_with('@')).map(|p| (p.pid, p.name)).collect();
+            for &(pid, _) in &offen {
+                kern::beende(pid);
+            }
+            kern::sys::debug_text(&format!("Autopilot: Runde beginnt, {} Programme offen geblieben {:?}", offen.len(), offen.iter().map(|o| o.1).collect::<Vec<_>>()));
         }
         let echt = [input.touch[0], input.touch.get(1).copied().flatten()].map(|t| t.map(|(x, y)| (i32::from(x), i32::from(y))));
         let ap = if self.gesperrt { [None, None] } else { self.ap_finger };

@@ -126,6 +126,23 @@ fn programm_heap() -> Option<(&'static Heap, *mut crate::prozess::Faden)> {
     }
 }
 
+/// M8 (Lecksuche): Bytes, die gerade im System-Heap belegt sind (über
+/// diesen Allokator; Board und PC). Ein PC-Test öffnet und schliesst
+/// Programme und vergleicht den Stand.
+static SYSTEM_BYTES: core::sync::atomic::AtomicIsize = core::sync::atomic::AtomicIsize::new(0);
+
+/// Belegte Bytes im System-Heap über [`KernAlloc`] (siehe [`SYSTEM_BYTES`]).
+pub fn system_belegt() -> isize {
+    SYSTEM_BYTES.load(Ordering::Relaxed)
+}
+
+fn system_zaehlen(p: *mut u8, n: usize) -> *mut u8 {
+    if !p.is_null() {
+        SYSTEM_BYTES.fetch_add(n as isize, Ordering::Relaxed);
+    }
+    p
+}
+
 /// `#[global_allocator]` des Systems (Board und PC).
 pub struct KernAlloc;
 
@@ -160,14 +177,14 @@ unsafe impl GlobalAlloc for KernAlloc {
                 }
             }
             // SAFETY: gültiges Layout laut Vertrag.
-            let p = unsafe { System.alloc(l) };
+            let p = system_zaehlen(unsafe { System.alloc(l) }, l.size());
             if !p.is_null() {
                 not_eintragen(p, l, pid);
             }
             return p;
         }
         // SAFETY: gültiges Layout laut Vertrag.
-        unsafe { System.alloc(l) }
+        system_zaehlen(unsafe { System.alloc(l) }, l.size())
     }
 
     unsafe fn alloc_zeroed(&self, l: Layout) -> *mut u8 {
@@ -181,7 +198,7 @@ unsafe impl GlobalAlloc for KernAlloc {
             return p;
         }
         // SAFETY: gültiges Layout.
-        unsafe { System.alloc_zeroed(l) }
+        system_zaehlen(unsafe { System.alloc_zeroed(l) }, l.size())
     }
 
     unsafe fn dealloc(&self, p: *mut u8, l: Layout) {
@@ -190,6 +207,7 @@ unsafe impl GlobalAlloc for KernAlloc {
             Some(h) => unsafe { h.free(p) },
             None => {
                 not_austragen(p);
+                SYSTEM_BYTES.fetch_sub(l.size() as isize, Ordering::Relaxed);
                 // SAFETY: p stammt aus dem System-Heap.
                 unsafe { System.dealloc(p, l) }
             }

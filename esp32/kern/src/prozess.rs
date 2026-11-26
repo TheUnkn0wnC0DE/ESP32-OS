@@ -427,7 +427,18 @@ pub fn starte_mit(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32, S
     starte_mit_einmal(e, argumente)
 }
 
+/// M8 (Dauertest 26.11.): unter so viel freiem System-Heap startet kein
+/// Programm mehr (Systemdienste „@…“ ausgenommen – die Absturzmeldung muss
+/// noch erscheinen). Bei leerem System-Heap bricht eine Belegung des Kerns
+/// das ganze System ab; im normalen Dauertest-Betrieb lag der Tiefstwert bei
+/// 835 KB.
+pub const START_RESERVE: usize = 512 * 1024;
+
 fn starte_mit_einmal(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32, StartFehler> {
+    if !e.name.starts_with('@') && system_frei() < START_RESERVE {
+        crate::sys::debug_text(&format!("Start {}: System-Heap unter {} KB – kein Start", e.name, START_RESERVE / 1024));
+        return Err(StartFehler::KeinSpeicher);
+    }
     kern_abschnitt(|| {
         let k = kern();
         let laenge = (e.heap_kb + e.stapel_kb) * 1024 + MIN_BEREICH + 4096;

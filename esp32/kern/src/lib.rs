@@ -36,7 +36,7 @@ pub mod wlan;
 pub mod zeit;
 pub mod zeiger;
 
-pub use alloc::{KernAlloc, notbelegungen, regionen};
+pub use alloc::{KernAlloc, notbelegungen, regionen, system_belegt};
 #[cfg(not(target_os = "espidf"))]
 pub use plattform::PC;
 pub use plattform::{Lauf, Plattform, ProzessEnde};

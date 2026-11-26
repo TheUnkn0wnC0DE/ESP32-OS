@@ -479,8 +479,9 @@ fn laden(z: &mut Zustand) {
     sys::debug_text(&format!("Wetter: {} – {:?}", o.name, z.wetter.as_ref().map(|w| (w.temp, w.code, w.tage.len()))));
 }
 
-fn suchen(z: &mut Zustand) {
-    let Some(q) = crate::dateimanager::name_dialog(t("Search place", "Ort suchen"), "") else { return };
+/// Ortssuche; false = abgebrochen (Dialog geschlossen).
+fn suchen(z: &mut Zustand) -> bool {
+    let Some(q) = crate::dateimanager::name_dialog(t("Search place", "Ort suchen"), "") else { return false };
     z.meldung = Some(t("Searching ...", "Suche ...").to_string());
     zeichnen(z);
     // Board 25.11.: „zuerich“ findet Open-Meteo nicht (nur „Zürich“) – ohne
@@ -491,21 +492,22 @@ fn suchen(z: &mut Zustand) {
                 Some(v) if !v.is_empty() => {
                     z.treffer = v;
                     z.meldung = None;
-                    return;
+                    return true;
                 }
                 _ => z.meldung = Some(format!("{} \"{q}\"", t("No place found for", "Kein Ort gefunden für"))),
             },
             Ok((st, _)) => {
                 z.meldung = Some(format!("{} (HTTP {st})", t("Search not available", "Suche nicht erreichbar")));
-                return;
+                return true;
             }
             Err(e) => {
                 z.meldung = Some(abruf_fehler(&e));
-                return;
+                return true;
             }
         }
         sys::debug_text(&format!("Wetter: Suche {i} \"{frage}\" ohne Treffer"));
     }
+    true
 }
 
 /// Suchtexte: wie getippt, dann ue/ae/oe als Umlaut (falls anders).
@@ -525,7 +527,11 @@ pub fn programm() {
     sys::maske(0x07);
     zeichnen(&z);
     if kern::argumente().trim() == "ort" || z.ort.is_none() {
-        suchen(&mut z);
+        // erste Suche ohne gespeicherten Ort abgebrochen: nichts anzuzeigen,
+        // die App endet (Dauertest 26.11.: das leere Fenster blieb offen)
+        if !suchen(&mut z) && z.ort.is_none() {
+            return;
+        }
         zeichnen(&z);
     } else {
         laden(&mut z);
@@ -539,7 +545,7 @@ pub fn programm() {
                 match id {
                     1 => return,
                     K_ORT => {
-                        suchen(&mut z);
+                        let _ = suchen(&mut z);
                         zeichnen(&z);
                     }
                     K_NEU => {

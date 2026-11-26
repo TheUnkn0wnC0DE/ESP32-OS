@@ -1527,6 +1527,38 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Grössenklassen für grosse Blöcke oder Baum), Messung mit dem Zähler
   `heap::zaehler` vorher/nachher, Board-Lauf br ohne Stillstand.
 
+- [ ] **M8 Leerer System-Heap bricht das System ab** (Fund Q4, Dauertest
+  26.11.) – im ersten 75-min-Lauf blieben zwei Wetter-Apps offen (Autopilot
+  schloss das leere Fenster nach abgebrochener Ortssuche nicht; behoben: die
+  App endet dann), der System-PSRAM fiel von ~2 MB auf 38 KB. Danach wies der
+  Kern Fenster richtig ab („zu wenig Systemspeicher“), aber das Startmenü
+  stürzte ab („Speicher voll“) und eine Belegung von 9216 Bytes im
+  System-Heap (vermutlich das 48×48-Symbol der Absturzmeldung) endete in
+  `abort()` → Neustart nach 53 min. Ziel: unter einer Reserve keine
+  Programme mehr starten und Meldungen ohne neue Belegung im System-Heap
+  zeigen; Belegungen des Kerns im System-Heap auf Fehlschlag prüfen statt
+  abzubrechen. Nachweis: Dauertest mit absichtlich vollem System-Heap.
+  Stand 26.11. nachmittags:
+  - Kein Programmstart unter 512 KB System-Heap (Systemdienste „@…“
+    ausgenommen), Test `kein_start_bei_knappem_system_heap`.
+  - Dauertest 2 (Wetter behoben): wieder abort() nach 66 min. Backtrace mit
+    dem gesicherten ELF: `desktop::shell::meldung` → `symbol()` kopiert das
+    48×48-Symbol im Kern-Abschnitt (System-Heap). Behoben: unter Reserve
+    entpackt das Programm das Symbol selbst (eigener Heap, kein
+    Zwischenspeicher); `kern::sys::system_belegung_moeglich`.
+  - Ursachen des Absinkens: (a) am Board blieb einmal `basic_gui` offen
+    (Autopilot ist zeitgesteuert, ein Tipp ging nach dem Browser daneben) –
+    jetzt beendet der Autopilot zu Beginn jeder Runde alle offenen Programme
+    und schreibt ihre Namen ins Log (Ereignis `t:0:0:9`, Test
+    `autopilot_aufraeumen`); (b) ein langsames Absinken des freien PSRAM um
+    etwa 110 KB je Runde, auch in den Läufen von 1.0.3 (m4f/m4g: 3,4 → 0,8
+    MB in 72 min). PC-Test `leck_system` (i686, alle Programme 4× öffnen und
+    über das Kreuz schliessen, Zähler `kern::system_belegt`): **kein
+    Programm lässt im Kern-Allokator etwas zurück** – das Absinken am Board
+    liegt ausserhalb (ESP-IDF/Treiber: TLS, HTTP, JPEG, Audio, …). Die
+    Speicherwacht schreibt dazu jetzt „Kern-System … KB“; der nächste
+    Dauertest zeigt, ob der Kern-Anteil gleich bleibt.
+
 ## S. Bedienung (Nutzer 24.11. abends; nach den Speicher-Punkten M, Stabilität hat Vorrang)
 
 - [x] **S1 Taskleiste im selben Bild** – Fenster und Eintrag in der

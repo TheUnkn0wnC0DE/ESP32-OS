@@ -92,6 +92,7 @@ static PROGRAMME: &[ProgrammEintrag] = &[
     ProgrammEintrag { name: "gierig", heap_kb: 256, stapel_kb: 64, start: gierig },
     ProgrammEintrag { name: "selbst", heap_kb: 64, stapel_kb: 64, start: selbst_ende },
     ProgrammEintrag { name: "faden", heap_kb: 256, stapel_kb: 64, start: mit_faden },
+    ProgrammEintrag { name: "@dienst", heap_kb: 64, stapel_kb: 64, start: selbst_ende },
 ];
 
 fn init() -> std::sync::MutexGuard<'static, ()> {
@@ -119,6 +120,23 @@ fn nichts_mehr_offen() {
         assert!(t.elapsed() < Duration::from_secs(10), "Reste: {:?}", kern::liste());
         std::thread::sleep(Duration::from_millis(5));
     }
+}
+
+/// M8: unter `START_RESERVE` freiem System-Heap startet kein Programm
+/// (Fehler „kein Speicher“), Systemdienste „@…“ starten weiter.
+#[test]
+fn kein_start_bei_knappem_system_heap() {
+    let _g = init();
+    kern::grafik::TEST_SYSTEM_FREI.store(kern::prozess::START_RESERVE - 100 * 1024, Ordering::SeqCst);
+    let r = kern::starte_name("normal");
+    let d = kern::starte_name("@dienst");
+    kern::grafik::TEST_SYSTEM_FREI.store(usize::MAX, Ordering::SeqCst);
+    assert!(matches!(r, Err(kern::StartFehler::KeinSpeicher)), "{r:?}");
+    let d = d.expect("Systemdienst startet");
+    assert_eq!(warte_ende(d), Ende::Normal);
+    let pid = kern::starte_name("normal").expect("wieder genug Speicher");
+    assert_eq!(warte_ende(pid), Ende::Normal);
+    nichts_mehr_offen();
 }
 
 #[test]

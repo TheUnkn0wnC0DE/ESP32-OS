@@ -11,6 +11,18 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **26.11., 13:30 – Q3 abgehakt, Q4 läuft.** Q3: br11 30/30 Seiten, 0
+  vorzeitig, JS-Fehler 61 → 17; offen: DuckDuckGo-Logo am Board
+  (Abweichung). Test-Notizen gelöscht (3 Dateien, Log in
+  docs/nachweise/q1). Release-Paket 1.0.4 lokal gebaut und geprüft
+  (nicht veröffentlicht), Release-Text docs/release/v1.0.4.md.
+  Dauertest 1 (75 min): **nach 53 min Neustart** – zwei nie geschlossene
+  Wetter-Apps (Autopilot schloss das leere Fenster nach abgebrochener
+  Ortssuche nicht) leerten den System-PSRAM, danach abort() bei 9 KB.
+  Behoben: Wetter-App endet, wenn die erste Ortssuche ohne Ort abgebrochen
+  wird; kein Programmstart unter 512 KB System-Heap (M8, Test). Läuft:
+  Dauertest 2, alle Tests.
+
 - **26.11., 09:20 – gepusht main bc1ae0c.** Auf origin/main lag dein PR
   „Add community health files (#2)“ (CODE_OF_CONDUCT, CONTRIBUTING,
   SECURITY, Vorlagen) – in esp32-os übernommen, Spiegel-Commit darauf

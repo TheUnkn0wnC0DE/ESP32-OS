@@ -1,0 +1,18 @@
+Release-Paket v1.0.4 (release_paket.ps1 -Version 1.0.4, 26.11.2026, nicht veröffentlicht)
+Release-Pruefung esp32os.elf: keine WLAN-Zugangsdaten
+Release-Pruefung esp32os.bin: keine WLAN-Zugangsdaten
+Release-Pruefung esp32os.bin: keine lokalen Pfade
+Release-Pruefung doomapp.elf: keine WLAN-Zugangsdaten
+Release-Pruefung doomapp.bin: keine WLAN-Zugangsdaten
+Release-Pruefung doomapp.bin: keine lokalen Pfade
+Release-Pruefung quakeapp.elf: keine WLAN-Zugangsdaten
+Release-Pruefung quakeapp.bin: keine WLAN-Zugangsdaten
+Release-Pruefung quakeapp.bin: keine lokalen Pfade
+2f2fc9f130c53df0f4eeaee63c5218d7326d26b6cbf829951479692e32be31bb  bootloader.bin
+9cea60dd2eedb368a8a2602bcddd9dcf6dc59fa0c56469c541bc29adb2026ec2  doomapp.bin
+cfb487e68123841df7500592ef5f80b86a189161a98a1cf408834b361cbbcf11  esp32os.bin
+7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f  otadata-leer.bin
+caac202b70ef8688d9b8536a5fe7d0c97b6ee698ba9b4f649155ca200f9b9c1e  partition-table.bin
+0c9a3ed0091b1b69aadab62ad3af7702d558a75898c672bb05fcfcecfaf44b48  quakeapp.bin
+Grössen: esp32os.bin 5874496 (94,4 % von 6225920), doomapp.bin 1742032, quakeapp.bin 1757552, bootloader.bin 24160, partition-table.bin 3072, otadata-leer.bin 8192
+Private Suchbegriffe: 2 Treffer, beide falsch-positiv (Cookie-Attribut in NetSurf, Wortteil in Quake), wie in 1.0.2 und 1.0.3.

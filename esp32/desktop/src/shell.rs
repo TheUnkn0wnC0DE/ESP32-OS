@@ -97,6 +97,15 @@ static SYMBOL_CACHE: Mutex<Vec<(usize, u32, Rgba)>> = Mutex::new(Vec::new());
 /// Symbol `i` in Grösse `g`.
 pub fn symbol(i: usize, g: u32) -> Rgba {
     let i = i.min(erzeugt::SYMBOLE_ANZAHL - 1);
+    // M8 (Dauertest 26.11.): Kopien im Kern-Abschnitt liegen im System-Heap;
+    // war der leer, brach eine 48×48-Kopie (9216 Bytes) für die Meldung das
+    // ganze System ab. Ohne Platz: selbst entpacken (Heap des Programms),
+    // ohne Zwischenspeicher.
+    let bytes = (g as usize * g as usize).saturating_mul(4) * 2;
+    if !kern::sys::system_belegung_moeglich(bytes) {
+        let b = symbol_entpacken(&erzeugt::SYMBOLE_32, i, 32);
+        return if g == 32 { b } else { kolibri::libimg::skalieren(&b, g, g, true) };
+    }
     let gespeichert = kern::kern_abschnitt(|| SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).iter().find(|(k, gr, _)| *k == i && *gr == g).map(|(_, _, b)| b.clone()));
     if let Some(b) = gespeichert {
         return b;

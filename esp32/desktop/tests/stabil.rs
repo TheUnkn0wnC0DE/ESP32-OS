@@ -37,6 +37,9 @@ enum Schritt {
     Ziehen(i32, i32, i32, i32),
     /// Warten (Board-Zeit in ms).
     Warte(u64),
+    /// Nur am Board antippen (SC: Aufwecken aus dem Ruhezustand – am PC
+    /// schläft nichts, die Firmware verschluckt die Weck-Berührung).
+    NurBoard(i32, i32),
 }
 
 struct Lauf {
@@ -184,10 +187,34 @@ fn menue_auf_zu(l: &mut Lauf, n: usize) {
     }
 }
 
+/// SC (Stabilitätsrunde nach Teil C): Startmenü → Ruhezustand, 20 s
+/// schlafen, Antippen weckt (nur am Board), danach weiter.
+fn ruhezustand(l: &mut Lauf) {
+    use core::sync::atomic::Ordering::Relaxed;
+    desktop::konfig::RUHE_JETZT.store(false, Relaxed);
+    l.tipp(START.0, START.1);
+    l.warte(1200);
+    let (x, y) = desktop::shell::menue_eintrag_mitte("@ruhe").expect("Ruhezustand im Menü");
+    l.tipp(x, y);
+    l.warte(20_000);
+    assert!(desktop::konfig::RUHE_JETZT.load(Relaxed), "Menüeintrag fordert den Ruhezustand an");
+    desktop::konfig::RUHE_JETZT.store(false, Relaxed);
+    l.schritte.push(Schritt::NurBoard(320, 180));
+    l.warte(5_000);
+    assert!(!sys::fenster_liste().iter().any(|f| f.titel == "@menu"), "Menü nach dem Ruhezustand zu");
+    let a = abstuerze();
+    assert!(a.is_empty(), "Ruhezustand: Abstürze {a:?}");
+}
+
 fn board_autopilot(schritte: &[Schritt], runden: usize) -> String {
     let mut ev = Vec::new();
     let mut t = BEGINN_MS;
     for _ in 0..runden {
+        // Anfang jeder Runde: noch offene Programme beenden (Desktop::autopilot,
+        // Ereignis `t:0:0:9`) – ein daneben gegangener Tipp am Board soll sich
+        // nicht über die Runden summieren; die Namen stehen im Log
+        ev.push(format!("{t}:0:0:9"));
+        t += 3_000;
         for s in schritte {
             match *s {
                 Schritt::Tipp(x, y) => {
@@ -204,6 +231,11 @@ fn board_autopilot(schritte: &[Schritt], runden: usize) -> String {
                     t += 900;
                 }
                 Schritt::Warte(ms) => t += ms,
+                Schritt::NurBoard(x, y) => {
+                    ev.push(format!("{t}:{x}:{y}:1"));
+                    ev.push(format!("{}:{x}:{y}:0", t + 120));
+                    t += 300;
+                }
             }
         }
     }
@@ -239,11 +271,13 @@ fn stabilitaetsrunde() {
     }
     programm(&mut l, "system", "taskmanager");
     menue_auf_zu(&mut l, 5);
+    ruhezustand(&mut l);
     let ap = board_autopilot(&l.schritte, RUNDEN);
     let dauer: u64 = l.schritte.iter().map(|s| match s {
         Schritt::Tipp(..) => 300,
         Schritt::Ziehen(..) => 900,
         Schritt::Warte(ms) => *ms,
+        Schritt::NurBoard(..) => 300,
     }).sum();
     eprintln!("Runde am Board: {} s, {RUNDEN} Runden = {} min, {} Ereignisse", dauer / 1000, dauer * RUNDEN as u64 / 60_000, ap.split(',').count());
     assert!(dauer * RUNDEN as u64 >= 30 * 60_000, "Board-Lauf unter 30 min");

@@ -43,7 +43,8 @@ pub fn zeile(sekunden: u64) -> String {
         .collect();
     let pool = crate::kern_board::pool_stand().map_or(String::new(), |(f, b, g)| format!(" Pool {f}/{g} KB (Block {b})"));
     format!(
-        "SPEICHER t={sekunden}s intern frei {i} KB (Block {ib}, Min {imin}) PSRAM frei {p} KB (Block {pb}, Min {pmin}){pool} | {}",
+        "SPEICHER t={sekunden}s intern frei {i} KB (Block {ib}, Min {imin}) PSRAM frei {p} KB (Block {pb}, Min {pmin}){pool} Kern-System {} KB | {}",
+        kern::system_belegt() / 1024,
         programme.join(", ")
     )
 }

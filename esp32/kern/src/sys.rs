@@ -1106,6 +1106,14 @@ pub fn heap_reserve(groesse_heap: usize) -> usize {
     (groesse_heap / 16).min(256 * 1024)
 }
 
+/// M8: Passt eine Belegung von `n` Bytes noch in den System-Heap, ohne
+/// dessen Reserve ([`crate::grafik::RESERVE`]) anzugreifen? Für
+/// Belegungen in [`crate::kern_abschnitt`] (dort bricht ein Fehlschlag das
+/// ganze System ab, nicht nur das Programm).
+pub fn system_belegung_moeglich(n: usize) -> bool {
+    n.checked_add(crate::grafik::RESERVE).is_some_and(|b| prozess::system_frei() >= b)
+}
+
 /// Freier Platz im Heap des eigenen Programms (ohne Blockköpfe und
 /// Zerstückelung zu rechnen); None ausserhalb eines Programms.
 pub fn programm_speicher_frei() -> Option<usize> {
