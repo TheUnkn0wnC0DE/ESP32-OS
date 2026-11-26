@@ -321,6 +321,18 @@ pub(crate) fn ende_angefordert() -> bool {
 /// Programm-Faden aufruft. Regel: Alles, was ein Programm überlebt (Kern-
 /// Tabellen, Warteschlangen, globale Puffer), wird nur hier belegt – der
 /// Programm-Heap verschwindet beim Ende als Ganzes.
+/// Q4 (internes RAM-Leck): Ergebnis eines Kern-Abschnitts in den Heap des
+/// aufrufenden Programms kopieren und das Original gleich freigeben. Im
+/// Kern-Abschnitt belegte Daten liegen im System-Heap (kleine am Board im
+/// internen RAM); hielt ein Programm sie bei seinem Ende, blieben sie dort
+/// liegen – am Board endet ein Programm ohne Abwickeln. Ausserhalb eines
+/// Kern-Abschnitts aufrufen.
+pub fn ins_programm<T: Clone>(v: T) -> T {
+    let kopie = v.clone();
+    drop(v);
+    kopie
+}
+
 pub fn kern_abschnitt<R>(f: impl FnOnce() -> R) -> R {
     let fd = faden();
     if !fd.is_null() {
@@ -864,9 +876,9 @@ pub fn eigene_pid() -> Option<u32> {
 /// Startparameter des laufenden Programms.
 pub fn argumente() -> String {
     let Some(pid) = eigene_pid() else { return String::new() };
-    kern_abschnitt(|| {
+    ins_programm(kern_abschnitt(|| {
         sperre(&kern().prozesse).iter().find(|p| p.pid == pid).map(|p| p.argumente.clone()).unwrap_or_default()
-    })
+    }))
 }
 
 /// TID des laufenden Fadens (None = Kern/System).
@@ -885,7 +897,7 @@ pub(crate) fn eigener_heap() -> Option<&'static Heap> {
 
 /// Laufende Programme.
 pub fn liste() -> Vec<ProzessInfo> {
-    kern_abschnitt(|| {
+    ins_programm(kern_abschnitt(|| {
         sperre(&kern().prozesse)
             .iter()
             .map(|p| {
@@ -902,7 +914,7 @@ pub fn liste() -> Vec<ProzessInfo> {
                 }
             })
             .collect()
-    })
+    }))
 }
 
 /// Wie ein beendetes Programm endete (None = läuft noch oder unbekannt).
@@ -919,7 +931,7 @@ pub fn ende_von(pid: u32) -> Option<Ende> {
 /// Abstürze (Panik, Speicher voll) seit dem letzten Aufruf – für die
 /// Meldung der Shell (D12). (Name, Grund)
 pub fn neue_abstuerze() -> Vec<(&'static str, Ende)> {
-    kern_abschnitt(|| {
+    ins_programm(kern_abschnitt(|| {
         let k = kern();
         // Zähler unter der Protokollsperre lesen (aufraeumen erhöht ihn dort)
         let prot = sperre(&k.protokoll);
@@ -932,7 +944,7 @@ pub fn neue_abstuerze() -> Vec<(&'static str, Ende)> {
             .filter(|(_, _, e)| matches!(e, Ende::Absturz(_) | Ende::SpeicherVoll))
             .map(|(_, n, e)| (*n, e.clone()))
             .collect()
-    })
+    }))
 }
 
 /// Räumt ab: beendete Fäden einzeln (Stapel und Task-Kopf frei, auch

@@ -1005,7 +1005,7 @@ pub fn fensterebene(ecx: u32, edx: u32, esi: u32) -> u32 {
 /// Fensterliste (ESP32-OS-Erweiterung für die Taskleiste).
 pub fn fenster_liste() -> Vec<fenster::FensterInfo> {
     pruefe_ende();
-    kern_abschnitt(|| fenster::mit_welt(|w| w.fenster_liste()))
+    prozess::ins_programm(kern_abschnitt(|| fenster::mit_welt(|w| w.fenster_liste())))
 }
 
 /// Funktion 15: Hintergrund. `daten` für 15.5 (BGR), Rückgabe für 15.6/15.8.

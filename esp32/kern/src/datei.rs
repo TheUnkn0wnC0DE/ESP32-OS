@@ -63,7 +63,7 @@ pub fn speicherplatz(kolibri: &str) -> Option<(u64, u64)> {
 
 /// Liste der Einhängungen (Dateimanager, Speicherplatz).
 pub fn einhaengungen() -> Vec<(String, PathBuf)> {
-    kern_abschnitt(|| sperre(&EINHAENGUNGEN).clone())
+    crate::prozess::ins_programm(kern_abschnitt(|| sperre(&EINHAENGUNGEN).clone()))
 }
 
 pub(crate) fn faden_weg(tid: u32) {
@@ -75,7 +75,7 @@ pub(crate) fn faden_weg(tid: u32) {
 /// Aktueller Ordner des Fadens (Standard "/sys").
 pub fn aktueller_ordner() -> String {
     let tid = eigene_tid().unwrap_or(0);
-    kern_abschnitt(|| sperre(&ORDNER).as_ref().and_then(|m| m.get(&tid).cloned()).unwrap_or_else(|| "/sys".into()))
+    crate::prozess::ins_programm(kern_abschnitt(|| sperre(&ORDNER).as_ref().and_then(|m| m.get(&tid).cloned()).unwrap_or_else(|| "/sys".into())))
 }
 
 /// Funktion 30.1/30.4: aktuellen Ordner setzen.

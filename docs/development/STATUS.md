@@ -33,6 +33,20 @@ Zerstückelung), DuckDuckGo-Logo am Board.
 
 ## Jetzt
 
+- **26.11., 19:00 – Halt auf Wunsch (PC wird gewartet):** alles committet
+  und gepusht. Internes Leck: Korrektur `ins_programm` drin, aber Spur
+  unverändert (Reste „thashview“) – Quelle weiter suchen (PLAN „Q4 interner
+  RAM“). Danach Dauertest, Q4 abhaken; dann S3, D2. Release 1.0.4 wartet auf
+  dein OK (Paket in release/v1.0.4).
+
+- **26.11., 20:30 – Übergabe (Kontext fast voll):** gepusht main 53df144.
+  Dauertest 4 bestanden bis auf das interne RAM-Leck (−9 KB/75 min). Spur
+  dazu gelaufen: Reste u. a. „thashview“/„Open file“ nach Programmende →
+  Verdacht Kern-Tabellen je Faden (datei::ORDNER …), siehe PLAN
+  „Q4 interner RAM“. Nächster Schritt: Tabellen beim Fadenende leeren,
+  leck_lauf wiederholen, dann Q4 abhaken. Danach S3, D2. sdkconfig.defaults
+  von leck_lauf wiederhergestellt (git status sauber prüfen).
+
 - **26.11., 18:30:** SC-Stabilitätsrunde bestanden (40 min, Konsole,
   Ruhezustand, 0 Abstürze) und abgehakt. PSRAM-Leck gefunden: Symbolkopien
   des Startmenüs im System-Heap (am Board ohne Abwickeln nie frei) –

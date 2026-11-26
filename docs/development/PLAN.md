@@ -2509,6 +2509,29 @@ und Verzeichnis auf GitHub).
   vielen Stunden Dauerlast spürbar. Ursache noch nicht zugeordnet (Heap-
   Spur `leck_lauf.ps1` gruppiert noch belegte interne Blöcke). Ersatz:
   Hinweis im Release-Text; Suche als Teil von M4.
+  Spur 26.11. abends (`leck_lauf.ps1`, 2 Runden, Bericht nur lokal – kann
+  Speicherinhalte enthalten): 4124 Bytes intern noch belegt in 59 kleinen
+  Gruppen; auffällig 2× „thashview“ und 2× „Open file“ (Dialogtitel) nach
+  dem Ende von TinyHashView, 4× 356 B mit Zeigern (Task-Blöcke laufender
+  Programme?). Kleine Belegungen des System-Heaps liegen am Board im
+  internen RAM – Verdacht: Kern-Tabellen, die Namen/Titel beendeter Fäden
+  behalten (z. B. `datei::ORDNER` je TID). Nächster Schritt: diese Tabellen
+  beim Fadenende leeren, Spur wiederholen.
+  Geprüft: `datei::ORDNER` wird beim Fadenende geleert. Wahrscheinlicher
+  ist dieselbe Klasse wie beim PSRAM-Leck (M8): Kernfunktionen geben Kopien
+  aus dem Kern-Abschnitt an Programme zurück (`aktueller_ordner()`,
+  `einhaengungen()`, Titel in `fenster_liste()` …) – sie liegen im
+  System-Heap (klein → am Board im internen RAM) und bleiben liegen, wenn das
+  Programm ohne Abwickeln endet, während es sie hält. Lösung wie bei
+  `shell::symbol`: Kopie im Heap des Programms (Mutex vorher im
+  Kern-Abschnitt sperren, `sperre_vorbereiten`), Stellen der Reihe nach.
+  Umgesetzt (26.11. abends): `prozess::ins_programm` (Ergebnis des
+  Kern-Abschnitts im Programm kopieren, Original sofort frei) für
+  `liste`, `neue_abstuerze`, `argumente`, `fenster_liste`, `einhaengungen`,
+  `aktueller_ordner`; alle Tests grün. Spur danach: unverändert 4191 Byte,
+  weiter 2× „thashview“ – die Quelle ist also eine andere (nächster
+  Schritt: wo der Kern den Programmnamen „thashview“ in einen String
+  kopiert, z. B. Fenstertitel/Taskleiste/Protokoll; dort suchen).
 
 - **Q3 Speicher (26.11.)** – 6–9 der 30 Testseiten brechen ihr JavaScript
   mit „out of memory“ ab und laden ohne JS neu; 8 werden nach 512 KB HTML
