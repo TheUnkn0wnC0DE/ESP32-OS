@@ -2532,6 +2532,15 @@ und Verzeichnis auf GitHub).
   weiter 2× „thashview“ – die Quelle ist also eine andere (nächster
   Schritt: wo der Kern den Programmnamen „thashview“ in einen String
   kopiert, z. B. Fenstertitel/Taskleiste/Protokoll; dort suchen).
+  Ausgeschlossen (Code gelesen, 26.11. abends): `datei::ORDNER` (beim
+  Fadenende geleert), Taskname am Board (Puffer auf dem Stapel), Name beim
+  Fadenstart (`&'static str`), statische Tabellen in kern/desktop (keine
+  hält Titel). Offen als Kandidaten: die Startbox `lauf`/`start` jedes
+  Fadens (im Kern-Abschnitt belegt, Freigabe hängt am Ende des Aufrufs –
+  am Board ohne Abwickeln nie), Fenstertitel aus Funktion 71.1 in einem
+  zweiten Fenster (Dialog „Open file“). Nächster Board-Versuch: Spur mit
+  `heap_trace` und Aufrufstelle (CONFIG_HEAP_TRACING_STACK_DEPTH) statt nur
+  Inhalt.
 
 - **Q3 Speicher (26.11.)** – 6–9 der 30 Testseiten brechen ihr JavaScript
   mit „out of memory“ ab und laden ohne JS neu; 8 werden nach 512 KB HTML
