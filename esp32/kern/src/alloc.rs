@@ -139,8 +139,96 @@ pub fn system_belegt() -> isize {
 fn system_zaehlen(p: *mut u8, n: usize) -> *mut u8 {
     if !p.is_null() {
         SYSTEM_BYTES.fetch_add(n as isize, Ordering::Relaxed);
+        #[cfg(not(target_os = "espidf"))]
+        spur::belegt(p, n);
+        #[cfg(not(target_os = "espidf"))]
+        spur::pc_belegt(p, n);
     }
     p
+}
+
+/// Q4 (nur PC-Tests): Belegungen im System-Heap mit Backtrace, um zu
+/// finden, wer Speicher anlegt, der nach dem Ende eines Programms liegen
+/// bleibt (`spur_starten` / `spur_offen`).
+#[cfg(not(target_os = "espidf"))]
+pub mod spur {
+    use std::cell::Cell;
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static AN: AtomicBool = AtomicBool::new(false);
+    static OFFEN: Mutex<Option<HashMap<usize, (usize, String)>>> = Mutex::new(None);
+    thread_local! {
+        static DRIN: Cell<bool> = const { Cell::new(false) };
+    }
+    fn mit<R>(f: impl FnOnce() -> R) -> Option<R> {
+        if !AN.load(Ordering::Relaxed) || DRIN.try_with(Cell::get).unwrap_or(true) {
+            return None;
+        }
+        let _ = DRIN.try_with(|d| d.set(true));
+        let r = f();
+        let _ = DRIN.try_with(|d| d.set(false));
+        Some(r)
+    }
+    pub(crate) fn belegt(p: *mut u8, n: usize) {
+        mit(|| {
+            let bt = std::backtrace::Backtrace::force_capture().to_string();
+            OFFEN.lock().unwrap_or_else(|e| e.into_inner()).get_or_insert_with(HashMap::new).insert(p as usize, (n, bt));
+        });
+    }
+    // Belegungen der PC-Plattform beim Start eines Threads (std::thread:
+    // Name, Thread-Daten) – bleiben im Testmodus „ohne Abwickeln“ liegen,
+    // am Board gibt es sie nicht; der Lecktest zieht sie ab.
+    thread_local! {
+        pub(crate) static PC_START: Cell<bool> = const { Cell::new(false) };
+    }
+    static PC_INTERN: Mutex<Option<HashMap<usize, usize>>> = Mutex::new(None);
+    static PC_SUMME: std::sync::atomic::AtomicIsize = std::sync::atomic::AtomicIsize::new(0);
+    pub(crate) fn pc_belegt(p: *mut u8, n: usize) {
+        if PC_START.try_with(Cell::get).unwrap_or(false) {
+            let _ = PC_START.try_with(|c| c.set(false));
+            // die Tabelle selbst belegt und gibt frei (Wachsen): nicht erneut
+            // sperren (`DRIN`)
+            let _ = DRIN.try_with(|d| d.set(true));
+            PC_INTERN.lock().unwrap_or_else(|e| e.into_inner()).get_or_insert_with(HashMap::new).insert(p as usize, n);
+            let _ = DRIN.try_with(|d| d.set(false));
+            PC_SUMME.fetch_add(n as isize, Ordering::Relaxed);
+            let _ = PC_START.try_with(|c| c.set(true));
+        }
+    }
+    pub(crate) fn pc_frei(p: *mut u8) {
+        if DRIN.try_with(Cell::get).unwrap_or(true) {
+            return;
+        }
+        let _ = DRIN.try_with(|d| d.set(true));
+        let n = PC_INTERN.lock().unwrap_or_else(|e| e.into_inner()).as_mut().and_then(|m| m.remove(&(p as usize)));
+        let _ = DRIN.try_with(|d| d.set(false));
+        if let Some(n) = n {
+            PC_SUMME.fetch_sub(n as isize, Ordering::Relaxed);
+        }
+    }
+    /// Noch belegte Bytes der PC-Plattform beim Thread-Start (siehe oben).
+    pub fn pc_plattform_belegt() -> isize {
+        PC_SUMME.load(Ordering::Relaxed)
+    }
+    pub(crate) fn frei(p: *mut u8) {
+        mit(|| {
+            if let Some(m) = OFFEN.lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
+                m.remove(&(p as usize));
+            }
+        });
+    }
+    /// Spur leeren und einschalten.
+    pub fn spur_starten() {
+        mit(|| ());
+        *OFFEN.lock().unwrap_or_else(|e| e.into_inner()) = Some(HashMap::new());
+        AN.store(true, Ordering::Relaxed);
+    }
+    /// Spur ausschalten; noch belegte Blöcke (Grösse, Backtrace).
+    pub fn spur_offen() -> Vec<(usize, String)> {
+        AN.store(false, Ordering::Relaxed);
+        OFFEN.lock().unwrap_or_else(|e| e.into_inner()).take().map(|m| m.into_values().collect()).unwrap_or_default()
+    }
 }
 
 /// `#[global_allocator]` des Systems (Board und PC).
@@ -208,6 +296,10 @@ unsafe impl GlobalAlloc for KernAlloc {
             None => {
                 not_austragen(p);
                 SYSTEM_BYTES.fetch_sub(l.size() as isize, Ordering::Relaxed);
+                #[cfg(not(target_os = "espidf"))]
+                spur::frei(p);
+                #[cfg(not(target_os = "espidf"))]
+                spur::pc_frei(p);
                 // SAFETY: p stammt aus dem System-Heap.
                 unsafe { System.dealloc(p, l) }
             }

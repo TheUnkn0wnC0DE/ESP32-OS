@@ -25,7 +25,9 @@ pub struct Plattform {
     pub faden_setzen: fn(*mut Faden),
     /// Startet einen Task/Thread. `heap` = Heap des Programms (Board: Stapel
     /// dort anlegen). Liefert einen Griff für `task_weg`/`task_freigeben`.
-    pub task_starten: fn(name: &str, stapel: usize, heap: &Heap, f: Box<dyn FnOnce() + Send>) -> Option<usize>,
+    /// `fd` = Fadenkontext; der Task ruft [`crate::prozess::faden_eintritt`]
+    /// (keine Box im System-Heap, Q4).
+    pub task_starten: fn(name: &str, stapel: usize, heap: &Heap, fd: usize) -> Option<usize>,
     /// Führt die Startfunktion im neuen Faden aus.
     pub ausfuehren: fn(Box<dyn FnOnce() + Send>) -> Lauf,
     /// Beendet den laufenden Faden sofort (kehrt nie zurück).
@@ -69,6 +71,8 @@ mod pc {
     }
 
     static GRIFFE: Mutex<Vec<Option<JoinHandle<()>>>> = Mutex::new(Vec::new());
+    /// Q4 (Test): Fäden, die ohne Abwickeln geendet haben (geparkt).
+    static GEPARKT: Mutex<Vec<std::thread::ThreadId>> = Mutex::new(Vec::new());
 
     fn lesen() -> *mut Faden {
         FADEN.try_with(Cell::get).unwrap_or(core::ptr::null_mut())
@@ -78,12 +82,14 @@ mod pc {
         let _ = FADEN.try_with(|c| c.set(f));
     }
 
-    fn starten(name: &str, stapel: usize, _heap: &Heap, f: Box<dyn FnOnce() + Send>) -> Option<usize> {
+    fn starten(name: &str, stapel: usize, _heap: &Heap, fd: usize) -> Option<usize> {
+        let _ = crate::alloc::spur::PC_START.try_with(|c| c.set(true));
         let h = std::thread::Builder::new()
             .name(name.into())
             .stack_size(stapel.max(256 * 1024))
-            .spawn(f)
-            .ok()?;
+            .spawn(move || crate::prozess::faden_eintritt(fd));
+        let _ = crate::alloc::spur::PC_START.try_with(|c| c.set(false));
+        let h = h.ok()?;
         let mut g = GRIFFE.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(i) = g.iter().position(Option::is_none) {
             g[i] = Some(h);
@@ -103,17 +109,31 @@ mod pc {
     }
 
     fn beenden() -> ! {
+        // Q4 (Test): wie am Board ohne Abwickeln enden – keine Destruktoren,
+        // was der Faden hält, bleibt liegen; der Faden parkt für immer
+        if crate::TEST_OHNE_ABWICKELN.load(core::sync::atomic::Ordering::Relaxed) {
+            GEPARKT.lock().unwrap_or_else(|e| e.into_inner()).push(std::thread::current().id());
+            loop {
+                std::thread::park();
+            }
+        }
         resume_unwind(Box::new(ProzessEnde))
+    }
+
+    fn geparkt(h: &JoinHandle<()>) -> bool {
+        GEPARKT.lock().unwrap_or_else(|e| e.into_inner()).contains(&h.thread().id())
     }
 
     fn weg(g: usize) -> bool {
         let l = GRIFFE.lock().unwrap_or_else(|e| e.into_inner());
-        l.get(g).and_then(Option::as_ref).is_none_or(JoinHandle::is_finished)
+        l.get(g).and_then(Option::as_ref).is_none_or(|h| h.is_finished() || geparkt(h))
     }
 
     fn freigeben(g: usize) {
         let h = GRIFFE.lock().unwrap_or_else(|e| e.into_inner()).get_mut(g).and_then(Option::take);
-        if let Some(h) = h {
+        if let Some(h) = h
+            && !geparkt(&h)
+        {
             let _ = h.join();
         }
     }

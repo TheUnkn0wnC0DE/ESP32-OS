@@ -30,7 +30,9 @@ fn ruhig() -> isize {
         kern::aufraeumen();
         std::thread::sleep(Duration::from_millis(60));
     }
-    kern::system_belegt()
+    // ohne die Thread-Daten der PC-Plattform (gibt es am Board nicht; im
+    // Modus ohne Abwickeln bleiben sie am PC liegen)
+    kern::system_belegt() - kern::pc_plattform_belegt()
 }
 
 /// Kreuz des Fensters im Slot `slot` (Bildschirmkoordinaten).
@@ -80,6 +82,8 @@ fn kein_leck_im_system_heap() {
     std::fs::create_dir_all(&wurzel).unwrap();
     std::fs::copy(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../kolibri/daten/logo.png"), wurzel.join("logo.png")).unwrap();
     kern::init(&kern::PC, desktop::PROGRAMME);
+    // wie am Board: Programme enden ohne Abwickeln (keine Destruktoren)
+    kern::TEST_OHNE_ABWICKELN.store(true, std::sync::atomic::Ordering::Relaxed);
     kern::datei::einhaengen("/sys", &wurzel);
     kern::datei::einhaengen("/rd/1", &wurzel);
     // wie am Board: SD-Karte mit dem Ordner von ESP32-OS (Notizen, Musik …)
@@ -95,6 +99,22 @@ Milch
     desktop::shell::anwendungen_setzen(&anwendungen);
     kern::starte_name("@start").unwrap();
     std::thread::sleep(Duration::from_millis(2500));
+    // Fehlersuche: LECK_SPUR=<programm> – zweiter Durchgang mit Spur, noch
+    // belegte Blöcke mit Backtrace ausgeben, dann Ende
+    if let Ok(name) = std::env::var("LECK_SPUR") {
+        einmal(&name);
+        ruhig();
+        kern::spur_starten();
+        einmal(&name);
+        ruhig();
+        for (n, bt) in kern::spur_offen() {
+            let zeilen: Vec<&str> = bt.lines().filter(|z| z.contains("esp32") && !z.contains("alloc.rs") && !z.contains("backtrace")).take(14).collect();
+            println!("=== {n} B
+{}", zeilen.join("
+"));
+        }
+        return;
+    }
     let mut programme: Vec<&str> = anwendungen.iter().map(|a| a.programm).filter(|p| !p.starts_with('@')).collect();
     programme.extend(["@menu", "@meldung"]);
     let mut zeilen = Vec::new();

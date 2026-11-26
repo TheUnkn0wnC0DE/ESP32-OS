@@ -56,6 +56,8 @@ pub struct Faden {
     pub geschuetzt: AtomicU32,
     pub speicher_voll: Cell<bool>,
     pub panik: RefCell<Option<String>>,
+    /// Startfunktion bis zum Start des Fadens ([`faden_eintritt`]).
+    start: Cell<Option<Start>>,
     /// Das Programm soll enden (gesetzt, wenn `soll_enden` des Prozesses
     /// gesetzt wird): `pruefe_ende` liest das ohne Kernsperre – sie läuft
     /// bei jeder Systemfunktion, auch bei jedem malloc/free (68.12/68.13),
@@ -482,7 +484,7 @@ fn starte_mit_einmal(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32
             system_beim_start: crate::system_belegt(),
         });
         let start = e.start;
-        if starte_faden_fuer(pid, Some(pid), e.name, e.stapel_kb, Box::new(move || start())).is_none() {
+        if starte_faden_fuer(pid, Some(pid), e.name, e.stapel_kb, Start::Programm(start)).is_none() {
             let mut l = sperre(&k.prozesse);
             if let Some(i) = l.iter().position(|p| p.pid == pid) {
                 let p = l.remove(i);
@@ -509,17 +511,22 @@ pub fn faden_starten(stapel_kb: usize, f: Box<dyn FnOnce() + Send>) -> Option<u3
     let pid = unsafe { (*fd).pid };
     kern_abschnitt(|| {
         let name = sperre(&kern().prozesse).iter().find(|p| p.pid == pid)?.name;
-        starte_faden_fuer(pid, None, name, stapel_kb, f)
+        starte_faden_fuer(pid, None, name, stapel_kb, Start::Faden(f))
     })
 }
 
-fn starte_faden_fuer(
-    pid: u32,
-    tid: Option<u32>,
-    name: &str,
-    stapel_kb: usize,
-    start: Box<dyn FnOnce() + Send>,
-) -> Option<u32> {
+/// Was ein neuer Faden ausführt. Q4 (internes RAM-Leck): keine Box im
+/// System-Heap beim Start – bei `Box<dyn FnOnce>` bleibt der Speicher belegt,
+/// bis der Aufruf zurückkehrt, und ein Faden, der ohne Abwickeln endet (am
+/// Board immer), kehrt nie zurück. Programme starten über ihren `fn()`-
+/// Zeiger; die Box eines Nebenfadens legt das Programm selbst an (Heap des
+/// Programms).
+pub(crate) enum Start {
+    Programm(fn()),
+    Faden(Box<dyn FnOnce() + Send>),
+}
+
+fn starte_faden_fuer(pid: u32, tid: Option<u32>, name: &str, stapel_kb: usize, start: Start) -> Option<u32> {
     let k = kern();
     let tid = tid.unwrap_or_else(|| k.naechste_pid.fetch_add(1, Ordering::Relaxed));
     let heap = {
@@ -540,6 +547,7 @@ fn starte_faden_fuer(
         geschuetzt: AtomicU32::new(0),
         speicher_voll: Cell::new(false),
         panik: RefCell::new(None),
+        start: Cell::new(Some(start)),
         ende_flag: AtomicBool::new(false),
         pruef_zaehler: Cell::new(0),
         bibliothek: Cell::new(0),
@@ -558,21 +566,8 @@ fn starte_faden_fuer(
         }
     }
     let pl = k.pl;
-    let lauf = Box::new(move || {
-        (pl.faden_setzen)(fd as *mut Faden);
-        match (pl.ausfuehren)(start) {
-            Lauf::SchonBeendet => {}
-            Lauf::Normal => faden_ende(Ende::Normal),
-            Lauf::Panik => {
-                // SAFETY: eigener Faden, noch gesetzt.
-                let msg = unsafe { (*(fd as *mut Faden)).panik.borrow_mut().take() };
-                let grund = kern_abschnitt(|| Ende::Absturz(msg.unwrap_or_else(|| "Panik".into())));
-                faden_ende(grund);
-            }
-        }
-    });
     // SAFETY: Heap lebt, bis der Prozess aufgeräumt ist.
-    let griff = (pl.task_starten)(name, stapel_kb * 1024, unsafe { &*heap }, lauf);
+    let griff = (pl.task_starten)(name, stapel_kb * 1024, unsafe { &*heap }, fd);
     let mut l = sperre(&k.prozesse);
     let p = l.iter_mut().find(|p| p.pid == pid)?;
     match griff {
@@ -591,6 +586,31 @@ fn starte_faden_fuer(
             // SAFETY: nie an einen Thread übergeben.
             drop(unsafe { Box::from_raw(fd as *mut Faden) });
             None
+        }
+    }
+}
+
+/// Eintritt jedes Programm-Fadens (von der Plattform im neuen Task
+/// gerufen, `fd` = Kontext aus [`starte_faden_fuer`]). Die Box der
+/// Startfunktion entsteht erst hier – nach `faden_setzen` im Heap des
+/// Programms, sie verschwindet mit seinem Bereich.
+pub fn faden_eintritt(fd: usize) {
+    let pl = kern().pl;
+    (pl.faden_setzen)(fd as *mut Faden);
+    // SAFETY: Kontext lebt, solange der Faden läuft; nur dieser Faden nimmt `start`.
+    let Some(start) = (unsafe { (*(fd as *const Faden)).start.take() }) else { return };
+    let f: Box<dyn FnOnce() + Send> = match start {
+        Start::Programm(p) => Box::new(p),
+        Start::Faden(b) => b,
+    };
+    match (pl.ausfuehren)(f) {
+        Lauf::SchonBeendet => {}
+        Lauf::Normal => faden_ende(Ende::Normal),
+        Lauf::Panik => {
+            // SAFETY: eigener Faden, noch gesetzt.
+            let msg = unsafe { (*(fd as *mut Faden)).panik.borrow_mut().take() };
+            let grund = kern_abschnitt(|| Ende::Absturz(msg.unwrap_or_else(|| "Panik".into())));
+            faden_ende(grund);
         }
     }
 }

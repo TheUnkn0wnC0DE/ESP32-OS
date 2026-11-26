@@ -2569,6 +2569,21 @@ und Verzeichnis auf GitHub).
   beim Fadenende noch lebt (z. B. Titel/Name je Slot zählen und beim
   Aufräumen vergleichen), oder die PC-Tests so laufen lassen, dass ein
   Programm ohne Abwickeln endet (wie am Board).
+  **Ursache gefunden (26.11. nachts):** PC-Test im Modus „ohne Abwickeln“
+  (`kern::TEST_OHNE_ABWICKELN`: der endende Faden parkt wie am Board, keine
+  Destruktoren) zeigt je Programmende ~80 B im System-Heap (Einstellungen,
+  PDF, Shell, Matrix, Dateimanager, Netzdemos; TinyHashView 2×). Spur mit
+  Backtrace (`kern::spur_starten/spur_offen`, `LECK_SPUR=<programm>` im
+  Lecktest): die Startbox `Box::new(move || start())` (prozess.rs
+  starte_mit_einmal), die Laufbox `lauf` (starte_faden_fuer) und am Board die
+  Box in `kern_board::starten` – alle im Kern-Abschnitt (System-Heap, klein
+  → interner RAM). Bei `Box<dyn FnOnce()>` bleibt der Speicher belegt, bis
+  der Aufruf zurückkehrt; ein Faden, der ohne Abwickeln endet, kehrt nie
+  zurück. Lösung: Programme ohne Box starten (`fn()`-Zeiger statt
+  `Box<dyn FnOnce>`), Laufdaten in den `Faden`-Kontext statt in eine
+  Closure-Box, und den Speicher nicht zurückgekehrter Boxen beim Aufräumen
+  nur freigeben (Layout merken, kein Drop). Danach Lecktest grün und
+  Dauertest.
 
 - **Q3 Speicher (26.11.)** – 6–9 der 30 Testseiten brechen ihr JavaScript
   mit „out of memory“ ab und laden ohne JS neu; 8 werden nach 512 KB HTML

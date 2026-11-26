@@ -37,13 +37,13 @@ fn setzen(f: *mut Faden) {
 }
 
 extern "C" fn trampolin(arg: *mut c_void) {
-    // SAFETY: arg stammt aus `starten` (Box<Box<dyn FnOnce>>).
-    let f = unsafe { Box::from_raw(arg.cast::<Box<dyn FnOnce() + Send>>()) };
-    f();
+    // arg = Fadenkontext aus `starten` (keine Box im System-Heap: am Board
+    // endet ein Task ohne Abwickeln, eine Box bliebe liegen – Q4)
+    kern::prozess::faden_eintritt(arg as usize);
     beenden();
 }
 
-fn starten(name: &str, stapel: usize, heap: &Heap, f: Box<dyn FnOnce() + Send>) -> Option<usize> {
+fn starten(name: &str, stapel: usize, heap: &Heap, fd: usize) -> Option<usize> {
     let stapel = stapel.max(8 * 1024) & !15;
     let st = heap.alloc(stapel, 16);
     if st.is_null() {
@@ -66,7 +66,7 @@ fn starten(name: &str, stapel: usize, heap: &Heap, f: Box<dyn FnOnce() + Send>) 
     for (d, s) in cname.iter_mut().zip(name.bytes().take(15)) {
         *d = s;
     }
-    let arg = Box::into_raw(Box::new(f)).cast::<c_void>();
+    let arg = fd as *mut c_void;
     // SAFETY: Stapel und TCB gehören dem Task, bis er gelöscht und abgeräumt ist.
     let handle = unsafe {
         sys::xTaskCreateStaticPinnedToCore(
@@ -83,7 +83,6 @@ fn starten(name: &str, stapel: usize, heap: &Heap, f: Box<dyn FnOnce() + Send>) 
     if handle.is_null() {
         // SAFETY: Task wurde nicht erzeugt, alles wieder frei.
         unsafe {
-            drop(Box::from_raw(arg.cast::<Box<dyn FnOnce() + Send>>()));
             sys::heap_caps_free(tcb.cast());
             heap.free(st);
         }

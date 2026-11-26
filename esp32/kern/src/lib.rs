@@ -38,6 +38,13 @@ pub mod zeiger;
 
 pub use alloc::{KernAlloc, notbelegungen, regionen, system_belegt};
 #[cfg(not(target_os = "espidf"))]
+pub use alloc::spur::{pc_plattform_belegt, spur_offen, spur_starten};
+
+/// Q4 (PC-Tests): Programme enden ohne Abwickeln wie am Board (Plattform
+/// `PC`: der Faden parkt, keine Destruktoren) – findet Kopien im
+/// System-Heap, die ein Programm bei seinem Ende noch hält.
+pub static TEST_OHNE_ABWICKELN: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+#[cfg(not(target_os = "espidf"))]
 pub use plattform::PC;
 pub use plattform::{Lauf, Plattform, ProzessEnde};
 pub use prozess::{
