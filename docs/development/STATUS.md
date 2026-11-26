@@ -9,6 +9,32 @@ Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
+## Bitte um OK: Release 1.0.4 und Web-Flasher (26.11. abends, Vorrang)
+
+Anlass: XDA Developers hat am 25.11. berichtet, neue Nutzer kommen über den
+Web-Flasher, der noch 1.0.1 installiert. Vorbereitet, **nichts
+veröffentlicht**:
+
+- Paket `release/v1.0.4` (gebaut nach allen Q4-Korrekturen, Stand
+  esp32-os 46894a1 = main 53df144, genau der Stand von Dauertest 4: 75 min,
+  0 Abstürze, System-Speicher stabil), Release-Check
+  `docs/nachweise/v104/release_paket_v1.0.4.txt` (keine WLAN-Daten, keine
+  lokalen Pfade, private Begriffe nur die zwei bekannten Fehltreffer),
+  Text `docs/release/v1.0.4.md`.
+- Einziger bekannter Mangel: internes RAM-Leck ~9 KB je 75 min (wie 1.0.3).
+
+Schritte nach deinem OK (je ein Befehl):
+1. `git tag v1.0.4 53df144` und `git push origin v1.0.4`
+2. `gh release create v1.0.4 --repo TheUnkn0wnC0DE/ESP32-OS --title "ESP32-OS 1.0.4"
+   --notes-file docs/release/v1.0.4.md release/v1.0.4/*`
+3. Web-Flasher: `gh workflow run flasher.yml --ref main` (lädt das neueste
+   Release, prüft SHA256SUMS)
+4. README: „latest release (1.0.4)“, Web-Flasher-Satz und Zahlen
+   (Abbild 5 878 272 Bytes, Dauertest) nachziehen, pushen.
+
+Antwort genügt: „OK Release“ (nur 1–2), „OK Release und Flasher“ (1–4)
+oder Änderungswünsche.
+
 ## Zusammenfassung (26.11., 21:00 – Abschluss dieser Sitzung)
 
 **Fertig (mit Nachweis, gepusht):** Q1 Rundgang, Q2 Wetter-App, Q3 Browser
