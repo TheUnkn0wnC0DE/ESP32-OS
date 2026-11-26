@@ -233,6 +233,10 @@ fn gruppen(q: &Path, aus: &Path, board: bool) -> Vec<Gruppe> {
                 g.f(css_select_kopie(q, aus));
                 continue;
             }
+            if *dir == "desktop" && f == "browser_window.c" {
+                g.f(browser_window_kopie(q, aus));
+                continue;
+            }
             g.f(ns.join(dir).join(f));
         }
     }
@@ -1106,6 +1110,24 @@ fn css_inhalt_kopie(q: &Path, ziel: &Path) -> PathBuf {
                 "static void nscss_destroy_css_data(struct content_css_data *c)\n{\n\tuint32_t i;\n\n\tns_css_vergessen(c);\n",
             ),
         ],
+    )
+}
+
+/// `desktop/browser_window.c` als geprüfte Kopie (Q3): eine neue Seite im
+/// Hauptfenster (nicht in einem Rahmen) leert die Tabelle der eigenen
+/// CSS-Eigenschaften (c/css_vorbereitung.c) – sonst färbten die Variablen
+/// der vorigen Seite die nächste (Board 26.11.: nach der DuckDuckGo-App
+/// fehlte auf html.duckduckgo das Logo).
+fn browser_window_kopie(q: &Path, ziel: &Path) -> PathBuf {
+    kopie_mit(
+        q,
+        ziel,
+        "desktop/browser_window.c",
+        "browser_window.c",
+        &[(
+            "\tNSLOG(netsurf, INFO, \"bw %p, url %s\", bw, nsurl_access(url));\n",
+            "\tNSLOG(netsurf, INFO, \"bw %p, url %s\", bw, nsurl_access(url));\n\n\t/* ESP32-OS Q3: neue Seite im Hauptfenster: CSS-Variablen leeren */\n\tif (bw->parent == NULL) {\n\t\textern void ns_css_variablen_leeren(void);\n\t\tns_css_variablen_leeren();\n\t}\n",
+        )],
     )
 }
 

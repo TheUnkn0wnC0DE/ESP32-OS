@@ -1197,6 +1197,48 @@
   for (const [name, i] of [['innerWidth', 0], ['innerHeight', 1], ['scrollX', 2], ['scrollY', 3], ['pageXOffset', 2], ['pageYOffset', 3]])
     Object.defineProperty(G, name, { get: () => N.ansicht()[i], configurable: true });
   G.outerWidth = 640; G.outerHeight = 360;
+  // Q3: ResizeObserver (am Board fehlend gemeldet) und IntersectionObserver
+  // – einmal nach observe() mit den Massen aus NetSurfs Layout, danach
+  // nicht mehr (kein Beobachten von Grössenänderungen und Rollen).
+  // Sichtbar heisst: Rechteck schneidet das Fenster (oder doppelte Höhe
+  // darunter, wie ein rootMargin für Nachlade-Bilder). Gemeldet wird erst
+  // nach „load“: vorher hat NetSurf noch kein Layout (Masse 0).
+  const nachLayout = (f) => {
+    if (document.readyState === 'complete') setTimeout(f, 0);
+    else G.addEventListener('load', () => setTimeout(f, 0), { once: true });
+  };
+  class ResizeObserver {
+    constructor(f) { this._f = f; this._z = new Set(); }
+    observe(el) {
+      if (this._z.has(el)) return;
+      this._z.add(el);
+      nachLayout(() => {
+        if (!this._z.has(el)) return;
+        const r = el.getBoundingClientRect(), g = [{ inlineSize: r.width, blockSize: r.height }];
+        this._f([{ target: el, contentRect: r, borderBoxSize: g, contentBoxSize: g, devicePixelContentBoxSize: g }], this);
+      });
+    }
+    unobserve(el) { this._z.delete(el); }
+    disconnect() { this._z.clear(); }
+  }
+  class IntersectionObserver {
+    constructor(f, o) { this._f = f; this._z = new Set(); this.root = (o && o.root) || null; this.rootMargin = (o && o.rootMargin) || '0px'; this.thresholds = [].concat((o && o.threshold) || 0); }
+    observe(el) {
+      if (this._z.has(el)) return;
+      this._z.add(el);
+      nachLayout(() => {
+        if (!this._z.has(el)) return;
+        const r = el.getBoundingClientRect(), h = innerHeight, w = innerWidth;
+        const sichtbar = (r.width > 0 || r.height > 0) && r.top < h * 2 && r.bottom > 0 && r.left < w && r.right > 0;
+        this._f([{ target: el, isIntersecting: sichtbar, intersectionRatio: sichtbar ? 1 : 0, boundingClientRect: r, intersectionRect: sichtbar ? r : rechteck(0, 0, 0, 0), rootBounds: rechteck(0, 0, w, h), time: performance.now() }], this);
+      });
+    }
+    unobserve(el) { this._z.delete(el); }
+    disconnect() { this._z.clear(); }
+    takeRecords() { return []; }
+  }
+  G.ResizeObserver = ResizeObserver;
+  G.IntersectionObserver = IntersectionObserver;
   G.devicePixelRatio = 2;
   G.scrollTo = G.scroll = (x, y) => {
     const a = N.ansicht();

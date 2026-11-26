@@ -143,15 +143,16 @@ pub fn netsurf_testreste_loeschen() {
 
 /// Entwicklungs-Build `ESP32OS_TESTNOTIZEN_LOESCHEN` (Q1 Fund 5, OK des
 /// Nutzers 25.11.): die Test-Notizen früherer Board-Läufe in
-/// `ESP32-OS/Notizen` löschen. Gelöscht wird nur eine Datei, deren Inhalt
-/// nicht leer ist, „qasdfghjkl“ enthält und sonst nur aus den Zeichen
-/// „qasdfghjkl1234567“ und Leerraum besteht (vom Autopiloten getippt).
-/// Alle anderen Notizen bleiben; von ihnen steht nur Name und Grösse im Log.
+/// `ESP32-OS/Notizen` löschen. Gelöscht wird nur eine Datei, deren Name mit
+/// „qasdfghjkl1234567890qwer“ beginnt (vom Autopiloten getippter Titel, auch
+/// „… (Kopie).txt“) und deren Inhalt diese Folge enthält und sonst nur aus
+/// Kleinbuchstaben, Ziffern und Leerraum besteht. Alle anderen Notizen
+/// bleiben; von ihnen steht nur Name und Grösse im Log.
 pub fn testnotizen_loeschen() {
     const ORDNER: &str = "/sdcard/ESP32-OS/Notizen";
-    const ZEICHEN: &str = "qasdfghjkl1234567";
-    fn testnotiz(t: &str) -> bool {
-        t.contains("qasdfghjkl") && t.chars().all(|c| c.is_whitespace() || ZEICHEN.contains(c))
+    const FOLGE: &str = "qasdfghjkl1234567890qwer";
+    fn testnotiz(name: &str, t: &str) -> bool {
+        name.starts_with(FOLGE) && t.contains(FOLGE) && t.chars().all(|c| c.is_whitespace() || c.is_ascii_lowercase() || c.is_ascii_digit())
     }
     let Ok(d) = std::fs::read_dir(ORDNER) else {
         log::warn!("Test-Notizen: Ordner {ORDNER} fehlt");
@@ -163,7 +164,7 @@ pub fn testnotizen_loeschen() {
     for (n, laenge) in &namen {
         let p = format!("{ORDNER}/{n}");
         let inhalt = if *laenge <= 4096 { std::fs::read_to_string(&p).unwrap_or_default() } else { String::new() };
-        if testnotiz(&inhalt) {
+        if testnotiz(n, &inhalt) {
             log::warn!("  {n} ({laenge} Byte, Inhalt {:?}): gelöscht {:?}", inhalt.trim(), std::fs::remove_file(&p).map_err(|e| e.to_string()));
         } else {
             log::warn!("  {n} ({laenge} Byte): bleibt");

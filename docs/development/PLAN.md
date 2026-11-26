@@ -1517,6 +1517,16 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   RAM frei, PSRAM frei, Speicher des Browsers, wie viele der 30 Testseiten
   laden.
 
+- [ ] **M7 Heap im Browser bei Zerstückelung zu langsam** (Fund Q3, Board
+  26.11.) – am Ende grosser Seiten (NZZ) arbeitet der Browser über 30 s fast
+  nur in seinem Heap: Freigeben (`gross_einfuegen`) und Belegen
+  (`gross_suchen`, `zusammenfuehren`) gehen linear durch die Liste der
+  freien Blöcke; bei tausenden Bruchstücken wird das quadratisch, die
+  Anzeige steht (Log: keine `ns_takt`-Zeilen, Sperre „von diesem Faden“).
+  Ziel: Freiliste nach Grösse/Adresse mit logarithmischer Suche (z. B.
+  Grössenklassen für grosse Blöcke oder Baum), Messung mit dem Zähler
+  `heap::zaehler` vorher/nachher, Board-Lauf br ohne Stillstand.
+
 ## S. Bedienung (Nutzer 24.11. abends; nach den Speicher-Punkten M, Stabilität hat Vorrang)
 
 - [x] **S1 Taskleiste im selben Bild** – Fenster und Eintrag in der
@@ -1664,6 +1674,11 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   5. mittel – Notizen am Board zeigen drei Test-Notizen
      („qasdfghjkl1234567“) aus früheren Board-Tests im Ordner von ESP32-OS
      auf der SD-Karte. Offen: Frage in STATUS (löschen?).
+     **Erledigt (26.11., OK des Nutzers):** Entwicklungs-Build
+     `ESP32OS_TESTNOTIZEN_LOESCHEN` löschte die drei Dateien
+     `qasdfghjkl1234567890qwer*.txt` (Inhalt nur die getippte Testfolge),
+     andere Dateien gab es im Ordner nicht; Log
+     `docs/nachweise/q1/testnotizen_geloescht.txt` (vorher 3, nachher 0).
   6. niedrig – Dateimanager: im Papierkorb sind „SD-Karte“ und
      „Papierkorb“ gleichzeitig hervorgehoben. **Behoben:** im Papierkorb
      nur „Papierkorb“ (Foto `d4_papierkorb` im PC-Test).
@@ -1751,7 +1766,7 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   Switzerland – (3.4 °C, Code 61, 5 Tage)“; Foto mit echten Daten
   `docs/nachweise/q2/q2_board_wetter_zuerich.png` (3°, Regen, Wind 4 km/h,
   Feuchte 91 %, Vorschau bis Sonntag); 0 Abstürze. T2 damit erledigt.
-- [ ] **Q3 Browser: so viel JavaScript und Web wie möglich** – mit den 30
+- [x] **Q3 Browser: so viel JavaScript und Web wie möglich** – mit den 30
   Testseiten loggen, welche JS-Funktionen, DOM- und Web-APIs fehlen oder
   Fehler werfen und welche CSS-Funktionen nicht unterstützt sind (Liste nach
   Häufigkeit); die häufigsten zuerst nachrüsten, nach jedem Schritt dieselben
@@ -1843,6 +1858,43 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   bestimmen damit ihren Pfad („chunk path empty but not in a worker“, 6×
   DuckDuckGo). Test `current_script` (64 Bit und i686). Dazu: Endgrund des
   Browsers im Log der Seitenliste (`kern::ende_von`).
+  Board br9 (`docs/nachweise/br/q3_schritt5_tabelle.md`): **chunk path 6 →
+  0**, JS-Fehler 18 (7× out of memory, 2× invalid assignment, 2× OSM is not
+  defined, je 1× Rest); 22 geladen, 8 abgeschnitten, 0 vorzeitig beendet.
+  Fund: DuckDuckGo leitet wieder auf html.duckduckgo (mit Suchfeld), aber
+  ohne Logo. Am PC zeigt dieselbe Seite mit derselben Vorbereitung das Logo
+  – am Board hatte vorher die DuckDuckGo-App geladen, und ihre Variablen
+  galten weiter (eine Tabelle je Browserstart). Behoben: eine neue Seite im
+  Hauptfenster leert die Tabelle (Kopie von `desktop/browser_window.c`);
+  Test `css_variablen_je_seite` (schlägt ohne die Korrektur fehl: Seite B
+  schwarz statt grün).
+  Board br10 (`q3_schritt6_tabelle.md`): 22 geladen, 8 abgeschnitten, 0
+  vorzeitig; JS-Fehler 20 (9× out of memory); DuckDuckGo (html) mit Lupe,
+  **Logo fehlt weiter** – offen: am PC zeigt dieselbe Seite (keine Skripte)
+  mit demselben CSS das Logo (`logo_homepage_mobile…png` als Hintergrund),
+  am Board wird das PNG geladen, aber nicht gezeichnet; in Schritt 2 (vor
+  der CSS-Vorbereitung) war es am Board zu sehen. Ursache am Board noch nicht
+  gefunden; auch i686 (wie das Board 32 Bit) zeigt es am PC – dort kommt das
+  PNG als data:-Adresse, am Board später über HTTPS.
+  Schritt 6: `ResizeObserver` und `IntersectionObserver` (melden einmal nach
+  „load“ mit den Massen aus dem Layout), Test `fehlende_apis_schritt2`.
+  Board br11 (26.11. mittags, `q3_schritt7_tabelle.md`): 30 von 30 Seiten
+  gestartet, 22 geladen, 8 abgeschnitten (HTML > 512 KB), 0 vorzeitig
+  beendet, 0 Neustarts; JS-Fehler 17 (6× out of memory, 2× invalid
+  assignment, 2× OSM is not defined, je 1× Rest – ResizeObserver weg). Nach
+  Seite 20 stand der Browser wieder mit seiner eigenen Heap-Sperre (Log
+  „zuletzt genommen von diesem Faden – Heap verworfen“): Zwangsbeenden griff,
+  Seiten 21–30 liefen. Ursache: siehe neuer Fund M7.
+  **Abschluss Q3 – Verlauf (alle 30 Seiten):** JS-Fehler 61 → 18 (Module
+  übersprungen) → 14 (Image, timing, hasFeature) → 16–20 (mehr Seiten
+  behalten JS) → 17 (currentScript, Beobachter); „chunk path“ 6 → 0;
+  Neuladen ohne JS 18 → 16; vorzeitig beendete Browser 1 → 0; CSS nicht
+  verstanden: `var()` 8677 → 600–800, `calc()` 1055 → ~400, `rgb()` 468
+  → 0, logische Eigenschaften → 0. Grundsätzlich nicht möglich (Abweichungen
+  „Q3 CSS“ und „Q3 Speicher“): Rundungen/Schatten/Übergänge/Grid,
+  JS-lastige Seiten über dem Speicher des Browsers, HTML über 512 KB.
+  Offen (Abweichungen „Q3 DuckDuckGo-Logo“): Logo auf html.duckduckgo am
+  Board.
 - [ ] **Q4 Abschluss** – Review-Subagent prüft das ganze Qualitäts-Update
   gegen diesen Auftrag; 60-min-Dauertest per Autopilot, 0 Abstürze, kein
   Speicherleck; nächste Version vorbereiten (README, CHANGELOG,
@@ -2371,6 +2423,18 @@ und Verzeichnis auf GitHub).
 
 ## Abweichungen
 
+- **Q3 Speicher (26.11.)** – 6–9 der 30 Testseiten brechen ihr JavaScript
+  mit „out of memory“ ab und laden ohne JS neu; 8 werden nach 512 KB HTML
+  abgeschnitten. Der Browser hat 10,6 MB; neben ihm bleiben im Programm-
+  Pool 990 KB, mehr gibt der PSRAM nicht her (M6). Ersatz: JS bis 6 MB,
+  solange 3 MB für die Seite frei bleiben (Q3 Schritt 3), Rückfall ohne JS.
+- **Q3 DuckDuckGo-Logo (26.11., offen)** – auf html.duckduckgo.com fehlt am
+  Board seit der CSS-Vorbereitung das Logo (Hintergrund-PNG wird geladen,
+  aber nicht gezeichnet); am PC (64 Bit und i686) erscheint es mit derselben
+  Seite und demselben CSS. Ursache nicht gefunden; Suchfeld und Lupe gehen.
+  Nächster Schritt: das PNG im PC-Test über HTTP statt als data:-Adresse
+  ausliefern (Prüfserver mit Binärdaten).
+
 - **Q3 CSS, nicht nachgerüstet (26.11.)** – `border-radius`, `box-shadow`,
   `transition`, `transform`, `animation`, `filter`, `mask`, CSS Grid
   (`grid-*`, `gap`), `-webkit-*`/`-moz-*`: libcss verwirft sie, und die
@@ -2389,7 +2453,8 @@ und Verzeichnis auf GitHub).
   gespeichert). Ersatz: keiner – eine eigene Glyphe hiesse die Schrift
   ändern; „…“ auf der Taste ist durch „¾“ ersetzt.
 
-- **Q1 Fund 5 (25.11.)** – drei Test-Notizen „qasdfghjkl1234567“ aus
+- **Q1 Fund 5 (25.11., erledigt 26.11. – gelöscht mit OK des Nutzers,
+  siehe Q1)** – drei Test-Notizen „qasdfghjkl1234567“ aus
   früheren Board-Tests liegen im Notizen-Ordner von ESP32-OS auf der SD-Karte
   des Nutzers. Nicht ohne OK gelöscht (Nutzerdaten-Regel); Frage steht in
   STATUS. Neue entstehen nicht: der Tipp-Teil des S3-Laufs schliesst die

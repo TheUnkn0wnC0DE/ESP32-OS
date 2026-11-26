@@ -11,6 +11,14 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
 ## Jetzt
 
+- **26.11., 09:20 – gepusht main bc1ae0c.** Auf origin/main lag dein PR
+  „Add community health files (#2)“ (CODE_OF_CONDUCT, CONTRIBUTING,
+  SECURITY, Vorlagen) – in esp32-os übernommen, Spiegel-Commit darauf
+  (kein Force). Q3 Schritt 5 (document.currentScript) committet; br8:
+  22 geladen, 8 abgeschnitten, 0 vorzeitig beendet; var() 8677 → 577.
+  Einmal schlug `browser_im_kern_fenster` (i686) unter Last fehl (paralleler
+  Firmware-Bau), einzeln und in der ganzen Suite danach grün. Läuft: br9.
+
 - **26.11., 07:30 – Q3 weiter:** CSS-Vorbereitung eingebaut (var(),
   calc(), rgb(), logische Eigenschaften), committet 6567ee0. Board br6:
   CSS-Lücken var() 8677 → 597, calc() 1055 → 348, rgb() 468 → 90; JS-Fehler

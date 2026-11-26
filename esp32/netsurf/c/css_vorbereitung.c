@@ -7,7 +7,8 @@
  * calc() 1055, rgb() 468, margin-block-start/-inline-start, inline-size …).
  * Diese Datei schreibt den Text so um, dass libcss ihn versteht:
  *
- * 1. Eigene Eigenschaften sammeln (je Browserstart, alle Stylesheets und
+ * 1. Eigene Eigenschaften sammeln (je Seite im Hauptfenster – die Kopie von
+ *    desktop/browser_window.c leert die Tabelle –, alle Stylesheets und
  *    style-Attribute): Vorrang 3 hat eine Definition in `:root`/`html`/
  *    `body`/`*` auf oberster Ebene, 2 dieselben in `@media` (bei 3 und 2
  *    gilt die spätere, wie die Kaskade), 1 andere Regeln (die erste gilt:
@@ -915,6 +916,22 @@ char *ns_css_inline(const char *s, size_t n, size_t *aus_n)
 	if (memchr(s, 0, n) != NULL)
 		return NULL;
 	return vorbereiten(s, n, true, aus_n);
+}
+
+/* Neue Seite im Hauptfenster (Kopie von desktop/browser_window.c): die
+ * eigenen Eigenschaften der vorigen Seite gelten nicht mehr. */
+void ns_css_variablen_leeren(void)
+{
+	size_t i;
+	if (vars == NULL)
+		return;
+	for (i = 0; i < VAR_PLAETZE; i++) {
+		free(vars[i].name);
+		free(vars[i].wert);
+		vars[i].name = vars[i].wert = NULL;
+	}
+	vars_anzahl = 0;
+	vars_bytes = 0;
 }
 
 /* Zähler fürs Protokoll (Board: Zeile „ns_css“) und die Tests */

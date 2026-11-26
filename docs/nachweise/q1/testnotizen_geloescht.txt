@@ -1,0 +1,5 @@
+W (2335) pudding_fw::speicher: Test-Notizen – vorher 3 Dateien in /sdcard/ESP32-OS/Notizen
+W (2344) pudding_fw::speicher:   qasdfghjkl1234567890qwer (Kopie 2).txt (59 Byte, Inhalt "qasdfghjkl1234567890qwertzuiopqwertzuiopasdfghjkl0987654321"): gelöscht Ok(())
+W (2352) pudding_fw::speicher:   qasdfghjkl1234567890qwer (Kopie).txt (59 Byte, Inhalt "qasdfghjkl1234567890qwertzuiopqwertzuiopasdfghjkl0987654321"): gelöscht Ok(())
+W (2360) pudding_fw::speicher:   qasdfghjkl1234567890qwer.txt (59 Byte, Inhalt "qasdfghjkl1234567890qwertzuiopqwertzuiopasdfghjkl0987654321"): gelöscht Ok(())
+W (2361) pudding_fw::speicher: Test-Notizen – nachher 0 Dateien

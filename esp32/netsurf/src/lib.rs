@@ -952,12 +952,15 @@ const i = new Image(10, 20);
 console.log('bild', i.tagName, i.getAttribute('width'), i.getAttribute('height'));
 console.log('timing', typeof performance.timing.responseStart, performance.timing.responseStart > 0, performance.navigation.type);
 console.log('feature', document.implementation.hasFeature('HTML', '1.0'));
+const p = document.querySelector('p');
+new ResizeObserver(e => console.log('resize', e.length, e[0].target === p, e[0].contentRect.width > 0)).observe(p);
+new IntersectionObserver(e => console.log('schnitt', e[0].isIntersecting, e[0].intersectionRatio)).observe(p);
 </script></body></html>"#;
         let (r, _bild) = lauf_mit(&data_url(html), 320, 200, 1500, true).expect("Bild");
         assert_eq!(r, 0, "Frontend endet normal");
         let k = js_konsole(true);
         println!("{k}");
-        for z in ["log: bild IMG 10 20", "log: timing number true 0", "log: feature true"] {
+        for z in ["log: bild IMG 10 20", "log: timing number true 0", "log: feature true", "log: resize 1 true true", "log: schnitt true 1"] {
             assert!(k.contains(z), "{z} fehlt in {k}");
         }
         assert!(!k.contains("Error"), "keine Fehler: {k}");
@@ -998,6 +1001,30 @@ console.log('feature', document.implementation.hasFeature('HTML', '1.0'));
         for z in ["log: extern SCRIPT t /teil.js", "log: inline null"] {
             assert!(k.contains(z), "{z} fehlt in {k}");
         }
+    }
+
+    /// Q3: die eigenen CSS-Eigenschaften gelten je Seite – eine neue Seite im
+    /// Hauptfenster leert die Tabelle (Board 26.11.: nach der DuckDuckGo-App
+    /// fehlte auf der nächsten Seite das Logo).
+    #[test]
+    fn css_variablen_je_seite() {
+        c(css_variablen_je_seite_innen);
+    }
+
+    fn css_variablen_je_seite_innen() {
+        if im_eigenen_prozess("css_variablen_je_seite") {
+            return;
+        }
+        ressourcen();
+        let b = data_url(r#"<html><head><style>.c { background: var(--x, #00ff00); width: 80px; height: 40px; }</style></head><body style="margin:0;background:white"><div class="c"></div></body></html>"#);
+        let a = data_url(&format!(
+            r#"<html><head><style>:root {{ --x: #000000; }}</style></head><body><script>setTimeout(function () {{ location.href = '{b}'; }}, 100);</script></body></html>"#
+        ));
+        let (r, bild) = lauf_mit(&a, 320, 200, 2500, true).expect("Bild");
+        assert_eq!(r, 0);
+        let gruen = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0x00_FF00).count();
+        let schwarz_block = bild.px.iter().filter(|&&p| p & 0xFF_FFFF == 0).count();
+        assert!(gruen >= 80 * 40 * 9 / 10, "Seite B mit Ersatzwert grün: {gruen} (schwarz {schwarz_block})");
     }
 
     fn module_skripte_innen() {
