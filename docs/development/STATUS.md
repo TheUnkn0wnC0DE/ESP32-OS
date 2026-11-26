@@ -9,27 +9,28 @@ Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
-## Zusammenfassung (26.11., 20:00)
+## Zusammenfassung (26.11., 21:00 – Abschluss dieser Sitzung)
 
-**Fertig:** Q1, Q2, Q3 und SC abgehakt. Q4: Review (7 Befunde behoben),
-vier Dauertests – der letzte 75 min mit **0 Abstürzen, 0 Neustarts, stabilem
-System-Speicher**. Gefunden und behoben: ein PSRAM-Leck von ~1 MB/h (Kopien
-der Menü-Symbole im System-Heap, schon in 1.0.3), offene Wetter-Apps, Absturz
-bei vollem System-Heap. Release-Paket 1.0.4 nach allen Korrekturen neu
-gebaut und geprüft (`release/v1.0.4`, Text `docs/release/v1.0.4.md`) – nicht
-veröffentlicht. Gepusht.
+**Fertig (mit Nachweis, gepusht):** Q1 Rundgang, Q2 Wetter-App, Q3 Browser
+(JS-Fehler 61 → 17, CSS var/calc/rgb/logische Eigenschaften, 30/30
+Testseiten ohne vorzeitiges Ende), SC-Stabilitätsrunde (40 min, Konsole,
+Ruhezustand, 0 Abstürze). Q4: Review behoben, PSRAM-Leck (~1 MB/h, schon
+in 1.0.3) gefunden und behoben, Dauertest 75 min mit 0 Abstürzen und
+stabilem System-Speicher. Release 1.0.4 gebaut und geprüft (release/v1.0.4,
+docs/release/v1.0.4.md) – **nicht veröffentlicht**. Neu angefangen: D2 MIDI
+im Musikplayer (PC-Tests grün).
 
-**Offen:** Q4 nicht abgehakt – interner RAM sinkt im Dauertest weiter um ~9
-KB je 75 min (bekannt aus 1.0.3, Abweichung „Q4 interner RAM“). S3 (≥ 30 fps
-beim Blättern), Teil D (D2 Ogg/MIDI), Funde M7 (Browser-Heap langsam bei
-Zerstückelung), DuckDuckGo-Logo am Board.
+**Offen:** Q4 – internes RAM-Leck ~9 KB/75 min (schon in 1.0.3, Ursache
+eingegrenzt, nicht gefunden; nächster Schritt Heap-Spur mit Aufrufstelle).
+S3 (≥ 30 fps beim Blättern), D2 Ogg und Board-Nachweis, SD, R12. Funde M7
+(Browser-Heap langsam), DuckDuckGo-Logo am Board.
 
 **Deine Entscheidungen:**
-1. **Release 1.0.4 freigeben?** Paket liegt bereit. Einziger bekannter
-   Mangel gegenüber dem Auftrag: das kleine interne RAM-Leck (wie 1.0.3).
-   Der Web-Flasher bleibt bis zu deinem OK auf 1.0.1.
+1. Release 1.0.4 freigeben? (einziger bekannter Mangel: das kleine
+   interne Leck wie in 1.0.3)
 2. C6-Firmware flashen für C2 (WLAN 6)?
-3. D3 App-Store: was soll installierbar sein (siehe Offene Fragen)?
+3. D3 App-Store: was soll installierbar sein?
+4. Ogg: Fremdcode (Vorbis-Dekoder) herunterladen und einbauen?
 
 ## Jetzt
 

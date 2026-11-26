@@ -238,10 +238,11 @@ impl<R: Read> WavLeser<R> {
     }
 }
 
-/// Quelle einer Wiedergabe: MP3 oder WAV.
+/// Quelle einer Wiedergabe: MP3, WAV oder MIDI.
 enum Quelle {
     Mp3(Leser),
     Wav(WavLeser<KDatei>),
+    Midi(crate::midi::MidiLeser),
 }
 
 impl Quelle {
@@ -249,6 +250,7 @@ impl Quelle {
         match self {
             Quelle::Mp3(l) => l.read(pcm).unwrap_or(0),
             Quelle::Wav(w) => w.lesen(pcm),
+            Quelle::Midi(m) => m.lesen(pcm),
         }
     }
 }
@@ -256,12 +258,15 @@ impl Quelle {
 /// Spielbare Endungen (D2).
 pub fn spielbar(name: &str) -> bool {
     let n = name.to_lowercase();
-    n.ends_with(".mp3") || n.ends_with(".wav")
+    n.ends_with(".mp3") || n.ends_with(".wav") || n.ends_with(".mid") || n.ends_with(".midi")
 }
 
 /// Titel ohne Endung.
 fn ohne_endung(name: &str) -> &str {
-    if spielbar(name) { &name[..name.len() - 4] } else { name }
+    match name.rfind('.') {
+        Some(i) if spielbar(name) => &name[..i],
+        _ => name,
+    }
 }
 
 /// Eine laufende Datei: Decoder und Umrechnung auf [`kern::ton::RATE`].
@@ -292,7 +297,38 @@ impl Wiedergabe {
     #[inline(never)]
     fn oeffnen(pfad: &str) -> Result<Box<Wiedergabe>, String> {
         let mut d = KDatei::oeffnen(pfad).ok_or_else(|| "nicht gefunden".to_string())?;
-        if pfad.to_lowercase().ends_with(".wav") {
+        let klein = pfad.to_lowercase();
+        if klein.ends_with(".mid") || klein.ends_with(".midi") {
+            // ganze Datei (MIDI ist klein), höchstens 1 MB
+            if d.groesse > 1024 * 1024 {
+                return Err(kern::sprache::t("MIDI file too large", "MIDI-Datei zu gross").into());
+            }
+            let mut daten = vec![0u8; d.groesse as usize];
+            let mut gelesen = 0;
+            while gelesen < daten.len() {
+                match d.read(&mut daten[gelesen..]) {
+                    Ok(0) | Err(_) => break,
+                    Ok(n) => gelesen += n,
+                }
+            }
+            daten.truncate(gelesen);
+            let m = crate::midi::MidiLeser::neu(&daten)?;
+            let gesamt_s = Some(m.sekunden());
+            return Ok(Box::new(Wiedergabe {
+                quelle: Quelle::Midi(m),
+                rate: crate::midi::RATE,
+                kanaele: 1,
+                schritt: f64::from(crate::midi::RATE) / f64::from(kern::ton::RATE),
+                vorrat: Vec::new(),
+                t: 0.0,
+                geschrieben: 0,
+                rest: Vec::new(),
+                ende: false,
+                gesamt_s,
+                pcm: vec![0; nanomp3::MAX_SAMPLES_PER_FRAME],
+            }));
+        }
+        if klein.ends_with(".wav") {
             let w = WavLeser::neu(d)?;
             let (rate, kanaele, gesamt_s) = (w.rate, w.kanaele, Some(w.sekunden()));
             return Ok(Box::new(Wiedergabe {
@@ -535,7 +571,7 @@ fn anzeige_zeichnen(z: &mut Zustand) {
     if let Some(m) = &z.meldung {
         text(RX, 200, &kurz(m, 36), 0xB03020, 1);
     } else if z.titel.is_empty() {
-        text(RX, 200, &kurz(&format!("{} {}", kern::sprache::t("No music files (MP3, WAV) in", "Keine Musikdateien (MP3, WAV) in"), z.ordner), 36), 0x606060, 1);
+        text(RX, 200, &kurz(&format!("{} {}", kern::sprache::t("No music files (MP3, WAV, MIDI) in", "Keine Musikdateien (MP3, WAV, MIDI) in"), z.ordner), 36), 0x606060, 1);
     }
 }
 

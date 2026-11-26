@@ -13,6 +13,7 @@ pub mod ersteinrichtung;
 pub mod gesten;
 pub mod kalender;
 pub mod konfig;
+pub mod midi;
 pub mod musik;
 pub mod notizen;
 pub mod rechner;

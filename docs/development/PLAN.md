@@ -2493,6 +2493,14 @@ und Verzeichnis auf GitHub).
   Musikplayer. Unit-Test `musik::tests::wav_lesen` (16 Bit stereo mit LIST,
   8 Bit mono wertgleich; keine WAV und 24 Bit abgelehnt). Offen: Ogg
   (Vorbis-Dekoder), MIDI (Synthesizer), Board-Nachweis (Ton im Log, Foto).
+  Stand 26.11. abends: **MIDI** (`desktop/src/midi.rs`): Standard-MIDI-
+  Dateien Format 0/1 mit Tempowechseln, eigener Synthesizer (bis 24
+  Stimmen, Dreieck+Rechteck mit Hüllkurve, Kanal 10 als Rauschen), 22050 Hz
+  mono, Liste und Dateimanager kennen .mid/.midi. Unit-Tests
+  `midi::tests` (Grundton a' = 420–460 Hz gemessen, Länge, Ende, keine
+  MIDI-Datei abgelehnt). Offen: Ogg (Vorbis-Dekoder – braucht Fremdcode,
+  z. B. lewton oder stb_vorbis, Download mit OK), Board-Nachweis (Ton im
+  Log, Foto).
 - [ ] **D3 App-Store** – Programme per WLAN aus einem signierten
   Verzeichnis auf GitHub laden, installieren, entfernen, per Touch; gleiche
   Signaturprüfung wie beim OTA. Nachweis: PC-Test Signatur, Board:
