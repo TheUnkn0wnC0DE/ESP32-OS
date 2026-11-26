@@ -112,20 +112,15 @@ pub fn spawn_pinned(
     handle
 }
 
-/// Logausgabe einrichten: eigener Logger, der jede Zeile über den Treiber
-/// des USB-Serial/JTAG in einen Ringpuffer schreibt (ein Interrupt sendet
-/// sie), ohne die Spielschleife anzuhalten. Ohne Treiber bleibt es beim
-/// Logger von ESP-IDF.
+/// Set up logging: our own logger writes each line into a ring buffer through
+/// the console driver ([`crate::serial`]); an interrupt sends it.
+/// Der Weg über stdout schrieb blockierend mit 115200 Baud – ~9 ms je
+/// Zeile; die Statistik alle 2 s hielt die Spielschleife so ~70 ms an, ein
+/// sichtbarer Hänger. Ohne Treiber bleibt es beim Logger von ESP-IDF.
 pub fn log_einrichten() {
-    let mut cfg = sys::usb_serial_jtag_driver_config_t { tx_buffer_size: 8192, rx_buffer_size: 256 };
-    // SAFETY: einmal beim Start; gültige Konfiguration.
-    let ok = unsafe { esp!(sys::usb_serial_jtag_driver_install(&mut cfg)) };
-    match ok {
+    match crate::serial::init() {
         Ok(()) => {
-            // ESP_LOG und printf über denselben Treiber.
-            // SAFETY: Treiber ist installiert.
-            unsafe { sys::usb_serial_jtag_vfs_use_driver() };
-            static LOGGER: UsbLog = UsbLog;
+            static LOGGER: SerialLog = SerialLog;
             if log::set_logger(&LOGGER).is_ok() {
                 log::set_max_level(log::LevelFilter::Info);
             }
@@ -133,16 +128,9 @@ pub fn log_einrichten() {
         }
         Err(e) => {
             esp_idf_svc::log::EspLogger::initialize_default();
-            log::error!("USB-Treiber: {e} – Logausgabe blockiert");
+            log::error!("console driver: {e} - logging blocks");
         }
     }
-}
-
-/// In den Ringpuffer der Konsole schreiben, ohne zu warten: Ist er voll (kein
-/// PC liest mit), geht die Zeile verloren, statt das System anzuhalten.
-fn konsole_schreiben(buf: *const core::ffi::c_void, n: usize) {
-    // SAFETY: `buf` gilt für `n` Bytes; der Treiber kopiert sie.
-    unsafe { sys::usb_serial_jtag_write_bytes(buf, n as _, 0) };
 }
 
 /// C-Ausgabe (printf von Doom, Quake und ESP-IDF) ebenfalls über den
@@ -153,7 +141,8 @@ fn konsole_schreiben(buf: *const core::ffi::c_void, n: usize) {
 fn stdout_umleiten() {
     unsafe extern "C" fn schreiben(_k: *mut core::ffi::c_void, buf: *const core::ffi::c_char, n: core::ffi::c_int) -> core::ffi::c_int {
         if n > 0 && !LOG_STUMM.load(core::sync::atomic::Ordering::Acquire) {
-            konsole_schreiben(buf.cast(), n as usize);
+            // newlib: `buf` is valid for `n` bytes
+            crate::serial::write(buf.cast(), n as usize);
         }
         n
     }
@@ -178,9 +167,9 @@ fn stdout_umleiten() {
 pub static LOG_STUMM: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
 
 /// Zeilen wie der ESP-IDF-Logger: `I (Millisekunden) Ziel: Text`.
-struct UsbLog;
+struct SerialLog;
 
-impl log::Log for UsbLog {
+impl log::Log for SerialLog {
     fn enabled(&self, m: &log::Metadata) -> bool {
         m.level() <= log::max_level()
     }
@@ -201,11 +190,10 @@ impl log::Log for UsbLog {
         // SAFETY: reine Abfrage der Laufzeit.
         let ms = unsafe { sys::esp_log_timestamp() };
         let _ = writeln!(z, "{k} ({ms}) {}: {}", r.target(), r.args());
-        konsole_schreiben(z.as_ptr().cast(), z.len());
-        // Fehler (auch Panik) sofort hinaus – danach kann ein Neustart folgen.
+        crate::serial::write(z.as_bytes().as_ptr(), z.len());
+        // Send errors (including panics) at once; a restart may follow.
         if r.level() == log::Level::Error {
-            // SAFETY: Treiber ist installiert (sonst ist dieser Logger nicht aktiv).
-            unsafe { sys::usb_serial_jtag_wait_tx_done(10) };
+            crate::serial::flush();
         }
     }
 

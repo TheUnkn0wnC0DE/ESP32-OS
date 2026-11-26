@@ -21,8 +21,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-# Windows: kurzer Pfad C:/ec; sonst im Benutzerordner. `ESP32OS_EC` muss auch
-# beim Bauen gesetzt sein (komponenten/esp32os/idf_component.yml).
+# Windows: the short path C:/ec; elsewhere in the home directory. `ESP32OS_EC`
+# must also be set when building (komponenten/esp32os/idf_component.yml).
 ZIEL = Path(os.environ.get("ESP32OS_EC") or ("C:/ec" if os.name == "nt" else Path.home() / ".cache/esp32os/ec"))
 
 # Name, Version, SHA-256 des Registry-Archivs

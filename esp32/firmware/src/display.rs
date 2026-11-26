@@ -1,7 +1,8 @@
-//! 4,3″-Display: ST7701, 480×800 hochkant, MIPI-DSI (2 Lanes), Video-Modus.
+//! Portrait display on MIPI-DSI (2 lanes), video mode; for the panel see
+//! [`crate::board`].
 //!
 //! Der DSI-Controller liest das Bild selbstständig aus einem Bildspeicher im
-//! PSRAM (rechnerisch 60-mal pro Sekunde, siehe [`PANEL_HZ`]; der
+//! PSRAM (bei den Waveshare-Zeitwerten rechnerisch 55-mal pro Sekunde; der
 //! Zähler [`refreshes`] misst den echten Wert). Drei Bildspeicher im Wechsel:
 //!
 //! * [`Display::acquire`] liefert den ältesten, sobald das Display ihn nicht
@@ -65,7 +66,7 @@ fn warte_auf_bildwechsel(fertig: impl Fn() -> bool) {
 
 pub struct Display {
     panel: sys::esp_lcd_panel_handle_t,
-    /// DBI-Befehlskanal (DCS-Befehle wie Sleep-In, die der Panel-Treiber
+    /// DBI-Befehlskanal (DCS-Befehle wie Sleep-In, die der HX8394-Treiber
     /// nicht anbietet).
     io: sys::esp_lcd_panel_io_handle_t,
     fbs: [*mut u16; FB_COUNT],
@@ -81,7 +82,8 @@ pub struct Display {
 
 impl Display {
     pub fn new(fill: u16) -> Result<Self, EspError> {
-        // SAFETY: Reihenfolge und Werte wie in der Demo von Guition; Konfigurationen leben bis zum Ende der Aufrufe, Handles
+        // SAFETY: Reihenfolge und Werte wie im Board-Support-Paket von
+        // Waveshare; Konfigurationen leben bis zum Ende der Aufrufe, Handles
         // bis zum Programmende.
         unsafe {
             // 1) Versorgung der MIPI-D-PHY (LDO-Kanal 3, 2,5 V).
@@ -121,18 +123,8 @@ impl Display {
             dpi.video_timing.vsync_back_porch = VSYNC_BACK;
             dpi.video_timing.vsync_front_porch = VSYNC_FRONT;
 
-            // 4) ST7701-Treiber mit der Initialisierungsfolge dieses Panels
-            // (komponenten/esp_lcd_st7701, aus der Demo von Guition).
-            let mut vendor: sys::st7701_vendor_config_t = zeroed();
-            vendor.__bindgen_anon_1.mipi_config.dsi_bus = bus;
-            vendor.__bindgen_anon_1.mipi_config.dpi_config = &dpi;
-            vendor.flags.set_use_mipi_interface(1);
-            let mut dev: sys::esp_lcd_panel_dev_config_t = zeroed();
-            dev.reset_gpio_num = LCD_RST;
-            dev.bits_per_pixel = 16;
-            dev.vendor_config = (&mut vendor as *mut sys::st7701_vendor_config_t).cast();
-            let mut panel = core::ptr::null_mut();
-            esp!(sys::esp_lcd_new_panel_st7701(io, &dev, &mut panel))?;
+            // 4) Panel driver (sends the init sequence).
+            let panel = create_panel(bus, io, &dpi)?;
             esp!(sys::esp_lcd_panel_reset(panel))?;
             esp!(sys::esp_lcd_panel_init(panel))?;
             // Nicht jeder Treiber kennt An/Aus – ein Fehler hier ist egal.
@@ -212,8 +204,8 @@ impl Display {
     /// nicht mehr ausliest: Er war bis zum vorletzten Umschalten zu sehen und
     /// ist frei, sobald danach ein Bild fertig ausgelesen wurde.
     /// Panel schlafen legen (DCS Display-Off 0x28 + Sleep-In 0x10) bzw.
-    /// wecken (Sleep-Out 0x11, 120 ms Wartezeit, Display-On
-    /// 0x29). Die Befehle gehen
+    /// wecken (Sleep-Out 0x11, 120 ms laut HX8394-Datenblatt, Display-On
+    /// 0x29). Der HX8394-Treiber kennt `disp_sleep` nicht (0x106), daher
     /// direkt über den DBI-Kanal. Ergebnis: ESP-Fehlercodes (0 = ok).
     pub fn schlafen(&mut self, an: bool) -> (i32, i32) {
         // SAFETY: gültiger DBI-Kanal aus `new`, Befehle ohne Parameter.

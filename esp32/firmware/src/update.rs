@@ -6,11 +6,13 @@
 use core::ffi::{c_char, c_int, c_void};
 use std::ffi::CString;
 
-/// Repository der Releases (O8), beim Bauen mit
-/// `ESP32OS_UPDATE_REPO=besitzer/name` gesetzt. Ohne Angabe gibt es keine
-/// Updates über WLAN: Die Releases von ESP32-OS sind für das
-/// Waveshare-Board gebaut und liefen auf dem Guition nicht.
-pub const REPO: Option<&str> = option_env!("ESP32OS_UPDATE_REPO");
+/// Release repository, per board ([`crate::board::UPDATE_REPO`]); override at
+/// build time with `ESP32OS_UPDATE_REPO=owner/name`. Without one there are no
+/// updates over Wi-Fi.
+pub const REPO: Option<&str> = match option_env!("ESP32OS_UPDATE_REPO") {
+    Some(r) => Some(r),
+    None => crate::board::UPDATE_REPO,
+};
 
 unsafe extern "C" {
     fn esp32os_https_text(url: *const c_char, json: c_int, puffer: *mut c_char, max: c_int, status: *mut c_int) -> c_int;

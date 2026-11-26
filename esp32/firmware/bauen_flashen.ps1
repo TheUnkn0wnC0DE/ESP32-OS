@@ -149,7 +149,6 @@ $env:CARGO_WORKSPACE_DIR = 'O:\esp32\firmware'
 # Zwischenspeicher des Komponenten-Managers mit kurzem Pfad: esp_hosted
 # enthält Beispiele mit sehr tiefen Ordnern (Windows-Grenze 260 Zeichen).
 $env:IDF_COMPONENT_CACHE_PATH = 'C:\ec'
-$env:ESP32OS_EC = 'C:/ec'
 # Testnetz (W0): nur aus der lokalen Datei wlan.local, nie ausgeben
 Remove-Item Env:ESP32OS_WLAN_SSID, Env:ESP32OS_WLAN_PASSWORT -ErrorAction SilentlyContinue
 if ($Wlan) {

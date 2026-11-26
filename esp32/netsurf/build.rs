@@ -399,10 +399,10 @@ fn main() {
     // Für das Board: dieselben Gruppen als CMake-Liste (mit eigenen
     // erzeugten Köpfen neben der Liste)
     board_liste(&q);
-    // Ohne Windows (macOS, Linux) laufen die PC-Tests nicht; für den
-    // Board-Bau genügt die Liste: `NETSURF_NUR_LISTE=1 cargo build -p netsurf`
-    println!("cargo:rerun-if-env-changed=NETSURF_NUR_LISTE");
-    if std::env::var_os("NETSURF_NUR_LISTE").is_some() {
+    // The PC tests only run on Windows. Elsewhere the board build just needs
+    // the list: `NETSURF_LIST_ONLY=1 cargo build -p netsurf`
+    println!("cargo:rerun-if-env-changed=NETSURF_LIST_ONLY");
+    if std::env::var_os("NETSURF_LIST_ONLY").is_some() {
         return;
     }
 

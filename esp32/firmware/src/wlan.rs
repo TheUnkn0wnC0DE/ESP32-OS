@@ -304,7 +304,7 @@ pub fn im_hintergrund_starten() {
             }
         });
         kern::wlan::treiber_setzen(Box::new(C6));
-        // Updates von GitHub (U1), nur mit eigenem Repository (update.rs)
+        // Updates from GitHub, only with a repository (update.rs)
         if crate::update::REPO.is_some() {
             kern::aktualisierung::quelle_setzen(Box::new(crate::update::GitHub));
         }

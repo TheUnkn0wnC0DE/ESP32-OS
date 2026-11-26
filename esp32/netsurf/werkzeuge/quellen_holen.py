@@ -40,8 +40,8 @@ QJS_SHA = "6c05066a6b62b483e2ba0f83d7a16688c6958182b214bfd693529434cef84a9e"
 ZLIB_URL = "https://zlib.net/fossils/zlib-1.4.tar.gz"
 # veröffentlicht auf https://zlib.net (zlib 1.4, tar.gz)
 ZLIB_SHA = "02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584"
-# Windows: C:\\ns; sonst im Benutzerordner (dann NETSURF_QUELLEN beim Bauen
-# auf <WURZEL>/3.11 setzen).
+# Windows: C:\\ns; elsewhere in the home directory (then set NETSURF_QUELLEN to
+# <root>/3.11 when building).
 WURZEL = r"C:\ns" if os.name == "nt" else os.path.expanduser("~/.cache/esp32os/ns")
 ZIEL = os.path.join(WURZEL, "3.11")
 ARCHIV = os.path.join(WURZEL, "dl", "netsurf-all-3.11.tar.gz")
@@ -328,7 +328,7 @@ def fb_schrift():
     werkzeug = os.path.join(WURZEL, "convert_font.exe")
     befehl = [CLANG, "-O1", "-w", "-o", werkzeug, os.path.join(ZIEL, "netsurf", "tools", "convert_font.c")]
     if os.name == "nt":
-        # POSIX-Ersatz nur für Windows; sonst bringt das System alles mit
+        # POSIX shims for Windows only; other systems have all of it
         befehl += ["-D_CRT_SECURE_NO_WARNINGS", "-I", os.path.join(HIER, "..", "compat"),
                    "-I", os.path.join(HIER, "..", "compat", "gemeinsam"), os.path.join(HIER, "..", "c", "getopt.c")]
     subprocess.run(befehl, check=True)

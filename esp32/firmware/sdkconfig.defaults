@@ -1,10 +1,10 @@
-# ESP-IDF-Einstellungen für das Guition JC4880P443C_I_W.
+# ESP-IDF-Einstellungen für das Waveshare ESP32-P4-WIFI6-Touch-LCD-5.
 # Grundlage: die Beispiele von Waveshare (07_Displaycolorbar); dazu die
 # Chip-Revision in sdkconfig.defaults.rev3_x bzw. sdkconfig.defaults.rev1_3.
 
 # --- Flash und PSRAM (wie bei Waveshare) -------------------------------------
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
-CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
 CONFIG_SPIRAM=y
 # Programmcode läuft aus dem PSRAM (schneller als aus dem Flash; Speichern im
 # Flash hält die Kerne nicht an).
@@ -34,10 +34,10 @@ CONFIG_ESP_TASK_WDT_EN=n
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=32768
 CONFIG_PTHREAD_TASK_STACK_SIZE_DEFAULT=16384
 
-# --- Konsole ------------------------------------------------------------------
-# Log, Bildschirmfotos und Aufspielen über den USB-Anschluss des P4
-# (USB-Serial/JTAG).
-CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+# --- Display: Waveshare-Treiber ohne dessen I²C-Initialisierung ---------------
+# (gehört zu einem anderen Panel; das Board-Support-Paket dieser Platine
+# schaltet sie ebenfalls ab)
+CONFIG_ESP_LCD_HX8394_SKIP_I2C_INIT=y
 
 # ESP32-OS: TLS-Platz 1 = Faden-Kontext des Kerns (kern_board.rs)
 CONFIG_FREERTOS_THREAD_LOCAL_STORAGE_POINTERS=3

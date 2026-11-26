@@ -1,8 +1,9 @@
 # Changelog
 
-## Guition JC4880P443C_I_W port (this fork)
+## Unreleased
 
-- Runs on the Guition JC4880P443C_I_W (4.3" 480×800 ST7701, 16 MB flash) instead of the Waveshare board; the 640×360 desktop is shown scaled ×1.25 with black bars. Log and flashing over the USB Serial/JTAG port. No updates over Wi-Fi unless built with `ESP32OS_UPDATE_REPO`. New build script for macOS/Linux: `esp32/firmware/bauen_flashen.sh`.
+- New board: Guition JC4880P443C_I_W (4.3" 480×800 ST7701, 16 MB flash), selected at build time; the Waveshare board stays the default. On the Guition the 640×360 desktop is shown scaled ×1.25 with black bars, log and flashing use the USB Serial/JTAG port, and updates over Wi-Fi are off. New build script for macOS/Linux: `esp32/firmware/build_flash.sh --board guition|waveshare`.
+- Web flasher: choose the board before installing.
 
 ## 1.0.4 (not released yet)
 

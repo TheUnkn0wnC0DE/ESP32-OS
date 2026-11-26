@@ -339,8 +339,7 @@ fn main() {
     }
 
     // --- Display und Ausgabe --------------------------------------------------
-    // Schwarz: Die Ränder neben dem Bild beschreibt der PPA nie.
-    let mut disp = Display::new(hex(0x000000)).expect("Display");
+    let mut disp = Display::new(hex(pudding_fw::board::BOOT_COLOR)).expect("Display");
     let mut pipeline = Pipeline::new().expect("PPA");
     // M4: Programm-Pool erst jetzt (Bildspeicher von Anzeige und Pipeline
     // liegen schon) – nur im Desktop (Spiele haben ihre eigenen Abbilder)
