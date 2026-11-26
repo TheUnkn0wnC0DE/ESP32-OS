@@ -60,7 +60,11 @@ pub fn anwendungen_setzen(v: &[Anwendung]) {
 
 fn anwendungen() -> Vec<Anwendung> {
     // Sperre nur im Kern-Abschnitt (siehe SYMBOL_CACHE; Zwangsbeenden)
-    kern::kern_abschnitt(|| ANWENDUNGEN.lock().unwrap_or_else(|e| e.into_inner()).clone())
+    // Kopie im Heap des Aufrufers (geschützt, nicht im Kern-Abschnitt): eine
+    // Kopie im System-Heap bliebe liegen, wenn das Programm ohne Aufräumen
+    // endet (M8, Dauertest 26.11.)
+    sperre_vorbereiten(&ANWENDUNGEN);
+    kern::geschuetzt(|| ANWENDUNGEN.lock().unwrap_or_else(|e| e.into_inner()).clone())
 }
 
 fn haken() -> Option<Haken> {
@@ -95,27 +99,43 @@ fn symbol_entpacken(t: &[(usize, usize)], i: usize, g: u32) -> Rgba {
 static SYMBOL_CACHE: Mutex<Vec<(usize, u32, Rgba)>> = Mutex::new(Vec::new());
 
 /// Symbol `i` in Grösse `g`.
+/// Die Mutex der Standardbibliothek legt ihr Sperrobjekt beim ersten Sperren
+/// an – im Heap dessen, der sperrt. Gemeinsame Mutexe deshalb zuerst im
+/// Kern-Abschnitt sperren (Objekt im System-Heap); sonst läge es im Heap
+/// eines Programms und zeigte nach dessen Ende ins Leere („failed to lock
+/// mutex: Invalid argument“, Dauertest 26.11.).
+pub(crate) fn sperre_vorbereiten<T>(m: &std::sync::Mutex<T>) {
+    kern::kern_abschnitt(|| drop(m.lock()));
+}
+
 pub fn symbol(i: usize, g: u32) -> Rgba {
     let i = i.min(erzeugt::SYMBOLE_ANZAHL - 1);
-    // M8 (Dauertest 26.11.): Kopien im Kern-Abschnitt liegen im System-Heap;
-    // war der leer, brach eine 48×48-Kopie (9216 Bytes) für die Meldung das
-    // ganze System ab. Ohne Platz: selbst entpacken (Heap des Programms),
-    // ohne Zwischenspeicher.
-    let bytes = (g as usize * g as usize).saturating_mul(4) * 2;
-    if !kern::sys::system_belegung_moeglich(bytes) {
-        let b = symbol_entpacken(&erzeugt::SYMBOLE_32, i, 32);
-        return if g == 32 { b } else { kolibri::libimg::skalieren(&b, g, g, true) };
-    }
-    let gespeichert = kern::kern_abschnitt(|| SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).iter().find(|(k, gr, _)| *k == i && *gr == g).map(|(_, _, b)| b.clone()));
+    // M8 (Dauertest 26.11.): die Kopie für das Programm entsteht in seinem
+    // eigenen Heap (geschützter Abschnitt). Vorher im Kern-Abschnitt, also im
+    // System-Heap – endete das Programm ohne Aufräumen (Startmenü nach dem
+    // Start eines Programms), blieb sie liegen: 12 Symbole × 9216 Bytes je
+    // Menü, ~1 MB je Stunde im Dauertest.
+    sperre_vorbereiten(&SYMBOL_CACHE);
+    let gespeichert = kern::geschuetzt(|| SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).iter().find(|(k, gr, _)| *k == i && *gr == g).map(|(_, _, b)| b.clone()));
     if let Some(b) = gespeichert {
         return b;
     }
+    let b = symbol_entpacken(&erzeugt::SYMBOLE_32, i, 32);
+    let b = if g == 32 { b } else { kolibri::libimg::skalieren(&b, g, g, true) };
+    // in den gemeinsamen Zwischenspeicher eine eigene Kopie im System-Heap –
+    // nur mit Reserve (eine Belegung im Kern-Abschnitt bricht bei leerem
+    // System-Heap das ganze System ab; vorher geschah das mit der Meldung)
+    let bytes = (g as usize * g as usize).saturating_mul(4);
+    if !kern::sys::system_belegung_moeglich(bytes) {
+        return b;
+    }
     kern::kern_abschnitt(|| {
-        let b = symbol_entpacken(&erzeugt::SYMBOLE_32, i, 32);
-        let b = if g == 32 { b } else { kolibri::libimg::skalieren(&b, g, g, true) };
-        SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).push((i, g, b.clone()));
-        b
-    })
+        let mut c = SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner());
+        if !c.iter().any(|(k, gr, _)| *k == i && *gr == g) {
+            c.push((i, g, b.clone()));
+        }
+    });
+    b
 }
 
 /// Bild mit Alpha über einen bekannten Untergrund `hg(x, y)` mischen und

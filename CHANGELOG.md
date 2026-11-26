@@ -10,6 +10,8 @@
 - Taskbar: long titles end with "..". File manager: in the recycle bin only "Recycle bin" is highlighted.
 - Texts no longer contain characters the system font cannot show (boxes instead of "..." and "-").
 - Stability: a program that is force-closed while it holds its own memory lock is now really ended; before, its memory stayed reserved and large programs (browser) could no longer start.
+- Memory: opening the Start menu no longer leaves about 108 KB of PSRAM behind each time (about 1 MB per hour of heavy use, also in 1.0.3). Programs no longer start when system memory is almost full, and an almost full system memory no longer restarts the board. Measured: 75-minute endurance run with all programs, 0 crashes, PSRAM stable.
+- Browser: CSS variables (`var()`), `calc()` with one unit, the space syntax of `rgb()`/`hsl()` and logical properties such as `margin-inline-start` now work; `<script type="module">` and import maps are skipped like in a browser without modules; new `document.currentScript`, `ResizeObserver`, `IntersectionObserver`, `new Image()`, `performance.timing`. JavaScript may use up to 6 MB as long as 3 MB stay free for the page. Measured on 30 well-known pages: JavaScript errors 61 → 17, CSS declarations dropped because of `var()` 8677 → about 700; 22 pages load, 8 are cut off at 512 KB of HTML, none ends early.
 ## 1.0.3 (2026-11-25)
 
 - Browser: tapping the Start button while the browser is open no longer crashes the system. A page that cannot load shows a readable reason (name not found, no connection, timeout) instead of an error code; DNS falls back to 1.1.1.1 when the router's server does not answer.

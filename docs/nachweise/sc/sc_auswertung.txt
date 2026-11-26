@@ -1,0 +1,17 @@
+﻿Stabilitätsrunde 2026-11-26T16:29:05, 40 min, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: Ruhezustand: aufgeweckt (Panel 0/0) nach 20 s, WLAN verbunden
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: Ruhezustand: aufgeweckt (Panel 0/0) nach 20 s, WLAN verbunden
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: Ruhezustand: aufgeweckt (Panel 0/0) nach 20 s, WLAN verbunden
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: Ruhezustand: aufgeweckt (Panel 0/0) nach 20 s, WLAN verbunden
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []

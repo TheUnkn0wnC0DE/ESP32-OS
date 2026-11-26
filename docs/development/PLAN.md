@@ -1558,6 +1558,28 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
     liegt ausserhalb (ESP-IDF/Treiber: TLS, HTTP, JPEG, Audio, …). Die
     Speicherwacht schreibt dazu jetzt „Kern-System … KB“; der nächste
     Dauertest zeigt, ob der Kern-Anteil gleich bleibt.
+  - Dauertest 3 (26.11. 15:45, 75 min, `m4_lauf.ps1`): **0 Abstürze, 0
+    Neustarts**, in keiner der 10 Runden blieb ein Programm offen; interner
+    RAM 220 → 211 KB. Aber: freier PSRAM plus „Kern-System“ bleibt konstant
+    (~5935 KB) – der Verlust liegt **im Kern-Allokator am Board**, etwa 108
+    KB je Runde in Stufen (3495 → 3603 → 3715 → 3823 … → 4827 KB), jeweils
+    in Zeitfenstern mit den Notizen. Am PC (auch mit SD-Ordner) lassen die
+    Notizen nichts zurück. Nächster Schritt: Board-Lauf mit der Zuordnung je
+    Programm (Kern loggt beim Ende eines Programms den Zuwachs des
+    System-Heaps seit seinem Start, „System-Heap: X endete, +N KB“).
+  - **Ursache gefunden (26.11. abends):** `shell::symbol()` (auch
+    `anwendungen()` und `konfig::hintergrund()`) klonte im Kern-Abschnitt –
+    die Kopie lag im System-Heap. Am PC läuft beim Ende eines Programms das
+    Abwickeln (Destruktoren), am Board wird der Task ohne Abwickeln
+    gelöscht: das Startmenü (endet, wenn man darin ein Programm startet)
+    liess so je Öffnen 12 Symbole × 9216 Bytes = 108 KB liegen. Jetzt
+    entsteht die Kopie im Heap des Programms (geschützter Abschnitt).
+    Dabei Fehler gemacht und behoben: die Mutex der Standardbibliothek legt
+    ihr Sperrobjekt beim ersten Sperren im Heap des Sperrenden an – zuerst
+    im Programm gesperrt, zeigte sie nach dessen Ende ins Leere („failed to
+    lock mutex: Invalid argument“, Neustart nach 7 min im Dauertest 4);
+    jetzt wird jede gemeinsame Mutex vorher im Kern-Abschnitt gesperrt
+    (`shell::sperre_vorbereiten`).
 
 ## S. Bedienung (Nutzer 24.11. abends; nach den Speicher-Punkten M, Stabilität hat Vorrang)
 
@@ -1932,6 +1954,24 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   Speicherleck; nächste Version vorbereiten (README, CHANGELOG,
   Release-Paket, Release-Check, Bildschirmfotos im README aktualisieren), OK
   in STATUS erbitten; Web-Flasher erst nach dem OK aktualisieren.
+  Dauertests (26.11., `m4_lauf.ps1`, je 75 min, 10 Runden):
+  1. Neustart nach 53 min (offene Wetter-Apps leerten den System-PSRAM) →
+     Wetter-App endet nach abgebrochener erster Ortssuche; kein Start unter
+     512 KB System-Heap (M8).
+  2. Neustart nach 66 min (Symbolkopie im System-Heap bei leerem Heap) →
+     Belegung nur mit Reserve; Autopilot räumt je Runde auf.
+  3. 0 Abstürze, aber PSRAM-Leck ~1 MB/h im Kern-Allokator → Ursache:
+     Symbolkopien des Startmenüs im System-Heap (siehe M8), behoben.
+  4. (`docs/nachweise/q4/dauertest4.txt`) **0 Abstürze, 0 Neustarts, kein
+     Programm blieb offen, System-Heap stabil** (Kern-System in Ruhe 3387 →
+     3392 KB über 75 min, PSRAM frei 2545 KB); interner RAM 220 → 211 KB
+     (−9 KB, bekanntes Leck aus M4, ~7 KB/h, nicht zugeordnet) – die
+     Bedingung „kein Speicherleck“ ist für den internen RAM noch nicht
+     erfüllt, deshalb Q4 noch offen (Abweichung „Q4 interner RAM“).
+  Release 1.0.4 vorbereitet: Version, CHANGELOG, Release-Text
+  `docs/release/v1.0.4.md`, Paket neu gebaut nach allen Korrekturen,
+  Release-Check `docs/nachweise/v104/`, README (Desktop- und Wetterfoto).
+  OK in STATUS erbeten; Web-Flasher unverändert (1.0.1).
   Review (25.11. nachts, Subagent über `git diff ae665ed` plus Arbeitsbaum,
   gegen Abschnitt Q und Auftrag Abschnitt 9) – 7 Befunde, alle behoben:
   1. hoch – `kern::abruf::text` (Wetter) lief nicht in `geschuetzt`: ein
@@ -2296,8 +2336,17 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   90 s Antippen: „aufgeweckt (Panel 0/0) nach 89 s, WLAN verbunden“; Fotos
   direkt danach und 15 s später – Matrix läuft weiter
   (`docs/nachweise/c3/`); 0 Abstürze, 0 Neustarts.
-- [ ] **SC Stabilitätsrunde nach Teil C** – wie SB, dazu Konsole und
+- [x] **SC Stabilitätsrunde nach Teil C** – wie SB, dazu Konsole und
   Standby. Nachweis: Log ≥ 30 min, 0 Abstürze.
+  Nachweis (26.11., `stabil_lauf.ps1`, 40 min): Autopilot aus `stabil.rs`
+  – alle Programme (auch Konsole und Matrix über „Mehr“), Menü oft auf/zu,
+  Browser mit Startknopf, neu: je Runde Ruhezustand aus dem Menü, 20 s
+  schlafen, Antippen weckt; zu Beginn jeder Runde räumt der Autopilot noch
+  offene Programme ab (keine waren offen). **0 Abstürze, 0 Neustarts**, 4×
+  „Ruhezustand: aufgeweckt … WLAN verbunden“ –
+  `docs/nachweise/sc/sc_auswertung.txt`, Fotos `sc_board_*min.png`.
+  C2 (WLAN 6) ist nicht enthalten (wartet auf das OK zum C6-Flashen) –
+  nach C2 eine weitere Runde.
 - [ ] **C4 v1.1 vorbereiten** – README, CHANGELOG, Release-Paket,
   Release-Check (Web-Flasher bleibt auf 1.0.1, Nutzer 24.11.); OK des
   Nutzers in STATUS erbitten, nicht warten.
@@ -2454,6 +2503,12 @@ und Verzeichnis auf GitHub).
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **Q4 interner RAM (26.11.)** – im Dauertest sinkt der freie interne RAM
+  um ~7–9 KB je 75 min (schon in 1.0.3, M4); mit 210 KB frei erst nach
+  vielen Stunden Dauerlast spürbar. Ursache noch nicht zugeordnet (Heap-
+  Spur `leck_lauf.ps1` gruppiert noch belegte interne Blöcke). Ersatz:
+  Hinweis im Release-Text; Suche als Teil von M4.
 
 - **Q3 Speicher (26.11.)** – 6–9 der 30 Testseiten brechen ihr JavaScript
   mit „out of memory“ ab und laden ohne JS neu; 8 werden nach 512 KB HTML

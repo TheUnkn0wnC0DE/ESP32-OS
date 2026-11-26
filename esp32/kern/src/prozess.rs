@@ -102,6 +102,8 @@ struct Prozess {
     ende: Option<Ende>,
     /// Startparameter (Funktion 70.7).
     argumente: String,
+    /// M8 (Lecksuche): belegter System-Heap beim Start ([`crate::system_belegt`]).
+    system_beim_start: isize,
 }
 
 // SAFETY: Zeiger werden nur unter der Prozesstabellen-Sperre benutzt.
@@ -465,6 +467,7 @@ fn starte_mit_einmal(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32
             startet: true,
             ende: None,
             argumente: argumente.chars().take(256).collect(),
+            system_beim_start: crate::system_belegt(),
         });
         let start = e.start;
         if starte_faden_fuer(pid, Some(pid), e.name, e.stapel_kb, Box::new(move || start())).is_none() {
@@ -985,6 +988,13 @@ pub fn aufraeumen() {
             // Offene Sockets des Programms schließen (W9)
             crate::netz::prozess_ende(p.pid);
             region_austragen(p.heap);
+            // M8 (Lecksuche am Board): wuchs der System-Heap seit dem Start
+            // deutlich, Programm nennen (auch andere Fäden können belegt
+            // haben – ein Hinweis, kein Beweis)
+            let zuwachs = crate::system_belegt() - p.system_beim_start;
+            if zuwachs > 16 * 1024 {
+                crate::sys::debug_text(&format!("System-Heap: {} endete, seit seinem Start {:+} KB", p.name, zuwachs / 1024));
+            }
             not_freigeben(p.pid);
             neu_frei.push((p.basis as usize, p.laenge));
             let mut prot = sperre(&k.protokoll);

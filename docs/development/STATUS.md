@@ -9,7 +9,51 @@ Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
+## Zusammenfassung (26.11., 20:00)
+
+**Fertig:** Q1, Q2, Q3 und SC abgehakt. Q4: Review (7 Befunde behoben),
+vier Dauertests – der letzte 75 min mit **0 Abstürzen, 0 Neustarts, stabilem
+System-Speicher**. Gefunden und behoben: ein PSRAM-Leck von ~1 MB/h (Kopien
+der Menü-Symbole im System-Heap, schon in 1.0.3), offene Wetter-Apps, Absturz
+bei vollem System-Heap. Release-Paket 1.0.4 nach allen Korrekturen neu
+gebaut und geprüft (`release/v1.0.4`, Text `docs/release/v1.0.4.md`) – nicht
+veröffentlicht. Gepusht.
+
+**Offen:** Q4 nicht abgehakt – interner RAM sinkt im Dauertest weiter um ~9
+KB je 75 min (bekannt aus 1.0.3, Abweichung „Q4 interner RAM“). S3 (≥ 30 fps
+beim Blättern), Teil D (D2 Ogg/MIDI), Funde M7 (Browser-Heap langsam bei
+Zerstückelung), DuckDuckGo-Logo am Board.
+
+**Deine Entscheidungen:**
+1. **Release 1.0.4 freigeben?** Paket liegt bereit. Einziger bekannter
+   Mangel gegenüber dem Auftrag: das kleine interne RAM-Leck (wie 1.0.3).
+   Der Web-Flasher bleibt bis zu deinem OK auf 1.0.1.
+2. C6-Firmware flashen für C2 (WLAN 6)?
+3. D3 App-Store: was soll installierbar sein (siehe Offene Fragen)?
+
 ## Jetzt
+
+- **26.11., 18:30:** SC-Stabilitätsrunde bestanden (40 min, Konsole,
+  Ruhezustand, 0 Abstürze) und abgehakt. PSRAM-Leck gefunden: Symbolkopien
+  des Startmenüs im System-Heap (am Board ohne Abwickeln nie frei) –
+  behoben; dabei eingeführter Mutex-Fehler (Neustart im ersten Versuch von
+  Dauertest 4) ebenfalls behoben. Läuft: Dauertest 4 (75 min), alle Tests.
+  Commit d8f4ef1 (nicht gepusht) enthält den Mutex-Fehler – erst nach dem
+  Korrektur-Commit pushen.
+
+- **26.11., 17:00 – Übergabe (Kontext 76 %):** Dauertest 3 (75 min): 0
+  Abstürze, 0 Neustarts, kein Programm blieb offen – aber NICHT BESTANDEN
+  wegen Lecks: interner RAM −9 KB (bekannt, M4) und System-PSRAM ~1 MB/h,
+  und zwar im Kern-Allokator am Board (freier PSRAM + „Kern-System“ =
+  konstant), in Stufen von ~108 KB je Runde, immer in Zeitfenstern mit den
+  Notizen; am PC (Test `leck_system`, auch mit SD-Ordner) kein Leck.
+  Nicht committet: Kern loggt beim Ende eines Programms den Zuwachs des
+  System-Heaps („System-Heap: X endete, +N KB“, prozess.rs aufraeumen);
+  Lecktest mit SD-Ordner. Läuft: SC-Stabilitätsrunde (38 min, mit
+  Ruhezustand) als Board-Lauf mit dieser Zuordnung, alle Tests.
+  Nächste Schritte: SC auswerten (Zeilen „System-Heap:“), Verursacher
+  beheben, Dauertest 4; dann Q4 abhaken, Release-Paket neu bauen, OK
+  erbitten. Danach S3, Teil D (D2 Ogg/MIDI).
 
 - **26.11., 13:30 – Q3 abgehakt, Q4 läuft.** Q3: br11 30/30 Seiten, 0
   vorzeitig, JS-Fehler 61 → 17; offen: DuckDuckGo-Logo am Board

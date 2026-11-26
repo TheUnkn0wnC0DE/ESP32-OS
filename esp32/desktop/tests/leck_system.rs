@@ -4,6 +4,13 @@
 //! wird mehrmals gestartet und beendet; der erste Durchgang füllt nur
 //! Zwischenspeicher (Symbole, Schriften), danach darf je Durchgang nichts
 //! mehr im System-Heap bleiben (`kern::system_belegt`).
+//!
+//! Grenze: Am PC wickelt das Ende eines Programms ab (Destruktoren laufen),
+//! am Board wird der Task ohne Abwickeln gelöscht. Kopien im System-Heap,
+//! die ein Programm beim Ende noch hält (z. B. Symbole aus einem
+//! Kern-Abschnitt), bleiben deshalb nur am Board liegen – diese Klasse zeigt
+//! erst die Speicherwacht („Kern-System“) im Dauertest. Am Board fand sie
+//! das Leck der Symbolkopien des Startmenüs (M8).
 use kern::{KernAlloc, sys};
 use std::time::{Duration, Instant};
 
@@ -75,6 +82,13 @@ fn kein_leck_im_system_heap() {
     kern::init(&kern::PC, desktop::PROGRAMME);
     kern::datei::einhaengen("/sys", &wurzel);
     kern::datei::einhaengen("/rd/1", &wurzel);
+    // wie am Board: SD-Karte mit dem Ordner von ESP32-OS (Notizen, Musik …)
+    let sd = wurzel.join("sd");
+    std::fs::create_dir_all(sd.join("ESP32-OS/Notizen")).unwrap();
+    std::fs::write(sd.join("ESP32-OS/Notizen/Einkauf.txt"), b"Brot
+Milch
+").unwrap();
+    kern::datei::einhaengen("/sd0/1", &sd);
     kern::fenster::bildschirm(640, 360);
     kern::skin::anwenden(kern::skin::STANDARD, 2).unwrap();
     let anwendungen = desktop::anwendungen();
@@ -105,6 +119,37 @@ fn kein_leck_im_system_heap() {
         if stand[1..].iter().all(|&d| d > 0) && danach > ERLAUBT {
             lecks.push(format!("{name}: {danach} B je Durchgang"));
         }
+    }
+    // wie im Alltag und im Dauertest: das Startmenü endet, weil man darin ein
+    // Programm startet (vorher blieben dabei 12 Symbolkopien im System-Heap)
+    let mut stand = Vec::new();
+    for _ in 0..DURCHGAENGE {
+        let vorher = ruhig();
+        tippen(40, 340);
+        let t = Instant::now();
+        while !sys::fenster_liste().iter().any(|f| f.titel == "ESP32-OS") && t.elapsed() < Duration::from_secs(4) {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        std::thread::sleep(Duration::from_millis(300));
+        let (x, y) = desktop::shell::menue_eintrag_mitte("rechner").expect("Rechner im Menü");
+        tippen(x, y);
+        let t = Instant::now();
+        while !sys::fenster_liste().iter().any(|f| f.titel == "Calculator") && t.elapsed() < Duration::from_secs(4) {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        std::thread::sleep(Duration::from_millis(300));
+        if let Some(slot) = sys::fenster_liste().iter().find(|f| f.titel == "Calculator").map(|f| f.slot)
+            && let Some((x, y)) = kreuz(slot)
+        {
+            tippen(x, y);
+        }
+        std::thread::sleep(Duration::from_millis(500));
+        stand.push(ruhig() - vorher);
+    }
+    let danach: isize = stand[1..].iter().sum::<isize>() / (DURCHGAENGE as isize - 1);
+    zeilen.push(format!("{:16} erster {:>8} B, danach je Durchgang {:>7} B  {stand:?}", "Menü→Rechner", stand[0], danach));
+    if stand[1..].iter().all(|&d| d > 0) && danach > ERLAUBT {
+        lecks.push(format!("Menü startet Programm: {danach} B je Durchgang"));
     }
     println!("System-Heap je Programm (Start und Ende):\n{}", zeilen.join("\n"));
     let a = kern::neue_abstuerze();

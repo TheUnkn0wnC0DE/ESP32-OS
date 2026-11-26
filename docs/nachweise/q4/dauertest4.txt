@@ -1,0 +1,21 @@
+M4 Dauertest 2026-11-26T18:21:15, 75 min, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+interner RAM frei: Anfang 220 KB (t=20 s), Ende 211 KB (t=4474 s), tiefster Wert 211 KB, Differenz -9 KB
+Ruhewerte (t s, PSRAM frei KB, Kern-System KB):
+30:3261/2957 360:2295/3638 510:2549/3387 780:2546/3390 960:2546/3391 1111:2186/3745 1321:2545/3391 1501:2545/3391 1711:2545/3391 1831:2185/3745 1982:2185/3746 2192:2545/3391 2312:2281/3652 2492:2185/3746 2762:2545/3392 2882:2545/3392 3153:2185/3746 3363:2545/3392 3633:2185/3747 3813:2185/3747 3903:2545/3392 4144:2545/3392 4294:2545/3392 4474:2185/3747
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []
+pudding_p4: [debug] Autopilot: Runde beginnt, 0 Programme offen geblieben []

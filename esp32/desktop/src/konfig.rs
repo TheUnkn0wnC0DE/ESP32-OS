@@ -205,7 +205,9 @@ pub fn touchpad_setzen(an: bool) -> bool {
 pub fn hintergrund() -> Hintergrund {
     // Nur im Kern-Abschnitt sperren (pthread-Objekt im System-Heap; ein
     // zwangsweise angehaltenes Programm hält die Sperre nie)
-    kern::kern_abschnitt(|| HINTERGRUND.lock().unwrap_or_else(|e| e.into_inner()).clone()).unwrap_or(Hintergrund::Verlauf(0))
+    // Kopie im Heap des Aufrufers (M8, wie shell::symbol)
+    crate::shell::sperre_vorbereiten(&HINTERGRUND);
+    kern::geschuetzt(|| HINTERGRUND.lock().unwrap_or_else(|e| e.into_inner()).clone()).unwrap_or(Hintergrund::Verlauf(0))
 }
 
 /// Vorbereitetes Hintergrundbild: halbe Bildschirmgrösse in RGB565 (Kopf:
