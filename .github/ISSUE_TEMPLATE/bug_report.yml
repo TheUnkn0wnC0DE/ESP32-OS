@@ -1,0 +1,84 @@
+name: Bug report
+description: Something does not work as expected on the board or in the build.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please search existing issues first.
+        Security problems: do **not** report them here, see [SECURITY.md](https://github.com/TheUnkn0wnC0DE/ESP32-OS/blob/main/SECURITY.md).
+        You can write in English or German.
+  - type: input
+    id: version
+    attributes:
+      label: ESP32-OS version
+      description: Shown in Settings → System.
+      placeholder: "1.0.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installed with
+      options:
+        - Web flasher
+        - espflash (release files)
+        - Firmware update over Wi-Fi
+        - Own build from source
+    validations:
+      required: true
+  - type: dropdown
+    id: revision
+    attributes:
+      label: Chip revision
+      options:
+        - v1.x
+        - v3.x
+        - Don't know
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Kernel / stability / crash
+        - Desktop / touch / on-screen keyboard
+        - Browser
+        - Wi-Fi / network
+        - Programs (file manager, PDF viewer, image viewer, …)
+        - KolibriOS C programs / shell
+        - Games
+        - Firmware update / flashing
+        - Build / tooling
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Tap …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Serial log
+      description: Output from the USB TO UART port (e.g. `espflash monitor`), if available.
+      render: text
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots and other information
+      description: Photos, screenshots, a link to the web page or the file that caused it.

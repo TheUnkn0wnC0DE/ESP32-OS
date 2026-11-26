@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/TheUnkn0wnC0DE/ESP32-OS/discussions
+    about: Ask questions, share photos of your build or discuss ideas.
+  - name: Report a security vulnerability
+    url: https://github.com/TheUnkn0wnC0DE/ESP32-OS/security/advisories/new
+    about: Please report security problems privately, not as an issue.
+  - name: Web flasher
+    url: https://theunkn0wnc0de.github.io/ESP32-OS/
+    about: Install ESP32-OS from the browser (Chrome or Edge).
