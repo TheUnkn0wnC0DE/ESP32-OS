@@ -12,6 +12,7 @@ ESP32-OS is a small desktop operating system for the ESP32-P4 microcontroller, i
 
 | File | What you see |
 |---|---|
+| `desktop.png` | Desktop with app and game icons and the taskbar |
 | `desktop_start_menu.png` | Desktop with the Start menu open: apps, games, system menu and the taskbar |
 | `browser_hacker_news.png` | NetSurf web browser showing Hacker News over Wi-Fi |
 | `file_manager.png` | File manager showing the internal flash storage |
@@ -19,4 +20,6 @@ ESP32-OS is a small desktop operating system for the ESP32-P4 microcontroller, i
 | `weather_app.png` | Weather app with current weather and a 5-day forecast (Open-Meteo) |
 | `task_manager.png` | Task manager with running programs, their memory and free RAM / PSRAM |
 | `music_player_mp3.png` | Music player playing an MP3 file |
+| `music_player_ogg.png` | Music player playing an Ogg Vorbis file (new in 1.0.5) |
+| `app_store.png` | App store: remove and reinstall Doom, Quake and other programs (new in 1.0.5) |
 | `quake.png` | Quake running on the board at 27 frames per second |
