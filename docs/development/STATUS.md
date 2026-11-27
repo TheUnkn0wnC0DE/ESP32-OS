@@ -21,6 +21,23 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 Als Nächstes (dein Auftrag): 1.0.5 – zuerst der Review von PR #3, dann M7,
 M6, M8 nach PLAN.
 
+## 1.0.5 – Stand 27.11., 11:30
+
+- **M7 erledigt:** Browser-Heap mit Treap (First-Fit nach Adresse in
+  O(log n)); 30 Testseiten am Board ohne Stillstand, ohne „Speicher voll“,
+  0 Neustarts. Gleiche Verteilung wie vorher (kein Mehr-Verschnitt).
+- Am Board läuft jetzt der Entwicklungsstand (1.0.4 + M7), nicht mehr die
+  Release-Firmware.
+- **M8 erledigt:** 40 min Stabilitätsrunde mit absichtlich fast leerem
+  System-Heap (600 KB): 0 Abstürze, 1178 Ablehnungen statt Absturz.
+  Abweichung: bei ganz leerem System-Heap erscheint die Meldung „Programm
+  nicht gestartet“ nicht (nur im Log) – PLAN „Abweichungen“.
+- Als Nächstes: M6-Rest (grössere Hebel: Bildspeicher, Programmcode aus
+  dem Flash – mit Folgen für Tempo, braucht Messungen), dann Teil C/D.
+- Fehlerbilanz seit 1.0.3 (deine Frage): 38 gefunden, 34 in 1.0.4 behoben;
+  offen waren DuckDuckGo-Logo, M7 (jetzt behoben), „€“ auf der Tastatur,
+  einmaliger Tonausfall beim Start (ES8311, nicht nachgestellt).
+
 ## Review PR #3 (aramix, Guition JC4880P443C_I_W) – 27.11., 09:40
 
 **Empfehlung: Änderungen anfragen** (nicht aufteilen nötig; nicht gemergt).

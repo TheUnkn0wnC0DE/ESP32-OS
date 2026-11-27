@@ -101,3 +101,34 @@ pub fn starten() {
         log::error!("Speicherwacht nicht gestartet");
     }
 }
+
+/// M8 (Entwicklungs-Build `ESP32OS_SYSTEM_RESTKB=<KB>`): System-Heap (PSRAM
+/// ausserhalb des Programm-Pools) absichtlich bis auf `rest_kb` füllen und
+/// so lassen – Nachweis, dass ein fast leerer System-Heap das System nicht
+/// abbricht (Programme werden mit Meldung abgelehnt). Belegt in 64-KB-
+/// Stücken, kleinere am Ende; schreibt das Ergebnis ins Log.
+pub fn system_fuellen(rest_kb: usize) {
+    let mut belegt_kb = 0usize;
+    let mut stueck = 64 * 1024usize;
+    loop {
+        // SAFETY: reine Abfrage.
+        let frei = unsafe { sys::heap_caps_get_free_size(sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) };
+        if frei <= rest_kb * 1024 + 1024 {
+            break;
+        }
+        let n = stueck.min(frei - rest_kb * 1024);
+        // SAFETY: Belegung im PSRAM; bleibt absichtlich bis zum Neustart.
+        let p = unsafe { sys::heap_caps_malloc(n, sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) };
+        if p.is_null() {
+            if stueck <= 1024 {
+                break;
+            }
+            stueck /= 2;
+            continue;
+        }
+        belegt_kb += n / 1024;
+    }
+    // SAFETY: reine Abfrage.
+    let frei = unsafe { sys::heap_caps_get_free_size(sys::MALLOC_CAP_SPIRAM | sys::MALLOC_CAP_8BIT) };
+    log::warn!("M8-Test: System-Heap gefüllt – {belegt_kb} KB belegt, {} KB frei (Ziel {rest_kb} KB)", frei / 1024);
+}

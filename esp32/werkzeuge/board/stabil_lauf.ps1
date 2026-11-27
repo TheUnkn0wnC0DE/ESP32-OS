@@ -13,7 +13,9 @@
 param(
     [Parameter(Mandatory)][string]$Ziel,
     [string]$Port = 'COM3',
-    [int]$Minuten = 40
+    [int]$Minuten = 40,
+    # M8: System-Heap 20 s nach dem Start bis auf so viele KB füllen (0 = aus)
+    [int]$SystemRestKB = 0
 )
 # Logs als UTF-8 (PowerShell 5 schriebe mit *> UTF-16)
 $env:PYTHONIOENCODING = 'utf-8'
@@ -29,6 +31,7 @@ Umgebung-Leeren
 # als Datei (eine Umgebungsvariable wäre zu lang, max. 32767 Zeichen)
 $env:ESP32OS_AUTOPILOT_DATEI = (Resolve-Path "$PSScriptRoot\stabil_autopilot.txt").Path
 $sek = $Minuten * 60
+if ($SystemRestKB -gt 0) { $env:ESP32OS_SYSTEM_RESTKB = "$SystemRestKB" }
 $env:KONSOLE_BILDER = ((1..([int]($Minuten / 10))) | ForEach-Object { $_ * 600 }) -join ','
 & powershell -NoProfile -File "$esp32\firmware\bauen_flashen.ps1" -Nur esp32os -Port $Port -Anhalten *> "$Ziel\bau.log"
 $rc = $LASTEXITCODE

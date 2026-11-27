@@ -1593,7 +1593,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   25 s, JS „out of memory“ 7 (vorher 8 bzw. 6), abgeschnitten 8 wie vorher.
   Alle Tests grün (FEHLER=0 nach dem Ordnen der Zähler-Tests).
 
-- [ ] **M8 Leerer System-Heap bricht das System ab** (**auf 1.0.5 verschoben**, Nutzer 27.11.; Testschalter „System-Heap füllen“ liegt als git stash bereit; Fund Q4, Dauertest
+- [x] **M8 Leerer System-Heap bricht das System ab** (1.0.5. **Nachweis 27.11.:** Entwicklungs-Build `ESP32OS_SYSTEM_RESTKB=600` füllt den System-Heap 20 s nach dem Start bis auf 600 KB (`stabil_lauf.ps1 -SystemRestKB 600`), dann 40 min Stabilitätsrunde: **0 Abstürze, 0 abort(), 0 Neustarts**; 1178 Ablehnungen statt Absturz (100 Programmstarts unter der Reserve, 1078 Fenster), tiefster Wert 264 KB frei; `docs/nachweise/m8/system_heap_voll.txt`. Abweichung: siehe „M8 Meldung bei leerem System-Heap“. Fund Q4, Dauertest
   26.11.) – im ersten 75-min-Lauf blieben zwei Wetter-Apps offen (Autopilot
   schloss das leere Fenster nach abgebrochener Ortssuche nicht; behoben: die
   App endet dann), der System-PSRAM fiel von ~2 MB auf 38 KB. Danach wies der
@@ -2713,6 +2713,12 @@ und Verzeichnis auf GitHub).
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **M8 Meldung bei leerem System-Heap (27.11.):** ist der System-Heap fast
+  leer, bekommt auch die Meldung „Programm nicht gestartet“ kein Fenster (der
+  Fensterpuffer liegt im System-Heap) – der Grund steht nur im Protokoll, auf
+  dem Schirm passiert nichts. Das System bleibt stabil (Nachweis M8). Ersatz
+  später: ein beim Start reservierter Puffer für eine Meldung.
 
 - **Q4 interner RAM (26.11.; erledigt 27.11.: Ursache Startboxen der Fäden im System-Heap, behoben, Dauertest 7 ohne Abfall)** – im Dauertest sinkt der freie interne RAM
   um ~7–9 KB je 75 min (schon in 1.0.3, M4); mit 210 KB frei erst nach

@@ -202,6 +202,14 @@ fn main() {
         // Test-Build (Z1): Test-PDFs für den PDF-Betrachter auf die SD-Karte
         #[cfg(esp32os_pdf_test)]
         pudding_fw::speicher::pdf_testdaten();
+        // Entwicklungs-Build M8: System-Heap 20 s nach dem Start bis auf
+        // einen Rest füllen (Dauertest mit fast leerem System-Heap)
+        if let Some(rest) = option_env!("ESP32OS_SYSTEM_RESTKB").and_then(|v| v.parse::<usize>().ok()) {
+            let _ = pudding_fw::hw::spawn_pinned_psram(c"m8_fuellen", 1, 5, 8 * 1024, move || {
+                std::thread::sleep(std::time::Duration::from_secs(20));
+                pudding_fw::speicherwacht::system_fuellen(rest);
+            });
+        }
         // Entwicklungs-Build S3: PPA-Durchsatz je Blockhöhe messen (bei
         // laufendem Desktop, 25 s nach dem Start)
         if option_env!("ESP32OS_PPA_MESS").is_some() {

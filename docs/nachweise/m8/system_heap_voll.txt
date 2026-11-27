@@ -1,0 +1,12 @@
+﻿Stabilitätsrunde 2026-11-27T11:04:16, 40 min, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+
+W (22359) pudding_fw::speicherwacht: M8-Test: System-Heap gefüllt – 2736 KB belegt, 599 KB frei (Ziel 600 KB)
+Ablehnungen im Lauf: 1178 (Programmstarts unter 512 KB Reserve: 100, Fenster ohne Systemspeicher: 1078)
+PSRAM frei (System-Heap) tiefster Wert der Speicherwacht: 264 KB
