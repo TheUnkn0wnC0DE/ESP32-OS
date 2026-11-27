@@ -2357,7 +2357,7 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   aus dem Log (Fotos nur der ersten 6 Seiten). Tabelle
   `docs/nachweise/br/br1_tabelle.md`. Folge: BR2/M6 – mehr Heap für den
   Browser, höhere HTML-Grenze.
-- [ ] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
+- [x] **BR2 Verbessern** – häufigste Ursachen zuerst; nach jeder
   Verbesserung dieselbe Liste erneut, Vorher/Nachher festhalten. Seiten, die
   mit 32 MB PSRAM grundsätzlich nicht gehen, unter „Abweichungen“ mit Grund.
   Kein Fernmodus, der Browser bleibt eigenständig. Laufende Arbeit an
@@ -2373,6 +2373,18 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
   kritische Abschnitte (Spinlock), in denen eine Aufgabe nicht angehalten
   werden kann. Dazu Überlauf bei ESP32OS_SEITENLISTE_S < 3 (nur
   Entwicklung). Board-Nachweis folgt mit BR1 (Liste „Board-Tests“).
+  Stand 27.11. (1.0.5, Lauf mit Treap-Heap, `docs/nachweise/m7/
+  br_treap_tabelle.md`): 30/30 ohne vorzeitiges Ende, 0 Neustarts. Häufigste
+  Ursachen jetzt: (1) 8 Seiten bei 512 KB HTML abgeschnitten (fest,
+  `NS_HTML_MAX_STANDARD`) – diese Seiten erreichen schon 10,8 von 11,1 MB
+  Heap, eine höhere Grenze bräuchte mehr Speicher (siehe M6); (2) 7× JS „out
+  of memory“ – ebenfalls Speicher. Eine höhere oder vom freien Heap
+  abhängige HTML-Grenze verworfen: mit 780 KB lief der Heap schon voll (B10),
+  bei 512 KB stehen diese Seiten bei 10,8 von 11,1 MB – mehr HTML machte aus
+  „abgeschnitten, aber sichtbar“ ein „Browser beendet“. **Abgeschlossen:**
+  30/30 Seiten ohne vorzeitiges Ende, 0 Neustarts (Nachweis oben); die
+  speicherbedingten Reste unter Abweichungen („BR2 Speichergrenzen“).
+
 - [x] **BR3 lexbor prüfen (nur prüfen, nicht einbauen)** – lexbor
   (github.com/lexbor/lexbor) als Ersatz für libdom/hubbub: Lizenz
   (Apache-2.0 gegen unser GPL-2.0), Speicherersparnis, Aufwand. Nachweis:
@@ -2719,6 +2731,14 @@ und Verzeichnis auf GitHub).
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **BR2 Speichergrenzen (27.11.):** 8 der 30 Testseiten (Wikipedia
+  „Schweiz“, GitHub, 20min, MeteoSchweiz, heise, Tages-Anzeiger, NZZ,
+  YouTube) werden nach 512 KB HTML abgeschnitten, auf etwa 7 Seiten läuft der
+  JavaScript-Speicher aus (die Seite erscheint ohne den Teil des Skripts). Der
+  Box-Baum braucht ein Vielfaches des HTML; bei 11 MB Browser-Heap (mehr gibt
+  der PSRAM ohne Nachteile nicht her, siehe M6) sind diese Seiten am Limit.
+  Ersatz: der Anfang der Seite erscheint, der Browser bleibt stabil.
 
 - **M6 weiterer Speicher nur mit Nachteilen (27.11.):** Nach Schritt 1
   bleiben zwei grosse Hebel, beide mit messbarem Preis: (1) zwei statt drei
