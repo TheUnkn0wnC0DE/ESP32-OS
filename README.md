@@ -18,17 +18,17 @@ Measured on the board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, chip revision v1.x,
 
 | | Value | Evidence |
 |---|---|---|
-| OS image | 5.6 MiB (5,825,632 bytes), 93.6 % of its 5.9 MiB flash slot | [release_paket_v1.0.3.txt](docs/nachweise/v103/release_paket_v1.0.3.txt) |
+| OS image | 5.6 MiB (5,895,008 bytes), 94.7 % of its 5.9 MiB flash slot | [release_paket_v1.0.4.txt](docs/nachweise/v104/release_paket_v1.0.4.txt) |
 | Power-on to desktop | 3.5 s | [o4_1_apps_log.txt](docs/nachweise/o4/o4_1_apps_log.txt) |
 | Browser scrolling | 32 frames/s (Wikipedia article) | [o1_scroll_log.txt](docs/nachweise/o1/o1_scroll_log.txt) |
 | PDF page (A4 with photo, text, shapes) | 0.24 s | [z1_board_log.txt](docs/nachweise/z1/z1_board_log.txt) |
 | Games | Pudding-Panik 55, Doom 55, Würfelwelt 27.6, Quake 27.5 frames/s | [o4/](docs/nachweise/o4/) |
 | Wi-Fi throughput (TCP) | 11.6 Mbit/s to the board, 9.8 Mbit/s from the board | [w8_durchsatz.txt](docs/nachweise/w8_durchsatz.txt) |
-| Endurance | 40 min stability round and 2 × 75 min endurance runs (all programs, menu, browser), 0 crashes, 0 resets | [sb_auswertung.txt](docs/nachweise/sb/sb_auswertung.txt) |
+| Endurance | 75 min endurance run on the 1.0.4 release state (all programs, menu, browser, sleep mode): 0 crashes, 0 resets, internal RAM and PSRAM stable | [dauertest8.txt](docs/nachweise/q4/dauertest8.txt) |
 
 ## Quick start
 
-Install the latest release (1.0.3, chip revision v1.x). The web flasher still installs 1.0.1; update afterwards in *Settings → System → Check for updates*.
+Install the latest release (1.0.4, chip revision v1.x). The web flasher installs 1.0.4.
 
 **Web flasher** (Chrome or Edge on a desktop computer): open the [ESP32-OS web flasher](https://theunkn0wnc0de.github.io/ESP32-OS/), connect the board's USB TO UART port, click *Connect*, choose the board's serial port and click *Install*. Without *Erase device*, settings and saved Wi-Fi networks are kept ([o8_webflasher.txt](docs/nachweise/o8/o8_webflasher.txt)).
 

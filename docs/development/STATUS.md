@@ -9,37 +9,17 @@ Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
-## Bitte um OK: Release 1.0.4 mit Web-Flasher (27.11., 10:15)
+## Release 1.0.4 veröffentlicht (27.11., 09:05 – mit deinem OK)
 
-Polieren abgeschlossen, **nichts veröffentlicht**, Web-Flasher noch 1.0.1.
-Danach keine neuen Baustellen bis zum Release.
+- Tag `v1.0.4` auf main 684e829 (geprüfter Stand), GitHub-Release mit allen
+  9 Dateien (als „latest“ markiert).
+- Web-Flasher aktualisiert (Workflow-Lauf erfolgreich) und geprüft: die
+  Seite liefert Manifest „1.0.4“, alle 6 Abbilder bytegleich zum Release
+  (`sha256sum -c` gegen SHA256SUMS: OK, Manifest identisch).
+- README: 1.0.4, Web-Flasher installiert 1.0.4, Zahlen und Dauertest.
 
-- **Stand:** esp32-os 19da71a, gespiegelt auf `main` (der gepushte
-  main-Commit mit diesem Eintrag; sein Code ist genau der gebaute).
-- **In 1.0.4** (gegenüber 1.0.3): Wetter-App, Browser (CSS var/calc,
-  JS-Fehler 61 → 17), Speicherlecks behoben (PSRAM ~1 MB/h, intern ~9 KB je
-  75 min), flüssigeres Blättern (Dateimanager 25 → 47, Browser 25 → 31
-  Bilder/s), Rundgang-Korrekturen (Bild-Demo, Fenster über der Taskleiste),
-  MIDI im Musikplayer, Review-Korrekturen. **Nicht drin:** M7 (Heap-Tempo,
-  am Board nicht eindeutig besser – mehr Verschnitt), M6 Rest, M8 → 1.0.5.
-- **Nachweis:** letzter Dauertest auf genau diesem Stand: 75 min, 0
-  Abstürze, 0 Startfehler, interner RAM in Ruhe konstant 217 KB
-  (`docs/nachweise/q4/dauertest8.txt`); alle Tests grün; Paket
-  `release/v1.0.4` (`esp32os.bin` 5 895 008 B, 94,7 %), Prüfung ohne
-  WLAN-Daten, lokale Pfade und private Begriffe
-  (`docs/nachweise/v104/release_paket_v1.0.4.txt`); Text
-  `docs/release/v1.0.4.md`.
-
-Schritte nach deinem OK:
-1. `git fetch origin main`, `git tag v1.0.4 origin/main`, `git push origin v1.0.4`
-2. `gh release create v1.0.4 --repo TheUnkn0wnC0DE/ESP32-OS --title "ESP32-OS 1.0.4"
-   --notes-file docs/release/v1.0.4.md release/v1.0.4/*`
-3. Web-Flasher: `gh workflow run flasher.yml --ref main` (holt das neueste
-   Release, prüft SHA256SUMS), danach Seite prüfen (installiert 1.0.4).
-4. README: „latest release (1.0.4)“ und Web-Flasher-Satz nachziehen, pushen.
-
-Antwort genügt: „OK Release und Flasher“ (1–4), „OK Release“ (1–2) oder
-Änderungswünsche.
+Als Nächstes (dein Auftrag): 1.0.5 – zuerst der Review von PR #3, dann M7,
+M6, M8 nach PLAN.
 
 **Vorgemerkt nach dem Release:** Review von PR #3 (aramix, Guition
 JC4880P443C_I_W) – Diff vollständig, PC-Tests, Waveshare-Firmware am Board
