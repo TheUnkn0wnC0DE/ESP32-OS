@@ -41,6 +41,13 @@ M6, M8 nach PLAN.
   als Fremdcode herunterladen, z. B. stb_vorbis, Public Domain/MIT), D3
   (was soll der App-Store anbieten). Ohne sie gehe ich an BR2 (Browser
   weiter verbessern), dann SD-Stabilitätsrunde.
+- **BR2 abgeschlossen** (30/30 Seiten ohne vorzeitiges Ende; die 8
+  abgeschnittenen Seiten und JS-Speicherfehler sind speicherbedingt, als
+  Abweichung). **Vorlauf zur SD-Runde** auf dem Stand mit Treap-Heap: 40 min
+  alle Programme, 0 Abstürze (`docs/nachweise/sd/vorlauf_treap.txt`). Die
+  SD-Runde selbst folgt nach Teil D.
+- **Jetzt warte ich auf dich:** alle übrigen Punkte hängen an C2 (C6-Flash),
+  D2 Ogg (Download) und D3 (Inhalt des App-Stores).
 - Fehlerbilanz seit 1.0.3 (deine Frage): 38 gefunden, 34 in 1.0.4 behoben;
   offen waren DuckDuckGo-Logo, M7 (jetzt behoben), „€“ auf der Tastatur,
   einmaliger Tonausfall beim Start (ES8311, nicht nachgestellt).
