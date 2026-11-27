@@ -21,12 +21,78 @@ gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 Als Nächstes (dein Auftrag): 1.0.5 – zuerst der Review von PR #3, dann M7,
 M6, M8 nach PLAN.
 
-**Vorgemerkt nach dem Release:** Review von PR #3 (aramix, Guition
-JC4880P443C_I_W) – Diff vollständig, PC-Tests, Waveshare-Firmware am Board
-(Boot, Touch, WLAN, Update-Prüfung), besonders Updater, Release-Paket,
-Web-Flasher und Pages-Workflow (nie ein falsches Board-Image), Lizenz
-esp_lcd_st7701 (Apache-2.0), fester Pfad ESP32OS_EC=C:/ec; Ergebnis und
-Empfehlung hier. Nicht mergen ohne dein OK.
+## Review PR #3 (aramix, Guition JC4880P443C_I_W) – 27.11., 09:40
+
+**Empfehlung: Änderungen anfragen** (nicht aufteilen nötig; nicht gemergt).
+Die Arbeit ist sorgfältig und für Waveshare am Board ohne Rückschritt –
+vor dem Übernehmen braucht sie aber diese Punkte.
+
+Geprüft:
+- **Diff vollständig gelesen** (52 Dateien, +2523/−206; davon ~1600 Zeilen
+  mitgelieferter Treiber `esp_lcd_st7701`).
+- **PC-Tests auf dem PR-Stand:** alle grün (FEHLER=0), `pudding-core` 51/51
+  inkl. der neuen Tests (Bildaufteilung ×1,25, Touch-Umrechnung, Updater
+  ignoriert `guition-*`).
+- **Board (Waveshare, PR-Firmware):** Boot, Touch GT911 (0x5D), Display
+  HX8394, Desktop, WLAN verbunden in 4,5 s, Update-Prüfung beim richtigen
+  Repo (HTTP 200, „Version aktuell“ = v1.0.4), abgelaufenes Zertifikat
+  abgelehnt; Rundgang aller 19 Programmfenster ohne Fehler, 0 Abstürze.
+  Danach wieder die 1.0.4-Firmware aufs Board. Guition selbst nicht
+  testbar (Board noch nicht da).
+
+Gut gelöst:
+- Board per Cargo-Feature; falsche sdkconfig/Feature-Kombination ist ein
+  Übersetzungsfehler. Waveshare bleibt Standard.
+- **Updater:** Waveshare wählt genau `…/esp32os.bin`; Guition-Dateien
+  heissen `guition-…` und werden nie gewählt (Test). Guition hat kein
+  Update über WLAN.
+- **Web-Flasher/Pages:** Board muss gewählt werden (keine Vorauswahl), ein
+  Board ohne Manifest im Release wird gesperrt; der Workflow prüft die
+  Prüfsummen je Board und bricht ohne Manifest ab.
+- **Release-Skript Guition:** eigener Ordner, `guition-`-Präfix, prüft auf
+  WLAN-Daten, Heimverzeichnis, Benutzername und Spieldaten.
+- **Lizenz:** `esp_lcd_st7701` mit SPDX Apache-2.0 (Espressif), voller
+  Lizenztext, Herkunft (esp-iot-solution, Commit 61935c3) und Eintrag in
+  THIRD_PARTY_NOTICES.
+
+Änderungen anfragen:
+1. **Konflikte mit dem heutigen Stand:** README.md und
+   `firmware/src/foto.rs` (Fotopause des Autopiloten); dazu ein Konflikt,
+   den Git nicht meldet: die CPU-Ausgabe (S3, `pipeline.rs`) fragt
+   `l.scale == 2` ab – das Feld heisst im PR `scale16`; sie muss auf
+   `scale16 == 32` ohne Ränder umgestellt werden und bei ×1,25 aus bleiben
+   (sonst baut es nicht bzw. Guition gäbe falsch aus). Bitte auf den
+   aktuellen Stand bringen. Hinweis für uns: `main` ist ein Spiegel von
+   `esp32-os` – übernommen wird auf `esp32-os` (mit Nennung des Autors),
+   nicht per Merge-Knopf.
+2. **Fester Pfad `ESP32OS_EC = "C:/ec"` in `.cargo/config.toml`:** ein
+   lokaler Windows-Pfad als Vorgabe für alle; besser wie unter macOS/Linux
+   im Bau-Skript setzen (`bauen_flashen.ps1`) und in `idf_component.yml`
+   mit klarer Fehlermeldung, wenn er fehlt.
+3. **Apache-2.0 §4(b):** `esp_lcd_st7701_mipi.c` ist geändert (Init-Folge
+   ersetzt, Lesen der Panel-ID entfernt) – im Dateikopf braucht es einen
+   sichtbaren Änderungsvermerk. Ausserdem: woher genau stammt die
+   Init-Folge (Guition-Demo) und unter welcher Lizenz steht sie? Bitte
+   Quelle nennen.
+4. **Updater-Falle bei eigenem Repo:** baut jemand Guition mit
+   `ESP32OS_UPDATE_REPO`, lädt der Updater `esp32os.bin` – aus dem
+   offiziellen Repo wäre das das Waveshare-Abbild (Bildschirm dunkel).
+   Besser: Dateiname je Board (`guition-esp32os.bin`) im Updater, oder
+   Guition + `ESP32OS_UPDATE_REPO` als Übersetzungsfehler.
+5. **Reproduzierbarkeit:** der mitgelieferte Treiber zieht
+   `cmake_utilities: 0.*` ungepinnt aus der Registry – bitte feste Version
+   (oder die Abhängigkeit entfernen, sie dient nur dem Versionsmakro).
+
+Fallstrick beim Testen (für den Rebase): PR-Stand und Hauptstand bauen
+über dasselbe Laufwerk `O:` in denselben Bauordner `C:\eo`, und NetSurf
+schreibt seine Dateiliste in den gemeinsamen Ordner `C:\ns\3.11\erzeugt`.
+Nach einem PR-Bau übernahm Cargo die PR-Fassung von `pudding-core`
+(Dateizeiten), und die Liste zeigte auf den Worktree. Abhilfe: Dateizeiten
+der Quellen neu setzen, `cargo test --release --no-run` in `esp32/netsurf`.
+
+Nicht in diesem Review: Guition-Hardware (Ton, SD, Quake laut PR selbst
+ungetestet). Einen Kommentar auf GitHub habe ich nicht geschrieben – sag,
+ob ich die Punkte als Review-Kommentar posten soll.
 
 ## Zusammenfassung (26.11., 21:00 – Abschluss dieser Sitzung)
 
