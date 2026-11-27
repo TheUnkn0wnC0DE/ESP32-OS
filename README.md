@@ -65,7 +65,7 @@ Boards with chip revision v3.x and changes to the code: build from source, see [
 ## Limitations
 
 - Wi-Fi passwords are stored unencrypted in flash (no flash encryption, no eFuses).
-- The browser has 10 MB of memory. Large web applications do not load; some web APIs are missing.
+- The browser has 10.5 MB of memory. Large web applications do not load; some web APIs are missing.
 - The PDF viewer shows text in the system font, opens files up to 4 MB and does not decode CCITT, JBIG2 or JPEG 2000 images.
 - The image viewer scales large JPEG and PNG photos down while decoding (JPEG by 1/2, 1/4 or 1/8). A 12-megapixel phone photo opens in 5.9 s, a 48-megapixel image in 11.4 s; 39 to 45 % of that is reading the microSD card ([p2g_messung.txt](docs/nachweise/p2_gross/p2g_messung.txt)). Progressive JPEGs need more memory: 12 megapixels open, 48 megapixels are refused. GIF and BMP open up to about 0.85 megapixels.
 - All programs share one address space. A faulty program is stopped and reported, but can still disturb the system.

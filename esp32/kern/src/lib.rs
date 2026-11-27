@@ -38,7 +38,7 @@ pub mod zeiger;
 
 pub use alloc::{KernAlloc, notbelegungen, regionen, system_belegt};
 #[cfg(not(target_os = "espidf"))]
-pub use alloc::spur::{pc_plattform_belegt, spur_offen, spur_starten};
+pub use alloc::spur::{AB_GROESSE as SPUR_AB_GROESSE, pc_plattform_belegt, spur_offen, spur_starten};
 
 /// Q4 (PC-Tests): Programme enden ohne Abwickeln wie am Board (Plattform
 /// `PC`: der Faden parkt, keine Destruktoren) – findet Kopien im

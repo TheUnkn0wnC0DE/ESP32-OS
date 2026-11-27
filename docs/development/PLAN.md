@@ -1426,7 +1426,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Systems; Kern-Test `kern/tests/netz.rs` (Verbindung nur mit 48 KB
   intern), PC-Tests der Notbelegungen. Seit 25.11. dazu: Rückfall am Pool
   vorbei nur mit 2 MB Reserve.
-- [ ] **M4 Dauertest** – Autopilot ≥ 60 min: alle Programme öffnen und
+- [x] **M4 Dauertest** – Autopilot ≥ 60 min: alle Programme öffnen und
   schliessen, Menü oft auf/zu, Browser mit vielen Seiten nacheinander,
   Startknopf („Home“) aus dem Browser. Freier interner RAM am Ende = am
   Anfang (sonst Leck), 0 Abstürze. Nachweis: Log, Auswertung.
@@ -1500,6 +1500,11 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   keinem Task zuordnen (Grössenordnung ~100 B je Minute, unter der
   Streuung einzelner Berichte). M4 bleibt offen: Kriterium „intern am
   Ende = am Anfang“ nicht erfüllt; 0 Abstürze in drei 75-min-Läufen erfüllt.
+  **Nachweis (27.11.):** Ursache des Lecks gefunden (Startboxen der Fäden im
+  System-Heap, siehe Q4) und behoben; Dauertest 7 (75 min, finaler Stand
+  1.0.4): 0 Abstürze, 0 Startfehler, interner RAM in Ruhe 218 → 217 KB,
+  Kern-System konstant (`docs/nachweise/q4/dauertest7.txt`); `m4_lauf.ps1`
+  meldet „FERTIG: 0 Abstürze, interner RAM am Ende wie am Anfang“.
 - [x] **M5 v1.0.3 vorbereiten** – OK in STATUS erbitten, erst danach C/D.
   Nachweis (25.11.): Version 1.0.3, CHANGELOG, Release-Text
   `docs/release/v1.0.3.md`, Paket `release_paket.ps1 -Version 1.0.3` (keine
@@ -1508,7 +1513,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   („Ok veröffentliche“), veröffentlicht als Release v1.0.3 auf GitHub
   (main); Web-Flasher bleibt auf 1.0.1. M4 ist dabei offen (Leck −7 KB/h,
   im Release-Text unter „Known issues“).
-- [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5) –
+- [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5; **auf 1.0.5 verschoben**, Nutzer 27.11. – Schritt 1 ist in 1.0.4) –
   intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM
   aufräumen (was belegt ausser dem Browser wie viel: Kern, Fenster,
   Schriften, Bildpuffer, Spiele-Reserven, Caches; nur bei Bedarf laden);
@@ -1516,8 +1521,32 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Seitengrösse) und den Programmen geben. Vorher/Nachher in PLAN: interner
   RAM frei, PSRAM frei, Speicher des Browsers, wie viele der 30 Testseiten
   laden.
+  Bestandsaufnahme (27.11., Board und PC):
+  - PSRAM 32 MB: Programmcode (XIP aus dem PSRAM) ~6 MB, drei Bildspeicher
+    5,5 MB, Programm-Pool 14,8 MB (in Ruhe belegt: @icon 2,6 MB Reserve,
+    @tastatur und @taskbar je 0,3 MB → Browser 10,6 MB am Stück), System-Heap
+    in Ruhe 2,6 MB belegt / 3,7 MB frei (Speicherwacht jetzt mit
+    „Fenster N KB in M“).
+  - System-Heap nach dem Start (PC-Bestand `desktop/tests/m6_inventur.rs`,
+    `M6_INVENTUR=1`): Hintergrund 640×360 450 KB, Symbolfenster 640×312
+    390 KB, Symbol-Zwischenspeicher 15 × 9 KB, sonst klein; am Board dazu
+    der doppelte Bildschirmpuffer des Desktops (2 × 450 KB).
+  - Schritt 1 (27.11.): Hintergrundbild direkt in RGB565 statt über RGBA
+    (`konfig::hintergrund_lesen`, `Bild565`), altes Bild vor dem neuen
+    freigegeben: Spitze von @icon mit Bild 1800 → 1350 KB (PC-Test
+    `einstellungen`, Grenze 1500 KB); Reserve von @icon 2560 → 1792 KB,
+    Browser 10 → 10,5 MB (gleicher Abstand im Pool wie vorher).
+    Board 27.11. (30 Testseiten, `br_lauf.ps1`, `docs/nachweise/m6/
+    br_10_5_mb_tabelle.md`): 30/30 ohne vorzeitiges Ende, 0 Neustarts –
+    wie vorher; 8 Seiten bei 512 KB HTML abgeschnitten (vorher 8), JS „out of
+    memory“ 8 (vorher 6): die Seiten füllen den grösseren Heap einfach mit
+    (Spitze 10 884 von 11 140 KB). **Kein messbarer Gewinn bei den Seiten** –
+    +0,5 MB reichen nicht; grössere Hebel wären die drei Bildspeicher
+    (5,5 MB) oder Programmcode aus dem Flash statt aus dem PSRAM (6 MB),
+    beide mit Folgen für Tempo bzw. Flash-Schreiben – offen, nächster
+    Schritt. M6 bleibt offen.
 
-- [ ] **M7 Heap im Browser bei Zerstückelung zu langsam** (Fund Q3, Board
+- [ ] **M7 Heap im Browser bei Zerstückelung zu langsam** (**auf 1.0.5 verschoben**, siehe unten; Fund Q3, Board
   26.11.) – am Ende grosser Seiten (NZZ) arbeitet der Browser über 30 s fast
   nur in seinem Heap: Freigeben (`gross_einfuegen`) und Belegen
   (`gross_suchen`, `zusammenfuehren`) gehen linear durch die Liste der
@@ -1526,8 +1555,32 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Ziel: Freiliste nach Grösse/Adresse mit logarithmischer Suche (z. B.
   Grössenklassen für grosse Blöcke oder Baum), Messung mit dem Zähler
   `heap::zaehler` vorher/nachher, Board-Lauf br ohne Stillstand.
+  Ursache (27.11., PC-Test `heap::tests::zerstueckelt_ohne_lange_suche`:
+  Heap füllen, die Hälfte verstreut freigeben, dann grosse Blöcke und
+  gemischt weiter): findet eine grosse Belegung keinen Platz, führt
+  `zusammenfuehren` alle kleinen freien Stücke in die grosse Liste – die
+  nicht verschmolzenen blieben dort für immer, tausende Einträge, jedes
+  weitere Einfügen und Suchen lief durch alle. **152,6 Knoten je Aufruf.**
+  Behoben: klein gebliebene Stücke gehen nach dem Verschmelzen zurück in
+  ihre Klassen (`groesster_freier_block`/`freie_bloecke` sehen sie dort)
+  → **25,8 Knoten je Aufruf** (Grenze im Test 50).
+  Board vorher (27.11., gleicher Lauf wie M6 ohne diese Korrektur): auf der
+  NZZ (Seite 20) 40,9 s ohne `ns_takt`, dann musste die Seitenliste den
+  Browser anhalten („Angehalten“, Heap-Sperre gesetzt, Heap verworfen).
+  Board nachher (27.11., `docs/nachweise/m6/br_m7_tabelle.md`): NZZ normal
+  beendet, kein Zwangsanhalten (0 statt 1), JS „out of memory“ 6 statt 8 –
+  aber die SRF (Seite 5) endete erstmals mit „Speicher voll“. Ursache passt
+  zum PC-Test: klein gebliebene Stücke in Klassen genau ihrer Grösse
+  bedienen keine kleineren Anfragen mehr (vorher First-Fit nach Adresse in
+  der grossen Liste) → mehr Verschnitt: 831 statt 717 Fehlschläge; Versuch
+  „nächstgrössere Klasse teilen“ noch schlechter (934). **Ergebnis nicht
+  eindeutig ok → M7 nicht in 1.0.4** (Vorgabe des Nutzers 27.11.); der
+  Heap bleibt für 1.0.4 auf dem Stand aller Dauertests, die Korrektur liegt
+  im Verlauf (Commit 7f7c326). Für 1.0.5: Struktur, die nach Adresse
+  verschmilzt (First-Fit-Packung) und trotzdem logarithmisch sucht (z. B.
+  Grenzmarken an den Blöcken + Grössenklassen für grosse Blöcke).
 
-- [ ] **M8 Leerer System-Heap bricht das System ab** (Fund Q4, Dauertest
+- [ ] **M8 Leerer System-Heap bricht das System ab** (**auf 1.0.5 verschoben**, Nutzer 27.11.; Testschalter „System-Heap füllen“ liegt als git stash bereit; Fund Q4, Dauertest
   26.11.) – im ersten 75-min-Lauf blieben zwei Wetter-Apps offen (Autopilot
   schloss das leere Fenster nach abgebrochener Ortssuche nicht; behoben: die
   App endet dann), der System-PSRAM fiel von ~2 MB auf 38 KB. Danach wies der
@@ -2032,6 +2085,11 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
      konstant 3390 KB (`docs/nachweise/q4/dauertest7.txt`). Damit „0
      Abstürze, kein Speicherleck“ erfüllt; Abweichung „Q4 interner RAM“
      erledigt.
+  8. (27.11., Stand 19da71a – **finaler Stand für 1.0.4**: dazu S3, M6
+     Schritt 1; M7 nicht drin) bestanden: 75 min, 0 Abstürze, 0
+     Startfehler, keine Reste; interner RAM in Ruhe 218 → 217 KB, Kern-
+     System konstant 3390 KB (`docs/nachweise/q4/dauertest8.txt`). Paket neu
+     gebaut und geprüft (`docs/nachweise/v104/release_paket_v1.0.4.txt`).
   Release 1.0.4 vorbereitet: Version, CHANGELOG, Release-Text
   `docs/release/v1.0.4.md`, Paket neu gebaut nach allen Korrekturen,
   Release-Check `docs/nachweise/v104/`, README (Desktop- und Wetterfoto).

@@ -9,44 +9,44 @@ Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
-## Bitte um OK: Release 1.0.4 und Web-Flasher (27.11., 05:30)
+## Bitte um OK: Release 1.0.4 mit Web-Flasher (27.11., 10:15)
 
-Dein Auftrag vom 26.11. spät ist erledigt, **nichts veröffentlicht**,
-Web-Flasher unverändert (1.0.1):
+Polieren abgeschlossen, **nichts veröffentlicht**, Web-Flasher noch 1.0.1.
+Danach keine neuen Baustellen bis zum Release.
 
-1. **Leck-Fix in 1.0.4 und am Board bestätigt:** Dauertest 7 (finaler
-   Stand, esp32-os 9cc2eb8): 75 min, 0 Abstürze, 0 Startfehler; interner
-   RAM in Ruhe 218 → 217 KB (vorher −9 KB je 75 min), Kern-System konstant.
-2. **Rundgang wie Q1** über alle 19 Programme mit Board-Fotos. Behoben:
-   - Die Bild-Demo stürzte ab, weil `/sys/logo.png` im internen Flash
-     beschädigt war.
-   - PasswordGen und die Bild-Demo lagen hinter der Taskleiste.
-   - Der Musik-Hinweis war abgeschnitten.
+- **Stand:** esp32-os 19da71a, gespiegelt auf `main` (der gepushte
+  main-Commit mit diesem Eintrag; sein Code ist genau der gebaute).
+- **In 1.0.4** (gegenüber 1.0.3): Wetter-App, Browser (CSS var/calc,
+  JS-Fehler 61 → 17), Speicherlecks behoben (PSRAM ~1 MB/h, intern ~9 KB je
+  75 min), flüssigeres Blättern (Dateimanager 25 → 47, Browser 25 → 31
+  Bilder/s), Rundgang-Korrekturen (Bild-Demo, Fenster über der Taskleiste),
+  MIDI im Musikplayer, Review-Korrekturen. **Nicht drin:** M7 (Heap-Tempo,
+  am Board nicht eindeutig besser – mehr Verschnitt), M6 Rest, M8 → 1.0.5.
+- **Nachweis:** letzter Dauertest auf genau diesem Stand: 75 min, 0
+  Abstürze, 0 Startfehler, interner RAM in Ruhe konstant 217 KB
+  (`docs/nachweise/q4/dauertest8.txt`); alle Tests grün; Paket
+  `release/v1.0.4` (`esp32os.bin` 5 895 008 B, 94,7 %), Prüfung ohne
+  WLAN-Daten, lokale Pfade und private Begriffe
+  (`docs/nachweise/v104/release_paket_v1.0.4.txt`); Text
+  `docs/release/v1.0.4.md`.
 
-   Zusätzlich hat ein Review vor dem Release 7 Befunde gefunden, alle
-   behoben (u. a. ein möglicher System-Hänger bei vollem Speicher und
-   MIDI-Dateien, die den Player abstürzen liessen). MIDI ist am Board
-   nachgewiesen.
-3. **Letzter Dauertest** – siehe 1. Der erste Versuch (Dauertest 5) war
-   wegen eines Fehlers im Testaufbau ungültig: Ein Foto unterbrach den
-   Autopiloten. Behoben und zweimal wiederholt, beide bestanden.
-4. **Release-Text, Paket und CHANGELOG** sind neu auf diesem Stand:
-   - Paket: `release/v1.0.4`, `esp32os.bin` 5 894 480 B (94,7 %).
-   - Prüfung: `docs/nachweise/v104/release_paket_v1.0.4.txt` (keine
-     WLAN-Daten, keine lokalen Pfade, 0 private Begriffe).
-   - Text: `docs/release/v1.0.4.md`.
-
-Schritte nach deinem OK (Tag auf `main` 33cd53e – sein Quellstand ist genau
-der gebaute; spätere Commits gehören nicht zu 1.0.4):
-1. `git tag v1.0.4 33cd53e` und `git push origin v1.0.4`
+Schritte nach deinem OK:
+1. `git fetch origin main`, `git tag v1.0.4 origin/main`, `git push origin v1.0.4`
 2. `gh release create v1.0.4 --repo TheUnkn0wnC0DE/ESP32-OS --title "ESP32-OS 1.0.4"
    --notes-file docs/release/v1.0.4.md release/v1.0.4/*`
-3. Web-Flasher: `gh workflow run flasher.yml --ref main`
-4. README: „latest release (1.0.4)“, Web-Flasher-Satz und Zahlen nachziehen,
-   pushen.
+3. Web-Flasher: `gh workflow run flasher.yml --ref main` (holt das neueste
+   Release, prüft SHA256SUMS), danach Seite prüfen (installiert 1.0.4).
+4. README: „latest release (1.0.4)“ und Web-Flasher-Satz nachziehen, pushen.
 
-Antwort genügt: „OK Release“ (1–2), „OK Release und Flasher“ (1–4) oder
+Antwort genügt: „OK Release und Flasher“ (1–4), „OK Release“ (1–2) oder
 Änderungswünsche.
+
+**Vorgemerkt nach dem Release:** Review von PR #3 (aramix, Guition
+JC4880P443C_I_W) – Diff vollständig, PC-Tests, Waveshare-Firmware am Board
+(Boot, Touch, WLAN, Update-Prüfung), besonders Updater, Release-Paket,
+Web-Flasher und Pages-Workflow (nie ein falsches Board-Image), Lizenz
+esp_lcd_st7701 (Apache-2.0), fester Pfad ESP32OS_EC=C:/ec; Ergebnis und
+Empfehlung hier. Nicht mergen ohne dein OK.
 
 ## Zusammenfassung (26.11., 21:00 – Abschluss dieser Sitzung)
 

@@ -258,6 +258,13 @@ pub(crate) fn welt() -> MutexGuard<'static, Option<Welt>> {
     WELT.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+/// M6 (Speicherwacht): Bytes aller Fensterpuffer und Zahl der Fenster.
+pub fn fensterpuffer() -> (usize, usize) {
+    mit_welt(|w| {
+        w.slots.iter().flatten().filter_map(|f| f.fenster.as_ref()).fold((0, 0), |(b, n), f| (b + f.buf.px.len() * 2, n + 1))
+    })
+}
+
 /// Führt `f` mit der Welt aus (legt sie bei Bedarf mit 640×360 an).
 pub fn mit_welt<R>(f: impl FnOnce(&mut Welt) -> R) -> R {
     let mut g = welt();

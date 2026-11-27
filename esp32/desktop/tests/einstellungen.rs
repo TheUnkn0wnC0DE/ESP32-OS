@@ -191,10 +191,14 @@ fn einstellungen_per_touch_und_nach_neustart() {
     bis(|| !sys::fenster_liste().iter().any(|f| f.titel == "Einstellungen"), "geschlossen");
     let px = foto("p3_desktop_bild");
     assert!(kern::liste().iter().any(|p| p.name == "@icon"), "@icon läuft noch");
+    // M6: Spitze von @icon mit Hintergrundbild (Reserve in desktop::PROGRAMME)
+    let spitze = kern::liste().iter().find(|p| p.name == "@icon").map_or(0, |p| p.heap_spitze);
+    println!("@icon Spitze mit Hintergrundbild: {} KB", spitze / 1024);
+    assert!(spitze < 1500 * 1024, "@icon braucht mit Hintergrundbild {} KB – Reserve 1792 KB prüfen", spitze / 1024);
     // Pixel rechts oben im Desktop = vorbereitetes Hintergrundbild
     let soll = desktop::konfig::hintergrund_lesen(640, 360).unwrap();
     for (x, y) in [(600usize, 30usize), (600, 200), (20, 300)] {
-        let s = kern::grafik::von565(kern::grafik::zu565(soll.px[y * 640 + x]));
+        let s = kern::grafik::von565(soll.px[y * 640 + x]);
         assert_eq!(px[y * 640 + x], s, "Hintergrundbild bei ({x}, {y})");
     }
     assert!(std::fs::metadata(wurzel.join("settings/wallpaper.rgb")).unwrap().len() < 120_000, "klein genug für die interne Partition");

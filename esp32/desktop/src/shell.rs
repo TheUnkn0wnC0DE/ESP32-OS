@@ -400,7 +400,7 @@ pub fn fuellend(b: &Rgba, w: u32, h: u32) -> Rgba {
 /// Bildschirmgrösse). Fehlt das Bild → blauer Verlauf.
 pub enum Grund {
     Verlauf(u32, u32),
-    Bild(Rgba),
+    Bild(crate::konfig::Bild565),
 }
 
 pub fn hintergrund_grund(hg: &crate::konfig::Hintergrund, w: i32, h: i32) -> Grund {
@@ -436,10 +436,9 @@ fn icon_zeichnen(w: i32, h: i32, grund: &Grund) {
             }
         }
         Grund::Bild(b) => {
+            let n = bw.min(b.w as usize);
             for y in 0..bh.min(b.h as usize) {
-                for x in 0..bw.min(b.w as usize) {
-                    p.px[y * bw + x] = zu565(b.px[y * b.w as usize + x] & 0xFF_FFFF);
-                }
+                p.px[y * bw..y * bw + n].copy_from_slice(&b.px[y * b.w as usize..y * b.w as usize + n]);
             }
         }
     }
@@ -447,7 +446,7 @@ fn icon_zeichnen(w: i32, h: i32, grund: &Grund) {
     let (mut t_sym, mut t_misch, mut t_text) = (0u64, 0u64, 0u64);
     let hg_farbe = |x: i32, y: i32| match grund {
         Grund::Verlauf(oben, unten) => verlauf(*oben, *unten, y, h),
-        Grund::Bild(b) => b.px[(y.clamp(0, h - 1) * w + x.clamp(0, w - 1)) as usize] & 0xFF_FFFF,
+        Grund::Bild(b) => kern::grafik::von565(b.px[(y.clamp(0, h - 1) * w + x.clamp(0, w - 1)) as usize]),
     };
     let zeilen = ((h - LEISTE_H - 8) / ZELLE_H).max(1);
     let mut knoepfe = Vec::new();
@@ -538,6 +537,8 @@ pub fn icon() {
             1 => {
                 let hg = crate::konfig::hintergrund();
                 if bild.as_ref().is_none_or(|(k, _)| *k != hg) {
+                    // altes Bild zuerst freigeben (M6: nicht zwei auf einmal)
+                    bild = None;
                     let b = hintergrund_grund(&hg, w, h);
                     bild = Some((hg, b));
                 }

@@ -395,10 +395,10 @@ const SHELL: [kern::ProgrammEintrag; 23] = [
     // Stück) fand daneben im Programm-Pool keinen Platz mehr
     eintrag!("@tastatur", tastatur::dienst, 256),
     eintrag!("@start", shell::start, 512),
-    // 2,5 MB: Spitze am Board 948 KB (Verlauf), mit Hintergrundbild etwa
-    // 1,7 MB (Bild 640×340 RGBA, halbes Bild beim Lesen, Desktop-Puffer);
-    // vorher 4 MB – die fehlten im Programm-Pool (M4)
-    eintrag!("@icon", shell::icon, 2560),
+    // 1,75 MB: Spitze mit Hintergrundbild 1350 KB (PC-Test einstellungen,
+    // M6 27.11.: Bild direkt in RGB565 statt RGBA – vorher 1800 KB und
+    // 2,5 MB Reserve; davor 4 MB, die im Programm-Pool fehlten, M4)
+    eintrag!("@icon", shell::icon, 1792),
     eintrag!("@taskbar", shell::taskbar, 256),
     eintrag!("@menu", shell::menu, 256),
     eintrag!("info", shell::info, 256),
@@ -450,9 +450,10 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
     eintrag!("matrix", kolibri::matrix, 256),
     // Browser (B1): NetSurf + QuickJS; Heap für Seiten, Bilder und die
     // JS-Laufzeit (bis 6 MB, 3 MB Reserve für die Seite, netsurf/build.rs), Stapel für Layout und
-    // JS (Grenze 192 KB). 10 MB: mehr lässt der PSRAM neben den Diensten
-    // des Desktops nicht zu (STATUS B1 „Speicher“)
-    kern::ProgrammEintrag { name: "browser", heap_kb: 10 * 1024, stapel_kb: 384, start: netsurf::programm },
+    // JS (Grenze 192 KB). 10,5 MB (M6 27.11.: +512 KB aus der kleineren
+    // Reserve von @icon; im Pool bleibt neben den Diensten derselbe Abstand
+    // wie vorher mit 10 MB)
+    kern::ProgrammEintrag { name: "browser", heap_kb: 10 * 1024 + 512, stapel_kb: 384, start: netsurf::programm },
 ];
 
 #[cfg(not(target_pointer_width = "32"))]

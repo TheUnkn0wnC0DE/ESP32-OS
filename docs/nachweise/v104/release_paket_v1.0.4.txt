@@ -1,4 +1,4 @@
-Release-Paket v1.0.4 (release_paket.ps1 -Version 1.0.4, 27.11.2026 morgens, Stand esp32-os 9cc2eb8 nach Rundgang, Review und Dauertest 7; nicht veröffentlicht)
+Release-Paket v1.0.4 (release_paket.ps1 -Version 1.0.4, 27.11.2026 vormittags, Stand esp32-os 19da71a – finaler Stand nach Rundgang, Review, S3, M6 Schritt 1 und Dauertest 8; nicht veröffentlicht)
 Release-Pruefung esp32os.elf: keine WLAN-Zugangsdaten
 Release-Pruefung esp32os.bin: keine WLAN-Zugangsdaten
 Release-Pruefung esp32os.bin: keine lokalen Pfade
@@ -9,10 +9,10 @@ Release-Pruefung quakeapp.elf: keine WLAN-Zugangsdaten
 Release-Pruefung quakeapp.bin: keine WLAN-Zugangsdaten
 Release-Pruefung quakeapp.bin: keine lokalen Pfade
 b64297c7bbeed9fb47b3255b36ff3c3c8fedf735865f47d7b4e5f172766c5296  bootloader.bin
-ff60ee2a2a32b732aafe1a9e44623c65367489b41232fe818a33e49927456807  doomapp.bin
-3e486269acb04fb8d94083905f99c0ac4065ba7f126a69d86cb3acc918a1582f  esp32os.bin
+fd9c93b7a0b83cd95ecee43e18ba2494bf07babaacca00af743baf9ff8f7b480  doomapp.bin
+5a2157695faf5ac01d74b13e751dd19dce2efb13976ec4f3fbf234ffa176a80d  esp32os.bin
 7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f  otadata-leer.bin
 caac202b70ef8688d9b8536a5fe7d0c97b6ee698ba9b4f649155ca200f9b9c1e  partition-table.bin
-2f4c920637595598373410c3ff9a783c4274fd957b83fe02eda2b9c91c03a662  quakeapp.bin
-Grössen: esp32os.bin 5894480 (94.7 % von 6225920), doomapp.bin 1744016, quakeapp.bin 1760160, bootloader.bin 24160, partition-table.bin 3072, otadata-leer.bin 8192
+464a890ecfe0afbb05544d43ff300e2cf6415af5b97c47dcdabf5787f8c19254  quakeapp.bin
+Grössen: esp32os.bin 5895008 (94.7 % von 6225920), doomapp.bin 1744592, quakeapp.bin 1760720, bootloader.bin 24160, partition-table.bin 3072, otadata-leer.bin 8192
 Private Suchbegriffe (bin_pruefen über alle .bin, manifest.json, SHA256SUMS): 0 Treffer.

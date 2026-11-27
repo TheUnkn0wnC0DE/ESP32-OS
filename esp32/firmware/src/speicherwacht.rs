@@ -41,10 +41,14 @@ pub fn zeile(sekunden: u64) -> String {
         .into_iter()
         .map(|p| format!("{} {}/{} KB (Spitze {})", p.name, p.heap_belegt / 1024, p.heap_groesse / 1024, p.heap_spitze / 1024))
         .collect();
+    // M6: Anteil der Fensterpuffer am Kern-System
+    let fenster = kern::fenster::fensterpuffer();
     let pool = crate::kern_board::pool_stand().map_or(String::new(), |(f, b, g)| format!(" Pool {f}/{g} KB (Block {b})"));
     format!(
-        "SPEICHER t={sekunden}s intern frei {i} KB (Block {ib}, Min {imin}) PSRAM frei {p} KB (Block {pb}, Min {pmin}){pool} Kern-System {} KB | {}",
+        "SPEICHER t={sekunden}s intern frei {i} KB (Block {ib}, Min {imin}) PSRAM frei {p} KB (Block {pb}, Min {pmin}){pool} Kern-System {} KB (Fenster {} KB in {}) | {}",
         kern::system_belegt() / 1024,
+        fenster.0 / 1024,
+        fenster.1,
         programme.join(", ")
     )
 }

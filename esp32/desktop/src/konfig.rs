@@ -229,8 +229,18 @@ pub fn hintergrund_vorbereiten(b: &kolibri::dekoder::Rgba, w: u32, h: u32) -> bo
     kern::datei::erstellen(HG_DATEI, &d).0 == kern::datei::OK
 }
 
-/// Vorbereitetes Hintergrundbild lesen und auf w×h vergrössern.
-pub fn hintergrund_lesen(w: u32, h: u32) -> Option<kolibri::dekoder::Rgba> {
+/// Hintergrundbild in Bildschirmgrösse, RGB565 (wie der Fensterpuffer).
+pub struct Bild565 {
+    pub w: u32,
+    pub h: u32,
+    pub px: Vec<u16>,
+}
+
+/// Vorbereitetes Hintergrundbild lesen und auf w×h vergrössern (bilinear,
+/// gleiche Rechnung wie `libimg::skalieren`). M6: direkt in RGB565, ohne
+/// RGBA-Zwischenbilder – vorher hielt `@icon` 800 KB RGBA (mit dem kleinen
+/// RGBA-Bild beim Vergrössern über 1 MB), jetzt 400 KB.
+pub fn hintergrund_lesen(w: u32, h: u32) -> Option<Bild565> {
     let (bw, bh) = (w / 2, h / 2);
     let mut d = vec![0u8; 8 + (bw * bh * 2) as usize];
     let (c, n) = kern::datei::lesen(HG_DATEI, 0, &mut d);
@@ -240,9 +250,35 @@ pub fn hintergrund_lesen(w: u32, h: u32) -> Option<kolibri::dekoder::Rgba> {
     if u32::from_le_bytes(d[0..4].try_into().ok()?) != bw || u32::from_le_bytes(d[4..8].try_into().ok()?) != bh {
         return None;
     }
-    let px = d[8..].chunks_exact(2).map(|c| 0xFF00_0000 | kern::grafik::von565(u16::from_le_bytes([c[0], c[1]]))).collect();
-    let klein = kolibri::dekoder::Rgba { w: bw, h: bh, px, delay: 0 };
-    Some(kolibri::libimg::skalieren(&klein, w, h, true))
+    let klein = |x: u32, y: u32| {
+        let i = 8 + 2 * (y * bw + x) as usize;
+        kern::grafik::von565(u16::from_le_bytes([d[i], d[i + 1]]))
+    };
+    let (w, h) = (w.max(1), h.max(1));
+    let mut px = Vec::with_capacity((w * h) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            if bw < 2 || bh < 2 {
+                px.push(kern::grafik::zu565(klein(x * bw / w, y * bh / h)));
+                continue;
+            }
+            let fx = ((x as f32 + 0.5) * bw as f32 / w as f32 - 0.5).clamp(0.0, (bw - 1) as f32);
+            let fy = ((y as f32 + 0.5) * bh as f32 / h as f32 - 0.5).clamp(0.0, (bh - 1) as f32);
+            let (x0, y0) = (fx as u32, fy as u32);
+            let (x1, y1) = ((x0 + 1).min(bw - 1), (y0 + 1).min(bh - 1));
+            let (ax, ay) = (fx - x0 as f32, fy - y0 as f32);
+            let (a, b, c, e) = (klein(x0, y0), klein(x1, y0), klein(x0, y1), klein(x1, y1));
+            let mut v = 0u32;
+            for s in 0..3 {
+                let k = |q: u32| (q >> (8 * s) & 255) as f32;
+                let o = k(a) * (1.0 - ax) + k(b) * ax;
+                let u = k(c) * (1.0 - ax) + k(e) * ax;
+                v |= ((o * (1.0 - ay) + u * ay).round() as u32 & 255) << (8 * s);
+            }
+            px.push(kern::grafik::zu565(v));
+        }
+    }
+    Some(Bild565 { w, h, px })
 }
 
 /// Hintergrund setzen, speichern, Desktop neu zeichnen.

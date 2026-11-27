@@ -183,9 +183,13 @@ pub mod spur {
         let _ = DRIN.try_with(|d| d.set(false));
         Some(r)
     }
+    /// Aufrufstapel nur für Blöcke ab dieser Grösse (0 = alle; das Auflösen
+    /// je Belegung ist langsam – für eine Bestandsaufnahme reichen die
+    /// grossen, M6).
+    pub static AB_GROESSE: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
     pub(crate) fn belegt(p: *mut u8, n: usize) {
         mit(|| {
-            let bt = std::backtrace::Backtrace::force_capture().to_string();
+            let bt = if n >= AB_GROESSE.load(Ordering::Relaxed) { std::backtrace::Backtrace::force_capture().to_string() } else { String::from("(klein)") };
             OFFEN.lock().unwrap_or_else(|e| e.into_inner()).get_or_insert_with(HashMap::new).insert(p as usize, (n, bt));
         });
     }

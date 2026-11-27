@@ -1,0 +1,51 @@
+﻿M4 Dauertest 2026-11-27T08:51:55, 75 min, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+Startfehler                    0
+Runden mit offenen Resten      0
+interner RAM frei: Anfang 220 KB (t=20 s), Ende 216 KB (t=4474 s), tiefster Wert 215 KB, Differenz -4 KB
+
+Stand esp32-os 19da71a (finaler Stand 1.0.4: S3, Review, M6 Schritt 1; Heap ohne M7). In Ruhe (nur Systemdienste: t, interner RAM frei KB, Kern-System KB):
+20 220 2896
+30 219 2956
+480 217 3387
+510 218 3387
+930 218 3390
+1081 218 3390
+1471 218 3390
+1621 218 3390
+1801 217 3390
+1831 217 3390
+1922 217 3390
+1952 217 3390
+2072 217 3390
+2102 217 3390
+2252 217 3390
+2312 217 3390
+2402 217 3390
+2462 217 3390
+2552 217 3390
+2702 217 3390
+2792 217 3390
+2913 217 3390
+2943 217 3390
+3093 217 3390
+3183 217 3390
+3363 217 3390
+3393 217 3390
+3483 217 3390
+3513 217 3390
+3663 217 3390
+3753 217 3390
+3814 217 3390
+3874 217 3390
+3964 217 3390
+4144 217 3390
+4264 217 3390
+4354 217 3390
+4414 217 3390
