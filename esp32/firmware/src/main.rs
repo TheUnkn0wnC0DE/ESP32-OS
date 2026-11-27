@@ -438,7 +438,8 @@ fn main() {
                 log::warn!("Ersteinrichtung als erledigt gemerkt: {}", desktop::konfig::einrichtung_abschliessen());
             }
             log::info!("ESP32-OS-Desktop startet ({prog})");
-            let mut d = desktop::Desktop::neu(|| hw::now_us() as u64);
+            // Uhr ohne die Fotopausen (Autopilot-Schritte bleiben im Takt)
+            let mut d = desktop::Desktop::neu(|| hw::now_us() as u64 - pudding_fw::foto::pause_us());
             if let Some(a) = AUTOPILOT {
                 d.autopilot(a);
             }

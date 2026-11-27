@@ -116,7 +116,17 @@ pub fn symbol(i: usize, g: u32) -> Rgba {
     // Start eines Programms), blieb sie liegen: 12 Symbole × 9216 Bytes je
     // Menü, ~1 MB je Stunde im Dauertest.
     sperre_vorbereiten(&SYMBOL_CACHE);
-    let gespeichert = kern::geschuetzt(|| SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).iter().find(|(k, gr, _)| *k == i && *gr == g).map(|(_, _, b)| b.clone()));
+    // Review 27.11.: nur kopieren, wenn der eigene Heap die Kopie fasst –
+    // sonst endete das Programm mit „Speicher voll“, während es die
+    // gemeinsame Sperre hält (am Board bliebe sie für immer belegt); dann
+    // ohne Zwischenspeicher neu entpacken
+    let bytes = (g as usize * g as usize).saturating_mul(4);
+    let passt = kern::sys::programm_speicher_groesster_block().is_none_or(|b| b >= bytes + 4096);
+    let gespeichert = if passt {
+        kern::geschuetzt(|| SYMBOL_CACHE.lock().unwrap_or_else(|e| e.into_inner()).iter().find(|(k, gr, _)| *k == i && *gr == g).map(|(_, _, b)| b.clone()))
+    } else {
+        None
+    };
     if let Some(b) = gespeichert {
         return b;
     }
@@ -125,7 +135,6 @@ pub fn symbol(i: usize, g: u32) -> Rgba {
     // in den gemeinsamen Zwischenspeicher eine eigene Kopie im System-Heap –
     // nur mit Reserve (eine Belegung im Kern-Abschnitt bricht bei leerem
     // System-Heap das ganze System ab; vorher geschah das mit der Meldung)
-    let bytes = (g as usize * g as usize).saturating_mul(4);
     if !kern::sys::system_belegung_moeglich(bytes) {
         return b;
     }

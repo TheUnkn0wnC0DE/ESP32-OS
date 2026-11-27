@@ -55,6 +55,12 @@ foreach ($k in $muster.Keys) {
     $summe += $n
 }
 $zeilen += "Summe: $summe"
+# Startfehler („Programm nicht gestartet“) und Reste je Runde: kein Absturz,
+# aber die Runde lief nicht wie geplant (Dauertest 27.11.)
+$startfehler = @($log | Select-String -Pattern 'Start \S+: Fehler').Count
+$reste = @($log | Select-String -Pattern 'offen geblieben \[.+\]').Count
+$zeilen += ('{0,-30} {1}' -f 'Startfehler', $startfehler)
+$zeilen += ('{0,-30} {1}' -f 'Runden mit offenen Resten', $reste)
 # Leck: interner RAM bei t=20 s (Desktop, WLAN, vor dem Autopiloten) gegen
 # die letzte Zeile (alle Programme zu, Autopilot fertig)
 $speicher = @($log | Select-String -Pattern 'SPEICHER t=(\d+)s intern frei (\d+) KB' | ForEach-Object {
@@ -75,4 +81,5 @@ $zeilen
 if ($LASTEXITCODE -ne 0) { "NORMALE FIRMWARE NICHT GESCHRIEBEN (siehe $Ziel\bau_normal.log)"; exit 1 }
 if ($summe -ne 0) { "NICHT BESTANDEN: $summe Absturz-Gründe"; exit 2 }
 if (-not ($anfang -and $ende) -or $ende.frei -lt $anfang.frei - 4) { "NICHT BESTANDEN: interner RAM am Ende tiefer als am Anfang (Leck?)"; exit 3 }
+if ($startfehler -ne 0 -or $reste -ne 0) { "NICHT BESTANDEN: $startfehler Startfehler, $reste Runden mit offenen Resten"; exit 4 }
 "FERTIG: 0 Abstürze, interner RAM am Ende wie am Anfang"

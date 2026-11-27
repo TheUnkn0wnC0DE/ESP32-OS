@@ -1,7 +1,8 @@
 //! Q4 (Dauertest 26.11.): Das Autopilot-Ereignis `t:0:0:9` beendet zu
 //! Beginn einer Board-Runde alle noch offenen Programme (Systemdienste
-//! „@…“ bleiben). Vorher hinterliess ein daneben gegangener Tipp offene
-//! Fenster, die sich über die Runden summierten.
+//! „@…“ bleiben, ausser liegengebliebenen Meldungen). Vorher hinterliess
+//! ein daneben gegangener Tipp offene Fenster, die sich über die Runden
+//! summierten; eine offene Meldung lenkte alle weiteren Tipps um (27.11.).
 use core::sync::atomic::{AtomicU64, Ordering};
 use kern::{KernAlloc, sys};
 use konsole::Spiel;
@@ -36,6 +37,8 @@ fn rundenbeginn_beendet_offene_programme() {
     d.autopilot("500:0:0:9");
     let rechner = kern::starte_name("rechner").unwrap();
     bis(|| sys::fenster_liste().iter().any(|f| f.pid == rechner), "Rechner offen");
+    desktop::shell::melden("Programm nicht gestartet", "Test");
+    bis(|| kern::liste().iter().any(|p| p.name == "@meldung"), "Meldung offen");
     let eingabe = Input::default();
     // vor dem Ereignis: nichts passiert
     UHR_US.store(400_000, Ordering::SeqCst);
@@ -48,9 +51,9 @@ fn rundenbeginn_beendet_offene_programme() {
     bis(
         || {
             kern::aufraeumen();
-            !kern::liste().iter().any(|p| p.pid == rechner)
+            !kern::liste().iter().any(|p| p.pid == rechner || p.name == "@meldung")
         },
-        "Rechner beendet",
+        "Rechner und Meldung beendet",
     );
     assert!(kern::liste().iter().any(|p| p.name == "@taskbar"), "Dienst läuft weiter");
     let _ = std::fs::remove_dir_all(&wurzel);

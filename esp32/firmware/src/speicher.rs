@@ -207,13 +207,16 @@ fn testdaten_ablegen(was: &str, ordner: &str, dateien: &[(&str, &[u8])]) {
     }
 }
 
-/// Entwicklungs-Build (A5): die eigenen Testtöne (`werkzeuge/test_mp3.py`)
+/// Entwicklungs-Build (A5, D2): die eigenen Testtöne
+/// (`werkzeuge/test_mp3.py`) und die Test-Melodie (`werkzeuge/test_midi.py`)
 /// nach `ESP32-OS/Musik_Test`.
 #[cfg(esp32os_musik_test)]
 pub fn musik_testdaten() {
     testdaten_ablegen("Musik-Test", "Musik_Test", &[
         ("Testton 1.mp3", include_bytes!("../../desktop/tests/daten/Testton 1.mp3")),
         ("Testton 2.mp3", include_bytes!("../../desktop/tests/daten/Testton 2.mp3")),
+        // D2: eigene Test-Melodie (`werkzeuge/test_midi.py`)
+        ("Testmelodie.mid", include_bytes!("../../desktop/tests/daten/Testmelodie.mid")),
     ]);
 }
 

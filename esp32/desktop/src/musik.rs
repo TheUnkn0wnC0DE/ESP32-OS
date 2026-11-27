@@ -299,8 +299,10 @@ impl Wiedergabe {
         let mut d = KDatei::oeffnen(pfad).ok_or_else(|| "nicht gefunden".to_string())?;
         let klein = pfad.to_lowercase();
         if klein.ends_with(".mid") || klein.ends_with(".midi") {
-            // ganze Datei (MIDI ist klein), höchstens 1 MB
-            if d.groesse > 1024 * 1024 {
+            // ganze Datei (MIDI ist klein), höchstens 512 KB: mit den
+            // Ereignissen beim Einlesen (bis ~0,8 MB, `midi::MAX_EREIGNISSE`)
+            // bleibt der Heap des Players (2 MB) sicher (Review 27.11.)
+            if d.groesse > 512 * 1024 {
                 return Err(kern::sprache::t("MIDI file too large", "MIDI-Datei zu gross").into());
             }
             let mut daten = vec![0u8; d.groesse as usize];

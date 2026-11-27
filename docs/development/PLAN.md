@@ -1968,6 +1968,20 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
      (−9 KB, bekanntes Leck aus M4, ~7 KB/h, nicht zugeordnet) – die
      Bedingung „kein Speicherleck“ ist für den internen RAM noch nicht
      erfüllt, deshalb Q4 noch offen (Abweichung „Q4 interner RAM“).
+  5. (27.11., Stand 3cb5043 mit Leck-Fix) 75 min, **0 Abstürze**; interner
+     RAM in den Runden 1–6 (bis 47 min) stabil 217–218 KB (Dauertest 4:
+     stetig fallend). In Runde 7 traf ein Foto (Übertragung ~7 s hält die
+     Oberfläche an) den Musik-Schritt: die aufgestauten Tipps feuerten
+     hintereinander, bevor das Fenster da war → Musik zweimal offen, der
+     Browser fand danach keinen Speicherblock („zu wenig Speicher“), die
+     Meldung blieb mitten im Bild liegen und lenkte weitere Tipps um; bis
+     zum Ende 5 Startfehler, 4 offene Meldungen → interner RAM am Ende 213
+     KB (−7 KB, je offene Meldung ~1 KB Task-Verwaltung). Kein Leck, aber
+     kein gültiger Nachweis. **Behoben (Testaufbau):** Uhr des Autopiloten
+     ohne Fotopausen (`foto::pause_us`); Rundenbeginn schliesst auch
+     liegengebliebene Meldungen (PC-Test `autopilot_aufraeumen`);
+     `m4_lauf.ps1` zählt Startfehler und Runden mit Resten und besteht nur
+     ohne beide.
   Release 1.0.4 vorbereitet: Version, CHANGELOG, Release-Text
   `docs/release/v1.0.4.md`, Paket neu gebaut nach allen Korrekturen,
   Release-Check `docs/nachweise/v104/`, README (Desktop- und Wetterfoto).
@@ -2030,6 +2044,31 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
     Nachweis: Fotos vorher/nachher `docs/nachweise/v104/rundgang/`
     (Musik, Bild-Demo, PasswordGen); alle Tests grün (FEHLER=0), Firmware
     5 894 976 B (94,7 %).
+  - Review vor dem Release (27.11., Subagent über `git diff 56d61cb..HEAD`
+    für kern, firmware, desktop, kolibri; nur Korrektheit) – 7 Befunde,
+    alle behoben:
+    1. mittel – Programm konnte in `geschuetzt` mit gehaltener Shell-Sperre
+       (Symbol-/Anwendungs-Zwischenspeicher) wegen „Speicher voll“ enden; am
+       Board bliebe die Sperre für immer belegt (System hängt).
+       **Behoben:** im geschützten Abschnitt Notbelegung bis 256 KB mit
+       128 KB Reserve statt sofortigem Ende (`alloc.rs`), Ende beim nächsten
+       Systemaufruf; `shell::symbol` kopiert nur, wenn der eigene Heap die
+       Kopie fasst.
+    2. mittel – MIDI: zu kurzer Kopf und Spurlängen mit Überlauf liessen
+       den Player abstürzen. **Behoben:** geprüftes Lesen, `checked_add`;
+       Test `kaputte_midi_dateien` (jede Kürzung, Länge 0xFFFFFFFF).
+    3. mittel – MIDI: grosse Dateien sprengten den 2-MB-Heap des Players.
+       **Behoben:** höchstens 40 000 Ereignisse, einmal passend angelegt,
+       32-Bit-Zeiten, Dateien bis 512 KB.
+    4. niedrig – Startfunktion eines vor dem Start angehaltenen Fadens lief
+       im Aufräumer (Destruktor mit Programmcode). **Behoben:** vergessen,
+       der Speicher geht mit dem Bereich.
+    5. niedrig – Zähler des System-Heaps zählte freigegebene Notbelegungen
+       nicht ab (falsche Leck-Hinweise). **Behoben.**
+    6. niedrig – `ins_programm`: Anhalten zwischen Kopie und Freigabe liess
+       das Original liegen. **Behoben:** geschützt.
+    7. niedrig – Start-Reserve: 20 Wiederholungen (~1 s blockiert).
+       **Behoben:** einmal aufräumen, erneut prüfen.
 
 ## T. Nach Teil S (Nutzer 24.11. abends)
 
@@ -2536,6 +2575,13 @@ und Verzeichnis auf GitHub).
   MIDI-Datei abgelehnt). Offen: Ogg (Vorbis-Dekoder – braucht Fremdcode,
   z. B. lewton oder stb_vorbis, Download mit OK), Board-Nachweis (Ton im
   Log, Foto).
+  Board 27.11. (MIDI): eigene Test-Melodie (`werkzeuge/test_midi.py`,
+  Format 1, 3 Spuren, Tempowechsel; PC-Test `testmelodie_format1`) über
+  den Entwicklungs-Build `ESP32OS_MUSIK_TEST` nach `ESP32-OS/Musik_Test`,
+  Musik mit der Datei gestartet: „spielt Testmelodie.mid (22050 Hz)“, nach
+  4 s 88 576 Frames ausgegeben (Echtzeit), „Ende“ nach 5,4 s, weiter zum
+  nächsten Titel (`docs/nachweise/d2/midi_board.txt`, Foto
+  `midi_board.png`). Offen bleibt nur Ogg.
 - [ ] **D3 App-Store** – Programme per WLAN aus einem signierten
   Verzeichnis auf GitHub laden, installieren, entfernen, per Touch; gleiche
   Signaturprüfung wie beim OTA. Nachweis: PC-Test Signatur, Board:

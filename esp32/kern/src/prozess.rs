@@ -330,9 +330,13 @@ pub(crate) fn ende_angefordert() -> bool {
 /// liegen – am Board endet ein Programm ohne Abwickeln. Ausserhalb eines
 /// Kern-Abschnitts aufrufen.
 pub fn ins_programm<T: Clone>(v: T) -> T {
-    let kopie = v.clone();
-    drop(v);
-    kopie
+    // geschützt (Review 27.11.): zwischen Kopie und Freigabe nicht anhalten,
+    // sonst bliebe das Original im System-Heap liegen
+    geschuetzt(|| {
+        let kopie = v.clone();
+        drop(v);
+        kopie
+    })
 }
 
 pub fn kern_abschnitt<R>(f: impl FnOnce() -> R) -> R {
@@ -431,6 +435,15 @@ pub fn starte(e: &'static ProgrammEintrag) -> Result<u32, StartFehler> {
 /// bis 1 s erneut versuchen – sonst scheiterte z. B. der PDF-Betrachter
 /// (8 MB) direkt nach dem Schliessen des Musikplayers.
 pub fn starte_mit(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32, StartFehler> {
+    // M8: unter der Start-Reserve einmal aufräumen und erneut prüfen – nicht
+    // 20-mal wiederholen (Review 27.11.: ~1 s blockiert, 21 Protokollzeilen)
+    if !e.name.starts_with('@') && system_frei() < START_RESERVE {
+        aufraeumen();
+        if system_frei() < START_RESERVE {
+            crate::sys::debug_text(&format!("Start {}: System-Heap unter {} KB – kein Start", e.name, START_RESERVE / 1024));
+            return Err(StartFehler::KeinSpeicher);
+        }
+    }
     for _ in 0..20 {
         match starte_mit_einmal(e, argumente) {
             Err(StartFehler::KeinSpeicher) => {
@@ -451,10 +464,6 @@ pub fn starte_mit(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32, S
 pub const START_RESERVE: usize = 512 * 1024;
 
 fn starte_mit_einmal(e: &'static ProgrammEintrag, argumente: &str) -> Result<u32, StartFehler> {
-    if !e.name.starts_with('@') && system_frei() < START_RESERVE {
-        crate::sys::debug_text(&format!("Start {}: System-Heap unter {} KB – kein Start", e.name, START_RESERVE / 1024));
-        return Err(StartFehler::KeinSpeicher);
-    }
     kern_abschnitt(|| {
         let k = kern();
         let laenge = (e.heap_kb + e.stapel_kb) * 1024 + MIN_BEREICH + 4096;
@@ -1012,7 +1021,16 @@ pub fn aufraeumen() {
             if kontext != 0 {
                 // SAFETY: Task ist gelöscht; Kontext aus Box::into_raw, nie
                 // anderswo freigegeben (zwangsweise angehalten).
-                drop(unsafe { Box::from_raw(kontext as *mut Faden) });
+                let f = unsafe { Box::from_raw(kontext as *mut Faden) };
+                // Review 27.11.: wurde der Faden vor seinem Start angehalten,
+                // liegt die Startfunktion noch hier – ihren Destruktor
+                // (Programmcode, kann Sperren nehmen) nicht im Aufräumer
+                // ausführen; der Speicher liegt im Heap des Programms und
+                // geht mit dessen Bereich
+                if let Some(start) = f.start.take() {
+                    core::mem::forget(start);
+                }
+                drop(f);
             }
         }
         let mut neu_frei = Vec::new();

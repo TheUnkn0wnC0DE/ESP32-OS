@@ -11,6 +11,10 @@
 pub const RATE: u32 = 22_050;
 /// Höchstzahl gleichzeitiger Stimmen (älteste wird ersetzt).
 const STIMMEN: usize = 24;
+/// Höchstzahl Noten-Ereignisse je Datei (Review 27.11.: der Player hat
+/// 2 MB Heap; 40 000 Ereignisse brauchen beim Einlesen ~0,8 MB, eine
+/// Datei mit mehr wird bis dahin gespielt).
+pub const MAX_EREIGNISSE: usize = 40_000;
 
 /// Ein Ereignis auf der Zeitachse (in Abtastwerten).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -35,7 +39,8 @@ struct Stimme {
 
 /// Dekodierte MIDI-Datei: Ereignisse mit Zeitpunkt, laufender Synthesizer.
 pub struct MidiLeser {
-    ereignisse: Vec<(u64, Ereignis)>,
+    /// (Abtastwert, Ereignis) – 32 Bit reichen für 54 Stunden
+    ereignisse: Vec<(u32, Ereignis)>,
     naechstes: usize,
     zeit: u64,
     ende: u64,
@@ -56,7 +61,12 @@ fn varlen(d: &[u8], i: &mut usize) -> Option<u32> {
 }
 
 fn be32(d: &[u8], i: usize) -> Option<u32> {
-    Some(u32::from_be_bytes(d.get(i..i + 4)?.try_into().ok()?))
+    Some(u32::from_be_bytes(d.get(i..i.checked_add(4)?)?.try_into().ok()?))
+}
+
+/// Tick auf 32 Bit begrenzen (Summe der Abstände aus der Datei).
+fn tick_32(t: u64) -> u32 {
+    t.min(u64::from(u32::MAX)) as u32
 }
 
 impl MidiLeser {
@@ -65,26 +75,34 @@ impl MidiLeser {
         if d.get(0..4) != Some(b"MThd") || be32(d, 4) != Some(6) {
             return Err(kern::sprache::t("not a MIDI file", "keine MIDI-Datei").into());
         }
-        let format = u16::from_be_bytes([d[8], d[9]]);
-        let spuren = u16::from_be_bytes([d[10], d[11]]);
-        let teilung = u16::from_be_bytes([d[12], d[13]]);
+        // Review 27.11.: Kopf ungeprüft gelesen – eine zu kurze Datei liess
+        // den Player abstürzen
+        let Some(&[f0, f1, s0, s1, t0, t1]) = d.get(8..14) else {
+            return Err(kern::sprache::t("not a MIDI file", "keine MIDI-Datei").into());
+        };
+        let format = u16::from_be_bytes([f0, f1]);
+        let spuren = u16::from_be_bytes([s0, s1]);
+        let teilung = u16::from_be_bytes([t0, t1]);
         if format > 1 || teilung & 0x8000 != 0 || teilung == 0 {
             return Err(format!("{} (Format {format})", kern::sprache::t("not supported", "nicht unterstützt")));
         }
-        // alle Spuren: (Tick, Reihenfolge, Ereignis oder Tempo)
+        // alle Spuren: (Tick, Ereignis oder Tempo); einmal in der nötigen
+        // Grösse angelegt (je Ereignis mindestens 3 Byte in der Datei)
         enum Roh {
             E(Ereignis),
             Tempo(u32),
         }
-        let mut roh: Vec<(u64, usize, Roh)> = Vec::new();
+        let mut roh: Vec<(u32, Roh)> = Vec::with_capacity((d.len() / 3 + 16).min(MAX_EREIGNISSE));
         let mut i = 14usize;
-        for _ in 0..spuren {
-            if d.get(i..i + 4) != Some(b"MTrk") {
+        'spuren: for _ in 0..spuren {
+            if d.get(i..i.saturating_add(4)) != Some(b"MTrk") {
                 break;
             }
             let laenge = be32(d, i + 4).ok_or("MTrk")? as usize;
-            let (start, ende) = (i + 8, (i + 8 + laenge).min(d.len()));
-            let spur = &d[start..ende];
+            // Längen aus der Datei: ohne Überlauf (RISC-V 32 Bit)
+            let start = i + 8;
+            let Some(naechste) = start.checked_add(laenge) else { break };
+            let spur = &d[start.min(d.len())..naechste.min(d.len())];
             let (mut j, mut tick, mut status) = (0usize, 0u64, 0u8);
             while j < spur.len() {
                 let Some(dt) = varlen(spur, &mut j) else { break };
@@ -101,7 +119,7 @@ impl MidiLeser {
                         let n = n as usize;
                         if typ == 0x51 && n == 3 && j + 3 <= spur.len() {
                             let us = u32::from(spur[j]) << 16 | u32::from(spur[j + 1]) << 8 | u32::from(spur[j + 2]);
-                            roh.push((tick, roh.len(), Roh::Tempo(us)));
+                            roh.push((tick_32(tick), Roh::Tempo(us)));
                         }
                         j += n;
                         if typ == 0x2F {
@@ -117,17 +135,20 @@ impl MidiLeser {
                     }
                 }
                 // Daten mit (laufendem) Status
+                if roh.len() >= MAX_EREIGNISSE {
+                    break 'spuren;
+                }
                 let kanal = status & 0x0F;
                 let a = *spur.get(j).unwrap_or(&0);
                 match status & 0xF0 {
                     0x80 => {
-                        roh.push((tick, roh.len(), Roh::E(Ereignis::Aus { kanal, note: a & 0x7F })));
+                        roh.push((tick_32(tick), Roh::E(Ereignis::Aus { kanal, note: a & 0x7F })));
                         j += 2;
                     }
                     0x90 => {
                         let v = *spur.get(j + 1).unwrap_or(&0);
                         let e = if v == 0 { Ereignis::Aus { kanal, note: a & 0x7F } } else { Ereignis::An { kanal, note: a & 0x7F, staerke: v & 0x7F } };
-                        roh.push((tick, roh.len(), Roh::E(e)));
+                        roh.push((tick_32(tick), Roh::E(e)));
                         j += 2;
                     }
                     0xA0 | 0xB0 | 0xE0 => j += 2,
@@ -135,27 +156,28 @@ impl MidiLeser {
                     _ => j += 1,
                 }
             }
-            i = start + laenge;
+            i = naechste;
         }
-        roh.sort_by_key(|(t, n, _)| (*t, *n));
+        // stabil: gleiche Ticks behalten die Reihenfolge der Datei
+        roh.sort_by_key(|(t, _)| *t);
         // Ticks → Abtastwerte mit Tempowechseln (Standard 500000 µs/Viertel)
         let mut us_je_viertel = 500_000f64;
-        let (mut letzter_tick, mut zeit_s) = (0u64, 0f64);
+        let (mut letzter_tick, mut zeit_s) = (0u32, 0f64);
         let mut ereignisse = Vec::with_capacity(roh.len());
-        for (tick, _, r) in roh {
+        for (tick, r) in roh {
             zeit_s += (tick - letzter_tick) as f64 * us_je_viertel / 1e6 / f64::from(teilung);
             letzter_tick = tick;
             match r {
                 Roh::Tempo(us) if us > 0 => us_je_viertel = f64::from(us),
                 Roh::Tempo(_) => {}
-                Roh::E(e) => ereignisse.push(((zeit_s * f64::from(RATE)) as u64, e)),
+                Roh::E(e) => ereignisse.push(((zeit_s * f64::from(RATE)).min(f64::from(u32::MAX)) as u32, e)),
             }
         }
         if ereignisse.is_empty() {
             return Err(kern::sprache::t("no notes", "keine Noten").into());
         }
         // Ende: letztes Ereignis plus Ausklingen
-        let ende = ereignisse.last().map_or(0, |e| e.0) + u64::from(RATE) / 2;
+        let ende = ereignisse.last().map_or(0, |e| u64::from(e.0)) + u64::from(RATE) / 2;
         Ok(MidiLeser { ereignisse, naechstes: 0, zeit: 0, ende, stimmen: Vec::with_capacity(STIMMEN) })
     }
 
@@ -206,7 +228,7 @@ impl MidiLeser {
     pub fn lesen(&mut self, pcm: &mut [i16]) -> usize {
         let mut n = 0;
         while n < pcm.len() && self.zeit < self.ende {
-            while self.naechstes < self.ereignisse.len() && self.ereignisse[self.naechstes].0 <= self.zeit {
+            while self.naechstes < self.ereignisse.len() && u64::from(self.ereignisse[self.naechstes].0) <= self.zeit {
                 match self.ereignisse[self.naechstes].1 {
                     Ereignis::An { kanal, note, staerke } => self.anschlagen(kanal, note, staerke),
                     Ereignis::Aus { kanal, note } => {
@@ -279,6 +301,63 @@ mod tests {
         assert!((420.0..460.0).contains(&hz), "Grundton {hz} Hz");
         assert!(s.iter().any(|&v| v.abs() > 2000), "hörbar laut");
         assert_eq!(m.lesen(&mut pcm), 0, "Ende");
+    }
+
+    /// Board-Testdatei (`werkzeuge/test_midi.py`): Format 1, drei Spuren,
+    /// Tempowechsel 120 → 150 nach 8 Vierteln; Trommel bis Viertel 10 →
+    /// 4 s + 2 Viertel à 0,4 s + Ausklingen.
+    #[test]
+    fn testmelodie_format1() {
+        let mut m = MidiLeser::neu(include_bytes!("../tests/daten/Testmelodie.mid")).unwrap();
+        let mut pcm = vec![0i16; 4096];
+        let mut n = 0;
+        let mut laut = false;
+        loop {
+            let k = m.lesen(&mut pcm);
+            if k == 0 {
+                break;
+            }
+            laut |= pcm[..k].iter().any(|&v| v.abs() > 2000);
+            n += k;
+            assert!(n < RATE as usize * 30, "endet nicht");
+        }
+        let s = n as f32 / RATE as f32;
+        assert!((4.5..6.5).contains(&s), "{s} s");
+        assert!(laut, "hörbar laut");
+    }
+
+    /// Review 27.11.: kaputte Dateien dürfen den Player nicht abstürzen
+    /// lassen (zu kurzer Kopf, Spurlänge mit Überlauf, Ende mitten im
+    /// Ereignis, sehr viele Ereignisse).
+    #[test]
+    fn kaputte_midi_dateien() {
+        assert!(MidiLeser::neu(b"MThd\0\0\0\x06").is_err());
+        assert!(MidiLeser::neu(b"MThd\0\0\0\x06\0\0\0").is_err());
+        // Spurlänge 0xFFFFFFFF: wird auf das Dateiende begrenzt
+        let mut d = datei();
+        d[18..22].copy_from_slice(&[0xFF; 4]);
+        let _ = MidiLeser::neu(&d);
+        // zwei Spuren angekündigt, zweite mit riesiger Länge und ohne Inhalt
+        let mut d = datei();
+        d[11] = 2;
+        d.extend(b"MTrk\xFF\xFF\xFF\xF0");
+        assert!(MidiLeser::neu(&d).is_ok());
+        // jede Kürzung der gültigen Datei: Fehler oder Leser, nie Panik
+        let d = datei();
+        for n in 0..d.len() {
+            let _ = MidiLeser::neu(&d[..n]);
+        }
+        // sehr viele Noten: höchstens MAX_EREIGNISSE
+        let mut spur = Vec::new();
+        for _ in 0..30_000 {
+            spur.extend([0x00, 0x90, 60, 100, 0x01, 0x80, 60, 0]);
+        }
+        let mut d = b"MThd\0\0\0\x06\0\0\0\x01\x01\xE0".to_vec();
+        d.extend(b"MTrk");
+        d.extend((spur.len() as u32).to_be_bytes());
+        d.extend(spur);
+        let m = MidiLeser::neu(&d).unwrap();
+        assert!(m.ereignisse.len() <= MAX_EREIGNISSE);
     }
 
     #[test]

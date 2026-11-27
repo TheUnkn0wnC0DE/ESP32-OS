@@ -217,7 +217,11 @@ impl Spiel for Desktop {
         }
         if self.ap_aufraeumen.last().is_some_and(|&t| ms >= t) {
             self.ap_aufraeumen.pop();
-            let offen: Vec<(u32, &str)> = kern::liste().iter().filter(|p| !p.name.starts_with('@')).map(|p| (p.pid, p.name)).collect();
+            // auch liegengebliebene Meldungen („Programm nicht gestartet“):
+            // eine offene Meldung mitten im Bild lenkt sonst alle weiteren
+            // Tipps der Runde um (Dauertest 27.11.: ein Startfehler zog so
+            // weitere nach sich); im Protokoll stehen sie trotzdem
+            let offen: Vec<(u32, &str)> = kern::liste().iter().filter(|p| !p.name.starts_with('@') || p.name == "@meldung").map(|p| (p.pid, p.name)).collect();
             for &(pid, _) in &offen {
                 kern::beende(pid);
             }

@@ -15,8 +15,21 @@ use esp_idf_svc::sys;
 pub const BAUD_SCHNELL: u32 = 3_000_000;
 const BAUD_NORMAL: u32 = 115_200;
 
+/// Summe der Zeit, die Fotos die Hauptschleife angehalten haben (ms; 32
+/// Bit – RISC-V-32 hat keine 64-Bit-Atomics).
+static PAUSE_MS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+
+/// Bisherige Fotopausen in µs: die Uhr des Autopiloten zählt sie nicht mit
+/// (Dauertest 27.11.: nach einem Foto von ~7 s mitten in einem Schritt
+/// feuerten die aufgestauten Tipps des Schritts kurz hintereinander, bevor
+/// das Programmfenster da war – der Schritt ging daneben).
+pub fn pause_us() -> u64 {
+    u64::from(PAUSE_MS.load(core::sync::atomic::Ordering::Relaxed)) * 1000
+}
+
 /// Sendet den Bildspeicher `fb` (blockiert einige Sekunden).
 pub fn senden(fb: *const u16, nummer: u32, gedreht: bool) {
+    let beginn = crate::hw::now_us();
     log::info!("BILD {nummer} {LCD_W} {LCD_H} {BAUD_SCHNELL} {}", gedreht as u8);
     crate::hw::LOG_STUMM.store(true, core::sync::atomic::Ordering::Release);
     // SAFETY: UART0 mit Treiber (hw::log_einrichten); `fb` ist ein ganzer
@@ -42,5 +55,6 @@ pub fn senden(fb: *const u16, nummer: u32, gedreht: bool) {
         sys::vTaskDelay(300);
     }
     crate::hw::LOG_STUMM.store(false, core::sync::atomic::Ordering::Release);
+    PAUSE_MS.fetch_add(((crate::hw::now_us() - beginn).max(0) / 1000) as u32, core::sync::atomic::Ordering::Relaxed);
     log::info!("BILD {nummer} gesendet");
 }

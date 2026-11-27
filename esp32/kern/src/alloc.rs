@@ -53,6 +53,13 @@ const MAX_NOT: usize = 64;
 const NOT_MAX_BELEGUNG: usize = 64 * 1024;
 /// M3: so viel System-Heap (grösster Block) bleibt bei Notbelegungen frei.
 const NOT_RESERVE: usize = 512 * 1024;
+/// Review 27.11.: in einem geschützten Abschnitt hält das Programm oft eine
+/// gemeinsame Sperre (Shell-Zwischenspeicher); dort endet es nicht sofort
+/// (am Board bliebe die Sperre für immer belegt), sondern beim nächsten
+/// Systemaufruf. Notbelegungen dort bis zu dieser Grösse und mit dieser
+/// kleineren Reserve.
+const NOT_MAX_GESCHUETZT: usize = 256 * 1024;
+const NOT_RESERVE_GESCHUETZT: usize = 128 * 1024;
 static NOT_PTR: [AtomicUsize; MAX_NOT] = [const { AtomicUsize::new(0) }; MAX_NOT];
 static NOT_GROESSE: [AtomicUsize; MAX_NOT] = [const { AtomicUsize::new(0) }; MAX_NOT];
 static NOT_ALIGN: [AtomicUsize; MAX_NOT] = [const { AtomicUsize::new(0) }; MAX_NOT];
@@ -94,6 +101,12 @@ pub(crate) fn not_freigeben(pid: u32) {
             NOT_ANZ.fetch_sub(1, Ordering::AcqRel);
             let l = Layout::from_size_align(NOT_GROESSE[i].load(Ordering::Relaxed), NOT_ALIGN[i].load(Ordering::Relaxed));
             if let Ok(l) = l {
+                // gezählt wurde er bei der Belegung (system_zaehlen)
+                SYSTEM_BYTES.fetch_sub(l.size() as isize, Ordering::Relaxed);
+                #[cfg(not(target_os = "espidf"))]
+                spur::frei(p as *mut u8);
+                #[cfg(not(target_os = "espidf"))]
+                spur::pc_frei(p as *mut u8);
                 // SAFETY: Block stammt aus System.alloc mit diesem Layout.
                 unsafe { System.dealloc(p as *mut u8, l) };
             }
@@ -260,7 +273,10 @@ unsafe impl GlobalAlloc for KernAlloc {
             if !pl.is_null() && unsafe { (*pl).panik_beendet_task } {
                 // SAFETY: wie oben.
                 let frei = unsafe { ((*pl).system_frei)() };
-                if l.size() > NOT_MAX_BELEGUNG || frei < l.size().saturating_add(NOT_RESERVE) || NOT_ANZ.load(Ordering::Acquire) >= MAX_NOT {
+                // SAFETY: eigener Faden.
+                let geschuetzt = unsafe { (*f).geschuetzt.load(Ordering::Relaxed) } > 0;
+                let (max, reserve) = if geschuetzt { (NOT_MAX_GESCHUETZT, NOT_RESERVE_GESCHUETZT) } else { (NOT_MAX_BELEGUNG, NOT_RESERVE) };
+                if l.size() > max || frei < l.size().saturating_add(reserve) || NOT_ANZ.load(Ordering::Acquire) >= MAX_NOT {
                     crate::prozess::beende_selbst(crate::prozess::Ende::SpeicherVoll);
                 }
             }

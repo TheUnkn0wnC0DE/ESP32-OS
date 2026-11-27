@@ -1,0 +1,12 @@
+W (2358) pudding_fw::speicher: Musik-Test: Testton 1.mp3 schon da
+W (2360) pudding_fw::speicher: Musik-Test: Testton 2.mp3 schon da
+W (2371) pudding_fw::speicher: Musik-Test: Testmelodie.mid (317 Byte): Ok(())
+I (11707) pudding_fw::wlan: WLAN: musik /sd0/1/ESP32-OS/Musik_Test/Testmelodie.mid gestartet (6)
+I (11731) pudding_p4: [debug] Musik: 3 Titel in /sd0/1/ESP32-OS/Musik_Test
+I (11736) pudding_p4: [debug] Musik: spielt Testmelodie.mid (22050 Hz, 1 Kanal/Kanäle)
+I (14018) pudding_p4: [debug] Musik: Testmelodie.mid bei 0:02, ausgegeben 44288 Frames
+I (16027) pudding_p4: [debug] Musik: Testmelodie.mid bei 0:04, ausgegeben 88576 Frames
+I (17111) pudding_p4: [debug] Musik: Ende von Testmelodie.mid
+I (17191) pudding_p4: [debug] Musik: spielt Testton 1.mp3 (44100 Hz, 1 Kanal/Kanäle)
+I (17224) pudding_p4: [debug] Musik: Testton 1.mp3 bei 0:00, ausgegeben 112452 Frames
+I (19495) pudding_p4: [debug] Musik: Testton 1.mp3 bei 0:02, ausgegeben 156996 Frames

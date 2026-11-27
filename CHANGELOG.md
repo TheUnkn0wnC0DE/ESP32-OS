@@ -5,12 +5,14 @@
 - Weather: new app with current weather and a 5-day forecast from Open-Meteo (no API key). Choose the place by touch in the app or in *Settings → Weather place*; without Wi-Fi it says so. Icon on the desktop and in the Start menu.
 - On-screen keyboard: typing in Notes redraws only the text area, about 31 to 33 frames per second instead of 24 to 30.
 - A program that cannot start (for example not enough memory) now shows a message with the reason instead of doing nothing.
-- Music player: also plays WAV files (8 and 16 bit PCM, mono and stereo); an empty folder says "No music files (MP3, WAV)".
+- Music player: also plays WAV files (8 and 16 bit PCM, mono and stereo) and MIDI files (.mid, format 0 and 1, with a small built-in synthesizer); an empty folder says "No music files (MP3, WAV, MIDI)" and names the folder on a second line.
 - Console: no more "File '/sys/settings/.shell' not found" at every start.
 - Taskbar: long titles end with "..". File manager: in the recycle bin only "Recycle bin" is highlighted.
 - Texts no longer contain characters the system font cannot show (boxes instead of "..." and "-").
 - Stability: a program that is force-closed while it holds its own memory lock is now really ended; before, its memory stayed reserved and large programs (browser) could no longer start.
-- Memory: opening the Start menu no longer leaves about 108 KB of PSRAM behind each time (about 1 MB per hour of heavy use, also in 1.0.3). Programs no longer start when system memory is almost full, and an almost full system memory no longer restarts the board. Measured: 75-minute endurance run with all programs, 0 crashes, PSRAM stable.
+- Memory: opening the Start menu no longer leaves about 108 KB of PSRAM behind each time (about 1 MB per hour of heavy use, also in 1.0.3), and starting a program no longer leaves a few bytes of internal RAM behind (about 7–9 KB per 75 minutes of heavy use, also in 1.0.3). Programs no longer start when system memory is almost full, and an almost full system memory no longer restarts the board. Measured: 75-minute endurance run with all programs, the Start menu, the browser and sleep mode: 0 crashes, internal RAM and PSRAM stable.
+- Windows of original KolibriOS programs no longer open partly behind the taskbar (PasswordGen: the "Generate!" and "Copy" buttons were hidden).
+- Image demo: no longer crashes when its picture in internal flash is damaged; the file is checked at start-up and written again.
 - Browser: CSS variables (`var()`), `calc()` with one unit, the space syntax of `rgb()`/`hsl()` and logical properties such as `margin-inline-start` now work; `<script type="module">` and import maps are skipped like in a browser without modules; new `document.currentScript`, `ResizeObserver`, `IntersectionObserver`, `new Image()`, `performance.timing`. JavaScript may use up to 6 MB as long as 3 MB stay free for the page. Measured on 30 well-known pages: JavaScript errors 61 → 17, CSS declarations dropped because of `var()` 8677 → about 700; 22 pages load, 8 are cut off at 512 KB of HTML, none ends early.
 ## 1.0.3 (2026-11-25)
 
