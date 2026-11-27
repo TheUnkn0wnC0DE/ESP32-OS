@@ -32,8 +32,15 @@ M6, M8 nach PLAN.
   System-Heap (600 KB): 0 Abstürze, 1178 Ablehnungen statt Absturz.
   Abweichung: bei ganz leerem System-Heap erscheint die Meldung „Programm
   nicht gestartet“ nicht (nur im Log) – PLAN „Abweichungen“.
-- Als Nächstes: M6-Rest (grössere Hebel: Bildspeicher, Programmcode aus
-  dem Flash – mit Folgen für Tempo, braucht Messungen), dann Teil C/D.
+- **M6 abgeschlossen:** zwei statt drei Bildspeicher würden 1,5 MB für den
+  Browser bringen, halbieren aber die Bildrate beim Blättern (47 → 27,5) –
+  gemessen und verworfen; Programmcode aus dem Flash nicht versucht (bremst
+  alles). Als Abweichung in PLAN.
+- Teil M ist damit fertig. **Für Teil C und D brauche ich deine
+  Entscheidungen:** C2 (eigene C6-Firmware flashen), D2 Ogg (Vorbis-Dekoder
+  als Fremdcode herunterladen, z. B. stb_vorbis, Public Domain/MIT), D3
+  (was soll der App-Store anbieten). Ohne sie gehe ich an BR2 (Browser
+  weiter verbessern), dann SD-Stabilitätsrunde.
 - Fehlerbilanz seit 1.0.3 (deine Frage): 38 gefunden, 34 in 1.0.4 behoben;
   offen waren DuckDuckGo-Logo, M7 (jetzt behoben), „€“ auf der Tastatur,
   einmaliger Tonausfall beim Start (ES8311, nicht nachgestellt).

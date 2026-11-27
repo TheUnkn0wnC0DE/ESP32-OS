@@ -1513,7 +1513,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   („Ok veröffentliche“), veröffentlicht als Release v1.0.3 auf GitHub
   (main); Web-Flasher bleibt auf 1.0.1. M4 ist dabei offen (Leck −7 KB/h,
   im Release-Text unter „Known issues“).
-- [ ] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5; **auf 1.0.5 verschoben**, Nutzer 27.11. – Schritt 1 ist in 1.0.4) –
+- [x] **M6 Speicher für Browser und Programme freimachen** (nach M1–M5; Schritt 1 in 1.0.4; **Nachweis:** Bestandsaufnahme, @icon −450 KB, Browser 10 → 10,5 MB, 30 Seiten ohne vorzeitiges Ende; Schritt 2 gemessen und verworfen; Rest als Abweichung) –
   intern nur, was zwingend ist (Interrupts, DMA, Chip-Vorgaben); PSRAM
   aufräumen (was belegt ausser dem Browser wie viel: Kern, Fenster,
   Schriften, Bildpuffer, Spiele-Reserven, Caches; nur bei Bedarf laden);
@@ -1545,6 +1545,12 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
     (5,5 MB) oder Programmcode aus dem Flash statt aus dem PSRAM (6 MB),
     beide mit Folgen für Tempo bzw. Flash-Schreiben – offen, nächster
     Schritt. M6 bleibt offen.
+  - Schritt 2 (27.11., verworfen): Desktop mit 2 statt 3 Bildspeichern →
+    Pool 14 848 → 16 384 KB (+1,5 MB für den Browser), aber jedes Bild wartet
+    auf den Bildwechsel: Dateimanager wischen 47,2 → 27,5, Browser 31,2 →
+    27,6, Menü 15,1 → 3,8 Bilder/s (`docs/nachweise/m6/
+    s3_zwei_bildspeicher.txt`) – widerspricht S3 (≥ 30), zurückgenommen.
+  - Abschluss: siehe Abweichung „M6 weiterer Speicher nur mit Nachteilen“.
 
 - [x] **M7 Heap im Browser bei Zerstückelung zu langsam** (1.0.5; Fund Q3, Board
   26.11.) – am Ende grosser Seiten (NZZ) arbeitet der Browser über 30 s fast
@@ -2713,6 +2719,16 @@ und Verzeichnis auf GitHub).
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **M6 weiterer Speicher nur mit Nachteilen (27.11.):** Nach Schritt 1
+  bleiben zwei grosse Hebel, beide mit messbarem Preis: (1) zwei statt drei
+  Bildspeicher (+1,5 MB) halbieren die Bildrate beim Blättern (gemessen, siehe
+  M6) – verworfen; (2) Programmcode aus dem Flash statt aus dem PSRAM (~6 MB)
+  verlangsamt den ganzen Code und hält ihn bei jedem Flash-Schreiben
+  (Einstellungen, Update) an – nicht versucht. Mehr Browser-Speicher brachte
+  bei den 30 Testseiten ohnehin nichts Messbares (+0,5 MB: gleiche Seiten,
+  die Seiten füllen jeden Heap). Ersatz: Speicher sparsamer nutzen (M7, M8,
+  @icon) statt umverteilen.
 
 - **M8 Meldung bei leerem System-Heap (27.11.):** ist der System-Heap fast
   leer, bekommt auch die Meldung „Programm nicht gestartet“ kein Fenster (der

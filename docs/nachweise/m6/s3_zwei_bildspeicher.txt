@@ -1,0 +1,18 @@
+S3 Bildrate M6: 2 Bildspeicher 2026-11-27T11:15:06, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+S3 Bildrate M6: 2 Bildspeicher (Desktop-Start bei 2923 ms)
+Phase          Fenster  Bilder/s    min  Fläche px  Compositor ms
+ruhe                 2       0.0    0.0          0           0.01
+menue                5       3.8    3.0     164959           0.33
+fenster             10       2.9    0.0      80343           0.16
+dateimanager         4      27.5   27.5     100972           5.41
+tastatur             5      10.0   10.0      39887           0.22
+tastatur_schnell       3      13.3   13.0      79277           0.70
+browser              4      27.6   27.5     132930           7.55
+FERTIG: 0 Abstürze
