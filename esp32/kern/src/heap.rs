@@ -2,9 +2,14 @@
 //!
 //! - Kleine Blöcke (bis `KLEIN_MAX` Bytes samt Kopf) haben je Grösse eine
 //!   eigene Freiliste (LIFO): Belegen und Freigeben ohne Suche, O(1).
-//! - Grosse Blöcke: First-Fit-Freiliste nach Adresse sortiert, mit
-//!   Verschmelzen benachbarter freier Blöcke. Kleine Blöcke kommen nie
-//!   hinein – die Liste bleibt kurz.
+//! - Grosse Blöcke: First-Fit nach Adresse (der freie Block mit der
+//!   niedrigsten Adresse, der passt), mit Verschmelzen benachbarter freier
+//!   Blöcke. Sie liegen in einem nach Adresse sortierten Treap, dessen Knoten
+//!   die grösste Blockgrösse ihres Teilbaums kennen (M7, 27.11.): Suchen,
+//!   Einfügen und Verschmelzen in O(log n) statt linear – dieselbe
+//!   Verteilung wie die frühere sortierte Liste, also nicht mehr Verschnitt.
+//!   Die Knoten liegen in den freien Blöcken selbst; die Priorität ist ein
+//!   Hash der Adresse (kein Zufall, kein Platz).
 //! - Reicht der Platz für einen grossen Block nicht, werden die kleinen
 //!   freien Blöcke zurück in die grosse Liste geführt (nach Adresse
 //!   sortiert, verschmolzen) und erneut gesucht: nichts geht durch die
@@ -46,12 +51,169 @@ struct Frei {
     next: *mut Frei,
 }
 
+/// Freier grosser Block im Treap: Grösse, Kinder (kleinere / grössere
+/// Adressen), grösste Grösse im Teilbaum. 4 Wörter = `MIN_BLOCK` auf 64 Bit.
+#[repr(C)]
+struct Knoten {
+    groesse: usize,
+    links: *mut Knoten,
+    rechts: *mut Knoten,
+    max: usize,
+}
+
+const _: () = assert!(core::mem::size_of::<Knoten>() <= MIN_BLOCK);
+
+fn prio(k: *mut Knoten) -> u32 {
+    ((k as usize as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) >> 32) as u32
+}
+
+/// Ein besuchter Knoten (Messung, siehe [`zaehler`]).
+fn schritt() {
+    SCHRITTE.fetch_add(1, Ordering::Relaxed);
+}
+
+/// # Safety
+/// `k` null oder ein gültiger Knoten.
+unsafe fn max_von(k: *mut Knoten) -> usize {
+    if k.is_null() { 0 } else { unsafe { (*k).max } }
+}
+
+/// # Safety
+/// `k` gültig, Kinder null oder gültig.
+unsafe fn neu_rechnen(k: *mut Knoten) {
+    unsafe { (*k).max = (*k).groesse.max(max_von((*k).links)).max(max_von((*k).rechts)) };
+}
+
+/// Teilt nach Adresse: (Knoten < `a`, Knoten >= `a`).
+///
+/// # Safety
+/// Baum gültig.
+unsafe fn teilen(k: *mut Knoten, a: usize) -> (*mut Knoten, *mut Knoten) {
+    if k.is_null() {
+        return (ptr::null_mut(), ptr::null_mut());
+    }
+    schritt();
+    // SAFETY: laut Vertrag.
+    unsafe {
+        if (k as usize) < a {
+            let (l, r) = teilen((*k).rechts, a);
+            (*k).rechts = l;
+            neu_rechnen(k);
+            (k, r)
+        } else {
+            let (l, r) = teilen((*k).links, a);
+            (*k).links = r;
+            neu_rechnen(k);
+            (l, k)
+        }
+    }
+}
+
+/// Verbindet zwei Bäume; alle Adressen in `a` liegen vor denen in `b`.
+///
+/// # Safety
+/// Beide Bäume gültig und disjunkt.
+unsafe fn verbinden(a: *mut Knoten, b: *mut Knoten) -> *mut Knoten {
+    if a.is_null() {
+        return b;
+    }
+    if b.is_null() {
+        return a;
+    }
+    schritt();
+    // SAFETY: laut Vertrag.
+    unsafe {
+        if prio(a) > prio(b) {
+            (*a).rechts = verbinden((*a).rechts, b);
+            neu_rechnen(a);
+            a
+        } else {
+            (*b).links = verbinden(a, (*b).links);
+            neu_rechnen(b);
+            b
+        }
+    }
+}
+
+/// Trennt den Knoten mit der höchsten Adresse ab: (Rest, Knoten).
+///
+/// # Safety
+/// Baum gültig, nicht leer.
+unsafe fn letzten_abtrennen(k: *mut Knoten) -> (*mut Knoten, *mut Knoten) {
+    schritt();
+    // SAFETY: laut Vertrag.
+    unsafe {
+        if (*k).rechts.is_null() {
+            let rest = (*k).links;
+            (*k).links = ptr::null_mut();
+            neu_rechnen(k);
+            return (rest, k);
+        }
+        let (rest, letzter) = letzten_abtrennen((*k).rechts);
+        (*k).rechts = rest;
+        neu_rechnen(k);
+        (k, letzter)
+    }
+}
+
+/// Trennt den Knoten mit der niedrigsten Adresse ab: (Knoten, Rest).
+///
+/// # Safety
+/// Baum gültig, nicht leer.
+unsafe fn ersten_abtrennen(k: *mut Knoten) -> (*mut Knoten, *mut Knoten) {
+    schritt();
+    // SAFETY: laut Vertrag.
+    unsafe {
+        if (*k).links.is_null() {
+            let rest = (*k).rechts;
+            (*k).rechts = ptr::null_mut();
+            neu_rechnen(k);
+            return (k, rest);
+        }
+        let (erster, rest) = ersten_abtrennen((*k).links);
+        (*k).links = rest;
+        neu_rechnen(k);
+        (erster, k)
+    }
+}
+
+/// Knoten mit der niedrigsten Adresse, dessen Grösse mindestens `n` ist.
+///
+/// # Safety
+/// Baum gültig.
+unsafe fn finden(mut k: *mut Knoten, n: usize) -> *mut Knoten {
+    // SAFETY: laut Vertrag.
+    unsafe {
+        if max_von(k) < n {
+            return ptr::null_mut();
+        }
+        loop {
+            schritt();
+            if max_von((*k).links) >= n {
+                k = (*k).links;
+            } else if (*k).groesse >= n {
+                return k;
+            } else {
+                k = (*k).rechts;
+            }
+        }
+    }
+}
+
+/// Knoten im Baum zählen.
+///
+/// # Safety
+/// Baum gültig.
+unsafe fn zaehlen_im_baum(k: *mut Knoten) -> usize {
+    if k.is_null() { 0 } else { unsafe { 1 + zaehlen_im_baum((*k).links) + zaehlen_im_baum((*k).rechts) } }
+}
+
 /// Heap über einem festen Bereich. Thread-sicher (kurze Spin-Sperre).
 pub struct Heap {
     arena_start: usize,
     arena_ende: usize,
-    /// grosse freie Blöcke, nach Adresse sortiert, verschmolzen
-    frei: UnsafeCell<*mut Frei>,
+    /// grosse freie Blöcke: Treap nach Adresse, verschmolzen (M7)
+    frei: UnsafeCell<*mut Knoten>,
     /// kleine freie Blöcke je Grösse
     klassen: UnsafeCell<[*mut Frei; KLASSEN]>,
     belegt: AtomicUsize,
@@ -95,54 +257,6 @@ const fn align_down(x: usize, a: usize) -> usize {
 /// Kleinste Bereichsgrösse, in der ein Heap mit Nutzfläche Platz hat.
 pub const MIN_BEREICH: usize = core::mem::size_of::<Heap>() + 4 * GRAN + MIN_BLOCK;
 
-/// Zwei nach Adresse sortierte Listen zu einer.
-///
-/// # Safety
-/// Beide Listen gültig und disjunkt.
-unsafe fn mischen(mut a: *mut Frei, mut b: *mut Frei) -> *mut Frei {
-    let mut kopf: *mut Frei = ptr::null_mut();
-    let mut ende: *mut *mut Frei = &raw mut kopf;
-    // SAFETY: Knoten laut Vertrag gültig.
-    unsafe {
-        while !a.is_null() && !b.is_null() {
-            if (a as usize) < (b as usize) {
-                *ende = a;
-                ende = &raw mut (*a).next;
-                a = (*a).next;
-            } else {
-                *ende = b;
-                ende = &raw mut (*b).next;
-                b = (*b).next;
-            }
-        }
-        *ende = if a.is_null() { b } else { a };
-    }
-    kopf
-}
-
-/// Liste nach Adresse sortieren (Mergesort, ohne zusätzlichen Speicher,
-/// Rekursionstiefe log2 n).
-///
-/// # Safety
-/// Liste gültig.
-unsafe fn sortieren(kopf: *mut Frei) -> *mut Frei {
-    // SAFETY: Knoten laut Vertrag gültig.
-    unsafe {
-        if kopf.is_null() || (*kopf).next.is_null() {
-            return kopf;
-        }
-        let mut langsam = kopf;
-        let mut schnell = (*kopf).next;
-        while !schnell.is_null() && !(*schnell).next.is_null() {
-            langsam = (*langsam).next;
-            schnell = (*(*schnell).next).next;
-        }
-        let zweite = (*langsam).next;
-        (*langsam).next = ptr::null_mut();
-        mischen(sortieren(kopf), sortieren(zweite))
-    }
-}
-
 impl Heap {
     /// Legt einen Heap über `[basis, basis + laenge)` an.
     ///
@@ -154,11 +268,13 @@ impl Heap {
         let start = align_up(kopf + core::mem::size_of::<Heap>(), GRAN);
         let ende = align_down(basis as usize + laenge, GRAN);
         assert!(ende > start && ende - start >= MIN_BLOCK, "Heap-Bereich zu klein");
-        let erster = start as *mut Frei;
+        let erster = start as *mut Knoten;
         // SAFETY: Bereich laut Vertrag gültig und exklusiv.
         unsafe {
             (*erster).groesse = ende - start;
-            (*erster).next = ptr::null_mut();
+            (*erster).links = ptr::null_mut();
+            (*erster).rechts = ptr::null_mut();
+            (*erster).max = ende - start;
             let h = kopf as *mut Heap;
             h.write(Heap {
                 arena_start: start,
@@ -270,131 +386,121 @@ impl Heap {
         p
     }
 
-    /// First-Fit in der grossen Liste.
+    /// First-Fit nach Adresse im Baum.
     ///
     /// # Safety
     /// Nur unter Sperre.
     unsafe fn gross_suchen(&self, groesse: usize, align: usize) -> *mut u8 {
+        // Blockgrösse, die sicher reicht: Kopf, Ausgleich für die Ausrichtung
+        // (bei `GRAN` keiner – dann genau dieselbe Wahl wie First-Fit), Nutz-
+        // fläche auf `GRAN` gerundet. Überlauf (malloc(-1)) = passt nicht.
+        let Some(noetig) = groesse
+            .checked_add(GRAN - 1)
+            .map(|g| g & !(GRAN - 1))
+            .and_then(|g| g.checked_add(GRAN + (align - GRAN)))
+        else {
+            self.zaehlen(0);
+            return ptr::null_mut();
+        };
         // SAFETY: laut Vertrag unter Sperre; Knoten in der Arena.
-        unsafe {
-            let mut vor: *mut *mut Frei = self.frei.get();
-            let mut gefunden = ptr::null_mut();
-            let mut schritte = 0usize;
-            while !(*vor).is_null() {
-                schritte += 1;
-                let blk = *vor;
+        let p = unsafe {
+            let wurzel = self.frei.get();
+            let blk = finden(*wurzel, noetig);
+            if blk.is_null() {
+                ptr::null_mut()
+            } else {
                 let b = blk as usize;
                 let s = (*blk).groesse;
-                // Überlauf (riesige Anfragen, z. B. malloc(-1)) = passt nicht
-                let p = (b + GRAN).checked_add(align - 1).map(|v| v & !(align - 1));
-                let ende = p.and_then(|p| p.checked_add(groesse)).and_then(|e| e.checked_add(GRAN - 1)).map(|e| e & !(GRAN - 1));
-                if let (Some(p), Some(ende)) = (p, ende)
-                    && ende <= b + s
-                {
-                    let rest = b + s - ende;
-                    let next = (*blk).next;
-                    let nutz = if rest >= MIN_BLOCK && rest <= KLEIN_MAX {
-                        // kleiner Rest: in seine Klasse, die grosse Liste
-                        // bleibt frei von kleinen Stücken
-                        let r = ende as *mut Frei;
-                        let liste = &mut (*self.klassen.get())[rest / GRAN];
-                        (*r).groesse = rest;
-                        (*r).next = *liste;
-                        *liste = r;
-                        *vor = next;
-                        ende - b
-                    } else if rest >= MIN_BLOCK {
-                        let r = ende as *mut Frei;
-                        (*r).groesse = rest;
-                        (*r).next = next;
-                        *vor = r;
-                        ende - b
-                    } else {
-                        *vor = next;
-                        s
-                    };
-                    *(b as *mut usize) = nutz;
-                    *((p - W) as *mut usize) = b;
-                    let neu = self.belegt.fetch_add(nutz, Ordering::Relaxed) + nutz;
-                    self.spitze.fetch_max(neu, Ordering::Relaxed);
-                    gefunden = p as *mut u8;
-                    break;
-                }
-                vor = &raw mut (*blk).next;
+                // aus dem Baum nehmen
+                let (l, r) = teilen(*wurzel, b);
+                let (_, r) = ersten_abtrennen(r);
+                *wurzel = verbinden(l, r);
+                let p = (b + GRAN + align - 1) & !(align - 1);
+                let ende = (p + groesse + GRAN - 1) & !(GRAN - 1);
+                let rest = b + s - ende;
+                let nutz = if rest >= MIN_BLOCK && rest <= KLEIN_MAX {
+                    // kleiner Rest: in seine Klasse
+                    let r = ende as *mut Frei;
+                    let liste = &mut (*self.klassen.get())[rest / GRAN];
+                    (*r).groesse = rest;
+                    (*r).next = *liste;
+                    *liste = r;
+                    ende - b
+                } else if rest >= MIN_BLOCK {
+                    self.gross_einfuegen(ende, rest);
+                    ende - b
+                } else {
+                    s
+                };
+                *(b as *mut usize) = nutz;
+                *((p - W) as *mut usize) = b;
+                let neu = self.belegt.fetch_add(nutz, Ordering::Relaxed) + nutz;
+                self.spitze.fetch_max(neu, Ordering::Relaxed);
+                p as *mut u8
             }
-            self.zaehlen(schritte);
-            gefunden
-        }
+        };
+        AUFRUFE.fetch_add(1, Ordering::Relaxed);
+        p
     }
 
-    /// Block `[b, b + s)` sortiert in die grosse Liste, mit Verschmelzen.
+    /// Block `[b, b + s)` in den Baum, mit den freien Nachbarn verschmolzen.
     ///
     /// # Safety
     /// Nur unter Sperre; der Block ist frei und gehört zur Arena.
-    unsafe fn gross_einfuegen(&self, b: usize, s: usize) {
+    unsafe fn gross_einfuegen(&self, mut b: usize, mut s: usize) {
         // SAFETY: laut Vertrag.
         unsafe {
-            let mut vor: *mut *mut Frei = self.frei.get();
-            let mut links: *mut Frei = ptr::null_mut();
-            let mut schritte = 0usize;
-            while !(*vor).is_null() && (*vor as usize) < b {
-                links = *vor;
-                vor = &raw mut (*links).next;
-                schritte += 1;
+            let wurzel = self.frei.get();
+            let (mut l, mut r) = teilen(*wurzel, b);
+            if !l.is_null() {
+                let (rest, vor) = letzten_abtrennen(l);
+                if vor as usize + (*vor).groesse == b {
+                    b = vor as usize;
+                    s += (*vor).groesse;
+                    l = rest;
+                } else {
+                    l = verbinden(rest, vor);
+                }
             }
-            self.zaehlen(schritte);
-            let rechts = *vor;
-            let neu = b as *mut Frei;
-            (*neu).groesse = s;
-            (*neu).next = rechts;
-            *vor = neu;
-            if !rechts.is_null() && b + s == rechts as usize {
-                (*neu).groesse += (*rechts).groesse;
-                (*neu).next = (*rechts).next;
+            if !r.is_null() {
+                let (nach, rest) = ersten_abtrennen(r);
+                if b + s == nach as usize {
+                    s += (*nach).groesse;
+                    r = rest;
+                } else {
+                    r = verbinden(nach, rest);
+                }
             }
-            if !links.is_null() && links as usize + (*links).groesse == b {
-                (*links).groesse += (*neu).groesse;
-                (*links).next = (*neu).next;
-            }
+            let k = b as *mut Knoten;
+            (*k).groesse = s;
+            (*k).links = ptr::null_mut();
+            (*k).rechts = ptr::null_mut();
+            (*k).max = s;
+            *wurzel = verbinden(verbinden(l, k), r);
         }
+        AUFRUFE.fetch_add(1, Ordering::Relaxed);
     }
 
-    /// Alle kleinen freien Blöcke zurück in die grosse Liste (sortiert,
-    /// verschmolzen). Liefert false, wenn es keine gab.
+    /// Alle kleinen freien Blöcke zurück in den Baum (verschmolzen).
+    /// Liefert false, wenn es keine gab.
     ///
     /// # Safety
     /// Nur unter Sperre.
     unsafe fn zusammenfuehren(&self) -> bool {
+        let mut gab = false;
         // SAFETY: laut Vertrag unter Sperre; alle Knoten in der Arena.
         unsafe {
-            let mut alle: *mut Frei = ptr::null_mut();
-            for liste in (*self.klassen.get()).iter_mut() {
-                let mut x = core::mem::replace(liste, ptr::null_mut());
+            for i in 0..KLASSEN {
+                let mut x = core::mem::replace(&mut (*self.klassen.get())[i], ptr::null_mut());
                 while !x.is_null() {
                     let n = (*x).next;
-                    (*x).next = alle;
-                    alle = x;
+                    self.gross_einfuegen(x as usize, (*x).groesse);
+                    gab = true;
                     x = n;
                 }
             }
-            if alle.is_null() {
-                return false;
-            }
-            let liste = mischen(sortieren(alle), *self.frei.get());
-            // Nachbarn verschmelzen
-            let mut k = liste;
-            while !k.is_null() {
-                let n = (*k).next;
-                if !n.is_null() && k as usize + (*k).groesse == n as usize {
-                    (*k).groesse += (*n).groesse;
-                    (*k).next = (*n).next;
-                } else {
-                    k = n;
-                }
-            }
-            *self.frei.get() = liste;
-            true
         }
+        gab
     }
 
     /// Gibt einen von `alloc` gelieferten Zeiger zurück.
@@ -471,16 +577,11 @@ impl Heap {
         if !self.sperren() {
             return 0;
         }
-        let mut n = 0;
         // SAFETY: unter Sperre.
-        unsafe {
+        let n = unsafe {
             self.zusammenfuehren();
-            let mut k = *self.frei.get();
-            while !k.is_null() {
-                n += 1;
-                k = (*k).next;
-            }
-        }
+            zaehlen_im_baum(*self.frei.get())
+        };
         self.entsperren();
         n
     }
@@ -493,16 +594,11 @@ impl Heap {
         if !self.sperren() {
             return 0;
         }
-        let mut g = 0;
         // SAFETY: unter Sperre.
-        unsafe {
+        let g = unsafe {
             self.zusammenfuehren();
-            let mut k = *self.frei.get();
-            while !k.is_null() {
-                g = g.max((*k).groesse);
-                k = (*k).next;
-            }
-        }
+            max_von(*self.frei.get())
+        };
         self.entsperren();
         g.saturating_sub(GRAN)
     }
@@ -511,6 +607,10 @@ impl Heap {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Tests, die die globalen Zähler (`zaehler`) messen, nacheinander –
+    /// sonst zählt der eine die Schritte des anderen mit.
+    static ZAEHLER_TESTS: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     fn bereich(n: usize) -> (Vec<u64>, *const Heap) {
         let mut v = vec![0u64; n / 8];
@@ -646,6 +746,7 @@ mod tests {
     /// Blöcke werden wiederverwendet.
     #[test]
     fn kleine_bloecke_ohne_suche() {
+        let _z = ZAEHLER_TESTS.lock().unwrap_or_else(|e| e.into_inner());
         let (_v, h) = bereich(1024 * 1024);
         let h = unsafe { &*h };
         // Blöcke verschiedener Grösse freigeben (Lücken), dann gleich
@@ -691,5 +792,65 @@ mod tests {
         unsafe { h.free(g) };
         assert_eq!(h.belegt(), 0);
         assert_eq!(h.freie_bloecke(), 1);
+    }
+
+    /// M7: browserähnliche Last – viele lebende Blöcke gemischter Grösse
+    /// (16 B bis 64 KB, meist klein), zufällig belegt und freigegeben, Heap
+    /// fast voll (Zerstückelung). Misst die durchlaufenen Knoten je Aufruf
+    /// (`zaehler`); Grenze siehe M7 in PLAN.
+    #[test]
+    fn zerstueckelt_ohne_lange_suche() {
+        let _z = ZAEHLER_TESTS.lock().unwrap_or_else(|e| e.into_inner());
+        let (_v, h) = bereich(8 * 1024 * 1024);
+        let h = unsafe { &*h };
+        let mut zufall = 0x1234_5678u32;
+        let mut naechste = || {
+            zufall ^= zufall << 13;
+            zufall ^= zufall >> 17;
+            zufall ^= zufall << 5;
+            zufall
+        };
+        let mut lebend: Vec<*mut u8> = Vec::new();
+        // 1. füllen: meist kleine Blöcke (Knoten, Texte), dazwischen 1–8 KB
+        loop {
+            let r = naechste();
+            let g = if r % 8 == 0 { 1024 + (r >> 8) as usize % 7168 } else { 24 + (r >> 8) as usize % 400 };
+            let p = h.alloc(g, 8);
+            if p.is_null() {
+                break;
+            }
+            lebend.push(p);
+        }
+        // 2. die Hälfte verstreut freigeben (Seite verlassen, Teile bleiben)
+        for i in (0..lebend.len()).rev() {
+            if naechste() % 2 == 0 {
+                unsafe { h.free(lebend.swap_remove(i)) };
+            }
+        }
+        let _ = zaehler(true);
+        // 3. grosse Blöcke (Bilder), dann gemischt weiter
+        let mut fehl = 0usize;
+        for k in 0..60_000usize {
+            let r = naechste();
+            if k % 50 == 0 {
+                let p = h.alloc(16 * 1024 + (r as usize % (48 * 1024)), 8);
+                if p.is_null() { fehl += 1 } else { lebend.push(p) }
+            } else if r % 2 == 0 && !lebend.is_empty() {
+                let i = naechste() as usize % lebend.len();
+                unsafe { h.free(lebend.swap_remove(i)) };
+            } else {
+                let g = if r % 8 == 0 { 1024 + (r >> 8) as usize % 7168 } else { 24 + (r >> 8) as usize % 400 };
+                let p = h.alloc(g, 8);
+                if p.is_null() { fehl += 1 } else { lebend.push(p) }
+            }
+        }
+        let (aufrufe, schritte) = zaehler(false);
+        let je = schritte as f64 / aufrufe.max(1) as f64;
+        println!("M7: {aufrufe} Aufrufe, {schritte} Knoten ({je:.1} je Aufruf), {fehl} fehlgeschlagen, {} lebend", lebend.len());
+        for p in lebend {
+            unsafe { h.free(p) };
+        }
+        assert_eq!(h.belegt(), 0);
+        assert!(je < 50.0, "Suche zu lang: {je:.1} Knoten je Aufruf");
     }
 }

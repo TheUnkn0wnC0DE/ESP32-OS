@@ -1546,7 +1546,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
     beide mit Folgen für Tempo bzw. Flash-Schreiben – offen, nächster
     Schritt. M6 bleibt offen.
 
-- [ ] **M7 Heap im Browser bei Zerstückelung zu langsam** (**auf 1.0.5 verschoben**, siehe unten; Fund Q3, Board
+- [x] **M7 Heap im Browser bei Zerstückelung zu langsam** (1.0.5; Fund Q3, Board
   26.11.) – am Ende grosser Seiten (NZZ) arbeitet der Browser über 30 s fast
   nur in seinem Heap: Freigeben (`gross_einfuegen`) und Belegen
   (`gross_suchen`, `zusammenfuehren`) gehen linear durch die Liste der
@@ -1579,6 +1579,19 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   im Verlauf (Commit 7f7c326). Für 1.0.5: Struktur, die nach Adresse
   verschmilzt (First-Fit-Packung) und trotzdem logarithmisch sucht (z. B.
   Grenzmarken an den Blöcken + Grössenklassen für grosse Blöcke).
+  **1.0.5 (27.11. vormittags):** grosse freie Blöcke in einem Treap nach
+  Adresse; jeder Knoten kennt die grösste Grösse seines Teilbaums. „Niedrigste
+  Adresse, die passt“ (bisherige First-Fit-Regel), Einfügen und Verschmelzen
+  in O(log n); die Knoten liegen in den freien Blöcken, Priorität = Hash der
+  Adresse. PC-Test `zerstueckelt_ohne_lange_suche`: **717 Fehlschläge und
+  6036 lebende Blöcke wie beim alten Heap** (gleiche Verteilung, kein
+  zusätzlicher Verschnitt), 2,36 statt 9,27 Mio. besuchte Knoten; alle
+  Kern-Tests grün (64 Bit, i686).
+  **Nachweis Board (27.11., 30 Testseiten, `docs/nachweise/m7/`):** ohne M7
+  NZZ 41 s Stillstand + Zwangsanhalten; erste Fassung SRF „Speicher voll“;
+  **Treap: 0 vorzeitig beendet, 0 angehalten, 0 Neustarts**, keine Lücke über
+  25 s, JS „out of memory“ 7 (vorher 8 bzw. 6), abgeschnitten 8 wie vorher.
+  Alle Tests grün (FEHLER=0 nach dem Ordnen der Zähler-Tests).
 
 - [ ] **M8 Leerer System-Heap bricht das System ab** (**auf 1.0.5 verschoben**, Nutzer 27.11.; Testschalter „System-Heap füllen“ liegt als git stash bereit; Fund Q4, Dauertest
   26.11.) – im ersten 75-min-Lauf blieben zwei Wetter-Apps offen (Autopilot
