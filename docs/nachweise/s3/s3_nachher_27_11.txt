@@ -1,0 +1,18 @@
+S3 Bildrate 27.11. CPU-Ausgabe 2026-11-27T04:55:08, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+S3 Bildrate 27.11. CPU-Ausgabe (Desktop-Start bei 2941 ms)
+Phase          Fenster  Bilder/s    min  Fläche px  Compositor ms
+ruhe                 2       0.0    0.0          0           0.01
+menue                5      15.1   13.4      45220           0.35
+fenster              9       6.8    0.0      57367           0.17
+dateimanager         3      47.2   47.1      48121           3.53
+tastatur             5      10.5   10.0      38983           0.22
+tastatur_schnell       3      15.8   14.5      67060           0.71
+browser              4      31.2   30.8     132930           3.52
+FERTIG: 0 Abstürze

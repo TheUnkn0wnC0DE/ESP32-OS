@@ -1620,7 +1620,7 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   185 762 px/Bild, Compositor 9,2 ms) → **nachher 25,2 Bilder/s** (101 221
   px/Bild, 4,4 ms); Browser im selben Lauf 24,9 bzw. 24,7 – so flüssig wie
   der Browser. 0 Abstürze. Grenze ≥ 30: siehe S3.
-- [ ] **S3 Oberfläche allgemein** – per Autopilot messen, wo die Bildrate
+- [x] **S3 Oberfläche allgemein** – per Autopilot messen, wo die Bildrate
   einbricht (Fenster öffnen/schliessen, Menü, Scrollen in allen
   Programmen, Tastatur); schlimmste Stellen zuerst; Ziel überall ≥ 30 fps
   beim Scrollen, keine sichtbaren Verzögerungen beim Öffnen/Schliessen.
@@ -1648,6 +1648,39 @@ Erst M1–M5, dann M6, dann weiter mit C/D.
   Blättern: der PPA vergrössert die geänderten Zeilen 640×360 → Panel in
   ~25 ms). Siehe Abweichungen „S3“. Offen: Ausgabeweg schneller (≤ 18 ms
   je Bild beim Blättern), dann erneut messen.
+  **Ausgabeweg umgebaut (27.11.):** Messung am Board (Entwicklungs-Build
+  `ESP32OS_PPA_MESS`, `firmware/src/ppa_mess.rs`,
+  `docs/nachweise/s3/ppa_messung_27_11.txt`): der PPA schafft 39–44 MB/s,
+  gleich ob Blöcke 1280×16 oder ×128, gedreht oder nicht – grössere Blöcke
+  helfen nicht. Die CPU verdoppelt und dreht mit 55–63 MB/s je Kern
+  (gecacht; am Cache vorbei nur 24 MB/s). Gemischt CPU+PPA in denselben
+  Bildspeicher geht nicht: jeder PPA-Auftrag verwirft vorher den Cache über
+  den ganzen Bildspeicher (ESP-IDF `ppa_srm.c`, M2C). Deshalb gibt im
+  Desktop-Modus jetzt die CPU aus (`present::drehen_verdoppelt`, beide
+  Kerne, gleiche Streifenverteilung), Spiele bleiben beim PPA; den Cache
+  schreibt das Anzeigen zurück (`esp_lcd_panel_draw_bitmap`). PC-Test
+  `present::tests::drehen_verdoppelt_wie_ppa` (Bild gleich dem PPA-Weg,
+  beide Drehrichtungen; `pudding-core` jetzt in `alle_tests.sh`).
+  Dabei gefunden: seit der Fotopause im Autopiloten (Dauertest 5) kamen
+  die Fotos im Ablauf je Foto ~7 s zu früh – Fotozeiten mit Autopilot jetzt
+  auf dessen Uhr, Lauf-Skripte zeichnen je Foto 8 s länger auf.
+  Board 27.11. (`s3_lauf.ps1`, gleicher Ablauf, neu erzeugt;
+  `docs/nachweise/s3/s3_vorher_27_11.txt`, `s3_nachher_27_11.txt`), neue
+  Bilder je s im Mittel:
+
+  | Phase | vorher | nachher |
+  |---|---|---|
+  | Dateimanager wischen | 25,2 | **47,2** |
+  | Browser wischen | 24,6 | **31,2** |
+  | Menü auf/zu | 3,5 | 15,1 |
+  | Fenster auf/zu | 2,7 | 6,8 |
+  | Tastatur tippen / schnell | 10,2 / 13,7 | 10,5 / 15,8 |
+
+  Ausgabe je Bild beim Blättern 34–38 → 21–25 ms, Pipeline 28–31 → 48–50
+  Bilder/s (Panel 55 Hz). Tastatur: so viele Bilder, wie Tasten kommen.
+  **Nachweis:** Tabelle oben (Board), Rundgang aller 19 Programmfenster mit
+  der CPU-Ausgabe ohne Bildfehler (`docs/nachweise/s3/cpu_ausgabe_*.png`),
+  0 Abstürze; alle Tests grün (FEHLER=0).
 - [x] **S4 Ersteinrichtung** – Schliessen mit dem X gilt als erledigt
   (kommt nicht bei jedem Start wieder); am Board des Nutzers den Merker
   setup=1 setzen. Nachweis: PC-Test, Board-Log „schon erledigt“.
@@ -2720,7 +2753,7 @@ und Verzeichnis auf GitHub).
   STATUS. Neue entstehen nicht: der Tipp-Teil des S3-Laufs schliesst die
   Notizen mit dem X, das nichts speichert (`fps_lauf.rs`).
 
-- **S3, ≥ 30 fps beim Scrollen noch nicht erreicht (24.11.):** Programme
+- **S3, ≥ 30 fps beim Scrollen noch nicht erreicht (24.11.; erledigt 27.11.: CPU statt PPA im Desktop, Dateimanager 47, Browser 31 Bilder/s):** Programme
   zeichnen schnell genug (Dateimanager nach S2 4,4 ms Compositor je Bild),
   aber die Anzeige zeigt im 55-Hz-Takt: ein Bild, das länger als 18 ms
   braucht, erscheint einen Takt später – zwischen 27,5 und 55 Bilder/s gibt

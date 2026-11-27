@@ -202,6 +202,14 @@ fn main() {
         // Test-Build (Z1): Test-PDFs für den PDF-Betrachter auf die SD-Karte
         #[cfg(esp32os_pdf_test)]
         pudding_fw::speicher::pdf_testdaten();
+        // Entwicklungs-Build S3: PPA-Durchsatz je Blockhöhe messen (bei
+        // laufendem Desktop, 25 s nach dem Start)
+        if option_env!("ESP32OS_PPA_MESS").is_some() {
+            let _ = pudding_fw::hw::spawn_pinned_psram(c"ppa_mess", 1, 5, 16 * 1024, || {
+                std::thread::sleep(std::time::Duration::from_secs(25));
+                pudding_fw::ppa_mess::lauf();
+            });
+        }
         // Test-Build: Testreste des ersten Browser-Versuchs (B1) löschen
         if option_env!("ESP32OS_NETSURF_RESTE").is_some() {
             pudding_fw::speicher::netsurf_testreste_loeschen();
@@ -508,6 +516,10 @@ fn main() {
     let foto_zeiten: Vec<i64> = option_env!("KONSOLE_BILDER")
         .map(|s| s.split(',').filter_map(|t| t.trim().parse::<f32>().ok()).map(|t| (t * 1e6) as i64).collect())
         .unwrap_or_default();
+    // Fotozeiten mit Autopilot auf dessen Uhr (ohne Fotopausen,
+    // `foto::pause_us`) – sonst käme jedes weitere Foto ~7 s früher im
+    // Ablauf; ohne Autopilot (z. B. Seitenliste des Browsers) echte Zeit
+    let foto_uhr = || if AUTOPILOT.is_some() { hw::now_us() - pudding_fw::foto::pause_us() as i64 } else { hw::now_us() };
     let (mut foto_nr, foto_start) = (0usize, hw::now_us());
     // Vorher/Nachher-Messungen: Bilanz alle 30 s (siehe `Bildbilanz`).
     let mut bilanz = pudding_core::present::Bildbilanz::default();
@@ -772,7 +784,7 @@ fn main() {
         }
         // Desktop ohne Änderung: nichts zeichnen, das letzte Bild bleibt stehen.
         if rahmen.unveraendert() {
-            if foto_nr < foto_zeiten.len() && hw::now_us() - foto_start >= foto_zeiten[foto_nr] && !pending {
+            if foto_nr < foto_zeiten.len() && foto_uhr() - foto_start >= foto_zeiten[foto_nr] && !pending {
                 pudding_fw::foto::senden(disp.gezeigt(), foto_nr as u32, rahmen.gedreht());
                 foto_nr += 1;
             }
@@ -805,7 +817,7 @@ fn main() {
             dt = pacer.frame(shown_at, hw::now_us());
             v_bild = ((dt / pacer.period()).round() as u32).saturating_sub(rahmen.bildrate_teiler());
             verpasst += v_bild;
-            if foto_nr < foto_zeiten.len() && hw::now_us() - foto_start >= foto_zeiten[foto_nr] {
+            if foto_nr < foto_zeiten.len() && foto_uhr() - foto_start >= foto_zeiten[foto_nr] {
                 pudding_fw::foto::senden(disp.gezeigt(), foto_nr as u32, rahmen.gedreht());
                 foto_nr += 1;
             }
@@ -825,7 +837,10 @@ fn main() {
             z.map(|(a, b)| Some(acc.map_or((a, b), |(c, d)| (c.min(a), d.max(b)))))
         }).flatten();
         // SAFETY: `drawing` und `fb` bleiben bis zum `join` oben unverändert.
-        unsafe { pipeline.start(&drawing, Frame { w, h, smooth, flip, fb, zeilen }) };
+        // S3: im Desktop-Modus (Bildstreifen im PSRAM, M2) gibt die CPU aus,
+        // nicht der PPA – Spiele bleiben beim PPA
+        let cpu = !smooth && !hw::PIXEL_INTERN.load(Ordering::Relaxed);
+        unsafe { pipeline.start(&drawing, Frame { w, h, smooth, flip, fb, zeilen, cpu }) };
         pending = true;
 
         let now = hw::now_us();

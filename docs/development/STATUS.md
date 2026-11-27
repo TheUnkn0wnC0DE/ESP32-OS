@@ -36,9 +36,9 @@ Web-Flasher unverändert (1.0.1):
      WLAN-Daten, keine lokalen Pfade, 0 private Begriffe).
    - Text: `docs/release/v1.0.4.md`.
 
-Schritte nach deinem OK (Tag auf den gepushten `main`-Commit mit diesem
-Eintrag – sein Quellstand ist genau der gebaute):
-1. `git fetch origin main`, `git tag v1.0.4 origin/main`, `git push origin v1.0.4`
+Schritte nach deinem OK (Tag auf `main` 33cd53e – sein Quellstand ist genau
+der gebaute; spätere Commits gehören nicht zu 1.0.4):
+1. `git tag v1.0.4 33cd53e` und `git push origin v1.0.4`
 2. `gh release create v1.0.4 --repo TheUnkn0wnC0DE/ESP32-OS --title "ESP32-OS 1.0.4"
    --notes-file docs/release/v1.0.4.md release/v1.0.4/*`
 3. Web-Flasher: `gh workflow run flasher.yml --ref main`

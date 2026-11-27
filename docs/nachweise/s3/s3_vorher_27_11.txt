@@ -1,0 +1,18 @@
+S3 Bildrate 27.11. vorher 2026-11-27T04:22:40, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+S3 Bildrate 27.11. vorher (Desktop-Start bei 2952 ms)
+Phase          Fenster  Bilder/s    min  Fläche px  Compositor ms
+ruhe                 2       0.0    0.0          0           0.01
+menue                5       3.5    2.5     161662           0.24
+fenster              9       2.7    0.0      93327           0.14
+dateimanager         3      25.2   24.4     101250           4.64
+tastatur             5      10.2    9.8      39145           0.24
+tastatur_schnell       3      13.7   13.0      77256           0.83
+browser              4      24.6   24.0     132930           6.64
+FERTIG: 0 Abstürze

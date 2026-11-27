@@ -24,6 +24,8 @@ $env:ESP32OS_AUTOPILOT = (Get-Content "$PSScriptRoot\s5_autopilot.txt" -Raw).Tri
 $env:KONSOLE_BILDER = (Get-Content "$PSScriptRoot\s5_fotos.txt" -Raw).Trim()
 # Laufzeit: letztes Foto + 40 s
 $sek = [int](((Get-Content "$PSScriptRoot\s5_fotos.txt" -Raw).Trim().Split(',') | Select-Object -Last 1)) + 40
+# je Foto ~8 s Übertragung, die der Autopilot anhält (foto::pause_us)
+$sek += 8 * (Get-Content "$PSScriptRoot\s5_fotos.txt" -Raw).Trim().Split(",").Count
 & powershell -NoProfile -File "$esp32\firmware\bauen_flashen.ps1" -Nur esp32os -Port $Port -Anhalten *> "$Ziel\bau.log"
 $rc = $LASTEXITCODE
 Umgebung-Leeren

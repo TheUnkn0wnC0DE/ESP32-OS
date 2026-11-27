@@ -32,7 +32,7 @@ use core::ffi::c_void;
 use core::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
 use esp_idf_svc::sys::{self, EspError, esp};
 use pudding_core::app::{App, FrameData, MAX_MESH_VERTICES};
-use pudding_core::present::{CHUNK_PX, Layout, STRIP_PX, upscale_nearest};
+use pudding_core::present::{CHUNK_PX, Layout, STRIP_PX, drehen_verdoppelt, upscale_nearest};
 use pudding_core::render::{Scratch, Target};
 use std::sync::mpsc::{Receiver, SyncSender, sync_channel};
 
@@ -122,6 +122,12 @@ pub struct Frame {
     /// Nur Streifen in diesen Zeilen ausgeben (von, bis); die übrigen stehen
     /// im Bildspeicher `fb` schon richtig (O1, siehe main.rs). None = alle.
     pub zeilen: Option<(usize, usize)>,
+    /// S3: Scharf ×2 ohne PPA – die CPU verdoppelt und dreht direkt in den
+    /// Bildspeicher ([`pudding_core::present::drehen_verdoppelt`]). Nur, wenn in diesen Bildspeicher
+    /// nie der PPA schreibt (Desktop): jeder PPA-Auftrag verwirft vorher den
+    /// Cache über den ganzen Bildspeicher (ppa_srm.c, M2C), noch nicht
+    /// zurückgeschriebene Pixel der CPU gingen verloren.
+    pub cpu: bool,
 }
 
 impl Frame {
@@ -456,6 +462,19 @@ impl CoreCtx {
             STRIPS_DONE[self.core.min(1)].fetch_add(1, Ordering::Relaxed);
             STAGE[self.core.min(1)].store(3, Ordering::Relaxed);
             st.render_us += (now_us() - t1) as u32;
+            // S3: ohne PPA (Board 27.11.: der PPA schafft 40–44 MB/s, gleich
+            // welche Blockgrösse; die CPU verdoppelt und dreht mit ~60 MB/s je
+            // Kern). Den Cache schreibt das Anzeigen zurück
+            // (esp_lcd_panel_draw_bitmap, C2M über den Bildspeicher).
+            if f.cpu && l.scale == 2 && l.cpu_scale() == 2 && l.panel_w == 2 * f.h && l.panel_h == 2 * f.w {
+                let t4 = now_us();
+                // SAFETY: `fb` ist ein ganzer Bildspeicher (panel_w × panel_h),
+                // der gerade nicht angezeigt wird (Display::acquire); jeder
+                // Kern schreibt nur die Spalten seiner Streifen.
+                unsafe { drehen_verdoppelt(&self.color[..n], f.w, y1 - y0, f.fb, y0, l.panel_w, f.flip) };
+                st.scale_us += (now_us() - t4) as u32;
+                continue;
+            }
             let mut r0 = y0;
             while r0 < y1 {
                 let r1 = (r0 + l.chunk_rows()).min(y1);

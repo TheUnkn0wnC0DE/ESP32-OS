@@ -20,6 +20,7 @@ pub mod jpeg;
 pub mod knopfsuche;
 pub mod kern_board;
 pub mod pipeline;
+pub mod ppa_mess;
 pub mod slots;
 pub mod speicher;
 pub mod speicherwacht;

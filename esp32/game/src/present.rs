@@ -88,6 +88,39 @@ impl Layout {
     }
 }
 
+/// S3: Quellzeilen `y0..y0+rows` (je `w` Pixel, quer) verdoppeln und wie
+/// der PPA gedreht in den Bildspeicher `fb` (hochkant, `panel_w` breit,
+/// 2·w hoch) schreiben. 90° gegen den Uhrzeigersinn: Quellpixel (x, y) →
+/// Panelspalten 2y, 2y+1 und Panelzeilen 2w−1−2x, 2w−2−2x; gedreht (270°):
+/// Spalten panel_w−2−2y, panel_w−1−2y und Zeilen 2x, 2x+1. Je Panelzeile
+/// entstehen 2·rows Pixel am Stück (als u32-Paare geschrieben).
+///
+/// # Safety
+/// `fb` zeigt auf panel_w × 2w Pixel, 4-Byte-ausgerichtet; 2·(y0+rows) ≤
+/// panel_w; `src` hat mindestens w·rows Pixel.
+#[cfg_attr(target_os = "espidf", unsafe(link_section = ".iram1.pudding"))]
+#[inline(never)]
+pub unsafe fn drehen_verdoppelt(src: &[u16], w: usize, rows: usize, fb: *mut u16, y0: usize, panel_w: usize, flip: bool) {
+    assert!(src.len() >= w * rows && 2 * (y0 + rows) <= panel_w, "Streifen ausserhalb");
+    for x in 0..w {
+        // zwei Panelzeilen je Quellspalte
+        let (za, zb) = if flip { (2 * x, 2 * x + 1) } else { (2 * w - 1 - 2 * x, 2 * w - 2 - 2 * x) };
+        // SAFETY: za, zb < 2w; Spalten im Bereich laut Vorbedingung; gerade
+        // Spalte → 4-Byte-ausgerichtet.
+        unsafe {
+            let a = fb.add(za * panel_w).cast::<u32>();
+            let b = fb.add(zb * panel_w).cast::<u32>();
+            for r in 0..rows {
+                let p = u32::from(*src.get_unchecked(r * w + x));
+                let v = p | p << 16;
+                let spalte = if flip { (panel_w - 2 - 2 * (y0 + r)) / 2 } else { y0 + r };
+                a.add(spalte).write(v);
+                b.add(spalte).write(v);
+            }
+        }
+    }
+}
+
 /// Nearest-Neighbor-Vergrößerung um den ganzzahligen Faktor `s`: `rows`
 /// Zeilen zu je `w` Pixeln aus `src` → `dst` mit (w·s)×(rows·s) Pixeln.
 #[cfg_attr(target_os = "espidf", unsafe(link_section = ".iram1.pudding"))]
@@ -317,6 +350,40 @@ impl Bildbilanz {
 
 #[cfg(test)]
 mod tests {
+    /// S3: CPU-Ausgabe gleich dem Weg über den PPA (×2 vergrössern, 90°
+    /// gegen den Uhrzeigersinn bzw. 270° drehen, an `block_offset`).
+    #[test]
+    fn drehen_verdoppelt_wie_ppa() {
+        let (w, h) = (16usize, 10usize);
+        let (pw, ph) = (2 * h, 2 * w);
+        let bild: Vec<u16> = (0..w * h).map(|i| (i as u16).wrapping_mul(7919) | 1).collect();
+        for flip in [false, true] {
+            let l = Layout::new(w, h, pw, ph, flip);
+            // Bezug: Block vergrössern und wie der PPA drehen
+            let mut erwartet = vec![0u16; pw * ph];
+            for (y0, y1) in [(0usize, 4usize), (4, 8), (8, 10)] {
+                let rows = y1 - y0;
+                let mut blk = vec![0u16; 2 * w * 2 * rows];
+                upscale_nearest(&bild[y0 * w..], w, rows, 2, &mut blk);
+                let (bw, bh) = (2 * w, 2 * rows);
+                let (ox, _) = l.block_offset(y0, y1);
+                for yb in 0..bh {
+                    for xb in 0..bw {
+                        let (px, py) = if flip { (ox + (bh - 1 - yb), xb) } else { (ox + yb, bw - 1 - xb) };
+                        erwartet[py * pw + px] = blk[yb * bw + xb];
+                    }
+                }
+            }
+            let mut fb = vec![0u32; pw * ph / 2];
+            for (y0, y1) in [(0usize, 4usize), (4, 8), (8, 10)] {
+                // SAFETY: fb hat pw × ph Pixel, u32-ausgerichtet; 2·y1 ≤ pw.
+                unsafe { drehen_verdoppelt(&bild[y0 * w..y1 * w], w, y1 - y0, fb.as_mut_ptr().cast(), y0, pw, flip) };
+            }
+            let ist: Vec<u16> = fb.iter().flat_map(|v| [*v as u16, (*v >> 16) as u16]).collect();
+            assert_eq!(ist, erwartet, "flip {flip}");
+        }
+    }
+
     use super::*;
     use alloc::{vec, vec::Vec};
 

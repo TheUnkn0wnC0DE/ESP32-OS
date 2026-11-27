@@ -19,6 +19,8 @@ lauf() {
 lauf "64 kern" cargo test --release -p kern
 lauf "64 kolibri" cargo test --release -p kolibri
 lauf "64 desktop" cargo test --release -p desktop
+# Anzeige-Kern (Streifen, Vergrössern, S3: CPU-Ausgabe gleich dem PPA-Weg)
+lauf "64 pudding-core" cargo test --release -p pudding-core
 lauf "i686 kern" cargo test --release -p kern --target i686-pc-windows-msvc
 lauf "i686 kolibri" cargo test --release -p kolibri --target i686-pc-windows-msvc
 lauf "i686 desktop (C-Programme, Startmenü, Stabilität, Leck)" cargo test --release -p desktop --target i686-pc-windows-msvc --test c_programme --test thashview --test menue_start --test stabil --test browser_menue --test konsole_touch --test standby_touch --test ersteinrichtung_kreuz --test fps_lauf --test fenster_raender --test leck_system

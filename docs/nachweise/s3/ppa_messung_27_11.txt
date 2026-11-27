@@ -1,0 +1,12 @@
+Block 1280x16 gedreht Quelle PSRAM: 45 Aufträge 47.7 ms, je Auftrag 1060 µs, Vollbild-Anteil je 16 Zeilen 1060 µs, 39 MB/s
+Block 1280x32 gedreht Quelle PSRAM: 22 Aufträge 43.2 ms, je Auftrag 1962 µs, Vollbild-Anteil je 16 Zeilen 981 µs, 42 MB/s
+Block 1280x64 gedreht Quelle PSRAM: 11 Aufträge 41.8 ms, je Auftrag 3797 µs, Vollbild-Anteil je 16 Zeilen 949 µs, 43 MB/s
+Block 1280x128 gedreht Quelle PSRAM: 5 Aufträge 37.6 ms, je Auftrag 7511 µs, Vollbild-Anteil je 16 Zeilen 939 µs, 44 MB/s
+Block 1280x16 ungedreht Quelle PSRAM: 45 Aufträge 44.3 ms, je Auftrag 984 µs, Vollbild-Anteil je 16 Zeilen 984 µs, 42 MB/s
+Block 1280x64 ungedreht Quelle PSRAM: 11 Aufträge 40.6 ms, je Auftrag 3692 µs, Vollbild-Anteil je 16 Zeilen 923 µs, 44 MB/s
+CPU verdoppeln+drehen 8 Zeilen je Streifen: Vollbild 28.6 ms (+ Cache zurückschreiben 0.7 ms), 63 MB/s
+CPU verdoppeln+drehen 16 Zeilen je Streifen: Vollbild 32.9 ms (+ Cache zurückschreiben 0.7 ms), 55 MB/s
+CPU verdoppeln+drehen 32 Zeilen je Streifen: Vollbild 32.2 ms (+ Cache zurückschreiben 1.0 ms), 55 MB/s
+CPU ungecacht verdoppeln+drehen 8 Zeilen je Streifen: Vollbild 75.4 ms, 24 MB/s
+CPU ungecacht verdoppeln+drehen 32 Zeilen je Streifen: Vollbild 73.7 ms, 25 MB/s
+gleichzeitig je halber Schirm: PPA 30.8 ms, CPU ungecacht 54.0 ms, zusammen 54.1 ms
