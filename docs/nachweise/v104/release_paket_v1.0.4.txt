@@ -1,4 +1,4 @@
-Release-Paket v1.0.4 (release_paket.ps1 -Version 1.0.4, 26.11.2026 abends, nach allen Korrekturen, nicht veröffentlicht)
+Release-Paket v1.0.4 (release_paket.ps1 -Version 1.0.4, 27.11.2026 morgens, Stand esp32-os 9cc2eb8 nach Rundgang, Review und Dauertest 7; nicht veröffentlicht)
 Release-Pruefung esp32os.elf: keine WLAN-Zugangsdaten
 Release-Pruefung esp32os.bin: keine WLAN-Zugangsdaten
 Release-Pruefung esp32os.bin: keine lokalen Pfade
@@ -8,11 +8,11 @@ Release-Pruefung doomapp.bin: keine lokalen Pfade
 Release-Pruefung quakeapp.elf: keine WLAN-Zugangsdaten
 Release-Pruefung quakeapp.bin: keine WLAN-Zugangsdaten
 Release-Pruefung quakeapp.bin: keine lokalen Pfade
-2f2fc9f130c53df0f4eeaee63c5218d7326d26b6cbf829951479692e32be31bb  bootloader.bin
-6d312e5a39e2009b2a5a440ea392d1141875209e65593b88d39c71385f26820b  doomapp.bin
-728582d8d176cf2ec1bec747ccc73c03710c8e088ac8cfc51f73cd07c6b07041  esp32os.bin
+b64297c7bbeed9fb47b3255b36ff3c3c8fedf735865f47d7b4e5f172766c5296  bootloader.bin
+ff60ee2a2a32b732aafe1a9e44623c65367489b41232fe818a33e49927456807  doomapp.bin
+3e486269acb04fb8d94083905f99c0ac4065ba7f126a69d86cb3acc918a1582f  esp32os.bin
 7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f  otadata-leer.bin
 caac202b70ef8688d9b8536a5fe7d0c97b6ee698ba9b4f649155ca200f9b9c1e  partition-table.bin
-666bf235dca544489124cf42a7365d23f44aa6b9aeb1bd29e8c99cb11e2bf3d5  quakeapp.bin
-Grössen: esp32os.bin 5878272 (94.4 % von 6225920), doomapp.bin 1744016, quakeapp.bin 1760160, bootloader.bin 24160, partition-table.bin 3072, otadata-leer.bin 8192
-Private Suchbegriffe: 2 Treffer, beide falsch-positiv (Cookie-Attribut in NetSurf, Wortteil in Quake), wie in 1.0.2 und 1.0.3.
+2f4c920637595598373410c3ff9a783c4274fd957b83fe02eda2b9c91c03a662  quakeapp.bin
+Grössen: esp32os.bin 5894480 (94.7 % von 6225920), doomapp.bin 1744016, quakeapp.bin 1760160, bootloader.bin 24160, partition-table.bin 3072, otadata-leer.bin 8192
+Private Suchbegriffe (bin_pruefen über alle .bin, manifest.json, SHA256SUMS): 0 Treffer.

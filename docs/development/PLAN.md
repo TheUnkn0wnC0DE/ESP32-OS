@@ -1949,11 +1949,18 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
   JS-lastige Seiten über dem Speicher des Browsers, HTML über 512 KB.
   Offen (Abweichungen „Q3 DuckDuckGo-Logo“): Logo auf html.duckduckgo am
   Board.
-- [ ] **Q4 Abschluss** – Review-Subagent prüft das ganze Qualitäts-Update
+- [x] **Q4 Abschluss** – Review-Subagent prüft das ganze Qualitäts-Update
   gegen diesen Auftrag; 60-min-Dauertest per Autopilot, 0 Abstürze, kein
   Speicherleck; nächste Version vorbereiten (README, CHANGELOG,
   Release-Paket, Release-Check, Bildschirmfotos im README aktualisieren), OK
   in STATUS erbitten; Web-Flasher erst nach dem OK aktualisieren.
+  **Nachweis (27.11.):** Reviews 25.11. (7 Befunde) und 27.11. (7 Befunde)
+  behoben; Dauertest 7 auf dem finalen Stand 9cc2eb8: 75 min, 0 Abstürze,
+  0 Startfehler, interner RAM und Kern-System in Ruhe stabil
+  (`docs/nachweise/q4/dauertest7.txt`); Paket `release/v1.0.4` neu gebaut
+  und geprüft (`docs/nachweise/v104/release_paket_v1.0.4.txt`, 0 Treffer
+  private Begriffe), CHANGELOG/Release-Text/README nachgezogen; OK in
+  STATUS erbeten, Web-Flasher unverändert.
   Dauertests (26.11., `m4_lauf.ps1`, je 75 min, 10 Runden):
   1. Neustart nach 53 min (offene Wetter-Apps leerten den System-PSRAM) →
      Wetter-App endet nach abgebrochener erster Ortssuche; kein Start unter
@@ -1982,6 +1989,16 @@ von A bis Z polieren, bis es sich wie ein fertiges Produkt anfühlt.
      liegengebliebene Meldungen (PC-Test `autopilot_aufraeumen`);
      `m4_lauf.ps1` zählt Startfehler und Runden mit Resten und besteht nur
      ohne beide.
+  6. (27.11., Stand 3b0dab6) bestanden: 75 min, 0 Abstürze, 0 Startfehler,
+     keine Reste; interner RAM ab Runde 2 konstant 216–218 KB
+     (`docs/nachweise/q4/dauertest6.txt`).
+  7. (27.11., Stand 9cc2eb8 nach dem Review – **finaler Stand für 1.0.4**)
+     bestanden: 75 min, 10 Runden, **0 Abstürze, 0 Startfehler, keine
+     Reste**; interner RAM in Ruhe (nur Systemdienste) 218 KB nach Runde 1
+     → 217 KB am Ende (55 min; vorher −9 KB je 75 min), Kern-System in Ruhe
+     konstant 3390 KB (`docs/nachweise/q4/dauertest7.txt`). Damit „0
+     Abstürze, kein Speicherleck“ erfüllt; Abweichung „Q4 interner RAM“
+     erledigt.
   Release 1.0.4 vorbereitet: Version, CHANGELOG, Release-Text
   `docs/release/v1.0.4.md`, Paket neu gebaut nach allen Korrekturen,
   Release-Check `docs/nachweise/v104/`, README (Desktop- und Wetterfoto).
@@ -2593,7 +2610,7 @@ und Verzeichnis auf GitHub).
 
 ## Abweichungen
 
-- **Q4 interner RAM (26.11.)** – im Dauertest sinkt der freie interne RAM
+- **Q4 interner RAM (26.11.; erledigt 27.11.: Ursache Startboxen der Fäden im System-Heap, behoben, Dauertest 7 ohne Abfall)** – im Dauertest sinkt der freie interne RAM
   um ~7–9 KB je 75 min (schon in 1.0.3, M4); mit 210 KB frei erst nach
   vielen Stunden Dauerlast spürbar. Ursache noch nicht zugeordnet (Heap-
   Spur `leck_lauf.ps1` gruppiert noch belegte interne Blöcke). Ersatz:

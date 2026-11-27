@@ -1,0 +1,34 @@
+﻿M4 Dauertest 2026-11-27T04:09:11, 75 min, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+Startfehler                    0
+Runden mit offenen Resten      0
+interner RAM frei: Anfang 220 KB (t=20 s), Ende 216 KB (t=4474 s), tiefster Wert 215 KB, Differenz -4 KB
+
+Stand esp32-os 9cc2eb8 (nach dem Review). Verlauf (t in s, interner RAM frei KB, Kern-System KB, offene Programme), jede 8. Speicherzeile:
+0 288 7 
+20 220 2896  @icon @tastatur @taskbar
+30 220 2956  @icon @tastatur @taskbar
+180 215 3415  @icon @tastatur @taskbar wetter
+420 218 3645  @icon @tastatur @taskbar shell
+660 217 3742  @icon @tastatur @taskbar @menu
+900 217 3745  @icon @tastatur @taskbar @menu
+1141 217 3745  @icon @tastatur @taskbar @menu
+1411 217 3657  @icon @tastatur @taskbar matrix
+1651 217 3780  @icon @tastatur @taskbar browser
+1921 216 3745  @icon @tastatur @taskbar @menu
+2162 217 3780  @icon @tastatur @taskbar browser
+2432 218 3390  @icon @tastatur @taskbar
+2672 217 3780  @icon @tastatur @taskbar browser
+2912 217 3390  @icon @tastatur @taskbar
+3183 217 3390  @icon @tastatur @taskbar
+3423 217 3631  @icon @tastatur @taskbar info
+3693 216 3650  @icon @tastatur @taskbar @menu
+3933 216 3745  @icon @tastatur @taskbar @menu
+4174 217 3812  @icon @tastatur @taskbar basic_gui
+4444 216 3749  @icon @tastatur @taskbar notizen

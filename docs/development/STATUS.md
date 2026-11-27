@@ -9,21 +9,44 @@ Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
-## Release 1.0.4: noch nicht – Politur (dein Auftrag 26.11. spät)
+## Bitte um OK: Release 1.0.4 und Web-Flasher (27.11., 05:30)
 
-Reihenfolge: Leck-Fix am Board bestätigen → Rundgang wie Q1 → letzter
-75-min-Dauertest auf dem finalen Stand → erst dann Release-Text, Paket und
-Tag neu und hier um dein OK bitten. Bis dahin **nichts veröffentlicht**,
-Web-Flasher unverändert (1.0.1).
+Dein Auftrag vom 26.11. spät ist erledigt, **nichts veröffentlicht**,
+Web-Flasher unverändert (1.0.1):
 
-- **26.11., 23:30 – Rundgang erledigt:** Spur mit Leck-Fix am Board: Reste
-  „Open file“ weg; dabei fiel ein Absturz der Bild-Demo auf (beschädigte
-  `/sys/logo.png` im internen Flash, nur 4 KB lesbar) – behoben (Inhalt wird
-  beim Start geprüft und neu geschrieben). Rundgang über alle 19 Programme
-  am Board: PasswordGen-Knöpfe und Bild-Demo lagen hinter der Taskleiste
-  (Fenster rücken jetzt nach oben), Musik-Hinweis abgeschnitten (zwei
-  Zeilen). Fotos vorher/nachher `docs/nachweise/v104/rundgang/`, Funde in
-  PLAN (Q4, „Politur vor 1.0.4“). Als Nächstes: Dauertest 75 min.
+1. **Leck-Fix in 1.0.4 und am Board bestätigt:** Dauertest 7 (finaler
+   Stand, esp32-os 9cc2eb8): 75 min, 0 Abstürze, 0 Startfehler; interner
+   RAM in Ruhe 218 → 217 KB (vorher −9 KB je 75 min), Kern-System konstant.
+2. **Rundgang wie Q1** über alle 19 Programme mit Board-Fotos. Behoben:
+   - Die Bild-Demo stürzte ab, weil `/sys/logo.png` im internen Flash
+     beschädigt war.
+   - PasswordGen und die Bild-Demo lagen hinter der Taskleiste.
+   - Der Musik-Hinweis war abgeschnitten.
+
+   Zusätzlich hat ein Review vor dem Release 7 Befunde gefunden, alle
+   behoben (u. a. ein möglicher System-Hänger bei vollem Speicher und
+   MIDI-Dateien, die den Player abstürzen liessen). MIDI ist am Board
+   nachgewiesen.
+3. **Letzter Dauertest** – siehe 1. Der erste Versuch (Dauertest 5) war
+   wegen eines Fehlers im Testaufbau ungültig: Ein Foto unterbrach den
+   Autopiloten. Behoben und zweimal wiederholt, beide bestanden.
+4. **Release-Text, Paket und CHANGELOG** sind neu auf diesem Stand:
+   - Paket: `release/v1.0.4`, `esp32os.bin` 5 894 480 B (94,7 %).
+   - Prüfung: `docs/nachweise/v104/release_paket_v1.0.4.txt` (keine
+     WLAN-Daten, keine lokalen Pfade, 0 private Begriffe).
+   - Text: `docs/release/v1.0.4.md`.
+
+Schritte nach deinem OK (Tag auf den gepushten `main`-Commit mit diesem
+Eintrag – sein Quellstand ist genau der gebaute):
+1. `git fetch origin main`, `git tag v1.0.4 origin/main`, `git push origin v1.0.4`
+2. `gh release create v1.0.4 --repo TheUnkn0wnC0DE/ESP32-OS --title "ESP32-OS 1.0.4"
+   --notes-file docs/release/v1.0.4.md release/v1.0.4/*`
+3. Web-Flasher: `gh workflow run flasher.yml --ref main`
+4. README: „latest release (1.0.4)“, Web-Flasher-Satz und Zahlen nachziehen,
+   pushen.
+
+Antwort genügt: „OK Release“ (1–2), „OK Release und Flasher“ (1–4) oder
+Änderungswünsche.
 
 ## Zusammenfassung (26.11., 21:00 – Abschluss dieser Sitzung)
 
