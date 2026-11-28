@@ -520,10 +520,20 @@ pub fn suchvarianten(q: &str) -> Vec<String> {
     v
 }
 
-/// Programm „wetter“ (Argument „ort“: gleich die Ortssuche, aus den
-/// Einstellungen).
+/// Argument „zeigen:Breite:Länge:Name“: diesen Ort anzeigen, ohne ihn zu
+/// speichern (Bildschirmfotos ohne den eigenen Ort).
+fn ort_aus_argument(a: &str) -> Option<Ort> {
+    let mut t = a.trim().strip_prefix("zeigen:")?.splitn(3, ':');
+    let lat: f64 = t.next()?.parse().ok()?;
+    let lon: f64 = t.next()?.parse().ok()?;
+    let name = t.next()?.trim();
+    ((-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lon) && !name.is_empty()).then(|| Ort { name: name.into(), lat, lon })
+}
+
+/// Programm „wetter“ (Argument „ort“: gleich die Ortssuche, „zeigen:…“ siehe
+/// [`ort_aus_argument`], sonst der Ort aus den Einstellungen).
 pub fn programm() {
-    let mut z = Zustand { ort: crate::konfig::wetter_ort(), ..Default::default() };
+    let mut z = Zustand { ort: ort_aus_argument(&kern::argumente()).or_else(crate::konfig::wetter_ort), ..Default::default() };
     sys::maske(0x07);
     zeichnen(&z);
     if kern::argumente().trim() == "ort" || z.ort.is_none() {
@@ -576,6 +586,16 @@ pub fn programm() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ort_zum_zeigen() {
+        let o = ort_aus_argument("zeigen:46.948:7.4474:Bern").unwrap();
+        assert_eq!((o.name.as_str(), o.lat, o.lon), ("Bern", 46.948, 7.4474));
+        assert_eq!(ort_aus_argument("zeigen:1:2:Ort: mit Doppelpunkt").unwrap().name, "Ort: mit Doppelpunkt");
+        for a in ["", "ort", "zeigen:", "zeigen:91:0:X", "zeigen:0:181:X", "zeigen:1:2:", "zeigen:a:2:X", "1:2:X"] {
+            assert!(ort_aus_argument(a).is_none(), "{a}");
+        }
+    }
 
     #[test]
     fn json_und_open_meteo() {

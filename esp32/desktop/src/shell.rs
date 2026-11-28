@@ -16,7 +16,7 @@ pub const MODUS_SCHLUESSEL: &str = "esp32os_modus";
 pub const LEISTE_H: i32 = 48;
 /// Name des Systems (Startbild, Info, Taskleiste).
 pub const NAME: &str = "ESP32-OS";
-pub const VERSION: &str = "1.0.4";
+pub const VERSION: &str = "1.0.5";
 
 /// Eintrag im Startmenü und auf dem Desktop.
 #[derive(Clone, Copy, Debug)]
@@ -58,13 +58,17 @@ pub fn anwendungen_setzen(v: &[Anwendung]) {
     kern::kern_abschnitt(|| *ANWENDUNGEN.lock().unwrap_or_else(|e| e.into_inner()) = v.to_vec());
 }
 
-fn anwendungen() -> Vec<Anwendung> {
+/// Programme fürs Startmenü und den Desktop (ohne im App-Store entfernte).
+pub fn anwendungen() -> Vec<Anwendung> {
     // Sperre nur im Kern-Abschnitt (siehe SYMBOL_CACHE; Zwangsbeenden)
     // Kopie im Heap des Aufrufers (geschützt, nicht im Kern-Abschnitt): eine
     // Kopie im System-Heap bliebe liegen, wenn das Programm ohne Aufräumen
     // endet (M8, Dauertest 26.11.)
     sperre_vorbereiten(&ANWENDUNGEN);
-    kern::geschuetzt(|| ANWENDUNGEN.lock().unwrap_or_else(|e| e.into_inner()).clone())
+    let mut v = kern::geschuetzt(|| ANWENDUNGEN.lock().unwrap_or_else(|e| e.into_inner()).clone());
+    // D3: im App-Store entfernte Programme erscheinen nicht
+    v.retain(|a| crate::appstore::sichtbar(a.programm));
+    v
 }
 
 fn haken() -> Option<Haken> {
@@ -538,7 +542,7 @@ pub fn icon() {
                 let hg = crate::konfig::hintergrund();
                 if bild.as_ref().is_none_or(|(k, _)| *k != hg) {
                     // altes Bild zuerst freigeben (M6: nicht zwei auf einmal)
-                    bild = None;
+                    drop(bild.take());
                     let b = hintergrund_grund(&hg, w, h);
                     bild = Some((hg, b));
                 }

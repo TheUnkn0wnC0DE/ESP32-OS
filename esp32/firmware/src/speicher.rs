@@ -217,7 +217,14 @@ pub fn musik_testdaten() {
         ("Testton 2.mp3", include_bytes!("../../desktop/tests/daten/Testton 2.mp3")),
         // D2: eigene Test-Melodie (`werkzeuge/test_midi.py`)
         ("Testmelodie.mid", include_bytes!("../../desktop/tests/daten/Testmelodie.mid")),
+        // englischer Name für die Pressefotos
+        ("Test tone.mp3", include_bytes!("../../desktop/tests/daten/Testton 1.mp3")),
+        // D2: freie Ogg-Vorbis-Datei (CC0, tests/daten/LIESMICH_OGG.txt)
+        ("Ogg sample.ogg", include_bytes!("../../desktop/tests/daten/cc0_daring_heart.ogg")),
     ]);
+    // D2: Ogg-Datei aus `ESP32OS_OGG_TEST` (bleibt lokal)
+    #[cfg(esp32os_ogg_test)]
+    testdaten_ablegen("Musik-Test", "Musik_Test", &[("Test.ogg", include_bytes!(env!("ESP32OS_OGG_PFAD")))]);
 }
 
 /// Entwicklungs-Build (Z1): die Test-PDFs des PDF-Betrachters
@@ -227,6 +234,8 @@ pub fn pdf_testdaten() {
     testdaten_ablegen("PDF-Test", "PDF_Test", &[
         ("bericht.pdf", include_bytes!("../../desktop/tests/pdf/bericht.pdf")),
         ("diagramm.pdf", include_bytes!("../../desktop/tests/pdf/diagramm.pdf")),
+        // englisches Dokument für die Pressefotos (`werkzeuge/test_pdf_en.py`)
+        ("quickstart.pdf", include_bytes!("../../desktop/tests/pdf/quickstart.pdf")),
     ]);
 }
 
@@ -257,4 +266,37 @@ pub fn sd_testreste_loeschen() {
     }
     log::warn!("SD aufräumen – nachher: {:?}", liste(wurzel));
     log::warn!("SD aufräumen – nachher Screenshots: {:?}", liste(fotos));
+}
+
+/// Entwicklungs-Build (`ESP32OS_DATEN_LISTE`): Inhalt von `/daten` und der
+/// Papierkörbe ins Log – nur lesen (Suche nach verschwundenen Spieldaten).
+pub fn daten_liste() {
+    fn liste(pfad: &str, tiefe: usize) {
+        let Ok(d) = std::fs::read_dir(pfad) else {
+            log::warn!("DATEN-LISTE: {pfad}: nicht lesbar");
+            return;
+        };
+        let mut v: Vec<_> = d.flatten().collect();
+        v.sort_by_key(|e| e.file_name());
+        for e in v {
+            let p = format!("{pfad}/{}", e.file_name().to_string_lossy());
+            match e.metadata() {
+                Ok(m) if m.is_dir() => {
+                    log::warn!("DATEN-LISTE: {p}/");
+                    if tiefe > 0 {
+                        liste(&p, tiefe - 1);
+                    }
+                }
+                Ok(m) => log::warn!("DATEN-LISTE: {p} ({} Byte)", m.len()),
+                Err(e) => log::warn!("DATEN-LISTE: {p}: {e}"),
+            }
+        }
+    }
+    liste("/daten", 3);
+    liste("/sdcard/ESP32-OS/Papierkorb", 2);
+    for p in ["/daten/Papierkorb/.herkunft", "/sdcard/ESP32-OS/Papierkorb/.herkunft"] {
+        if let Ok(t) = std::fs::read_to_string(p) {
+            log::warn!("DATEN-LISTE: {p}: {}", t.replace('\n', " | "));
+        }
+    }
 }

@@ -1,0 +1,71 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 747 >>
+stream
+BT
+/F1 24 Tf
+72 760 Td
+/F1 24 Tf
+(ESP32-OS Quick Start) Tj
+0 -32 Td
+/F1 12 Tf
+() Tj
+0 -20 Td
+/F1 12 Tf
+(ESP32-OS is a small desktop operating system for the ESP32-P4.) Tj
+0 -20 Td
+/F1 12 Tf
+(It runs on a 5-inch touch screen with windows, a taskbar,) Tj
+0 -20 Td
+/F1 12 Tf
+(a Start menu and an on-screen keyboard.) Tj
+0 -20 Td
+/F1 12 Tf
+() Tj
+0 -22 Td
+/F1 14 Tf
+(First steps) Tj
+0 -22 Td
+/F1 12 Tf
+(1. Tap the Start button and open Files.) Tj
+0 -20 Td
+/F1 12 Tf
+(2. Connect to Wi-Fi in Settings.) Tj
+0 -20 Td
+/F1 12 Tf
+(3. Open the browser, the weather app or the music player.) Tj
+0 -20 Td
+/F1 12 Tf
+(4. Swipe left or right to turn pages in this viewer.) Tj
+ET
+0.23 0.48 0.75 rg
+72 300 200 120 re f
+0 0.5 0 RG 4 w 0.8 1 0.8 rg
+320 300 200 120 re B
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001039 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1109
+%%EOF

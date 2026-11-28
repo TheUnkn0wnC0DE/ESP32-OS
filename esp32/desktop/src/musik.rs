@@ -243,6 +243,7 @@ enum Quelle {
     Mp3(Leser),
     Wav(WavLeser<KDatei>),
     Midi(crate::midi::MidiLeser),
+    Ogg(crate::ogg::OggLeser<KDatei>),
 }
 
 impl Quelle {
@@ -251,6 +252,7 @@ impl Quelle {
             Quelle::Mp3(l) => l.read(pcm).unwrap_or(0),
             Quelle::Wav(w) => w.lesen(pcm),
             Quelle::Midi(m) => m.lesen(pcm),
+            Quelle::Ogg(o) => o.lesen(pcm),
         }
     }
 }
@@ -258,7 +260,7 @@ impl Quelle {
 /// Spielbare Endungen (D2).
 pub fn spielbar(name: &str) -> bool {
     let n = name.to_lowercase();
-    n.ends_with(".mp3") || n.ends_with(".wav") || n.ends_with(".mid") || n.ends_with(".midi")
+    n.ends_with(".mp3") || n.ends_with(".wav") || n.ends_with(".mid") || n.ends_with(".midi") || n.ends_with(".ogg") || n.ends_with(".oga")
 }
 
 /// Titel ohne Endung.
@@ -327,6 +329,25 @@ impl Wiedergabe {
                 rest: Vec::new(),
                 ende: false,
                 gesamt_s,
+                pcm: vec![0; nanomp3::MAX_SAMPLES_PER_FRAME],
+            }));
+        }
+        if klein.ends_with(".ogg") || klein.ends_with(".oga") {
+            // D2: stückweise (stb_vorbis, Push-Schnittstelle); Länge
+            // unbekannt (ohne die ganze Datei zu lesen)
+            let o = crate::ogg::OggLeser::neu(d)?;
+            let (rate, kanaele) = (o.rate, o.kanaele);
+            return Ok(Box::new(Wiedergabe {
+                quelle: Quelle::Ogg(o),
+                rate,
+                kanaele,
+                schritt: f64::from(rate) / f64::from(kern::ton::RATE),
+                vorrat: Vec::new(),
+                t: 0.0,
+                geschrieben: 0,
+                rest: Vec::new(),
+                ende: false,
+                gesamt_s: None,
                 pcm: vec![0; nanomp3::MAX_SAMPLES_PER_FRAME],
             }));
         }
@@ -574,7 +595,7 @@ fn anzeige_zeichnen(z: &mut Zustand) {
         text(RX, 200, &kurz(m, 36), 0xB03020, 1);
     } else if z.titel.is_empty() {
         // zwei Zeilen: in einer war der Ordner abgeschnitten (Rundgang 1.0.4)
-        text(RX, 200, kern::sprache::t("No music files (MP3, WAV, MIDI)", "Keine Musikdateien (MP3, WAV, MIDI)"), 0x606060, 1);
+        text(RX, 200, kern::sprache::t("No music files (MP3, WAV, MIDI, Ogg)", "Keine Musikdateien (MP3, WAV, MIDI, Ogg)"), 0x606060, 1);
         text(RX, 218, &kurz(&format!("{} {}", kern::sprache::t("in", "in"), z.ordner), 36), 0x606060, 1);
     }
 }
@@ -823,6 +844,6 @@ mod tests {
         // abgelehnt
         assert!(super::WavLeser::neu(std::io::Cursor::new(b"RIFF\0\0\0\0WAVX".to_vec())).is_err());
         assert!(super::WavLeser::neu(std::io::Cursor::new(wav(44_100, 2, 24, &[0; 12], false))).is_err());
-        assert!(super::spielbar("Lied.WAV") && super::spielbar("a.mp3") && !super::spielbar("a.ogg"));
+        assert!(super::spielbar("Lied.WAV") && super::spielbar("a.mp3") && super::spielbar("a.ogg") && super::spielbar("b.OGA") && !super::spielbar("a.flac"));
     }
 }

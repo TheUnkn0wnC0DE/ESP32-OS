@@ -196,6 +196,10 @@ fn main() {
         if option_env!("ESP32OS_TESTNOTIZEN_LOESCHEN").is_some() {
             pudding_fw::speicher::testnotizen_loeschen();
         }
+        // Entwicklungs-Build: Inhalt von /daten und der Papierkörbe ins Log
+        if option_env!("ESP32OS_DATEN_LISTE").is_some() {
+            pudding_fw::speicher::daten_liste();
+        }
         // Test-Build (A5): Testtöne für den Musikplayer auf die SD-Karte
         #[cfg(esp32os_musik_test)]
         pudding_fw::speicher::musik_testdaten();

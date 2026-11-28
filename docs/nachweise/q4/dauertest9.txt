@@ -1,0 +1,13 @@
+M4 Dauertest 2026-11-28T16:01:17, 75 min, Port COM3
+Guru Meditation (CPU-Fehler)   0
+abort()                        0
+Rust-Panik                     0
+Programm abgestürzt            0
+Speicher voll                  0
+Neustart (Boot-ROM)            0
+Summe: 0
+Startfehler                    0
+Runden mit offenen Resten      0
+interner RAM frei: Anfang 218 KB (t=20 s), Ende 214 KB (t=4474 s), tiefster Wert 212 KB, Differenz -4 KB
+
+Stand esp32-os 2a1a409 (finaler Stand 1.0.5, gleicher Baum wie das Release-Paket). Ablauf wie Dauertest 8 (m4_lauf.ps1: alle Programme, Menü, Browser, Ruhezustand je Runde); im Log 8× „Ruhezustand: aufgeweckt“.

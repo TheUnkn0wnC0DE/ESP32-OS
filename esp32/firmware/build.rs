@@ -13,6 +13,16 @@ fn main() {
     if std::env::var_os("ESP32OS_MUSIK_TEST").is_some() {
         println!("cargo:rustc-cfg=esp32os_musik_test");
     }
+    // D2: dazu eine Ogg-Datei für den Board-Nachweis (Pfad; die Datei bleibt
+    // lokal, nur im Entwicklungs-Build)
+    println!("cargo:rustc-check-cfg=cfg(esp32os_ogg_test)");
+    println!("cargo:rerun-if-env-changed=ESP32OS_OGG_TEST");
+    if let Ok(p) = std::env::var("ESP32OS_OGG_TEST") {
+        assert!(std::path::Path::new(&p).exists(), "Ogg-Datei {p} fehlt");
+        println!("cargo:rerun-if-changed={p}");
+        println!("cargo:rustc-env=ESP32OS_OGG_PFAD={p}");
+        println!("cargo:rustc-cfg=esp32os_ogg_test");
+    }
     // Entwicklungs-Build mit Heap-Tracing des Systemheaps (BR1: Leck im
     // internen RAM); braucht CONFIG_HEAP_TRACING_STANDALONE im sdkconfig
     println!("cargo:rustc-check-cfg=cfg(esp32os_heap_trace)");

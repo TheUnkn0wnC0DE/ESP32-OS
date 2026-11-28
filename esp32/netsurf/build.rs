@@ -712,7 +712,7 @@ fn gui_kopie(q: &Path, ziel: &Path) -> PathBuf {
              \t\t\t\t\t\tpadding, NS_JS_KNOPF_BREITE, -padding,\n\
              \t\t\t\t\t\tframe_col, FB_COLOUR_BLACK,\n\
              \t\t\t\t\t\tns_js_knopf_klick, gw->bw);\n\
-             \t\t\tfbtk_set_text(widget, \"Ohne JS\");\n\
+             \t\t\tfbtk_set_text(widget, getenv(\"LANGUAGE\") != NULL && strncmp(getenv(\"LANGUAGE\"), \"de\", 2) == 0 ? \"Ohne JS\" : \"No JS\");\n\
              \t\t\tns_js_knopf = widget;\n\t\t\tns_tab_knopf_setzen(gw, 'j', widget);\n\t\t\tbreak;\n\n\
              \t\tcase 't': /* throbber/activity indicator */\n\t\t\twidget = fbtk_create_bitmap(",
         ),

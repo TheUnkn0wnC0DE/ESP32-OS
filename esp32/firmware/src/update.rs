@@ -23,6 +23,16 @@ unsafe extern "C" {
         kontext: *mut c_void,
     ) -> c_int;
     fn esp32os_boot_platz(aus: *mut c_char, n: c_int) -> c_int;
+    fn esp32os_bild_von_url(
+        url: *const c_char,
+        label: *const c_char,
+        sha: *const u8,
+        fortschritt: Option<unsafe extern "C" fn(c_int, *mut c_void)>,
+        kontext: *mut c_void,
+        startplatz: c_int,
+    ) -> c_int;
+    fn esp32os_bild_loeschen(label: *const c_char) -> c_int;
+    fn esp32os_bild_vorhanden(label: *const c_char) -> c_int;
 }
 
 /// Startplatz für den nächsten Neustart (sicher auch aus Fäden mit
@@ -116,6 +126,60 @@ impl kern::aktualisierung::Quelle for GitHub {
     }
 }
 
+/// D3 (App-Store): Programme mit eigenem Abbild (Doom, Quake) aus dem
+/// neuesten Release: Datei genau nach Namen, SHA-256 aus `SHA256SUMS`, HTTPS
+/// mit Zertifikatsprüfung; geschrieben wird ohne Startplatz-Wechsel.
+pub struct GitHubAbbilder;
+
+impl kern::aktualisierung::Abbilder for GitHubAbbilder {
+    fn vorhanden(&self, platz: &str) -> Option<bool> {
+        let c = CString::new(platz).ok()?;
+        // SAFETY: gültige C-Zeichenkette; Flash-Zugriff im Schreib-Task (update.c).
+        match unsafe { esp32os_bild_vorhanden(c.as_ptr()) } {
+            1 => Some(true),
+            0 => Some(false),
+            _ => None,
+        }
+    }
+
+    fn installieren(&self, platz: &str, datei: &str, fortschritt: &mut dyn FnMut(u32)) -> Result<(), String> {
+        if !kern::wlan::zustand().verbunden {
+            return Err(kern::sprache::t("No Wi-Fi connection", "Keine WLAN-Verbindung").into());
+        }
+        let (status, json) = https_text(&format!("https://api.github.com/repos/{REPO}/releases/latest"), true)?;
+        if status != 200 {
+            return Err(format!("HTTP {status}"));
+        }
+        let bild = kern::aktualisierung::datei_url(&json, datei).ok_or_else(|| format!("{} {datei}", kern::sprache::t("Release without", "Release ohne")))?;
+        let summen_url = kern::aktualisierung::datei_url(&json, "SHA256SUMS").ok_or("Release ohne SHA256SUMS")?;
+        let (status, summen) = https_text(&summen_url, false)?;
+        if status != 200 {
+            return Err(format!("SHA256SUMS: HTTP {status}"));
+        }
+        let sha = kern::aktualisierung::sha256_fuer(&summen, datei).ok_or_else(|| format!("SHA256SUMS ohne {datei}"))?;
+        log::info!("APP-STORE: {datei} → {platz}");
+        let (url, label) = (CString::new(bild).map_err(|_| "URL")?, CString::new(platz).map_err(|_| "Platz")?);
+        let mut f_ref: &mut dyn FnMut(u32) = fortschritt;
+        // SAFETY: Zeiger leben während des Aufrufs; Rückruf nur synchron.
+        let r = unsafe { esp32os_bild_von_url(url.as_ptr(), label.as_ptr(), sha.as_ptr(), Some(fortschritt_c), (&mut f_ref as *mut &mut dyn FnMut(u32)).cast(), 0) };
+        ota_fehler(r)?;
+        log::info!("APP-STORE: {datei} installiert und geprüft");
+        Ok(())
+    }
+
+    fn entfernen(&self, platz: &str) -> Result<(), String> {
+        let c = CString::new(platz).map_err(|_| "Platz")?;
+        // SAFETY: gültige C-Zeichenkette; Flash-Zugriff im Schreib-Task.
+        match unsafe { esp32os_bild_loeschen(c.as_ptr()) } {
+            0 => {
+                log::info!("APP-STORE: {platz} entfernt");
+                Ok(())
+            }
+            e => Err(format!("{} ({e})", kern::sprache::t("Could not remove", "Entfernen fehlgeschlagen"))),
+        }
+    }
+}
+
 /// Faden mit Stapel im PSRAM starten (TLS braucht viel Stapel, der interne
 /// RAM ist neben Anzeige und WLAN knapp – siehe W7).
 pub fn psram_faden(name: &'static core::ffi::CStr, stapel: usize, f: impl FnOnce() + Send + 'static) -> bool {
@@ -198,6 +262,11 @@ fn installieren_mit_sha(f: &kern::aktualisierung::Freigabe, sha: &[u8; 32], fort
     let mut f_ref: &mut dyn FnMut(u32) = fortschritt;
     // SAFETY: Zeiger leben während des Aufrufs; Rückruf nur synchron.
     let r = unsafe { esp32os_ota_von_url(url.as_ptr(), ziel.as_ptr(), sha.as_ptr(), Some(fortschritt_c), (&mut f_ref as *mut &mut dyn FnMut(u32)).cast()) };
+    ota_fehler(r)
+}
+
+/// Ergebnis von `esp32os_ota_von_url`/`esp32os_bild_von_url` in Worten.
+fn ota_fehler(r: c_int) -> Result<(), String> {
     match r {
         0 => Ok(()),
         -4 => Err(kern::sprache::t("Checksum mismatch - not installed", "Prüfsumme falsch - nicht installiert").into()),

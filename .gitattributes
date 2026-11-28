@@ -1,2 +1,5 @@
 # Shell-Skripte immer mit LF (bash bricht sonst am Zeichen CR ab)
 *.sh text eol=lf
+# PDF nie umwandeln (Byte-Offsets in der xref-Tabelle)
+*.pdf binary
+*.ogg binary

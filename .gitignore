@@ -41,3 +41,5 @@ AUFTRAG-KolibriOS-P4.md
 
 # S5: Fotos je Programm (fenster_raender.rs schreibt sie bei jedem Lauf)
 esp32/desktop/tests/erwartet/s5/
+# Werbung/Kontakte (C5) – nur lokal
+promo.local/

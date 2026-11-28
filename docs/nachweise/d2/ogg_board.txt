@@ -1,0 +1,12 @@
+W (2396) pudding_fw::speicher: Musik-Test: Test.ogg schon da
+I (3044) pudding_p4: [debug] Musik: 5 Titel in /sd0/1/ESP32-OS/Musik_Test
+I (3170) pudding_p4: [debug] Musik: spielt Test.ogg (48000 Hz, 1 Kanal/Kanäle)
+I (3299) pudding_p4: ESP32-OS-Desktop startet (musik /sd0/1/ESP32-OS/Musik_Test/Test.ogg)
+I (5505) pudding_p4: [debug] Musik: Test.ogg bei 0:02, ausgegeben 44544 Frames
+I (7532) pudding_p4: [debug] Musik: Test.ogg bei 0:04, ausgegeben 89088 Frames
+I (8353) pudding_p4: [debug] Musik: Ende von Test.ogg
+I (8370) pudding_p4: [debug] Musik: spielt Testmelodie.mid (22050 Hz, 1 Kanal/Kanäle)
+I (8452) pudding_p4: [debug] Musik: Testmelodie.mid bei 0:00, ausgegeben 107036 Frames
+I (10679) pudding_p4: [debug] Musik: Testmelodie.mid bei 0:02, ausgegeben 151324 Frames
+I (12678) pudding_p4: [debug] Musik: Testmelodie.mid bei 0:04, ausgegeben 195612 Frames
+I (13770) pudding_p4: [debug] Musik: Ende von Testmelodie.mid

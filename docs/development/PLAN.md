@@ -2563,6 +2563,27 @@ Die Punkt-Kürzel BR1/BR2 bleiben (B1/B2 sind im Plan schon vergeben).
 - [ ] **C4 v1.1 vorbereiten** – README, CHANGELOG, Release-Paket,
   Release-Check (Web-Flasher bleibt auf 1.0.1, Nutzer 24.11.); OK des
   Nutzers in STATUS erbitten, nicht warten.
+- [ ] **C5 ESP32-OS bekannter machen** (Auftrag 28.11.) – erst beginnen,
+  wenn 1.0.5 veröffentlicht ist (OK des Nutzers) und der Web-Flasher 1.0.5
+  ausliefert; bis dahin normal am Plan weiter. Alle Texte beschreiben den
+  Stand 1.0.5, Bilder aus `docs/press/` dürfen verlinkt werden. Nichts
+  abschicken oder posten, nichts fragen: alles fertig zum Kopieren.
+  1. 20–30 passende Stellen suchen (Tech-Seiten, YouTuber, Subreddits,
+     Foren, Newsletter, „awesome“-Listen auf GitHub, Hackster.io,
+     Hackaday.io). Nicht: XDA, Tom's Hardware, CNX Software, Liliputing,
+     Hackaday (Tipps), Action Retro (hat der Nutzer schon).
+  2. Je Stelle: Weg (Mail, Formular, Post), Regeln dort (bei Subreddits
+     die Regeln zu Eigenwerbung lesen), fertige Nachricht auf Englisch –
+     locker, kleingeschrieben, nicht nach KI klingend, je Stelle angepasst.
+  3. awesome-Listen: fertiger Eintrag und PR-Beschreibung.
+  4. Zeitplan (z. B. höchstens 2 Reddit-Posts pro Tag).
+  5. Am Repo direkt verbessern: Social-Preview-Bild, GIF oder Bild oben in
+     der README, Topics; pushen nur nach dem pre-push-Check.
+  Alles Weitere lokal in `promo.local/` (in `.gitignore`), nichts davon
+  auf GitHub. Kein echter Name (nur TheUnkn0wnC0DE), als Mail die
+  Proton-Adresse des Nutzers; nur Fakten aus dem Repo, keine erfundenen
+  Zahlen. Nachweis: Übersicht des Vorbereiteten in STATUS, `promo.local/`
+  vorhanden und nicht im Repo (`git check-ignore`).
 
 Stand der früheren Punkte (bis 23.11.):
 
@@ -2696,7 +2717,7 @@ und Verzeichnis auf GitHub).
   Original-Shell) Zeilen über 250 Zeichen und überlange Skriptzeilen
   überschrieben den Stapel bzw. CMD → abgelehnt bzw. gekürzt. Test
   `shell_umleitung.rs` um grosse Dateien und falsche Umleitungen erweitert.
-- [ ] **D2 Medienplayer** – MP3, Ogg, WAV, MIDI über den
+- [x] **D2 Medienplayer** – MP3, Ogg, WAV, MIDI über den
   ES8311-Lautsprecher, per Touch; vorhandenen KolibriOS-Player nehmen, wenn
   passend. Nachweis: PC-Test der Dekoder, Board: Ton (Log), Foto.
   Stand 25.11. (PC, Board ist unterwegs): MP3 gab es (nanomp3). Neu WAV
@@ -2721,16 +2742,95 @@ und Verzeichnis auf GitHub).
   4 s 88 576 Frames ausgegeben (Echtzeit), „Ende“ nach 5,4 s, weiter zum
   nächsten Titel (`docs/nachweise/d2/midi_board.txt`, Foto
   `midi_board.png`). Offen bleibt nur Ogg.
-- [ ] **D3 App-Store** – Programme per WLAN aus einem signierten
+  Ogg (27.11., OK des Nutzers): **stb_vorbis v1.25** aus dem offiziellen
+  Repo (nothings/stb, Commit 033efa1, SHA-256 in THIRD_PARTY_NOTICES),
+  unverändert in `desktop/c/`, MIT oder Public Domain. Anbindung
+  `desktop/src/ogg.rs`: Push-Schnittstelle, Datei stückweise (Fenster 64 KB,
+  höchstens 512 KB), Dekoder nur im festen Puffer (384 KB im Heap des
+  Players, kein malloc), `NDEBUG` (kein assert/abort), ohne Fortschritt =
+  Ende. Player und Dateimanager kennen .ogg/.oga. Tests (64 Bit und i686):
+  keine Ogg-Datei/leer/nur Kopf/Zufallsdaten → Fehler; mit echter Datei
+  (`OGG_TESTDATEI`, lokal) ganz dekodiert, 63-mal abgeschnitten und 200-mal
+  mit gekippten Bytes → nie Absturz oder Endlosschleife.
+  Board 27.11. (`werkzeuge/board/d23_lauf.ps1 -OggDatei …`): „spielt
+  Test.ogg (48000 Hz)“, 89 088 Frames nach 4 s (Echtzeit), „Ende“, weiter
+  zum nächsten Titel, 0 Abstürze (`docs/nachweise/d2/ogg_board.txt`, Foto
+  `docs/press/music_player_ogg.png`). Freie Testdatei im Repo seit 28.11.
+  (siehe Abweichung „D2 Ogg-Testdatei“).
+- [x] **D3 App-Store** – Programme per WLAN aus einem signierten
   Verzeichnis auf GitHub laden, installieren, entfernen, per Touch; gleiche
   Signaturprüfung wie beim OTA. Nachweis: PC-Test Signatur, Board:
   Installieren/Entfernen per Autopilot, Foto.
-- [ ] **SD Stabilitätsrunde nach Teil D** – wie SB mit allen neuen
+  Vorgabe des Nutzers (27.11.): anbieten die Spiele (Doom, Quake,
+  Würfelwelt, Pudding-Panik), PasswordGen, TinyHashView und die laufenden
+  KolibriOS-Programme aus T1; Grundsystem fest; nur GPL-2.0-kompatibel, jedes
+  mit Prüfsumme, Download über GitHub Releases; Unmögliches als Abweichung.
+  Entwurf (27.11.): Programm „App-Store“ (Liste, Installieren/Entfernen).
+  Doom und Quake sind eigene Abbilder (Partitionen doomapp/quakeapp, je
+  Release mit SHA256SUMS): echter Download über HTTPS (Zertifikat geprüft) aus
+  dem neuesten Release, SHA-256 gegen SHA256SUMS, Schreiben in ihre Partition
+  ohne Startplatz-Wechsel (`esp32os_ota_von_url` mit Schalter); Entfernen
+  löscht den Kopf des Abbilds; „installiert“ = gültiges Abbild in der
+  Partition. Die übrigen Programme sind in die Firmware einkompiliert – ein
+  getrennter Download bräuchte einen Lader für Programmcode zur Laufzeit
+  (O2, nicht vorhanden): sie werden ein-/ausgeblendet (Einstellungen),
+  Menü und Desktop richten sich danach → Abweichung „D3 einkompilierte
+  Programme“.
+  PC 27.11.: `desktop/tests/appstore.rs` – per Touch (Gesten) Doom
+  entfernen (erst nach zweitem Tippen, weil danach ein neuer Download nötig
+  ist), wieder installieren (simulierter Download mit Fortschritt),
+  PasswordGen aus- und wieder einblenden; Startmenü-Liste folgt, Zustand in
+  `hidden_apps` der esp32os.ini und nach dem Neuladen gleich. Fotos
+  `d3_*.png`. Kern: `aktualisierung::tests::app_store_datei_und_pruefsumme`
+  (nur https-Adresse genau dieser Datei, SHA-256 aus SHA256SUMS).
+  Board 27.11. (`d23_lauf.ps1`, Autopilot): Doom entfernen (2× tippen) →
+  „APP-STORE: doomapp entfernt“, „nicht installiert – Download“; Installieren
+  → Download aus Release v1.0.4 über HTTPS (Zertifikate geprüft), danach
+  „installiert“; doomapp am Board ausgelesen = bytegleich zu doomapp.bin
+  des Releases (SHA-256 fd9c93b7…); PasswordGen entfernt und wieder
+  installiert; 0 Abstürze (`docs/nachweise/d3/`).
+- [x] **SD Stabilitätsrunde nach Teil D** – wie SB mit allen neuen
   Programmen. Nachweis: Log ≥ 30 min, 0 Abstürze.
+  Nachweis 27.11.: Autopilot neu aus `desktop/tests/stabil.rs` (i686, mit
+  App-Store), `stabil_lauf.ps1 -Minuten 40` auf dem Stand mit D2/D3:
+  0 CPU-Fehler, 0 abort, 0 Panik, 0 Programmabstürze, 0 „Speicher voll“,
+  0 Neustarts (`docs/nachweise/sd/sd_auswertung.txt`).
 - [ ] **R12 v1.2 vorbereiten** – README, CHANGELOG, Paket, Release-Check;
   OK in STATUS erbitten. Am Ende: Liste aller Punkte mit Nachweis.
 
 ## Abweichungen
+
+- **D2 Ogg-Testdatei (27.11., erledigt 28.11.):** Zuerst gab es keine frei
+  lizenzierte Ogg-Datei fürs Repo; Test und Board-Nachweis liefen mit einer
+  lokalen Datei. Mit OK des Nutzers (28.11.) liegt jetzt eine CC0-Datei von
+  Wikimedia Commons im Repo (`desktop/tests/daten/cc0_daring_heart.ogg`,
+  Herkunft in LIESMICH_OGG.txt und THIRD_PARTY_NOTICES); der Test
+  `cc0_datei_kaputt_und_abgeschnitten` läuft immer (ganz, 63× abgeschnitten,
+  200× mit gekippten Bytes), 64 Bit und i686 grün. Musik-Testdaten am Board
+  enthalten sie als „Ogg sample.ogg“.
+
+- **D3 einkompilierte Programme (27.11.):** Geplant war, jedes Programm
+  einzeln aus einem Verzeichnis auf GitHub zu laden. Ein eigener Download
+  geht nur für Doom und Quake (eigene Abbilder in eigenen Partitionen). Die
+  übrigen angebotenen Programme (Pudding-Panik, Würfelwelt, PasswordGen,
+  TinyHashView, die T1-Programme) sind in die Firmware einkompiliert;
+  einzeln laden ginge nur mit einem Lader für Programmcode zur Laufzeit.
+  `espressif/elf_loader` könnte das auf dem P4 (Prüfung O2), ist aber nicht
+  umgesetzt (Abweichung O2: zweite Bau-Kette für ELF-Programme, Export der
+  Systemfunktionen als Tabelle, Speicher für geladenen Code) – das ist ein
+  eigenes grosses Vorhaben, kein Speicher- oder Lizenzgrund.
+  Ersatz: der App-Store blendet sie ein/aus (Startmenü, Desktop,
+  Einstellungen); sie kommen mit jeder Firmware-Aktualisierung neu, die
+  ihrerseits mit SHA-256 geprüft wird. Lizenz: alle angebotenen Programme
+  sind GPL-2.0-kompatibel (KolibriOS-Programme GPL-2.0, Doom GPL-2.0,
+  Quake GPL-2.0, eigene Programme). „Signiert“ heisst wie beim OTA: HTTPS
+  mit geprüftem Zertifikat und SHA-256 aus SHA256SUMS des Releases – eine
+  eigene Signatur hat auch das OTA nicht.
+
+- **C2 WLAN 6 bleibt liegen (Nutzer 27.11.):** die C6 wird nicht geflasht.
+  Vorbereitet und am PC/über OTA-Selbsttest geprüft ist alles bis zum
+  Schreiben der eigenen C6-Firmware; ohne Flash bleibt die C6 bei ihrer
+  Werks-Firmware (WLAN 4/5 wie bisher). Ersatz: keiner nötig, WLAN läuft.
 
 - **BR2 Speichergrenzen (27.11.):** 8 der 30 Testseiten (Wikipedia
   „Schweiz“, GitHub, 20min, MeteoSchweiz, heise, Tages-Anzeiger, NZZ,

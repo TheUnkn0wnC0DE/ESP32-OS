@@ -114,6 +114,60 @@ pub fn freigabe_aus_json(json: &str) -> Result<Freigabe, String> {
     })
 }
 
+// ------------------------------------------------------------ D3 App-Store
+
+/// D3: Programme, die als eigenes Abbild im Release liegen (Doom, Quake):
+/// Platz (Partition) und Dateiname im Release.
+pub trait Abbilder: Send + Sync {
+    /// Liegt ein gültiges Abbild im Platz? None = Platz fehlt / unbekannt.
+    fn vorhanden(&self, platz: &str) -> Option<bool>;
+    /// Aus dem neuesten Release laden (HTTPS, Zertifikat geprüft), SHA-256
+    /// gegen `SHA256SUMS`, in den Platz schreiben – ohne Startplatz-Wechsel.
+    fn installieren(&self, platz: &str, datei: &str, fortschritt: &mut dyn FnMut(u32)) -> Result<(), String>;
+    /// Kopf des Abbilds löschen (startet danach nicht, gilt als entfernt).
+    fn entfernen(&self, platz: &str) -> Result<(), String>;
+}
+
+static ABBILDER: OnceLock<Box<dyn Abbilder>> = OnceLock::new();
+
+/// Quelle der Abbilder anmelden (Firmware bzw. Test, einmal).
+pub fn abbilder_setzen(a: Box<dyn Abbilder>) -> bool {
+    crate::kern_abschnitt(|| ABBILDER.set(a).is_ok())
+}
+
+pub fn abbild_vorhanden(platz: &str) -> Option<bool> {
+    ABBILDER.get()?.vorhanden(platz)
+}
+
+/// Installieren (ein Vorgang zur Zeit, wie beim Update; geschützt).
+pub fn abbild_installieren(platz: &str, datei: &str, fortschritt: &mut dyn FnMut(u32)) -> Result<(), String> {
+    let a = ABBILDER.get().ok_or_else(|| crate::sprache::t("App store not available", "App-Store nicht verfügbar").to_string())?;
+    let _g = crate::kern_abschnitt(|| BETRIEB.try_lock().ok()).ok_or_else(|| crate::sprache::t("Another download is running", "Ein anderer Download läuft").to_string())?;
+    crate::geschuetzt(|| a.installieren(platz, datei, fortschritt))
+}
+
+pub fn abbild_entfernen(platz: &str) -> Result<(), String> {
+    let a = ABBILDER.get().ok_or_else(|| crate::sprache::t("App store not available", "App-Store nicht verfügbar").to_string())?;
+    let _g = crate::kern_abschnitt(|| BETRIEB.try_lock().ok()).ok_or_else(|| crate::sprache::t("Another download is running", "Ein anderer Download läuft").to_string())?;
+    crate::geschuetzt(|| a.entfernen(platz))
+}
+
+/// URL der Release-Datei mit genau diesem Namen (nur HTTPS; `…/doomapp.bin`,
+/// nie `…/guition-doomapp.bin`).
+pub fn datei_url(json: &str, datei: &str) -> Option<String> {
+    let endung = format!("/{datei}");
+    json_texte(json, "browser_download_url").into_iter().find(|u| u.starts_with("https://") && u.ends_with(&endung)).map(|u| u.to_string())
+}
+
+/// Prüfsumme einer Datei aus `SHA256SUMS` (Zeilen „hex  name“ oder
+/// „hex *name“).
+pub fn sha256_fuer(summen: &str, datei: &str) -> Option<[u8; 32]> {
+    summen.lines().find_map(|z| {
+        let (hex, name) = z.trim().split_once(char::is_whitespace)?;
+        (name.trim().trim_start_matches('*') == datei).then(|| sha256_aus_text(hex)).flatten()
+    })
+}
+
 /// Prüfsummendatei (`sha256sum`-Format: 64 Hex-Ziffern, dann Name) → Bytes.
 pub fn sha256_aus_text(t: &str) -> Option<[u8; 32]> {
     let hex: Vec<u8> = t.trim().bytes().take(64).collect();
@@ -151,7 +205,24 @@ impl Quelle for Simulation {
 
 #[cfg(test)]
 mod tests {
-    use super::{freigabe_aus_json, neuer, sha256_aus_text};
+    use super::{datei_url, freigabe_aus_json, neuer, sha256_aus_text, sha256_fuer};
+
+    /// D3: Datei genau nach Namen (nie die eines anderen Boards), Prüfsumme
+    /// aus SHA256SUMS, nur HTTPS.
+    #[test]
+    fn app_store_datei_und_pruefsumme() {
+        let json = r#"{"tag_name":"v1.0.5","assets":[{"browser_download_url":"https://x/guition-doomapp.bin"},{"browser_download_url":"https://x/doomapp.bin"},{"browser_download_url":"http://y/quakeapp.bin"},{"browser_download_url":"https://x/SHA256SUMS"}]}"#;
+        assert_eq!(datei_url(json, "doomapp.bin").as_deref(), Some("https://x/doomapp.bin"));
+        assert_eq!(datei_url(json, "quakeapp.bin"), None, "nur HTTPS");
+        assert_eq!(datei_url(json, "fehlt.bin"), None);
+        let a = "ab".repeat(32);
+        let b = "cd".repeat(32);
+        let summen = format!("{a}  guition-doomapp.bin\n{b}  doomapp.bin\n{a} *quakeapp.bin\n");
+        assert_eq!(sha256_fuer(&summen, "doomapp.bin"), Some([0xCD; 32]));
+        assert_eq!(sha256_fuer(&summen, "quakeapp.bin"), Some([0xAB; 32]));
+        assert_eq!(sha256_fuer(&summen, "esp32os.bin"), None);
+        assert_eq!(sha256_fuer("kaputt  doomapp.bin", "doomapp.bin"), None);
+    }
 
     #[test]
     fn release_json_und_pruefsumme() {

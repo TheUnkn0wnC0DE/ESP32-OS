@@ -1,6 +1,6 @@
 # ESP32-OS press images
 
-Screenshots taken directly from the framebuffer of a real board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, 1280 × 720) with ESP32-OS **1.0.5** (development version, not released yet).
+Screenshots taken directly from the framebuffer of a real board (Waveshare ESP32-P4-WIFI6-Touch-LCD-5, 1280 × 720) with ESP32-OS **1.0.5**.
 
 Free to use for articles and videos, credit: TheUnkn0wnC0DE / ESP32-OS
 

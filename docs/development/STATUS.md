@@ -9,6 +9,85 @@ Stabilitätsrunde und ein Release-Vorschlag. Plan: PLAN.md, „Gesamtauftrag
 Repo: dieser Ordner, Branch `esp32-os`; öffentlich wird nur `main`
 gepflegt (eigener Anfangscommit, siehe CLAUDE.md).
 
+## 28.11. – weiter nach Wochenlimit
+
+- Deine Antworten: Doom – du hast keine `DOOM1.WAD` und hast nichts daran
+  gemacht. Doom startet deshalb nicht (Hinweis „Spieldaten fehlen“ im
+  Desktop); es gibt kein Doom-Pressefoto. Die Ursache des Löschens vom
+  23.11. bleibt offen (siehe Befund unten). Das Programm Doom selbst ist
+  installiert (App-Store-Test, bytegleich zum Release).
+- OK für die Ogg-Testdatei: CC0-Datei von Wikimedia Commons eingebaut,
+  Abweichung „D2 Ogg-Testdatei“ damit erledigt.
+- Neuer Punkt C5 (bekannter machen) nach C4 im PLAN – beginnt erst nach
+  Release 1.0.5 mit deinem OK und Web-Flasher 1.0.5.
+
+## Halt 27.11., 17:55 – Wochenlimit erreicht (100 %, Halt ab 97 %)
+
+- Abgehakt seit 15:25: **D2** (Ogg am Board), **D3** (Doom entfernt und aus
+  Release v1.0.4 neu geladen, bytegleich), **SD** (40 min, 0 Abstürze).
+- Review-Subagent Teil D: 5 Befunde behoben (9f08fa4: OTA-Sperre, halbes
+  App-Abbild löscht Kopf, Startplatz geschützt, Ogg-Speicher ohne Abbruch,
+  Ausrichtung). Offen als Hinweis: `d23_lauf.ps1` entfernt Doom ohne
+  vorherige WLAN-Prüfung (nur Testwerkzeug).
+- Alles auf `esp32-os` committet, nicht gepusht (main hat nur die
+  Pressefotos).
+- Nächster Punkt: **R12/C4 1.0.5 vorbereiten** – Paket, letzter Dauertest,
+  Release-Check, dann dein OK. Dazu: Browser-Pressefoto mit „No JS“ neu,
+  Doom-Foto nach WAD, freie Ogg-Datei (dein OK zum Download).
+
+## Übergabe 27.11., 15:25 (Wochenlimit 94 %, Halt bei 97 %)
+
+- **Pressefotos veröffentlicht** (dein OK): `docs/press/` auf main, 11 Bilder
+  und README (englisch). Offen: Doom-Bild (WAD fehlt, siehe Befund unten),
+  Browser-Bild noch mit „Ohne JS“ (Beschriftung ist jetzt übersetzt –
+  `netsurf/c/ohne_js.c`, `build.rs`; Bild neu nach PC-Bau von netsurf, der
+  die Board-Quellen erzeugt). Skript: `werkzeuge/board/presse_lauf.ps1`.
+- **D3 App-Store:** Code fertig (Programm, Katalog, Kern-Schnittstelle
+  `Abbilder`, Firmware `GitHubAbbilder`, update.c ohne Startplatz-Wechsel),
+  Entfernen von Doom/Quake mit Bestätigung, PC-Test `desktop/tests/appstore.rs`
+  grün, Abweichung „D3 einkompilierte Programme“ in PLAN. Am Board: Programm
+  läuft (Pressefoto). Offen: Board-Nachweis Entfernen/Download per Autopilot
+  (`werkzeuge/board/d23_lauf.ps1`, Lauf 2) – erst wenn die Doom-WAD wieder da
+  ist (sonst ist Doom nach dem Download nicht prüfbar).
+- **D2 Ogg:** Code und Tests fertig, am Board spielt eine Ogg-Datei
+  (Pressefoto, lokale Datei über `ESP32OS_OGG_TEST`). Offen: frei
+  lizenzierte Ogg-Datei fürs Repo (braucht dein OK zum Download) und der
+  Log-Nachweis (`d23_lauf.ps1 -OggDatei …`).
+- Neu: Wetter-Argument `zeigen:Breite:Länge:Name` (zeigt ohne zu speichern),
+  `ESP32OS_SPRACHE` (feste Sprache im Entwicklungs-Build), `ESP32OS_DATEN_LISTE`
+  (Inhalt von /daten ins Log), englisches Test-PDF `quickstart.pdf`.
+- Danach: Stabilitätsrunde nach Teil D, dann 1.0.5 (Paket, Dauertest, dein OK).
+
+## Befund 27.11., 14:30: Doom-Daten im internen Flash gelöscht
+
+- Beim Pressefoto von Doom: `DOOM1.WAD` fehlt intern (`/daten/doom/`) und auf
+  der SD (`ESP32-OS/doom/`) – Doom startet nicht. Du hast nichts daran
+  gemacht.
+- Nur gelesen (Diagnose-Build `ESP32OS_DATEN_LISTE`, `espflash read-flash`
+  der Partition `daten`): der ganze Ordner `doom/` fehlt (WAD und
+  Spielstände). 3989 von 4096 Sektoren der Partition sind gelöscht (0xFF),
+  keine Spur der WAD – die Partition wurde ganz gelöscht bzw. neu angelegt,
+  nicht nur ein Eintrag verloren.
+- Zeitraum: zuletzt geladen 23.11. 12:23 (Log o4_3_doom); ältester Eintrag
+  im neuen Dateisystem 23.11. 21:30; um 18:30 (O8, Web-Flasher 1.0.1) waren
+  die Einstellungen noch da. Also zwischen 18:30 und 21:30 am 23.11.
+- Kein Code der Firmware löscht die Partition (geprüft: Löschen nur im
+  Dateimanager/Papierkorb, Flashtest nur in esp32os_b, Update nur in den
+  Programmplätzen). Möglich: „Erase device“ im Web-Flasher oder Formatieren
+  nach einem fehlgeschlagenen Einbinden (`format_if_mount_failed`, ohne Log
+  in diesem Zeitraum). Nicht abschliessend geklärt.
+- Dazu: `/daten/settings` liefert beim Auflisten ~140 Einträge, die sich
+  nicht öffnen lassen (EINVAL) – Hinweis auf beschädigte Verzeichnisdaten.
+  Die Einstellungen selbst (esp32os.ini, .bak) sind lesbar.
+- Wiederherstellen geht nur mit der WAD: `DOOM1.WAD` nach `ESP32-OS/doom/`
+  auf die SD legen, Doom kopiert sie beim nächsten Start. Die Spielstände
+  sind verloren. Bis dahin kein Doom-Pressefoto.
+- Nebenbefund: Entwicklungs-Build mit `KONSOLE_START=doom` direkt nach dem
+  Flashen → esp32os wurde vor dem Gültig-Melden verlassen, der Rollback
+  verwarf ihn, doomapp ohne Spieldaten startete danach immer wieder neu.
+  Nur im Entwicklungsweg; das nächste Flashen behob es. Spiele für Fotos
+  künftig per Tipp starten.
+
 ## Release 1.0.4 veröffentlicht (27.11., 09:05 – mit deinem OK)
 
 - Tag `v1.0.4` auf main 684e829 (geprüfter Stand), GitHub-Release mit allen
@@ -46,8 +125,15 @@ M6, M8 nach PLAN.
   Abweichung). **Vorlauf zur SD-Runde** auf dem Stand mit Treap-Heap: 40 min
   alle Programme, 0 Abstürze (`docs/nachweise/sd/vorlauf_treap.txt`). Die
   SD-Runde selbst folgt nach Teil D.
-- **Jetzt warte ich auf dich:** alle übrigen Punkte hängen an C2 (C6-Flash),
-  D2 Ogg (Download) und D3 (Inhalt des App-Stores).
+- **Deine Entscheidungen 27.11.:** D2 Ogg mit stb_vorbis (aktuell, offizielles
+  Repo) – eingebaut; C2 bleibt liegen (Abweichung); D3 App-Store mit Spielen,
+  PasswordGen, TinyHashView und den laufenden KolibriOS-Programmen aus T1,
+  nur GPL-2.0-kompatibel, mit Prüfsumme, über GitHub Releases; BR2-Grenze ok;
+  1.0.5 erst nach D2, D3 und der SD-Runde, dann OK erbitten.
+- **PR #3:** nichts posten. Nach dem Push von aramix erledigt: Konflikte,
+  Updater; C:/ec mit Rückfall ok. Offen: Änderungsvermerk im Kopf von
+  esp_lcd_st7701_mipi.c, cmake_utilities fest pinnen. Mergen erst mit dem
+  Guition-Board und Test beider Boards; bis dahin nichts am Web-Flasher.
 - Fehlerbilanz seit 1.0.3 (deine Frage): 38 gefunden, 34 in 1.0.4 behoben;
   offen waren DuckDuckGo-Logo, M7 (jetzt behoben), „€“ auf der Tastatur,
   einmaliger Tonausfall beim Start (ES8311, nicht nachgestellt).

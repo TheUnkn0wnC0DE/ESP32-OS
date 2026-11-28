@@ -14,6 +14,8 @@ pub mod gesten;
 pub mod kalender;
 pub mod konfig;
 pub mod midi;
+pub mod ogg;
+pub mod appstore;
 pub mod musik;
 pub mod notizen;
 pub mod rechner;
@@ -388,7 +390,7 @@ macro_rules! eintrag {
 }
 
 /// Shell-Programme (ohne C-Programme).
-const SHELL: [kern::ProgrammEintrag; 23] = [
+const SHELL: [kern::ProgrammEintrag; 24] = [
     eintrag!("@meldung", shell::meldung, 256),
     // Dienste: Spitze am Board (M4, 24.11.) @tastatur 56 KB, @taskbar
     // 54 KB, @menu 56 KB – vorher 512/512/1024 KB; der Browser (10,6 MB am
@@ -430,12 +432,14 @@ const SHELL: [kern::ProgrammEintrag; 23] = [
     eintrag!("pdfbetrachter", pdfbetrachter::programm, 8192),
     // Benachrichtigung wie KolibriOS notify3 (für C-Programme, Z3)
     eintrag!("@notify", notify::programm, 64),
+    // D3: App-Store (Liste; Download der Spiele-Abbilder läuft in der Firmware)
+    eintrag!("appstore", appstore::programm, 256),
 ];
 
 /// Programme des Desktops (statisch eingelinkt): Shell + KolibriOS-C-Programme.
 #[cfg(target_pointer_width = "32")]
 pub static PROGRAMME: &[kern::ProgrammEintrag] = &[
-    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15], SHELL[16], SHELL[17], SHELL[18], SHELL[19], SHELL[20], SHELL[21], SHELL[22],
+    SHELL[0], SHELL[1], SHELL[2], SHELL[3], SHELL[4], SHELL[5], SHELL[6], SHELL[7], SHELL[8], SHELL[9], SHELL[10], SHELL[11], SHELL[12], SHELL[13], SHELL[14], SHELL[15], SHELL[16], SHELL[17], SHELL[18], SHELL[19], SHELL[20], SHELL[21], SHELL[22], SHELL[23],
     eintrag!("absturz_test", kolibri::absturz_test, 128),
     eintrag!("basic_gui", kolibri::basic_gui, 512),
     eintrag!("boxlib_demo", kolibri::boxlib_demo, 512),
@@ -463,7 +467,7 @@ pub static PROGRAMME: &[kern::ProgrammEintrag] = &SHELL;
 /// folgen mit P/A, Spiele mit S).
 pub fn anwendungen() -> Vec<shell::Anwendung> {
     let a = |programm, titel, titel_de, symbol, auf_desktop| shell::Anwendung { programm, titel, titel_de, symbol, auf_desktop };
-    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("rechner", "Calculator", "Rechner", 4, true), a("uhr", "Clock", "Uhr", 119, true), a("kalender", "Calendar", "Kalender", 52, true), a("musik", "Music", "Musik", 65, true), a("wetter", "Weather", "Wetter", 128, true)];
+    let mut v = vec![a("info", "Info", "Info", 113, true), a("dateimanager", "Files", "Dateien", 0, true), a("einstellungen", "Settings", "Einstellungen", 5, true), a("notizen", "Notes", "Notizen", 9, true), a("rechner", "Calculator", "Rechner", 4, true), a("uhr", "Clock", "Uhr", 119, true), a("kalender", "Calendar", "Kalender", 52, true), a("musik", "Music", "Musik", 65, true), a("wetter", "Weather", "Wetter", 128, true), a("appstore", "App store", "App-Store", 50, false)];
     if cfg!(target_pointer_width = "32") {
         v.extend([
             a("browser", "Browser", "Browser", 125, true),

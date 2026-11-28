@@ -320,7 +320,7 @@ pub fn programm_fuer(name: &str) -> Option<&'static str> {
     match e.as_str() {
         "png" | "jpg" | "jpeg" | "gif" | "bmp" => Some("bildbetrachter"),
         "txt" | "ini" | "log" | "md" | "cfg" => Some("notizen"),
-        "mp3" | "wav" | "mid" | "midi" => Some("musik"),
+        "mp3" | "wav" | "mid" | "midi" | "ogg" | "oga" => Some("musik"),
         "pdf" => Some("pdfbetrachter"),
         _ => None,
     }

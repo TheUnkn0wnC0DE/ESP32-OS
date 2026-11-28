@@ -80,6 +80,11 @@ fn zahl(schluessel: &str) -> Option<i64> {
     lesen(schluessel)?.trim().parse().ok()
 }
 
+/// D3: im App-Store entfernte Programme speichern.
+pub fn ausgeblendet_speichern(wert: &str) -> bool {
+    speichern("hidden_apps", wert)
+}
+
 fn speichern(schluessel: &str, wert: &str) -> bool {
     let _ = kern::datei::ordner_erstellen(ORDNER);
     libini::schreiben(DATEI, SEKTION, schluessel, wert)
@@ -101,7 +106,14 @@ pub fn wetter_ort_setzen(o: &crate::wetter::Ort) -> bool {
 /// Gespeicherte Einstellungen übernehmen (Standard: Englisch, Layout CH,
 /// Helligkeit 8, Lautstärke 6, Touchpad aus, blauer Verlauf).
 pub fn laden() {
-    let s = lesen("language").and_then(|k| sprache::aus_kuerzel(&k)).unwrap_or(Sprache::Englisch);
+    // D3: im App-Store entfernte Programme
+    crate::appstore::laden(&lesen("hidden_apps").unwrap_or_default());
+    // Entwicklungs-Builds (`ESP32OS_SPRACHE=en`, z. B. Pressefotos): feste
+    // Sprache, die gespeicherte Einstellung bleibt unverändert
+    let s = option_env!("ESP32OS_SPRACHE")
+        .and_then(sprache::aus_kuerzel)
+        .or_else(|| lesen("language").and_then(|k| sprache::aus_kuerzel(&k)))
+        .unwrap_or(Sprache::Englisch);
     sprache::setzen(s);
     let l = lesen("keyboard").and_then(|k| crate::tastatur::Layout::aus_kuerzel(&k)).unwrap_or(crate::tastatur::Layout::Ch);
     crate::tastatur::layout_setzen(l);

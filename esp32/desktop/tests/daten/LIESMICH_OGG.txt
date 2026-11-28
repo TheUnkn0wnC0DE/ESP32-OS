@@ -1,0 +1,9 @@
+cc0_daring_heart.ogg – Ogg-Vorbis-Testdatei für desktop/src/ogg.rs
+
+Herkunft: Wikimedia Commons, "File:En-voristu-daring heart.ogg"
+  https://commons.wikimedia.org/wiki/File:En-voristu-daring_heart.ogg
+Urheber: Commons-Benutzer Voristu
+Lizenz: CC0 1.0 (Creative Commons Zero, Public Domain Dedication)
+Unverändert, geladen am 28.11.2026.
+SHA-1   1d7dbb1616778e26a81c598c96f914fedc0ec9c3 (wie auf Commons)
+SHA-256 96267911d4240ddc99c95fcbb25e89609f52916f59cb454de0076abc821f78f3

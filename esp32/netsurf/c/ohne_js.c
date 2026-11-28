@@ -166,6 +166,16 @@ static nsurl *seite(struct browser_window *bw)
 	return h != NULL ? hlcache_handle_get_url(h) : NULL;
 }
 
+/* Beschriftung nach der Sprache des Systems (LANGUAGE, wie lesezeichen.c) */
+static const char *knopf(bool mit)
+{
+	const char *s = getenv("LANGUAGE");
+	bool de = s != NULL && strncmp(s, "de", 2) == 0;
+	if (mit)
+		return de ? "Mit JS" : "With JS";
+	return de ? "Ohne JS" : "No JS";
+}
+
 /* Knopf „Ohne JS“ / „Mit JS“ */
 void ns_ohne_js_umschalten(struct browser_window *bw)
 {
@@ -184,7 +194,7 @@ void ns_ohne_js_umschalten(struct browser_window *bw)
 
 const char *ns_ohne_js_knopftext(struct nsurl *url)
 {
-	return ns_ohne_js(url) ? "Mit JS" : "Ohne JS";
+	return knopf(ns_ohne_js(url));
 }
 
 /* JavaScript dieser Seite an Ort und Stelle abschalten */
@@ -193,7 +203,7 @@ static void js_aus(html_content *htmlc)
 	htmlc->enable_scripting = false;
 	if (htmlc->jsthread != NULL)
 		js_closethread(htmlc->jsthread);
-	ns_js_knopf_text("Mit JS");
+	ns_js_knopf_text(knopf(true));
 }
 
 static void pruefen(void *p)

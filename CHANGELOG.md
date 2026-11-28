@@ -1,6 +1,16 @@
 # Changelog
 
-## 1.0.4 (not released yet)
+## 1.0.5 (2026-11-28)
+
+- Music player: also plays Ogg Vorbis files (.ogg, .oga) with stb_vorbis 1.25 (MIT / public domain). Broken or cut-off files end with a message or at the last readable part, never with a crash.
+- New App store: Doom and Quake can be removed and installed again over Wi-Fi from the latest GitHub release (HTTPS, SHA-256 from SHA256SUMS). Pudding Panic, Cube World, PasswordGen, TinyHashView and the example programs can be removed from and put back into the Start menu and desktop; they stay part of the firmware. The core system cannot be removed. Removing Doom or Quake asks for a second tap.
+- App store: a download that fails or does not match its checksum leaves the game marked as not installed (never a half-written image). A Wi-Fi update and the App store never write to flash at the same time.
+- Browser: the JavaScript button is translated ("No JS" / "With JS" in English).
+- Start menu: the App store is under *More programs...*.
+- Browser: no more half-minute freezes at the end of very large pages. The browser's memory manager now finds free blocks in a tree sorted by address (same placement as before, so no extra waste) instead of walking a long list. Measured on 30 test pages: no page ends early, no freeze, no restart.
+- Stability: with system memory almost full, the system no longer stops; programs and windows are refused instead (40-minute test with only 600 KB left: 0 crashes).
+
+## 1.0.4 (2026-11-27)
 
 - Weather: new app with current weather and a 5-day forecast from Open-Meteo (no API key). Choose the place by touch in the app or in *Settings → Weather place*; without Wi-Fi it says so. Icon on the desktop and in the Start menu.
 - On-screen keyboard: typing in Notes redraws only the text area, about 31 to 33 frames per second instead of 24 to 30.

@@ -9,6 +9,20 @@
 use std::io::Write;
 
 fn main() {
+    // D2: Ogg-Vorbis-Dekoder (stb_vorbis v1.25, unverändert) – am PC hier,
+    // am Board baut ihn ESP-IDF (firmware/komponenten/stb_vorbis). NDEBUG:
+    // eine kaputte Datei darf kein assert/abort auslösen.
+    println!("cargo:rerun-if-changed=c/stb_vorbis.c");
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("espidf") {
+        cc::Build::new()
+            .file("c/stb_vorbis.c")
+            .define("STB_VORBIS_NO_STDIO", None)
+            .define("STB_VORBIS_NO_PULLDATA_API", None)
+            .define("NDEBUG", None)
+            .warnings(false)
+            .opt_level(2)
+            .compile("stb_vorbis");
+    }
     let quelle = std::path::Path::new("daten/icons32.png");
     println!("cargo:rerun-if-changed={}", quelle.display());
     let png = std::fs::read(quelle).expect("daten/icons32.png");

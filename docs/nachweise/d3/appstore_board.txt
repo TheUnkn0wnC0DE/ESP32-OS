@@ -1,0 +1,21 @@
+I (33258) pudding_fw::foto: BILD 0 720 1280 3000000 0
+I (40146) pudding_fw::foto: BILD 0 gesendet
+I (50448) pudding_fw::update: APP-STORE: doomapp entfernt
+I (65144) pudding_fw::foto: BILD 1 720 1280 3000000 0
+I (72032) pudding_fw::foto: BILD 1 gesendet
+I (77971) esp-x509-crt-bundle: Certificate validated
+I (79234) esp-x509-crt-bundle: Certificate validated
+I (79977) esp-x509-crt-bundle: Certificate validated
+I (80301) pudding_fw::update: APP-STORE: doomapp.bin → doomapp
+I (80920) esp-x509-crt-bundle: Certificate validated
+I (81509) esp-x509-crt-bundle: Certificate validated
+I (97032) pudding_fw::foto: BILD 2 720 1280 3000000 0
+I (103926) pudding_fw::foto: BILD 2 gesendet
+I (193923) pudding_fw::foto: BILD 3 720 1280 3000000 0
+I (200811) pudding_fw::foto: BILD 3 gesendet
+I (235813) pudding_fw::foto: BILD 4 720 1280 3000000 0
+I (242701) pudding_fw::foto: BILD 4 gesendet
+doomapp nach Download (espflash read-flash 0xC00000, 1744592 Byte):
+SHA-256 fd9c93b7a0b83cd95ecee43e18ba2494bf07babaacca00af743baf9ff8f7b480
+= doomapp.bin aus SHA256SUMS von Release v1.0.4 (bytegleich).
+Die Logzeile „installiert und geprüft“ fehlt: sie fiel in die Übertragung von Foto 2 über dieselbe serielle Leitung.

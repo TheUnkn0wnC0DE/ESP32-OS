@@ -90,7 +90,7 @@ int esp32os_https_text(const char *url, int json, char *puffer, int max, int *st
 // internen RAM (cache_utils.c: esp_task_stack_is_sane_cache_disabled).
 // Programme und der Update-Faden laufen mit Stapel im PSRAM – darum führt
 // ein kleiner Task mit internem Stapel die OTA-Aufrufe aus.
-enum { OTA_ANFANG, OTA_SCHREIBEN, OTA_ENDE, OTA_ABBRUCH, OTA_STOPP };
+enum { OTA_ANFANG, OTA_SCHREIBEN, OTA_ENDE, OTA_ABBRUCH, OTA_STOPP, OTA_KOPF_LOESCHEN, OTA_KOPF_LESEN };
 typedef struct {
     int befehl;
     const esp_partition_t *p;
@@ -98,6 +98,8 @@ typedef struct {
     size_t n;
     esp_ota_handle_t ota;
     esp_err_t ergebnis;
+    int startplatz;      /* OTA_ENDE: auch Startplatz setzen (Firmware-Update) */
+    unsigned char kopf;  /* OTA_KOPF_LESEN: erstes Byte */
 } ota_auftrag_t;
 static QueueHandle_t ota_schlange;
 static SemaphoreHandle_t ota_fertig;
@@ -114,15 +116,43 @@ static void ota_schreiber(void *arg) {
         case OTA_SCHREIBEN: a->ergebnis = esp_ota_write(a->ota, a->daten, a->n); break;
         case OTA_ENDE:
             a->ergebnis = esp_ota_end(a->ota);
-            if (a->ergebnis == ESP_OK) a->ergebnis = esp_ota_set_boot_partition(a->p);
+            // D3: Spiele-Abbilder (App-Store) werden nur geschrieben, nicht
+            // zum Startplatz
+            if (a->ergebnis == ESP_OK && a->startplatz) a->ergebnis = esp_ota_set_boot_partition(a->p);
             break;
         case OTA_ABBRUCH: a->ergebnis = esp_ota_abort(a->ota); break;
+        case OTA_KOPF_LOESCHEN: a->ergebnis = esp_partition_erase_range(a->p, 0, 4096); break;
+        case OTA_KOPF_LESEN: a->ergebnis = esp_partition_read(a->p, 0, &a->kopf, 1); break;
         default: a->ergebnis = ESP_OK; break;
         }
         esp32os_flash_freigeben();
         xSemaphoreGive(ota_fertig);
         if (stopp) vTaskDelete(NULL);
     }
+}
+
+/* Eine Sperre für alle Nutzer des Schreib-Tasks (Update, App-Store:
+ * Schreiben, Kopf löschen/lesen) – sonst liefen zwei Schreib-Tasks an
+ * derselben Schlange und demselben Semaphor (Review Teil D). */
+static SemaphoreHandle_t ota_sperre;
+static StaticSemaphore_t ota_sperre_puffer;
+static portMUX_TYPE ota_sperre_mux = portMUX_INITIALIZER_UNLOCKED;
+
+static bool ota_sperren(TickType_t warten) {
+    taskENTER_CRITICAL(&ota_sperre_mux);
+    if (!ota_sperre) ota_sperre = xSemaphoreCreateMutexStatic(&ota_sperre_puffer);
+    taskEXIT_CRITICAL(&ota_sperre_mux);
+    return xSemaphoreTake(ota_sperre, warten) == pdTRUE;
+}
+
+static void ota_freigeben(void) { xSemaphoreGive(ota_sperre); }
+
+int esp32os_boot_platz(char *aus, int n);
+
+/* Ist `p` der Platz, aus dem beim nächsten Start gebootet wird? */
+static bool ist_startplatz(const esp_partition_t *p) {
+    char l[20];
+    return esp32os_boot_platz(l, sizeof l) == 0 && strcmp(l, p->label) == 0;
 }
 
 static esp_err_t ota_ausfuehren(ota_auftrag_t *a) {
@@ -143,11 +173,13 @@ static int ota_schreiber_starten(void) {
 // Byte). fortschritt(prozent, kontext) wird alle paar Prozent gerufen.
 // Rückgabe 0 = geschrieben, geprüft, Startplatz gesetzt; sonst Fehler:
 // -1 Platz fehlt, -2 Verbindung, -3 Länge, -4 Prüfsumme, sonst esp_err_t.
-int esp32os_ota_von_url(const char *url, const char *label, const unsigned char *sha,
-                        void (*fortschritt)(int, void *), void *kontext) {
+static int bild_von_url(const char *url, const char *label, const unsigned char *sha,
+                        void (*fortschritt)(int, void *), void *kontext, int startplatz) {
     const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
     if (!p) return -1;
     if (p == esp_ota_get_running_partition()) return -1;
+    // App-Abbild (ohne Startplatz-Wechsel) nie in den Startplatz schreiben
+    if (!startplatz && ist_startplatz(p)) return -1;
     int64_t laenge = 0;
     int status = 0;
     esp_http_client_handle_t h = oeffnen(url, 0, &laenge, &status);
@@ -166,7 +198,7 @@ int esp32os_ota_von_url(const char *url, const char *label, const unsigned char 
         esp_http_client_cleanup(h);
         return ESP_ERR_NO_MEM;
     }
-    ota_auftrag_t a = { .befehl = OTA_ANFANG, .p = p, .n = (size_t)laenge };
+    ota_auftrag_t a = { .befehl = OTA_ANFANG, .p = p, .n = (size_t)laenge, .startplatz = startplatz };
     esp_err_t r = ota_ausfuehren(&a);
     if (r != ESP_OK) {
         a.befehl = OTA_STOPP;
@@ -223,11 +255,69 @@ int esp32os_ota_von_url(const char *url, const char *label, const unsigned char 
             fehler = r;
         }
     }
+    // App-Store: ein halb geschriebenes Abbild darf nicht als installiert
+    // gelten (erstes Byte 0xE9 stünde schon da) – Kopf löschen
+    if (fehler && !startplatz) {
+        a.befehl = OTA_KOPF_LOESCHEN;
+        ota_ausfuehren(&a);
+    }
     a.befehl = OTA_STOPP;
     ota_ausfuehren(&a);
     if (fehler) return fehler;
-    ESP_LOGI(TAG, "Abbild %lld Byte in %s geschrieben, geprüft, Startplatz gesetzt", (long long)n, label);
+    ESP_LOGI(TAG, "Abbild %lld Byte in %s geschrieben, geprüft%s", (long long)n, label, startplatz ? ", Startplatz gesetzt" : "");
     return 0;
+}
+
+int esp32os_bild_von_url(const char *url, const char *label, const unsigned char *sha,
+                         void (*fortschritt)(int, void *), void *kontext, int startplatz) {
+    ota_sperren(portMAX_DELAY);
+    int r = bild_von_url(url, label, sha, fortschritt, kontext, startplatz);
+    ota_freigeben();
+    return r;
+}
+
+/* Update der Firmware: Abbild schreiben und als Startplatz setzen. */
+int esp32os_ota_von_url(const char *url, const char *label, const unsigned char *sha,
+                        void (*fortschritt)(int, void *), void *kontext) {
+    return esp32os_bild_von_url(url, label, sha, fortschritt, kontext, 1);
+}
+
+/* D3: Kopf eines App-Abbilds löschen (App-Store „Entfernen“): ohne gültigen
+ * Kopf startet es nicht und gilt als nicht installiert. Nie der laufende
+ * Platz. 0 = ok. */
+static int kopf_auftrag(const esp_partition_t *p, int befehl, unsigned char *kopf) {
+    if (ota_schreiber_starten() != 0) return -1;
+    ota_auftrag_t a = { .befehl = befehl, .p = p };
+    esp_err_t r = ota_ausfuehren(&a);
+    if (kopf) *kopf = a.kopf;
+    ota_auftrag_t stopp = { .befehl = OTA_STOPP };
+    ota_ausfuehren(&stopp);
+    return r == ESP_OK ? 0 : (int)r;
+}
+
+int esp32os_bild_loeschen(const char *label) {
+    const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
+    if (!p) return -1;
+    if (p == esp_ota_get_running_partition() || ist_startplatz(p)) return -1;
+    // Flash nur aus dem Schreib-Task (interner Stapel, Flash gesperrt)
+    ota_sperren(portMAX_DELAY);
+    int r = kopf_auftrag(p, OTA_KOPF_LOESCHEN, NULL);
+    ota_freigeben();
+    return r;
+}
+
+/* D3: liegt ein Abbild im Platz? (erstes Byte 0xE9 = ESP-Abbild) – 1 ja,
+ * 0 nein, -1 Platz fehlt. */
+int esp32os_bild_vorhanden(const char *label) {
+    const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, label);
+    if (!p) return -1;
+    unsigned char b = 0;
+    // läuft gerade ein Update/Download: unbekannt statt warten
+    if (!ota_sperren(0)) return -1;
+    int r = kopf_auftrag(p, OTA_KOPF_LESEN, &b);
+    ota_freigeben();
+    if (r != 0) return -1;
+    return b == 0xE9 ? 1 : 0;
 }
 
 // ---- Startplatz abfragen: esp_ota_get_boot_partition liest otadata über
